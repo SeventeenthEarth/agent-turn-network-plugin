@@ -13,6 +13,7 @@ REQUIRED_TARGETS = (
     "test-int",
     "test-e2e",
     "check-core-contract",
+    "check-bootstrap-smoke",
     "check-make-contract",
     "docs-guardrails",
     "fmt",
@@ -21,14 +22,30 @@ REQUIRED_TARGETS = (
     "require-uv",
 )
 EXPECTED_TEST_DEPS = ("test-prepare", "test-unit", "test-int", "test-e2e")
-EXPECTED_PREPARE_DEPS = ("fmt", "lint", "typecheck", "docs-guardrails", "check-make-contract")
-REQUIRE_UV_TARGETS = ("fmt", "lint", "typecheck", "test-unit", "test-int", "test-e2e")
+EXPECTED_PREPARE_DEPS = (
+    "fmt",
+    "lint",
+    "typecheck",
+    "docs-guardrails",
+    "check-make-contract",
+    "check-bootstrap-smoke",
+)
+REQUIRE_UV_TARGETS = (
+    "fmt",
+    "lint",
+    "typecheck",
+    "check-bootstrap-smoke",
+    "test-unit",
+    "test-int",
+    "test-e2e",
+)
 TARGET_MARKERS = {
     "fmt": (("$(UV) run ruff format --check .", "ruff format check"),),
     "lint": (("$(UV) run ruff check .", "ruff lint check"),),
     "typecheck": (("$(UV) run mypy src", "mypy typecheck"),),
     "docs-guardrails": (("scripts/guardrails.py", "docs guardrails script"),),
     "check-core-contract": (("scripts/check_core_contract.py", "core contract script"),),
+    "check-bootstrap-smoke": (("scripts/check_bootstrap_smoke.py", "bootstrap smoke script"),),
     "check-make-contract": (("scripts/check_make_contract.py", "Makefile contract script"),),
     "require-uv": (
         ("uv is required for Python scaffold checks", "uv fail-safe message"),

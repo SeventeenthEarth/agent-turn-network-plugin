@@ -32,9 +32,11 @@ kkachi-agent-network-plugin/
 
 ## Makefile targets
 
-`make test-prepare` runs formatting, lint, type checking, docs guardrails, and the Makefile target-contract check.
+`make test-prepare` runs formatting, lint, type checking, docs guardrails, the Makefile target-contract check, and the bootstrap smoke check.
 
 `make check-make-contract` verifies required single-line target declarations, `.PHONY` coverage, `make test` dependencies, preparation-gate dependencies, scoped tool commands, offline integration defaults, and isolated E2E environment variables.
+
+`make check-bootstrap-smoke` verifies the package import/metadata, scaffold-only plugin manifest shape, and root directory-plugin entrypoint availability without registering tools, hooks, or commands.
 
 `make test-unit` runs `pytest tests/unit`.
 
@@ -54,11 +56,14 @@ After the Python scaffold exists, `uv` and `pyproject.toml` are required for cod
 
 ## Bootstrap smoke tests
 
-The first plugin scaffold PR should prove:
+SCAFF-5 delivers a scaffold smoke gate for the first plugin scaffold PR. It proves:
 
-- plugin package imports;
-- plugin manifest is valid;
-- all declared tool handlers exist;
-- handlers return JSON strings;
-- fake daemon compatibility check works;
-- `make test` succeeds without external resources.
+- the plugin package imports through the `src/` layout and exposes stable metadata;
+- the plugin manifest is a YAML mapping with the expected name, version, standalone kind, and explicit empty `provides_tools: []` / `provides_hooks: []` declarations;
+- the root directory-plugin entrypoint exposes `register(ctx)`;
+- the scaffold entrypoint does not register unavailable tools, hooks, or commands;
+- `make test` succeeds without live Hermes, Discord, daemon, or network resources.
+
+Later HPLUG/DAEMN work owns the full plugin-bootstrap checks that require real declared tool handlers, handler JSON-string return contracts, and fake daemon compatibility probes. Those checks are intentionally deferred until the handler and daemon contracts exist.
+
+SCAFF-5 records scaffold smoke coverage in `scripts/check_bootstrap_smoke.py` and `tests/unit/test_bootstrap_smoke.py`. This proves scaffold readiness only; it does not claim installed Hermes plugin loading.

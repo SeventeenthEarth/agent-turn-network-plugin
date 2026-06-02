@@ -1,0 +1,172 @@
+from __future__ import annotations
+
+import importlib
+import importlib.util
+import sys
+from pathlib import Path
+from types import ModuleType
+from typing import Any
+
+import yaml
+
+ROOT = Path(__file__).resolve().parents[1]
+PACKAGE_MODULE = "kkachi_agent_network_plugin"
+PACKAGE_NAME = "kkachi-agent-network-plugin"
+
+
+def load_module(path: Path, name: str, *, package_root: bool = False) -> ModuleType:
+    spec = importlib.util.spec_from_file_location(
+        name,
+        path,
+        submodule_search_locations=[str(path.parent)] if package_root else None,
+    )
+    if spec is None or spec.loader is None:
+        raise SystemExit(f"bootstrap smoke cannot load module spec: {path}")
+    module = importlib.util.module_from_spec(spec)
+    try:
+        spec.loader.exec_module(module)
+    except Exception as exc:
+        raise SystemExit(f"bootstrap smoke failed to load module {path}: {exc}") from exc
+    return module
+
+
+def import_package_from_src(root: Path) -> ModuleType:
+    """Import the package through normal import machinery from the src layout."""
+
+    src_path = str(root / "src")
+    previous_path = list(sys.path)
+    previous_module = sys.modules.pop(PACKAGE_MODULE, None)
+    try:
+        sys.path.insert(0, src_path)
+        return importlib.import_module(PACKAGE_MODULE)
+    except Exception as exc:
+        raise SystemExit(
+            f"bootstrap smoke failed to import package {PACKAGE_MODULE}: {exc}"
+        ) from exc
+    finally:
+        sys.path[:] = previous_path
+        if previous_module is None:
+            sys.modules.pop(PACKAGE_MODULE, None)
+        else:
+            sys.modules[PACKAGE_MODULE] = previous_module
+
+
+def require_package_metadata(root: Path) -> str:
+    package = load_module(
+        root / "src" / PACKAGE_MODULE / "__init__.py",
+        f"{PACKAGE_MODULE}_bootstrap_smoke",
+    )
+    package_version = getattr(package, "__version__", None)
+    if not isinstance(package_version, str) or not package_version:
+        raise SystemExit(
+            f"package version metadata must be a non-empty string: {package_version!r}"
+        )
+
+    package_metadata = getattr(package, "package_metadata", None)
+    if not callable(package_metadata):
+        raise SystemExit("package_metadata is not callable")
+    expected = {
+        "name": PACKAGE_NAME,
+        "module": PACKAGE_MODULE,
+        "version": package_version,
+    }
+    actual_metadata = package_metadata()
+    if actual_metadata != expected:
+        raise SystemExit(f"package metadata mismatch: {actual_metadata} != {expected}")
+
+    imported_package = import_package_from_src(root)
+    imported_metadata = getattr(imported_package, "package_metadata", None)
+    if not callable(imported_metadata):
+        raise SystemExit("imported package_metadata is not callable")
+    if imported_metadata() != expected:
+        raise SystemExit(f"imported package metadata mismatch: {imported_metadata()} != {expected}")
+
+    return package_version
+
+
+def require_manifest(root: Path, *, package_version: str) -> None:
+    manifest_path = root / "plugin.yaml"
+    if not manifest_path.exists():
+        raise SystemExit(f"missing plugin manifest: {manifest_path}")
+    manifest = yaml.safe_load(manifest_path.read_text(encoding="utf-8"))
+    if not isinstance(manifest, dict):
+        raise SystemExit(f"plugin manifest must be a YAML mapping: {manifest_path}")
+
+    actual_name = manifest.get("name")
+    if actual_name != PACKAGE_NAME:
+        raise SystemExit(f"manifest name mismatch: got {actual_name!r}, expected {PACKAGE_NAME!r}")
+    actual_version = manifest.get("version")
+    if str(actual_version) != package_version:
+        raise SystemExit(
+            f"manifest version mismatch: got {actual_version!r}, expected {package_version!r}"
+        )
+    actual_kind = manifest.get("kind")
+    if actual_kind != "standalone":
+        raise SystemExit(f"manifest kind mismatch: got {actual_kind!r}, expected 'standalone'")
+
+    # The scaffold contract intentionally requires explicit empty lists. Omitted
+    # fields are rejected so the manifest cannot silently overclaim later surfaces.
+    actual_tools = manifest.get("provides_tools")
+    if actual_tools != []:
+        raise SystemExit(
+            f"manifest provides_tools must remain explicit empty list for scaffold smoke: "
+            f"got {actual_tools!r}"
+        )
+    actual_hooks = manifest.get("provides_hooks")
+    if actual_hooks != []:
+        raise SystemExit(
+            f"manifest provides_hooks must remain explicit empty list for scaffold smoke: "
+            f"got {actual_hooks!r}"
+        )
+
+
+def require_entrypoint(root: Path) -> None:
+    entrypoint_path = root / "__init__.py"
+    if not entrypoint_path.exists():
+        raise SystemExit(f"missing root plugin entrypoint: {entrypoint_path}")
+    entrypoint = load_module(
+        entrypoint_path, "kkachi_agent_network_plugin_root_bootstrap", package_root=True
+    )
+    register = getattr(entrypoint, "register", None)
+    if not callable(register):
+        raise SystemExit("entrypoint register is not callable")
+
+    context = FakePluginContext()
+    try:
+        register(context)
+    except Exception as exc:
+        raise SystemExit(f"entrypoint register failed during bootstrap smoke: {exc}") from exc
+    if context.registered_tools:
+        raise SystemExit("entrypoint registered scaffold-forbidden tools")
+    if context.registered_hooks:
+        raise SystemExit("entrypoint registered scaffold-forbidden hooks")
+    if context.registered_commands:
+        raise SystemExit("entrypoint registered scaffold-forbidden commands")
+
+
+class FakePluginContext:
+    def __init__(self) -> None:
+        self.registered_tools: list[dict[str, Any]] = []
+        self.registered_hooks: list[tuple[str, Any]] = []
+        self.registered_commands: list[dict[str, Any]] = []
+
+    def register_tool(self, **kwargs: Any) -> None:
+        self.registered_tools.append(kwargs)
+
+    def register_hook(self, hook_name: str, callback: Any) -> None:
+        self.registered_hooks.append((hook_name, callback))
+
+    def register_command(self, *args: Any, **kwargs: Any) -> None:
+        self.registered_commands.append({"args": args, "kwargs": kwargs})
+
+
+def main(*, root: Path = ROOT) -> None:
+    root = root.resolve()
+    package_version = require_package_metadata(root)
+    require_manifest(root, package_version=package_version)
+    require_entrypoint(root)
+    print("check-bootstrap-smoke: ok")
+
+
+if __name__ == "__main__":
+    main()

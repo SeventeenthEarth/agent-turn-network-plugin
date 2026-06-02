@@ -20,8 +20,4 @@ forbidden_phrases = ["`../kkachi-agent-network"]
 for phrase in forbidden_phrases:
     if phrase in text:
         raise SystemExit(f"stale docs-relative sibling path found: {phrase}")
-make = (root / "Makefile").read_text(encoding="utf-8")
-for target in ["test-prepare:", "test-unit:", "test-int:", "test-e2e:", "test:", "check-core-contract:"]:
-    if target not in make:
-        raise SystemExit(f"missing Makefile target {target}")
 print("docs-guardrails: ok")

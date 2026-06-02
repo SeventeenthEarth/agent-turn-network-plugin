@@ -32,7 +32,9 @@ kkachi-agent-network-plugin/
 
 ## Makefile targets
 
-`make test-prepare` runs formatting, lint, type checking, and docs guardrails.
+`make test-prepare` runs formatting, lint, type checking, docs guardrails, and the Makefile target-contract check.
+
+`make check-make-contract` verifies required single-line target declarations, `.PHONY` coverage, `make test` dependencies, preparation-gate dependencies, scoped tool commands, offline integration defaults, and isolated E2E environment variables.
 
 `make test-unit` runs `pytest tests/unit`.
 
@@ -40,7 +42,9 @@ kkachi-agent-network-plugin/
 
 `make test-e2e` runs `pytest tests/e2e` only against an isolated test environment. It must not touch the current running Hermes or Discord environment.
 
-`make test` runs all targets sequentially.
+`make test` depends on `test-prepare`, `test-unit`, `test-int`, and `test-e2e`; the preparation gate must complete before the test tiers under normal serial `make`.
+
+After the Python scaffold exists, `uv` and `pyproject.toml` are required for code/test targets. Missing prerequisites fail with explicit messages instead of silently passing. Default integration and E2E targets still avoid live Hermes, Discord, daemon, and network resources.
 
 ## Bootstrap smoke tests
 

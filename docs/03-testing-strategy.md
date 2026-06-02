@@ -4,11 +4,11 @@
 
 | Target | Plugin meaning | External resources |
 | --- | --- | --- |
-| `test-prepare` | ruff format/check, mypy/typecheck, docs guardrails, static safety checks | forbidden |
+| `test-prepare` | ruff format/check, mypy/typecheck, docs guardrails, Makefile contract check, static safety checks | forbidden |
 | `test-unit` | pure Python units for schemas, error rendering, client request construction | forbidden |
 | `test-int` | fake daemon, fake Hermes registry, fake send_message/gateway | forbidden |
 | `test-e2e` | real daemon/Hermes/Discord only in isolated test environment | allowed only when configured |
-| `test` | sequentially runs all four targets | follows each target |
+| `test` | depends on the preparation, unit, integration, and E2E targets | follows each target |
 
 ## Unit tests
 
@@ -42,3 +42,9 @@ E2E tests may use external resources only when explicitly configured for an isol
 - visible test labels and cleanup guidance.
 
 When required environment variables are absent, E2E tests must skip with a clear reason. They must not silently fall back to production resources.
+
+## Makefile drift checks
+
+`make check-make-contract` verifies the required single-line target declarations, `.PHONY` coverage, `make test` dependencies, preparation-gate dependencies, scoped tool commands, offline integration defaults, and isolated E2E environment variables. `make test-prepare` includes this check so target-contract drift is caught before tests run.
+
+Once the Python scaffold exists, missing `uv` or `pyproject.toml` is a fail-safe prerequisite error for code/test targets rather than a silent pass. Live external resources remain forbidden by default.

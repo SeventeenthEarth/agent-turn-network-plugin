@@ -46,6 +46,12 @@ kkachi-agent-network-plugin/
 
 After the Python scaffold exists, `uv` and `pyproject.toml` are required for code/test targets. Missing prerequisites fail with explicit messages instead of silently passing. Default integration and E2E targets still avoid live Hermes, Discord, daemon, and network resources.
 
+## Guardrail scripts
+
+`make docs-guardrails` runs `scripts/guardrails.py`. The script is import-safe for unit testing, verifies the required docs set and required project phrases, and scans all `docs/*.md` files for stale docs-relative sibling paths. It does not duplicate Makefile target structure checks; `make check-make-contract` owns Makefile structure.
+
+`make check-core-contract` runs `scripts/check_core_contract.py`. The script is import-safe for unit testing and verifies the local companion core repo, or `KAN_CORE_REPO`, exposes the expected conformance manifest protocol, cross-repo development phrases, distribution fixture handoff wording, reciprocal `check-plugin-contract` Makefile target, and matching plugin compatibility declaration.
+
 ## Bootstrap smoke tests
 
 The first plugin scaffold PR should prove:

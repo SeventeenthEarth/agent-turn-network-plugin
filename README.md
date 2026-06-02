@@ -1,12 +1,12 @@
 # kkachi-agent-network-plugin
 
-`kkachi-agent-network-plugin` is the Python Hermes plugin adapter for KAN. It exposes Hermes tools/slash commands/skill guidance and optional Discord visible-surface helpers over the companion core Go daemon repository.
+`kkachi-agent-network-plugin` is the Python Hermes plugin adapter for KAN. In the current DAEMN-1 state it contains an import-safe Python daemon-client foundation exercised only through fake/injected transports; Hermes tools, slash commands, Discord helpers, and live daemon support remain unexposed future surfaces.
 
 The plugin is not the source of truth. `kkachi-agent-networkd` owns `channel.jsonl`, SQLite projections, locks, replay, cursors, and state transitions.
 
 ## Repository boundary
 
-- This repo: Python plugin code, Python daemon client, Hermes tool schemas/handlers, slash-command bindings, bundled skill material, fake-daemon integration tests, isolated plugin E2E tests.
+- This repo: Python plugin code, fake/injected-transport daemon client foundation, future Hermes tool schemas/handlers, future slash-command bindings, bundled skill material, fake-daemon integration tests, isolated plugin E2E tests.
 - Core repo: Go daemon/CLI, protocol SOT, event/state/storage/security/recovery docs.
 - Discord helper behavior must record delivery evidence back through typed daemon commands and must not move raw Discord tokens into the daemon.
 
@@ -24,7 +24,7 @@ Key docs:
 
 ## Current state
 
-Scaffold stage. Python package layout, build configuration, package metadata, tiered unit/integration/e2e test infrastructure, plugin manifest, and minimal no-op Hermes directory entrypoint are in place. Real plugin tools, daemon client behavior, slash commands, install smoke tests, and live Hermes integration remain pending later tasks.
+DAEMN-1 draft foundation stage. Python package layout, build configuration, package metadata, tiered unit/integration/e2e test infrastructure, plugin manifest, and minimal no-op Hermes directory entrypoint are in place. The daemon client foundation now supports status/version parsing, deterministic command envelopes, structured error decoding, and conformance-manifest guards through explicit fake/injected transports only. Real plugin tools, slash commands, install smoke tests, live daemon support, and live Hermes integration remain pending later tasks.
 
 ## Test targets
 

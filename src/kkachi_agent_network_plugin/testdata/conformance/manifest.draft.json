@@ -1,0 +1,14 @@
+{
+  "manifest_version": 1,
+  "protocol_version": "kan-protocol-v1alpha0",
+  "stability": "draft-plugin-local-scaffold",
+  "owner_repo": "kkachi-agent-network-plugin",
+  "consumer_repo": "kkachi-agent-network-plugin",
+  "fixtures": [],
+  "required_feature_groups": [
+    "version_features",
+    "command_envelope",
+    "structured_error"
+  ],
+  "notes": "Plugin-local fake-daemon draft manifest for DAEMN-1 only; fixtures=[] forces live_readiness=false."
+}

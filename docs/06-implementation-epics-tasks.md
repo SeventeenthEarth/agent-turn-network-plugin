@@ -63,7 +63,7 @@ Exit: the plugin has a fail-closed Python client foundation that can speak to th
 
 | Task ID | Task Title | Task Status | Task Description |
 |---|---|---|---|
-| DAEMN-1 | Implement core protocol client foundation | planned | Implement status/version reads, command envelope serialization, structured daemon error decoding, idempotency-ready request metadata, and conformance/fake-daemon tests for the minimum safe daemon client. Block any live-client claim until stable core status/version fixtures and protocol declarations exist. |
+| DAEMN-1 | Implement core protocol client foundation | completed | Implemented status/version reads, command envelope serialization, structured daemon error decoding, idempotency-ready request metadata, and conformance/fake-daemon tests for the minimum safe daemon client. This is fake/injected transport only; live-client readiness remains blocked until stable core status/version fixtures and protocol declarations exist. |
 | DAEMN-2 | Implement stream and diagnostics client surfaces | planned | Implement stream frame parsing, malformed-frame protection, diagnostics response decoding, and fake-daemon coverage for tail/read-only diagnostic paths. Block live stream claims until the core stream/status contracts exist. |
 
 ## HPLUG: Hermes plugin surface

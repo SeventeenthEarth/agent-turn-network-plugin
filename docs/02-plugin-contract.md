@@ -13,7 +13,7 @@ Required compatibility checks:
 - stream frame schema supported;
 - structured error schema supported.
 
-If any required check fails, the plugin fails closed and tells the operator to use the canonical CLI from the core repo.
+If any required check fails, the plugin fails closed and does not expose the affected operation as safe. DAEMN-1 does not call or suggest a plugin-side CLI fallback.
 
 ## Tool handler rules
 
@@ -28,8 +28,21 @@ Hermes tool handlers must:
 
 ## CLI fallback rule
 
-CLI fallback is allowed only when it is equivalent to an operator running `kkachi-agent-network` manually. It must use argv-only subprocess invocation and must never interpolate shell strings.
+CLI fallback is not implemented in DAEMN-1. If a later task adds one, it must be explicit, argv-only, equivalent to an operator running `kkachi-agent-network` manually, and covered by tests.
 
 ## Plugin/core equivalence
 
 For every plugin write operation, there must be a documented equivalent daemon/CLI command in the core repo. Equivalence means same state transition, same validation, same idempotency behavior, and compatible structured errors.
+
+## DAEMN-1 draft client foundation
+
+DAEMN-1 implements only the import-safe Python client foundation. It requires an explicit fake or injected transport and does not open localhost sockets, call the core CLI, inspect Hermes runtime state, touch Discord/gateway/auth/token data, or expose Hermes plugin tools.
+
+The foundation currently covers:
+
+- status/version response parsing with supported-protocol and required-feature checks;
+- deterministic command envelope serialization with caller-supplied request and idempotency identifiers;
+- structured daemon error decoding that preserves command/session/event/request identifiers while redacting token/secret-like diagnostics;
+- conformance manifest parsing where `fixtures: []` is accepted only for draft/scaffold stability and always forces `live_readiness: false`.
+
+Live daemon support and plugin tool readiness remain blocked until stable core fixtures and endpoint declarations exist.

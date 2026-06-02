@@ -64,6 +64,18 @@ SCAFF-5 delivers a scaffold smoke gate for the first plugin scaffold PR. It prov
 - the scaffold entrypoint does not register unavailable tools, hooks, or commands;
 - `make test` succeeds without live Hermes, Discord, daemon, or network resources.
 
-Later HPLUG/DAEMN work owns the full plugin-bootstrap checks that require real declared tool handlers, handler JSON-string return contracts, and fake daemon compatibility probes. Those checks are intentionally deferred until the handler and daemon contracts exist.
+DAEMN-1 adds fake daemon compatibility probes for the client foundation only. Later HPLUG work owns full plugin-bootstrap checks that require real declared tool handlers and handler JSON-string return contracts. Those handler checks remain deferred until the handler contracts exist.
 
 SCAFF-5 records scaffold smoke coverage in `scripts/check_bootstrap_smoke.py` and `tests/unit/test_bootstrap_smoke.py`. This proves scaffold readiness only; it does not claim installed Hermes plugin loading.
+
+## DAEMN-1 client modules
+
+The DAEMN-1 implementation is import-safe and dependency-free:
+
+- `protocol.py` owns protocol constants, status/version/result models, canonical JSON, and command envelopes.
+- `errors.py` owns structured daemon error decoding and redaction.
+- `conformance.py` owns conformance manifest parsing and the draft zero-fixture guard.
+- `client/daemon.py` owns status/version reads and command submission through an explicit transport.
+- `client/transport.py` provides the transport protocol and a static fake transport for tests.
+
+There is no live daemon, Hermes, Discord, KAB, auth, token, gateway, localhost, or CLI fallback in these modules.

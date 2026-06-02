@@ -13,9 +13,9 @@
 ## Unit tests
 
 - tool schema shape and required fields;
-- daemon client request construction;
-- structured error rendering;
-- compatibility check decision table;
+- daemon client request construction and explicit injected-transport requirement;
+- structured error rendering and redaction;
+- compatibility/conformance manifest decision table, including the zero-fixture draft rule;
 - secret redaction and safe logging;
 - argv-only CLI fallback builder.
 
@@ -23,11 +23,11 @@
 
 Integration tests use mock/fake/stub components only:
 
-- fake daemon HTTP/socket server with fixture responses;
+- fake daemon injected transport with fixture responses;
 - fake stream source with replay/follow frames;
 - fake Hermes tool invocation context;
 - fake `send_message`/gateway delivery function;
-- copied or vendored conformance fixtures from the core repo.
+- copied/plugin-local draft conformance manifests from the core repo.
 
 Integration tests must not contact real Hermes, live Discord, or the current daemon.
 
@@ -50,3 +50,7 @@ When required environment variables are absent, E2E tests must skip with a clear
 `make check-bootstrap-smoke` verifies scaffold bootstrap readiness: package import/metadata through the `src/` layout, scaffold-only plugin manifest shape with explicit empty tool/hook declarations, and root entrypoint availability without registering unavailable tools, hooks, or commands.
 
 Once the Python scaffold exists, missing `uv` or `pyproject.toml` is a fail-safe prerequisite error for code/test targets rather than a silent pass. Live external resources remain forbidden by default.
+
+## DAEMN-1 fake-daemon coverage
+
+DAEMN-1 tests are fake-only. Unit tests cover canonical envelope serialization, explicit idempotency metadata, unsupported protocol failures, missing feature failures, malformed response failures, structured error preservation/redaction, and conformance manifest fail-closed behavior. Integration tests use `StaticDaemonTransport` to simulate status/version reads, command success, command conflict, and malformed command responses. E2E coverage is limited to proving that live-looking environment variables do not create a live daemon fallback.

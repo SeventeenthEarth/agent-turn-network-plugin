@@ -6,13 +6,15 @@
 kkachi-agent-network-plugin/
   plugin.yaml or equivalent manifest
   src/kkachi_agent_network_plugin/
-    client/              # Python daemon protocol client
-    schemas.py           # Hermes tool schemas
-    tools.py             # tool handlers returning JSON strings
-    slash_commands/      # optional slash-command wiring
-    discord_surface/     # send_message/gateway helper wrappers
-    health.py            # daemon compatibility checks
-    errors.py            # daemon error rendering
+    protocol.py          # protocol constants, models, canonical envelopes
+    errors.py            # structured daemon error decoding/redaction
+    conformance.py       # conformance manifest guard
+    client/              # explicit fake/injected daemon transport client
+    schemas.py           # future Hermes tool schemas
+    tools.py             # future tool handlers returning JSON strings
+    slash_commands/      # future optional slash-command wiring
+    discord_surface/     # future send_message/gateway helper wrappers
+    health.py            # future live daemon compatibility checks
   skills/kkachi-agent-network/SKILL.md
   tests/
     unit/
@@ -25,7 +27,12 @@ kkachi-agent-network-plugin/
 ## Flow
 
 ```text
-Hermes agent tool/slash command
+DAEMN-1 fake/injected transport
+  -> Python KAN daemon client
+    -> status/version parser or command envelope serializer
+    <- structured success/error fixture
+
+Future Hermes agent tool/slash command
   -> plugin handler
     -> Python KAN daemon client
       -> kkachi-agent-networkd protocol endpoint
@@ -38,13 +45,13 @@ Hermes agent tool/slash command
 
 - The plugin calls the daemon protocol; it does not write core storage files.
 - The plugin returns daemon errors as authoritative failures.
-- The plugin may shell out to `kkachi-agent-network` only for compatibility fallback or operator-equivalent diagnostics.
-- The plugin must pass a compatibility health check before exposing write tools as safe to use.
+- DAEMN-1 has no shell, localhost, Hermes, Discord, KAB, auth, token, or gateway fallback; callers must inject a transport explicitly.
+- The plugin must pass a compatibility health check before exposing any future write tools as safe to use.
 - Hermes restart/plugin reload must not affect daemon state.
 
 ## Hermes plugin surface
 
-The plugin may provide:
+The plugin currently registers no Hermes tools or hooks. Later tasks may provide:
 
 - daemon/session status tools;
 - delegation and council command tools matching implemented core commands;

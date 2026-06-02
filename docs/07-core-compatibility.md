@@ -13,8 +13,8 @@ The core-side SOT is `../../kkachi-agent-network/docs/21-cross-repo-development.
 | Core repo | `../../kkachi-agent-network` |
 | Protocol version | `kan-protocol-v1alpha0` |
 | Fixture manifest | `../../kkachi-agent-network/testdata/conformance/manifest.json` |
-| Stability | draft, docs/scaffold only |
-| Plugin behavior on mismatch | fail closed and direct operator to canonical CLI |
+| Stability | draft, docs/scaffold/client-foundation only |
+| Plugin behavior on mismatch | fail closed; no DAEMN-1 live fallback or tool exposure |
 
 ## Compatibility checks
 
@@ -38,9 +38,9 @@ Default for unit and integration tests before the core daemon exists. Fake daemo
 
 The Python client parses core fixtures without starting the real daemon. This is required for P1 and later.
 
-### Live local daemon mode
+### Future live local daemon mode
 
-Uses a locally built `kkachi-agent-networkd` with disposable data home. This is allowed for plugin E2E only when explicitly configured.
+Not part of DAEMN-1. A later milestone may use a locally built `kkachi-agent-networkd` with disposable data home, but only when explicitly configured.
 
 ### Isolated Hermes/Discord mode
 
@@ -67,4 +67,10 @@ This command checks that the sibling core repo exposes the expected docs, manife
 
 ## Fail-closed rule
 
-Plugin compatibility checks are safety gates. If the daemon reports an unsupported protocol version, missing required feature, malformed structured error, or missing delivery evidence command path, the plugin must not expose the affected write operation as safe. It should return an operator-friendly failure and point to the canonical CLI fallback.
+Plugin compatibility checks are safety gates. If the daemon reports an unsupported protocol version, missing required feature, malformed structured error, or missing delivery evidence command path, the plugin must not expose the affected write operation as safe. DAEMN-1 stops at an operator-friendly failure; it does not call a live daemon or CLI fallback.
+
+## DAEMN-1 manifest guard
+
+The client foundation parses both the plugin-local draft manifest and the core conformance manifest. `fixtures: []` is valid only when `stability` is explicitly draft/scaffold-like. Empty fixtures always force `live_readiness: false`, even if a malformed manifest tries to claim otherwise. Unsupported protocol versions, missing required feature groups, malformed fixture lists, or non-boolean live-readiness values fail closed before any future live operation can be considered safe.
+
+DAEMN-1 does not contact a live daemon. Status/version reads and command submission require an explicit fake or injected transport. No localhost, CLI, Hermes, Discord, KAB, auth, token, or gateway fallback is implemented.

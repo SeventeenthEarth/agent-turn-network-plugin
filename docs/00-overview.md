@@ -2,7 +2,7 @@
 
 ## Purpose
 
-`kkachi-agent-network-plugin` is the Python Hermes plugin adapter for KAN. It gives Hermes agents convenient tool/slash-command/skill surfaces for the Go daemon in `kkachi-agent-network`.
+`kkachi-agent-network-plugin` is the Python Hermes plugin adapter for KAN. In the current DAEMN-1 draft it provides an import-safe Python daemon-client foundation for fake/injected transports. Hermes tool/slash-command/skill surfaces for the Go daemon in `kkachi-agent-network` are planned but not exposed by the manifest or entrypoint yet.
 
 The plugin is not the source of truth. `kkachi-agent-networkd` owns state, event append, locks, replay, projections, and lifecycle decisions.
 
@@ -11,11 +11,11 @@ The plugin is not the source of truth. `kkachi-agent-networkd` owns state, event
 This repository owns:
 
 - Hermes plugin manifest/entrypoint code;
-- Python daemon client for KAN protocol;
-- Hermes tool schemas and handlers;
-- slash-command bindings where Hermes supports them;
-- bundled KAN skill material;
-- Discord visible-surface helpers through Hermes gateway/send_message;
+- Python daemon client foundation for KAN protocol using explicit fake/injected transports;
+- future Hermes tool schemas and handlers;
+- future slash-command bindings where Hermes supports them;
+- bundled KAN skill material when that task lands;
+- future Discord visible-surface helpers through Hermes gateway/send_message after delivery-evidence contracts exist;
 - plugin tests and plugin docs.
 
 It does not own:
@@ -25,6 +25,7 @@ It does not own:
 - daemon locks/cursors;
 - protocol SOT;
 - raw Discord bot tokens inside the daemon;
+- live daemon/Hermes/Discord/KAB/auth/token/gateway fallback behavior;
 - Hermes core changes.
 
 ## Companion core repo

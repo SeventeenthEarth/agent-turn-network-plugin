@@ -50,7 +50,7 @@ test-int:
 
 test-e2e:
 	@if command -v uv >/dev/null 2>&1 && [ -f pyproject.toml ]; then \
-		KAN_E2E=1 HERMES_HOME="$${HERMES_TEST_HOME:-$$(mktemp -d)}" DISCORD_TEST_TARGET="$${DISCORD_TEST_TARGET:-}" uv run pytest tests/e2e; \
+		KAN_E2E=1 HERMES_HOME="$${HERMES_TEST_HOME:-$$(mktemp -d)}" DISCORD_TEST_TARGET="" uv run pytest tests/e2e; \
 	else \
 		echo "test-e2e: no Python scaffold yet; docs-only pass"; \
 	fi

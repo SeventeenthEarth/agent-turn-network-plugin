@@ -18,7 +18,7 @@ Core daemon/CLI authority lives in `../../kkachi-agent-network/docs/`. The plugi
 ## Required Makefile targets
 
 ```bash
-make test-prepare  # ruff format/check, mypy/typecheck, guardrails; no external resources
+make test-prepare  # ruff format/check, mypy/typecheck, guardrails; no live external resources
 make test-unit     # Python unit tests
 make test-int      # integration tests using fake daemon/Hermes/gateway only
 make test-e2e      # real external tests only in isolated test environment
@@ -26,4 +26,4 @@ make test          # sequential: prepare -> unit -> int -> e2e
 make check-core-contract  # verify companion core milestone/contract readiness
 ```
 
-Until Python scaffolding exists, Makefile code checks may skip with an explicit message, but docs guardrails must still run.
+Python package scaffolding now exists. Makefile code checks are active when `uv` and `pyproject.toml` are available; docs guardrails must always run.

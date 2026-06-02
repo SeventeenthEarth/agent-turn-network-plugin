@@ -28,11 +28,11 @@ Use `docs/07-core-compatibility.md` as the compatibility SOT. The short rule is:
 
 Epic ID: `SCAFF`
 
-Exit: `make test` and `make check-core-contract` pass without external resources. This epic may claim scaffold readiness only; do not claim installed/working Hermes integration until an install/plugin-load smoke test exists in `SKILL`.
+Exit: `make test` and `make check-core-contract` pass without live Hermes, Discord, daemon, or network resources. `make check-core-contract` intentionally requires the local companion core repository, or `KAN_CORE_REPO`, so protocol drift is detected. This epic may claim scaffold readiness only; do not claim installed/working Hermes integration until an install/plugin-load smoke test exists in `SKILL`.
 
 | Task ID | Task Title | Task Status | Task Description |
 |---|---|---|---|
-| SCAFF-1 | Initialize Python package layout | planned | Create `pyproject.toml`, `src/` package layout, package metadata, and a minimal importable module. |
+| SCAFF-1 | Initialize Python package layout | completed | Created `pyproject.toml`, `src/` package layout, package metadata, and a minimal importable module with local-only scaffold tests and review evidence. |
 | SCAFF-2 | Add plugin manifest and entrypoint | planned | Add `plugin.yaml` and a minimal plugin entrypoint that matches the documented plugin contract. |
 | SCAFF-3 | Establish Makefile target contract | planned | Add or tighten required targets including `test-prepare`, `check-core-contract`, `test`, and tiered test targets so unavailable tiers skip or fail safely. |
 | SCAFF-4 | Add docs and contract guardrails | planned | Keep docs guardrails executable and ensure core contract drift is detected without external resources. |

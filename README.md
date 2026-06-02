@@ -1,6 +1,6 @@
 # kkachi-agent-network-plugin
 
-`kkachi-agent-network-plugin` is the Python Hermes plugin adapter for KAN. It exposes Hermes tools/slash commands/skill guidance and optional Discord visible-surface helpers over the Go daemon in `../kkachi-agent-network`.
+`kkachi-agent-network-plugin` is the Python Hermes plugin adapter for KAN. It exposes Hermes tools/slash commands/skill guidance and optional Discord visible-surface helpers over the companion core Go daemon repository.
 
 The plugin is not the source of truth. `kkachi-agent-networkd` owns `channel.jsonl`, SQLite projections, locks, replay, cursors, and state transitions.
 
@@ -24,13 +24,13 @@ Key docs:
 
 ## Current state
 
-Documentation/scaffold stage. Python source scaffolding is not created yet, so Makefile code checks skip with explicit messages while docs guardrails still run.
+Scaffold stage. Python package layout, build configuration, package metadata, and tiered unit/integration/e2e test infrastructure are in place. Plugin manifest and entrypoint are pending in SCAFF-2.
 
 ## Test targets
 
 ```bash
-make test-prepare  # ruff/mypy/docs guardrails; no external resources
-make test-unit     # unit tests; currently docs-only scaffold pass
+make test-prepare  # ruff/mypy/docs guardrails; no live external resources
+make test-unit     # unit tests for Python package scaffold and later plugin code
 make test-int      # fake daemon/Hermes/Discord integration; no external resources
 make test-e2e      # isolated Hermes/Discord test environment only
 make test          # sequential all targets

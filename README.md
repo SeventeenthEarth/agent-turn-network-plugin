@@ -1,6 +1,6 @@
 # kkachi-agent-network-plugin
 
-`kkachi-agent-network-plugin` is the Python Hermes plugin adapter for KAN. In the current DAEMN-1 state it contains an import-safe Python daemon-client foundation exercised only through fake/injected transports; Hermes tools, slash commands, Discord helpers, and live daemon support remain unexposed future surfaces.
+`kkachi-agent-network-plugin` is the Python Hermes plugin adapter for KAN. In the current DAEMN-2 state it contains an import-safe Python daemon-client foundation exercised only through fake/injected transports; Hermes tools, slash commands, Discord helpers, and live daemon support remain unexposed future surfaces.
 
 The plugin is not the source of truth. `kkachi-agent-networkd` owns `channel.jsonl`, SQLite projections, locks, replay, cursors, and state transitions.
 
@@ -24,7 +24,7 @@ Key docs:
 
 ## Current state
 
-DAEMN-1 draft foundation stage. Python package layout, build configuration, package metadata, tiered unit/integration/e2e test infrastructure, plugin manifest, and minimal no-op Hermes directory entrypoint are in place. The daemon client foundation now supports status/version parsing, deterministic command envelopes, structured error decoding, and conformance-manifest guards through explicit fake/injected transports only. Real plugin tools, slash commands, install smoke tests, live daemon support, and live Hermes integration remain pending later tasks.
+DAEMN-2 fake/fixture parser stage. Python package layout, build configuration, package metadata, tiered unit/integration/e2e test infrastructure, plugin manifest, and minimal no-op Hermes directory entrypoint are in place. The daemon client foundation now supports status/version parsing, deterministic command envelopes, structured error decoding, stream tail frame parsing, diagnostics response decoding, and conformance-manifest guards through explicit fake/injected transports only. Stream tail reads require positive `stream_frame` feature compatibility evidence before the stream operation runs. Real plugin tools, slash commands, install smoke tests, live daemon support, and live Hermes integration remain pending later tasks.
 
 ## Test targets
 

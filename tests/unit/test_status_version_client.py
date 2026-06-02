@@ -1,16 +1,23 @@
 from __future__ import annotations
 
+from typing import cast
+
 import pytest
 
 from kkachi_agent_network_plugin.client import DaemonClient, StaticDaemonTransport
-from kkachi_agent_network_plugin.client.daemon import OP_STATUS_READ, OP_VERSION_READ
+from kkachi_agent_network_plugin.client.daemon import (
+    OP_STATUS_READ,
+    OP_STREAM_TAIL,
+    OP_VERSION_READ,
+)
 from kkachi_agent_network_plugin.errors import (
     DaemonCompatibilityError,
     DaemonProtocolError,
     DaemonTransportError,
 )
+from kkachi_agent_network_plugin.protocol import JsonObject
 
-BASE_RESPONSE = {
+BASE_RESPONSE: JsonObject = {
     "protocol_version": "kan-protocol-v1alpha0",
     "daemon_version": "0.0.0-fake",
     "feature_groups": ["version_features", "command_envelope", "structured_error"],
@@ -65,6 +72,21 @@ def test_missing_feature_group_fails_closed() -> None:
         client.read_version()
 
 
+def test_stream_tail_missing_stream_frame_feature_fails_closed_before_stream_operation() -> None:
+    transport = StaticDaemonTransport(
+        {
+            OP_VERSION_READ: dict(BASE_RESPONSE),
+            OP_STREAM_TAIL: {"protocol_version": "kan-protocol-v1alpha0", "frames": []},
+        }
+    )
+    client = DaemonClient(transport)
+
+    with pytest.raises(DaemonCompatibilityError, match="stream_frame"):
+        client.read_stream_tail(session_id="sess-unit-1", member="agent-1")
+
+    assert transport.requests == [(OP_VERSION_READ, {"protocol_version": "kan-protocol-v1alpha0"})]
+
+
 @pytest.mark.parametrize(
     "response",
     [
@@ -75,7 +97,7 @@ def test_missing_feature_group_fails_closed() -> None:
     ],
 )
 def test_malformed_version_data_fails_closed(response: object) -> None:
-    client = DaemonClient(StaticDaemonTransport({OP_VERSION_READ: response}))  # type: ignore[arg-type]
+    client = DaemonClient(StaticDaemonTransport({OP_VERSION_READ: cast(JsonObject, response)}))
 
     with pytest.raises(DaemonProtocolError):
         client.read_version()

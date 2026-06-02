@@ -1,4 +1,4 @@
-"""Import-safe daemon client foundation for DAEMN-1."""
+"""Import-safe daemon client foundation for explicit fake/injected transports."""
 
 from __future__ import annotations
 
@@ -13,19 +13,27 @@ from ..errors import (
 )
 from ..protocol import (
     REQUIRED_FEATURE_GROUPS,
+    STREAM_REQUIRED_FEATURE_GROUPS,
+    STREAM_TAIL_FRAME_LIMIT,
     SUPPORTED_PROTOCOL_VERSION,
     ClientMetadata,
     CommandEnvelope,
     CommandResult,
+    DaemonDiagnostics,
     DaemonStatus,
     DaemonVersion,
     JsonObject,
+    StreamTail,
 )
+from .diagnostics import parse_daemon_diagnostics
+from .stream import parse_stream_tail_response
 from .transport import DaemonTransport
 
 OP_STATUS_READ = "status.read"
 OP_VERSION_READ = "version.read"
 OP_COMMAND_SUBMIT = "command.submit"
+OP_STREAM_TAIL = "stream.tail"
+OP_DIAGNOSTICS_READ = "diagnostics.read"
 
 
 class DaemonClient:
@@ -46,6 +54,42 @@ class DaemonClient:
     def read_status(self) -> DaemonStatus:
         response = self._request(OP_STATUS_READ, _protocol_probe_body())
         return _parse_status(response)
+
+    def read_stream_tail(
+        self,
+        *,
+        session_id: str,
+        member: str,
+        since_cursor: str | None = None,
+        limit: int = 100,
+    ) -> StreamTail:
+        """Read stream tail frames through an explicit transport only.
+
+        Stream reads require a positive `stream_frame` feature-group probe
+        before the stream operation is attempted.
+        """
+
+        _parse_version(
+            self._request(OP_VERSION_READ, _protocol_probe_body()),
+            required_feature_groups=STREAM_REQUIRED_FEATURE_GROUPS,
+        )
+        body: JsonObject = {
+            "protocol_version": SUPPORTED_PROTOCOL_VERSION,
+            "session_id": _require_string(session_id, label="session_id"),
+            "member": _require_string(member, label="member"),
+            "limit": _require_stream_limit(limit),
+        }
+        if since_cursor is not None:
+            body["since_cursor"] = _require_string(since_cursor, label="since_cursor")
+        response = self._request(OP_STREAM_TAIL, body)
+        return parse_stream_tail_response(response)
+
+    def read_diagnostics(self, *, session_id: str | None = None) -> DaemonDiagnostics:
+        body: JsonObject = {"protocol_version": SUPPORTED_PROTOCOL_VERSION}
+        if session_id is not None:
+            body["session_id"] = _require_string(session_id, label="session_id")
+        response = self._request(OP_DIAGNOSTICS_READ, body)
+        return parse_daemon_diagnostics(response)
 
     def build_command_envelope(
         self,
@@ -101,7 +145,11 @@ def _require_bool(value: object, *, label: str) -> bool:
     return value
 
 
-def _feature_groups(value: object) -> tuple[str, ...]:
+def _feature_groups(
+    value: object,
+    *,
+    required_feature_groups: tuple[str, ...] = REQUIRED_FEATURE_GROUPS,
+) -> tuple[str, ...]:
     if not isinstance(value, list):
         raise DaemonProtocolError("daemon feature_groups must be a list")
     groups: list[str] = []
@@ -109,7 +157,7 @@ def _feature_groups(value: object) -> tuple[str, ...]:
         if not isinstance(item, str) or not item:
             raise DaemonProtocolError("daemon feature_groups entries must be non-empty strings")
         groups.append(item)
-    missing = sorted(set(REQUIRED_FEATURE_GROUPS).difference(groups))
+    missing = sorted(set(required_feature_groups).difference(groups))
     if missing:
         raise DaemonCompatibilityError(f"daemon missing required feature groups: {missing}")
     return tuple(groups)
@@ -124,12 +172,18 @@ def _require_supported_protocol(response: Mapping[str, object]) -> str:
     return protocol_version
 
 
-def _parse_version(response: Mapping[str, object]) -> DaemonVersion:
+def _parse_version(
+    response: Mapping[str, object],
+    *,
+    required_feature_groups: tuple[str, ...] = REQUIRED_FEATURE_GROUPS,
+) -> DaemonVersion:
     protocol_version = _require_supported_protocol(response)
     return DaemonVersion(
         protocol_version=protocol_version,
         daemon_version=_require_string(response.get("daemon_version"), label="daemon_version"),
-        feature_groups=_feature_groups(response.get("feature_groups")),
+        feature_groups=_feature_groups(
+            response.get("feature_groups"), required_feature_groups=required_feature_groups
+        ),
         live_readiness=_require_bool(response.get("live_readiness"), label="live_readiness"),
     )
 
@@ -163,9 +217,21 @@ def _parse_command_response(response: Mapping[str, object]) -> CommandResult:
     )
 
 
+def _require_stream_limit(value: object) -> int:
+    if isinstance(value, bool) or not isinstance(value, int):
+        raise DaemonProtocolError("stream tail limit must be an integer")
+    if value < 1 or value > STREAM_TAIL_FRAME_LIMIT:
+        raise DaemonProtocolError(
+            f"stream tail limit must be between 1 and {STREAM_TAIL_FRAME_LIMIT}"
+        )
+    return value
+
+
 __all__ = [
     "DaemonClient",
     "OP_COMMAND_SUBMIT",
+    "OP_DIAGNOSTICS_READ",
     "OP_STATUS_READ",
+    "OP_STREAM_TAIL",
     "OP_VERSION_READ",
 ]

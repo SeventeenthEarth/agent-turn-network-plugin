@@ -74,3 +74,9 @@ Plugin compatibility checks are safety gates. If the daemon reports an unsupport
 The client foundation parses both the plugin-local draft manifest and the core conformance manifest. `fixtures: []` is valid only when `stability` is explicitly draft/scaffold-like. Empty fixtures always force `live_readiness: false`, even if a malformed manifest tries to claim otherwise. Unsupported protocol versions, missing required feature groups, malformed fixture lists, or non-boolean live-readiness values fail closed before any future live operation can be considered safe.
 
 DAEMN-1 does not contact a live daemon. Status/version reads and command submission require an explicit fake or injected transport. No localhost, CLI, Hermes, Discord, KAB, auth, token, or gateway fallback is implemented.
+
+## DAEMN-2 stream and diagnostics guard
+
+DAEMN-2 adds fake/fixture-only stream tail parsing and diagnostics decoding. Stream tail reads are gated by a `version.read` compatibility probe that must report `stream_frame` in `feature_groups` before `stream.tail` is attempted. Missing `stream_frame`, unsupported protocol versions, malformed frames, malformed diagnostics payloads, unsupported frame/event schema versions, and oversized frame/check arrays fail closed.
+
+This does not change live readiness. Core conformance fixtures are still draft/manifest-only, and live stream transport remains blocked/deferred until stable core stream/status fixtures and endpoint declarations exist.

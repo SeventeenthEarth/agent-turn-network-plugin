@@ -1,4 +1,4 @@
-"""Protocol constants and import-safe daemon protocol models for DAEMN-1.
+"""Protocol constants and import-safe daemon protocol models.
 
 This module intentionally contains no network, daemon, Hermes, Discord, auth,
 token, or gateway initialization.  It only validates and serializes local data
@@ -22,6 +22,15 @@ REQUIRED_FEATURE_GROUPS: Final[tuple[str, ...]] = (
     "command_envelope",
     "structured_error",
 )
+STREAM_FRAME_FEATURE_GROUP: Final = "stream_frame"
+STREAM_REQUIRED_FEATURE_GROUPS: Final[tuple[str, ...]] = (
+    *REQUIRED_FEATURE_GROUPS,
+    STREAM_FRAME_FEATURE_GROUP,
+)
+STREAM_EVENT_SCHEMA_VERSION: Final = 1
+STREAM_FRAME_SCHEMA_VERSION: Final = 1
+STREAM_TAIL_FRAME_LIMIT: Final = 1000
+DIAGNOSTIC_CHECK_LIMIT: Final = 128
 
 type JsonValue = None | bool | int | float | str | list[JsonValue] | dict[str, JsonValue]
 type JsonObject = dict[str, JsonValue]
@@ -54,9 +63,8 @@ def _validate_json_value(value: object, *, label: str) -> None:
 def canonical_json(value: Mapping[str, JsonValue]) -> str:
     """Return deterministic JSON for protocol payloads.
 
-    The canonical form is stable across runs and ready for hashing/signing by
-    later idempotency layers.  It deliberately performs no implicit UUID/time
-    generation.
+    The canonical form is stable across runs for later hashing/signing layers.
+    It deliberately performs no implicit UUID/time generation.
     """
 
     return json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
@@ -175,18 +183,74 @@ class CommandResult:
     request_id: str | None
 
 
+@dataclass(frozen=True)
+class StreamEvent:
+    schema_version: int
+    event_id: str
+    session_id: str
+    type: str
+    sender: str
+    recipients: tuple[str, ...]
+    payload: JsonObject
+    details: JsonObject | None = None
+
+
+@dataclass(frozen=True)
+class StreamFrame:
+    cursor: str
+    is_replay: bool
+    event: StreamEvent
+    sequence: int | None = None
+    schema_version: int | None = None
+
+
+@dataclass(frozen=True)
+class StreamTail:
+    protocol_version: str
+    frames: tuple[StreamFrame, ...]
+    next_cursor: str | None = None
+
+
+@dataclass(frozen=True)
+class DiagnosticCheck:
+    name: str
+    ok: bool
+    message: str | None = None
+    details: JsonObject | None = None
+    error: object | None = None
+
+
+@dataclass(frozen=True)
+class DaemonDiagnostics:
+    protocol_version: str
+    daemon_version: str
+    live_readiness: bool
+    checks: tuple[DiagnosticCheck, ...]
+
+
 __all__ = [
     "CLIENT_NAME",
     "CLIENT_VERSION",
     "COMMAND_ENVELOPE_VERSION",
     "CommandEnvelope",
     "CommandResult",
+    "DIAGNOSTIC_CHECK_LIMIT",
     "DaemonStatus",
+    "DaemonDiagnostics",
     "DaemonVersion",
+    "DiagnosticCheck",
     "JsonObject",
     "JsonValue",
     "ProtocolValidationError",
     "REQUIRED_FEATURE_GROUPS",
+    "STREAM_EVENT_SCHEMA_VERSION",
+    "STREAM_FRAME_FEATURE_GROUP",
+    "STREAM_FRAME_SCHEMA_VERSION",
+    "STREAM_REQUIRED_FEATURE_GROUPS",
+    "STREAM_TAIL_FRAME_LIMIT",
     "SUPPORTED_PROTOCOL_VERSION",
+    "StreamEvent",
+    "StreamFrame",
+    "StreamTail",
     "canonical_json",
 ]

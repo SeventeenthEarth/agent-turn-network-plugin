@@ -2,7 +2,7 @@
 
 ## Purpose
 
-`kkachi-agent-network-plugin` is the Python Hermes plugin adapter for KAN. In the current DAEMN-1 draft it provides an import-safe Python daemon-client foundation for fake/injected transports. Hermes tool/slash-command/skill surfaces for the Go daemon in `kkachi-agent-network` are planned but not exposed by the manifest or entrypoint yet.
+`kkachi-agent-network-plugin` is the Python Hermes plugin adapter for KAN. In the current DAEMN-2 state it provides an import-safe Python daemon-client foundation for fake/injected transports, including fake-only status/version, command envelope, stream tail parsing, and diagnostics decoding. Hermes tool/slash-command/skill surfaces for the Go daemon in `kkachi-agent-network` are planned but not exposed by the manifest or entrypoint yet.
 
 The plugin is not the source of truth. `kkachi-agent-networkd` owns state, event append, locks, replay, projections, and lifecycle decisions.
 

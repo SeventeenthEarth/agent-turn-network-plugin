@@ -79,3 +79,14 @@ The DAEMN-1 implementation is import-safe and dependency-free:
 - `client/transport.py` provides the transport protocol and a static fake transport for tests.
 
 There is no live daemon, Hermes, Discord, KAB, auth, token, gateway, localhost, or CLI fallback in these modules.
+
+## DAEMN-2 client modules
+
+DAEMN-2 stays synchronous, import-safe, and dependency-free:
+
+- `client/stream.py` parses stream frames from mappings or NDJSON lines and parses fake `stream.tail` responses.
+- `client/diagnostics.py` decodes fake diagnostics responses and applies the existing sensitive-data redaction rules.
+- `client/daemon.py` exposes `read_stream_tail()` and `read_diagnostics()` through the existing explicit transport boundary. `read_stream_tail()` performs a `version.read` compatibility probe and requires `stream_frame` support before a stream operation runs.
+- `client/transport.py` deep-copies static fake responses so nested stream/diagnostics fixtures cannot leak mutation between calls.
+
+No async test dependency is introduced because DAEMN-2 does not implement live streaming, socket/SSE/WebSocket clients, or daemon discovery.

@@ -1,4 +1,4 @@
-"""Explicit DAEMN-1 transport boundary.
+"""Explicit daemon transport boundary.
 
 Only injected/fake transports are provided here.  There is intentionally no
 localhost, subprocess, Hermes, Discord, auth, token, or gateway fallback.
@@ -7,6 +7,7 @@ localhost, subprocess, Hermes, Discord, auth, token, or gateway fallback.
 from __future__ import annotations
 
 from collections.abc import Callable
+from copy import deepcopy
 from typing import Protocol
 
 from ..errors import DaemonTransportError
@@ -45,7 +46,7 @@ class StaticDaemonTransport:
             raise DaemonTransportError(f"fake daemon has no response for operation: {operation}")
         if callable(response):
             return response(body)
-        return dict(response)
+        return deepcopy(response)
 
 
 __all__ = ["DaemonTransport", "StaticDaemonTransport"]

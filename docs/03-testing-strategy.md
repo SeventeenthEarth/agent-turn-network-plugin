@@ -54,3 +54,14 @@ Once the Python scaffold exists, missing `uv` or `pyproject.toml` is a fail-safe
 ## DAEMN-1 fake-daemon coverage
 
 DAEMN-1 tests are fake-only. Unit tests cover canonical envelope serialization, explicit idempotency metadata, unsupported protocol failures, missing feature failures, malformed response failures, structured error preservation/redaction, and conformance manifest fail-closed behavior. Integration tests use `StaticDaemonTransport` to simulate status/version reads, command success, command conflict, and malformed command responses. E2E coverage is limited to proving that live-looking environment variables do not create a live daemon fallback.
+
+## DAEMN-2 fake stream and diagnostics coverage
+
+DAEMN-2 remains fake-only by default:
+
+- unit tests cover stream frame parsing from mappings and NDJSON lines, stream error-frame redaction, malformed frame/event/tail fail-closed cases, diagnostics decoding/redaction, malformed diagnostics fail-closed cases, and oversized frames/checks arrays;
+- unit and integration tests prove `read_stream_tail()` requires positive `stream_frame` feature compatibility before `stream.tail` succeeds;
+- integration tests use `StaticDaemonTransport` for stream tail and diagnostics success/malformed responses and assert the exact fake operation sequence;
+- E2E no-live-fallback tests include live-looking daemon/stream/auth/token environment variables and still require explicit fake/injected transport behavior.
+
+These tests do not open sockets, start a daemon, call the CLI, inspect Hermes runtime state, contact Discord/KAB/gateway/auth surfaces, or claim live stream readiness.

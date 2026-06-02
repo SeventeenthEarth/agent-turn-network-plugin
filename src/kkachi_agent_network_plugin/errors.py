@@ -38,7 +38,7 @@ REDACTED: Final = "[REDACTED]"
 
 
 class DaemonClientError(Exception):
-    """Base class for DAEMN-1 client failures."""
+    """Base class for daemon client failures."""
 
 
 class DaemonTransportError(DaemonClientError):
@@ -85,6 +85,14 @@ class DaemonErrorDetails:
 
 class DaemonCommandError(DaemonClientError):
     """Raised for structured daemon command failures."""
+
+    def __init__(self, details: DaemonErrorDetails) -> None:
+        super().__init__(f"{details.category}: {details.message}")
+        self.details = details
+
+
+class DaemonStreamError(DaemonClientError):
+    """Raised for structured daemon stream error frames."""
 
     def __init__(self, details: DaemonErrorDetails) -> None:
         super().__init__(f"{details.category}: {details.message}")
@@ -170,6 +178,7 @@ __all__ = [
     "DaemonCompatibilityError",
     "DaemonErrorDetails",
     "DaemonProtocolError",
+    "DaemonStreamError",
     "DaemonTransportError",
     "decode_daemon_error",
     "redact_sensitive",

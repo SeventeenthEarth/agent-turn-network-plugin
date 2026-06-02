@@ -46,3 +46,15 @@ The foundation currently covers:
 - conformance manifest parsing where `fixtures: []` is accepted only for draft/scaffold stability and always forces `live_readiness: false`.
 
 Live daemon support and plugin tool readiness remain blocked until stable core fixtures and endpoint declarations exist.
+
+## DAEMN-2 fake stream and diagnostics surfaces
+
+DAEMN-2 extends the same explicit-transport boundary with fake/fixture-only stream and diagnostics client surfaces:
+
+- `read_stream_tail()` probes `version.read` and requires positive `stream_frame` feature-group support before `stream.tail` is attempted;
+- stream frames parse from mappings or NDJSON lines shaped as `{cursor, is_replay, event}` with the full event envelope from the core protocol docs;
+- malformed stream data fails closed for invalid JSON, non-object roots, unknown explicit `kind`, missing/invalid cursor, invalid `is_replay`, missing/malformed event objects, unsupported frame/event schema versions, invalid optional sequence values, malformed payload/details objects, and oversized frame arrays;
+- diagnostics responses decode checks through explicit fake/injected responses and redact token/secret-like details with the DAEMN-1 redaction rules;
+- structured stream error frames and diagnostics errors preserve daemon categories and command/session/event/request identifiers while redacting sensitive diagnostics.
+
+This is parser and fake-daemon readiness only. Live stream transport, socket/SSE/WebSocket/local daemon discovery, Hermes tool exposure, and CLI fallback remain deferred.

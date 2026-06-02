@@ -26,4 +26,4 @@ make test          # sequential: prepare -> unit -> int -> e2e
 make check-core-contract  # verify companion core milestone/contract readiness
 ```
 
-Python package scaffolding now exists. Makefile code checks are active when `uv` and `pyproject.toml` are available; docs guardrails must always run.
+Python package scaffolding and the minimal Hermes plugin manifest/entrypoint now exist. Makefile code checks are active when `uv` and `pyproject.toml` are available; docs guardrails must always run.

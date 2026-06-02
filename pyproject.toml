@@ -14,6 +14,7 @@ dependencies = []
 dev = [
     "mypy>=1.16",
     "pytest>=8.4",
+    "pyyaml>=6.0.3",
     "ruff>=0.11",
 ]
 
@@ -28,7 +29,7 @@ testpaths = ["tests"]
 
 [tool.ruff]
 src = ["src", "tests"]
-include = ["src/**/*.py", "tests/**/*.py"]
+include = ["__init__.py", "src/**/*.py", "tests/**/*.py"]
 line-length = 100
 target-version = "py312"
 
@@ -38,5 +39,6 @@ select = ["E", "F", "I", "UP", "B", "SIM"]
 [tool.mypy]
 python_version = "3.12"
 strict = true
+explicit_package_bases = true
 mypy_path = "src"
 packages = ["kkachi_agent_network_plugin"]

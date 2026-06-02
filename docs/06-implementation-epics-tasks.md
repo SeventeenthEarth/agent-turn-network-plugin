@@ -33,7 +33,7 @@ Exit: `make test` and `make check-core-contract` pass without live Hermes, Disco
 | Task ID | Task Title | Task Status | Task Description |
 |---|---|---|---|
 | SCAFF-1 | Initialize Python package layout | completed | Created `pyproject.toml`, `src/` package layout, package metadata, and a minimal importable module with local-only scaffold tests and review evidence. |
-| SCAFF-2 | Add plugin manifest and entrypoint | planned | Add `plugin.yaml` and a minimal plugin entrypoint that matches the documented plugin contract. |
+| SCAFF-2 | Add plugin manifest and entrypoint | completed | Added `plugin.yaml` and a minimal no-op Hermes directory plugin entrypoint matching the documented plugin contract, with focused manifest/entrypoint tests and review evidence. |
 | SCAFF-3 | Establish Makefile target contract | planned | Add or tighten required targets including `test-prepare`, `check-core-contract`, `test`, and tiered test targets so unavailable tiers skip or fail safely. |
 | SCAFF-4 | Add docs and contract guardrails | planned | Keep docs guardrails executable and ensure core contract drift is detected without external resources. |
 | SCAFF-5 | Add bootstrap smoke tests | planned | Add smoke tests for package import, plugin manifest shape, entrypoint availability, and baseline target execution. |

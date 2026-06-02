@@ -24,7 +24,7 @@ Key docs:
 
 ## Current state
 
-Scaffold stage. Python package layout, build configuration, package metadata, and tiered unit/integration/e2e test infrastructure are in place. Plugin manifest and entrypoint are pending in SCAFF-2.
+Scaffold stage. Python package layout, build configuration, package metadata, tiered unit/integration/e2e test infrastructure, plugin manifest, and minimal no-op Hermes directory entrypoint are in place. Real plugin tools, daemon client behavior, slash commands, install smoke tests, and live Hermes integration remain pending later tasks.
 
 ## Test targets
 

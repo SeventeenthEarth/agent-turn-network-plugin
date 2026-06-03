@@ -1,10 +1,11 @@
 name: kkachi-agent-network-plugin
 version: 0.1.0
-description: "Hermes plugin adapter for kkachi-agent-network; HPLUG-1 exposes fake/injected read-only status and compatibility diagnostics tools."
+description: "Hermes plugin adapter for kkachi-agent-network; HPLUG-2 exposes fake/injected read-only status, compatibility diagnostics, and stream tail tools."
 author: "17번째 지구 Kkachi"
 kind: standalone
 provides_tools:
   - kan_daemon_status
   - kan_compatibility_diagnostics
+  - kan_stream_tail
 provides_hooks: []
 provides_commands: []

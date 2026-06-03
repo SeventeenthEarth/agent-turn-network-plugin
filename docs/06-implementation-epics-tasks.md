@@ -75,7 +75,7 @@ Exit: read-only Hermes plugin tools expose the daemon client safely through JSON
 | Task ID | Task Title | Task Status | Task Description |
 |---|---|---|---|
 | HPLUG-1 | Add read-only Hermes plugin tools | completed | Defined schemas and implemented fail-closed JSON-returning handlers for daemon status and compatibility diagnostics backed by DAEMN client fixtures. `kan_session_status` is deferred because core `session.status.read` fixture/protocol authority is not available. Closure review: Red `t_bd2965d2`, Orange `t_b18e05d5`, Gray `t_42ad6902` ACCEPT. |
-| HPLUG-2 | Add session status and stream/tail plugin tools | planned | Expose session status only after matching core fixture/protocol authority exists, and expose stream/tail read surfaces through plugin tools with fake-stream tests, malformed-frame protection, and operator docs. Block any live stream claim until matching core stream contracts are available. |
+| HPLUG-2 | Add session status and stream/tail plugin tools | completed | Implemented the fake/injected `kan_stream_tail` read-only plugin tool with stream-frame compatibility probing, malformed-frame protection, JSON-string fail-closed handler coverage, and operator docs. `kan_session_status` remains deferred because matching core `session.status.read` fixture/protocol authority is not available. Final closure reviews: Red `t_51358e60` ACCEPT, Orange `t_c6e67e69` ACCEPT, Gray `t_4fcec3cd` ACCEPT. |
 | HPLUG-3 | Document unsupported slash-command bindings | planned | Record slash-command support status, unsupported Hermes surfaces, and future binding requirements. Keep docs-only unless Hermes provides a real slash-command binding path during the task. |
 
 ## DELRV: Delegation and review tools

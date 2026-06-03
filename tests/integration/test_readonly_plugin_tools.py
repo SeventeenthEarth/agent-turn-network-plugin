@@ -5,7 +5,12 @@ from collections.abc import Callable
 from typing import Any
 
 from kkachi_agent_network_plugin.client import DaemonClient, StaticDaemonTransport
-from kkachi_agent_network_plugin.client.daemon import OP_DIAGNOSTICS_READ, OP_STATUS_READ
+from kkachi_agent_network_plugin.client.daemon import (
+    OP_DIAGNOSTICS_READ,
+    OP_STATUS_READ,
+    OP_STREAM_TAIL,
+    OP_VERSION_READ,
+)
 from kkachi_agent_network_plugin.tools import register_tools
 
 
@@ -25,6 +30,35 @@ def test_fake_hermes_context_invokes_registered_readonly_handlers() -> None:
                 "live_readiness": False,
                 "checks": [{"name": "structured_error", "ok": True}],
             },
+            OP_VERSION_READ: {
+                "protocol_version": "kan-protocol-v1alpha0",
+                "daemon_version": "0.0.0-fake",
+                "feature_groups": [
+                    "version_features",
+                    "command_envelope",
+                    "structured_error",
+                    "stream_frame",
+                ],
+                "live_readiness": False,
+            },
+            OP_STREAM_TAIL: {
+                "protocol_version": "kan-protocol-v1alpha0",
+                "frames": [
+                    {
+                        "cursor": "cur_1",
+                        "is_replay": False,
+                        "event": {
+                            "schema_version": 1,
+                            "event_id": "evt_1",
+                            "session_id": "sess-int",
+                            "type": "status",
+                            "from": "agent-1",
+                            "to": ["agent-2"],
+                            "payload": {},
+                        },
+                    }
+                ],
+            },
         }
     )
     ctx = FakePluginContext()
@@ -33,19 +67,37 @@ def test_fake_hermes_context_invokes_registered_readonly_handlers() -> None:
     assert [tool["name"] for tool in ctx.registered_tools] == [
         "kan_daemon_status",
         "kan_compatibility_diagnostics",
+        "kan_stream_tail",
     ]
     status = json.loads(ctx.handlers["kan_daemon_status"]({}))
     diagnostics = json.loads(
         ctx.handlers["kan_compatibility_diagnostics"]({"session_id": "sess-int"})
     )
+    stream_tail = json.loads(
+        ctx.handlers["kan_stream_tail"](
+            {"session_id": "sess-int", "member": "agent-1", "since_cursor": "cur_prev"}
+        )
+    )
 
     assert status["ok"] is True
     assert diagnostics["ok"] is True
+    assert stream_tail["ok"] is True
     assert transport.requests == [
         (OP_STATUS_READ, {"protocol_version": "kan-protocol-v1alpha0"}),
         (
             OP_DIAGNOSTICS_READ,
             {"protocol_version": "kan-protocol-v1alpha0", "session_id": "sess-int"},
+        ),
+        (OP_VERSION_READ, {"protocol_version": "kan-protocol-v1alpha0"}),
+        (
+            OP_STREAM_TAIL,
+            {
+                "protocol_version": "kan-protocol-v1alpha0",
+                "session_id": "sess-int",
+                "member": "agent-1",
+                "since_cursor": "cur_prev",
+                "limit": 100,
+            },
         ),
     ]
 

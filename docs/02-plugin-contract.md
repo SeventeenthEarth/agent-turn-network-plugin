@@ -47,14 +47,15 @@ The foundation currently covers:
 
 Live daemon support and plugin tool readiness remain blocked until stable core fixtures and endpoint declarations exist.
 
-## HPLUG-1 read-only Hermes tools
+## HPLUG-2 read-only Hermes tools
 
-HPLUG-1 exposes exactly two Hermes tool schemas through the root plugin entrypoint and `plugin.yaml`:
+HPLUG-2 exposes exactly three Hermes tool schemas through the root plugin entrypoint and `plugin.yaml`:
 
 - `kan_daemon_status` calls `DaemonClient.read_status()` through an explicit fake/injected client factory.
 - `kan_compatibility_diagnostics` calls `DaemonClient.read_diagnostics(session_id=...)` through an explicit fake/injected client factory.
+- `kan_stream_tail` calls `DaemonClient.read_stream_tail(session_id=..., member=..., since_cursor=..., limit=...)` through an explicit fake/injected client factory.
 
-Both handlers return JSON strings. Success envelopes include `ok: true`, `tool`, `protocol_version`, `live_readiness`, and `data`. Failure envelopes include `ok: false`, `tool`, `live_readiness: false`, and an operator-safe `error` object with `category`, `message`, and `retryable`.
+All handlers return JSON strings. Success envelopes include `ok: true`, `tool`, `protocol_version`, `live_readiness`, and `data`. Failure envelopes include `ok: false`, `tool`, `live_readiness: false`, and an operator-safe `error` object with `category`, `message`, and `retryable`.
 
 Failure mapping is fail-closed:
 
@@ -62,9 +63,11 @@ Failure mapping is fail-closed:
 - unsupported protocol or missing feature groups -> `compatibility`;
 - malformed daemon/fake payloads -> `protocol`;
 - invalid tool arguments -> `validation`;
-- structured daemon command errors preserve daemon category/ids after redaction.
+- structured daemon command/stream errors preserve daemon category/ids after redaction.
 
-`kan_session_status` is deliberately not exposed in HPLUG-1 because the core conformance manifest still has `fixtures: []` and no `session.status.read` authority. It remains deferred until core fixture/protocol evidence exists.
+`kan_stream_tail` success data contains `frames` and `next_cursor`. Each frame includes cursor/replay metadata and an event envelope; stream payload/details are redacted with the same sensitive-key rules before Hermes receives them.
+
+`kan_session_status` is deliberately not exposed in HPLUG-2 because the core conformance manifest still has `fixtures: []` and no `session.status.read` authority. It remains deferred until core fixture/protocol evidence exists.
 
 ## DAEMN-2 fake stream and diagnostics surfaces
 
@@ -76,4 +79,4 @@ DAEMN-2 extends the same explicit-transport boundary with fake/fixture-only stre
 - diagnostics responses decode checks through explicit fake/injected responses and redact token/secret-like details with the DAEMN-1 redaction rules;
 - structured stream error frames and diagnostics errors preserve daemon categories and command/session/event/request identifiers while redacting sensitive diagnostics.
 
-This is parser and fake-daemon readiness only. Live stream transport, socket/SSE/WebSocket/local daemon discovery, Hermes tool exposure, and CLI fallback remain deferred.
+This is parser and fake-daemon readiness only. HPLUG-2 maps the existing fake/injected stream tail client into a Hermes tool, but live stream transport, socket/SSE/WebSocket/local daemon discovery, session-status exposure, and CLI fallback remain deferred.

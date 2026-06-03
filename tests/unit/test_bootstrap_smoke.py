@@ -19,7 +19,7 @@ def load_bootstrap_smoke() -> ModuleType:
     return module
 
 
-def hplug1_register_lines(*, include_hook: bool = False) -> str:
+def hplug2_register_lines(*, include_hook: bool = False) -> str:
     hook_line = (
         '    ctx.register_hook("message.created", lambda event: event)\n' if include_hook else ""
     )
@@ -37,6 +37,12 @@ def hplug1_register_lines(*, include_hook: bool = False) -> str:
         '        schema={"name": "kan_compatibility_diagnostics"},\n'
         '        handler=lambda args: "{}",\n'
         "    )\n"
+        "    ctx.register_tool(\n"
+        '        name="kan_stream_tail",\n'
+        '        toolset="kkachi_agent_network",\n'
+        '        schema={"name": "kan_stream_tail"},\n'
+        '        handler=lambda args: "{}",\n'
+        "    )\n"
         f"{hook_line}"
     )
 
@@ -48,7 +54,9 @@ def write_bootstrap_fixture(
     package_metadata: str | None = None,
     manifest_text: str | None = None,
     manifest_version: str = "0.1.0",
-    provides_tools: str = '["kan_daemon_status", "kan_compatibility_diagnostics"]',
+    provides_tools: str = (
+        '["kan_daemon_status", "kan_compatibility_diagnostics", "kan_stream_tail"]'
+    ),
     provides_hooks: str = "[]",
     provides_commands: str = "[]",
     root_entrypoint: str | None = None,
@@ -80,7 +88,7 @@ def write_bootstrap_fixture(
         encoding="utf-8",
     )
     root.joinpath("__init__.py").write_text(
-        root_entrypoint or "from __future__ import annotations\n\n" + hplug1_register_lines(),
+        root_entrypoint or "from __future__ import annotations\n\n" + hplug2_register_lines(),
         encoding="utf-8",
     )
 
@@ -177,10 +185,10 @@ def test_bootstrap_smoke_rejects_entrypoint_that_registers_hooks(tmp_path: Path)
     write_bootstrap_fixture(
         tmp_path,
         root_entrypoint="from __future__ import annotations\n\n"
-        + hplug1_register_lines(include_hook=True),
+        + hplug2_register_lines(include_hook=True),
     )
 
-    with pytest.raises(SystemExit, match="entrypoint registered HPLUG-1-forbidden hooks"):
+    with pytest.raises(SystemExit, match="entrypoint registered HPLUG-2-forbidden hooks"):
         bootstrap_smoke.main(root=tmp_path)
 
 

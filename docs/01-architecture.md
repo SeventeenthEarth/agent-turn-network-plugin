@@ -12,8 +12,8 @@ kkachi-agent-network-plugin/
     client/              # explicit fake/injected daemon transport client
       stream.py          # stream frame / NDJSON / tail-response parser
       diagnostics.py     # diagnostics response decoder/redactor
-    schemas.py           # HPLUG-1 read-only Hermes tool schemas
-    tools.py             # HPLUG-1 JSON-string tool handlers
+    schemas.py           # HPLUG-2 read-only Hermes tool schemas
+    tools.py             # HPLUG-2 JSON-string tool handlers
     slash_commands/      # future optional slash-command wiring
     discord_surface/     # future send_message/gateway helper wrappers
     health.py            # future live daemon compatibility checks
@@ -35,11 +35,11 @@ DAEMN-2 fake/injected transport
        stream tail parser, or diagnostics decoder
     <- structured success/error/stream/diagnostics fixture
 
-HPLUG-1 Hermes read-only tool
+HPLUG-2 Hermes read-only tool
   -> plugin handler
     -> explicit fake/injected Python KAN daemon client
-      -> status.read or diagnostics.read fake transport operation
-      <- structured success/error/diagnostics fixture
+      -> status.read, diagnostics.read, or version.read + stream.tail fake transport operation
+      <- structured success/error/diagnostics/stream fixture
     -> plugin renders JSON-string success or fail-closed error
 
 Future write-capable Hermes tool/slash command
@@ -55,23 +55,24 @@ Future write-capable Hermes tool/slash command
 
 - The plugin calls the daemon protocol; it does not write core storage files.
 - The plugin returns daemon errors as authoritative failures.
-- HPLUG-1 handlers have no shell, localhost, Hermes, Discord, KAB, auth, token, gateway, or CLI fallback; callers must inject a client factory explicitly for success paths.
+- HPLUG-2 handlers have no shell, localhost, Hermes, Discord, KAB, auth, token, gateway, or CLI fallback; callers must inject a client factory explicitly for success paths.
 - Stream tail reads first require positive `stream_frame` feature-group evidence from the injected transport before the `stream.tail` operation is attempted.
 - The plugin must pass a compatibility health check before exposing any future write tools as safe to use.
 - Hermes restart/plugin reload must not affect daemon state.
 
 ## Hermes plugin surface
 
-The plugin currently registers exactly two read-only Hermes tools and no hooks or slash commands:
+The plugin currently registers exactly three read-only Hermes tools and no hooks or slash commands:
 
 - `kan_daemon_status` — fake/injected daemon status read;
-- `kan_compatibility_diagnostics` — fake/injected diagnostics read with redaction.
+- `kan_compatibility_diagnostics` — fake/injected diagnostics read with redaction;
+- `kan_stream_tail` — fake/injected retained stream tail read that requires positive `stream_frame` compatibility before `stream.tail`.
 
 Later tasks may provide:
 
 - `kan_session_status` after core `session.status.read` fixture/protocol authority exists;
 - delegation and council command tools matching implemented core commands;
-- stream/tail/cursor diagnostic tools;
+- cursor/session diagnostic tools;
 - transcript/export tools;
 - slash commands for common operations;
 - bundled skill guidance;

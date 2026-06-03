@@ -47,7 +47,7 @@ When required environment variables are absent, E2E tests must skip with a clear
 
 `make check-make-contract` verifies required single-line target declarations, `.PHONY` coverage, `make test` dependencies, preparation-gate dependencies, scoped tool commands, offline integration defaults, and isolated E2E environment variables. `make test-prepare` includes this check so target-contract drift is caught before tests run.
 
-`make check-bootstrap-smoke` verifies HPLUG-1 bootstrap readiness: package import/metadata through the `src/` layout, plugin manifest shape with exactly `kan_daemon_status` and `kan_compatibility_diagnostics`, explicit empty hook/command declarations, and root entrypoint registration of callable JSON-string handlers without hooks or slash commands.
+`make check-bootstrap-smoke` verifies HPLUG-2 bootstrap readiness: package import/metadata through the `src/` layout, plugin manifest shape with exactly `kan_daemon_status`, `kan_compatibility_diagnostics`, and `kan_stream_tail`, explicit empty hook/command declarations, and root entrypoint registration of callable JSON-string handlers without hooks or slash commands.
 
 Once the Python scaffold exists, missing `uv` or `pyproject.toml` is a fail-safe prerequisite error for code/test targets rather than a silent pass. Live external resources remain forbidden by default.
 
@@ -66,12 +66,12 @@ DAEMN-2 remains fake-only by default:
 
 These tests do not open sockets, start a daemon, call the CLI, inspect Hermes runtime state, contact Discord/KAB/gateway/auth surfaces, or claim live stream readiness.
 
-## HPLUG-1 read-only plugin tool coverage
+## HPLUG-2 read-only plugin tool coverage
 
-HPLUG-1 remains fake/injected-only by default:
+HPLUG-2 remains fake/injected-only by default:
 
-- unit tests cover exact tool schema names, manifest declarations, root entrypoint registration, JSON-string handler success envelopes, fail-closed handler errors, diagnostics redaction, and deferred absence of `kan_session_status`;
-- integration tests use a fake Hermes context and `StaticDaemonTransport` to invoke `kan_daemon_status` and `kan_compatibility_diagnostics`, asserting the exact `status.read` / `diagnostics.read` operation sequence;
-- E2E smoke tests run only with isolated `KAN_E2E=1` defaults and prove live-looking daemon/Discord/token environment variables do not create live fallback behavior.
+- unit tests cover exact tool schema names, manifest declarations, root entrypoint registration, JSON-string handler success envelopes, fail-closed handler errors, diagnostics/stream redaction, stream-tail argument validation, and deferred absence of `kan_session_status`;
+- integration tests use a fake Hermes context and `StaticDaemonTransport` to invoke `kan_daemon_status`, `kan_compatibility_diagnostics`, and `kan_stream_tail`, asserting the exact `status.read` / `diagnostics.read` / `version.read` + `stream.tail` operation sequence;
+- E2E smoke tests run only with isolated `KAN_E2E=1` defaults and prove live-looking daemon/stream/Discord/token environment variables do not create live fallback behavior.
 
-These tests do not claim installed-plugin loading, live daemon readiness, session-status support, stream/tail tool exposure, slash commands, write tools, or Discord helper readiness.
+These tests do not claim installed-plugin loading, live daemon readiness, session-status support, slash commands, write tools, or Discord helper readiness.

@@ -13,7 +13,7 @@ The core-side SOT is `../../kkachi-agent-network/docs/21-cross-repo-development.
 | Core repo | `../../kkachi-agent-network` |
 | Protocol version | `kan-protocol-v1alpha0` |
 | Fixture manifest | `../../kkachi-agent-network/testdata/conformance/manifest.json` |
-| Stability | draft, docs/scaffold/client-foundation plus fake/injected HPLUG-1 read-only status/diagnostics tools |
+| Stability | draft, docs/scaffold/client-foundation plus fake/injected HPLUG-2 read-only status/diagnostics/stream-tail tools |
 | Plugin behavior on mismatch | fail closed; no live fallback; affected tool returns `ok:false` |
 
 ## Compatibility checks
@@ -81,8 +81,8 @@ DAEMN-2 adds fake/fixture-only stream tail parsing and diagnostics decoding. Str
 
 This does not change live readiness. Core conformance fixtures are still draft/manifest-only, and live stream transport remains blocked/deferred until stable core stream/status fixtures and endpoint declarations exist.
 
-## HPLUG-1 tool compatibility guard
+## HPLUG-2 tool compatibility guard
 
-HPLUG-1 exposes `kan_daemon_status` and `kan_compatibility_diagnostics` only through explicit fake/injected client factories. Missing factories, unsupported protocol versions, missing feature groups, malformed status/diagnostics payloads, and sensitive diagnostics all fail closed or redact before returning JSON to Hermes.
+HPLUG-2 exposes `kan_daemon_status`, `kan_compatibility_diagnostics`, and `kan_stream_tail` only through explicit fake/injected client factories. Missing factories, unsupported protocol versions, missing feature groups, malformed status/diagnostics/stream payloads, and sensitive diagnostics/stream payloads all fail closed or redact before returning JSON to Hermes.
 
-`kan_session_status` is not exposed because no authoritative core fixture/protocol operation exists for `session.status.read`; this avoids plugin-owned state authority or schema-only overclaiming.
+`kan_stream_tail` inherits DAEMN-2 stream safety: it must receive positive `stream_frame` compatibility from `version.read` before `stream.tail` is attempted. `kan_session_status` is not exposed because no authoritative core fixture/protocol operation exists for `session.status.read`; this avoids plugin-owned state authority or schema-only overclaiming.

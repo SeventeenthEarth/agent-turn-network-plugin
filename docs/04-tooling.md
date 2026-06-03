@@ -36,7 +36,7 @@ kkachi-agent-network-plugin/
 
 `make check-make-contract` verifies required single-line target declarations, `.PHONY` coverage, `make test` dependencies, preparation-gate dependencies, scoped tool commands, offline integration defaults, and isolated E2E environment variables.
 
-`make check-bootstrap-smoke` verifies the package import/metadata, HPLUG-1 plugin manifest shape, exact read-only tool registrations, callable handler presence, and root directory-plugin entrypoint availability without registering hooks or slash commands.
+`make check-bootstrap-smoke` verifies the package import/metadata, HPLUG-2 plugin manifest shape, exact read-only tool registrations, callable handler presence, and root directory-plugin entrypoint availability without registering hooks or slash commands.
 
 `make test-unit` runs `pytest tests/unit`.
 
@@ -59,14 +59,14 @@ After the Python scaffold exists, `uv` and `pyproject.toml` are required for cod
 SCAFF-5 delivers a scaffold smoke gate for the first plugin scaffold PR. It proves:
 
 - the plugin package imports through the `src/` layout and exposes stable metadata;
-- the plugin manifest is a YAML mapping with the expected name, version, standalone kind, exact `provides_tools: [kan_daemon_status, kan_compatibility_diagnostics]`, and explicit empty `provides_hooks: []` / `provides_commands: []` declarations;
+- the plugin manifest is a YAML mapping with the expected name, version, standalone kind, exact `provides_tools: [kan_daemon_status, kan_compatibility_diagnostics, kan_stream_tail]`, and explicit empty `provides_hooks: []` / `provides_commands: []` declarations;
 - the root directory-plugin entrypoint exposes `register(ctx)`;
-- the HPLUG-1 entrypoint registers callable read-only JSON-string handlers and does not register hooks or commands;
+- the HPLUG-2 entrypoint registers callable read-only JSON-string handlers and does not register hooks or commands;
 - `make test` succeeds without live Hermes, Discord, daemon, or network resources.
 
-DAEMN-1 adds fake daemon compatibility probes for the client foundation only. Later HPLUG work owns full plugin-bootstrap checks that require real declared tool handlers and handler JSON-string return contracts. Those handler checks remain deferred until the handler contracts exist.
+DAEMN-1 added fake daemon compatibility probes for the client foundation only. At that stage, full plugin-bootstrap checks that required real declared tool handlers and handler JSON-string return contracts were deferred. HPLUG-2 now enables those checks for the three read-only JSON-string handlers.
 
-SCAFF-5 introduced smoke coverage in `scripts/check_bootstrap_smoke.py` and `tests/unit/test_bootstrap_smoke.py`; HPLUG-1 updates it for the two read-only tool registrations. This proves manifest/entrypoint/handler-contract readiness only; it does not claim installed Hermes plugin loading.
+SCAFF-5 introduced smoke coverage in `scripts/check_bootstrap_smoke.py` and `tests/unit/test_bootstrap_smoke.py`; HPLUG-2 updates it for the three read-only tool registrations. This proves manifest/entrypoint/handler-contract readiness only; it does not claim installed Hermes plugin loading.
 
 ## DAEMN-1 client modules
 
@@ -90,3 +90,12 @@ DAEMN-2 stays synchronous, import-safe, and dependency-free:
 - `client/transport.py` deep-copies static fake responses so nested stream/diagnostics fixtures cannot leak mutation between calls.
 
 No async test dependency is introduced because DAEMN-2 does not implement live streaming, socket/SSE/WebSocket clients, or daemon discovery.
+
+
+## HPLUG-2 plugin modules
+
+HPLUG-2 maps DAEMN-2 stream-tail support into the plugin layer without adding dependencies:
+
+- `schemas.py` declares `kan_stream_tail` with required `session_id`/`member`, optional `since_cursor`, bounded `limit`, and `additionalProperties: false`.
+- `tools.py` validates stream-tail args before transport, requires explicit `client_factory`, calls `read_stream_tail()`, serializes frames/events into JSON, and redacts sensitive payload/details values.
+- `plugin.yaml`, the root entrypoint, and bootstrap smoke tests now declare exactly three read-only tools and still no hooks or commands.

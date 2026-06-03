@@ -113,13 +113,13 @@ def require_manifest(root: Path, *, package_version: str) -> None:
     actual_hooks = manifest.get("provides_hooks")
     if actual_hooks != []:
         raise SystemExit(
-            f"manifest provides_hooks must remain explicit empty list for HPLUG-2: "
+            f"manifest provides_hooks must remain explicit empty list for HPLUG-2/HPLUG-3: "
             f"got {actual_hooks!r}"
         )
     actual_commands = manifest.get("provides_commands")
     if actual_commands != []:
         raise SystemExit(
-            f"manifest provides_commands must remain explicit empty list for HPLUG-2: "
+            f"manifest provides_commands must remain explicit empty list for HPLUG-2/HPLUG-3: "
             f"got {actual_commands!r}"
         )
 
@@ -154,9 +154,9 @@ def require_entrypoint(root: Path) -> None:
         if not callable(tool.get("handler")):
             raise SystemExit(f"entrypoint tool handler is not callable: {tool!r}")
     if context.registered_hooks:
-        raise SystemExit("entrypoint registered HPLUG-2-forbidden hooks")
+        raise SystemExit("entrypoint registered HPLUG-2/HPLUG-3-forbidden hooks")
     if context.registered_commands:
-        raise SystemExit("entrypoint registered HPLUG-2-forbidden commands")
+        raise SystemExit("entrypoint registered HPLUG-2/HPLUG-3-forbidden commands")
 
 
 class FakePluginContext:

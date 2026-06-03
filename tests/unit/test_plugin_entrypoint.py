@@ -10,15 +10,15 @@ import yaml  # type: ignore[import-untyped]
 ROOT = Path(__file__).resolve().parents[2]
 
 
-def test_plugin_manifest_declares_hplug2_readonly_surface() -> None:
+def test_plugin_manifest_declares_hplug3_readonly_surface() -> None:
     manifest = yaml.safe_load((ROOT / "plugin.yaml").read_text(encoding="utf-8"))
 
     assert manifest == {
         "name": "kkachi-agent-network-plugin",
         "version": "0.1.0",
         "description": (
-            "Hermes plugin adapter for kkachi-agent-network; HPLUG-2 exposes "
-            "fake/injected read-only status, compatibility diagnostics, and stream tail tools."
+            "Hermes plugin adapter for kkachi-agent-network; HPLUG-3 exposes "
+            "fake/injected read-only tools and documents unsupported KAN slash-command bindings."
         ),
         "author": "17번째 지구 Kkachi",
         "kind": "standalone",

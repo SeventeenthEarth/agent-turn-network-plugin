@@ -13,7 +13,7 @@ The core-side SOT is `../../kkachi-agent-network/docs/21-cross-repo-development.
 | Core repo | `../../kkachi-agent-network` |
 | Protocol version | `kan-protocol-v1alpha0` |
 | Fixture manifest | `../../kkachi-agent-network/testdata/conformance/manifest.json` |
-| Stability | draft, docs/scaffold/client-foundation plus fake/injected HPLUG-2 read-only status/diagnostics/stream-tail tools |
+| Stability | draft, docs/scaffold/client-foundation plus fake/injected HPLUG-2 read-only status/diagnostics/stream-tail tools and HPLUG-3 unsupported slash-command documentation |
 | Plugin behavior on mismatch | fail closed; no live fallback; affected tool returns `ok:false` |
 
 ## Compatibility checks
@@ -86,3 +86,7 @@ This does not change live readiness. Core conformance fixtures are still draft/m
 HPLUG-2 exposes `kan_daemon_status`, `kan_compatibility_diagnostics`, and `kan_stream_tail` only through explicit fake/injected client factories. Missing factories, unsupported protocol versions, missing feature groups, malformed status/diagnostics/stream payloads, and sensitive diagnostics/stream payloads all fail closed or redact before returning JSON to Hermes.
 
 `kan_stream_tail` inherits DAEMN-2 stream safety: it must receive positive `stream_frame` compatibility from `version.read` before `stream.tail` is attempted. `kan_session_status` is not exposed because no authoritative core fixture/protocol operation exists for `session.status.read`; this avoids plugin-owned state authority or schema-only overclaiming.
+
+## HPLUG-3 slash-command compatibility guard
+
+Hermes host slash-command support exists through `PluginContext.register_command`, but KAN plugin slash commands are not compatible-ready. Core KAN must first provide daemon command authority, protocol fixtures, idempotency/error semantics, and delivery-evidence rules for the specific operation. Until then, `provides_commands: []` is the correct manifest state and no slash-command handler should be registered. See `docs/08-unsupported-surfaces.md` for the operator-facing unsupported-surface matrix and future binding checklist.

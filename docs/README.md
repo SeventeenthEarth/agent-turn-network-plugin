@@ -14,6 +14,7 @@ Core daemon/CLI authority lives in `../../kkachi-agent-network/docs/`. The plugi
 6. `05-discord-surface.md` — Discord helper behavior and evidence rules
 7. `06-implementation-epics-tasks.md` — plugin implementation roadmap and task backlog
 8. `07-core-compatibility.md` — core protocol compatibility, milestone matrix, and cross-repo checks
+9. `08-unsupported-surfaces.md` — unsupported Hermes/plugin surfaces and future binding requirements
 
 ## Required Makefile targets
 

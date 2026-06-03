@@ -14,10 +14,9 @@ kkachi-agent-network-plugin/
       diagnostics.py     # diagnostics response decoder/redactor
     schemas.py           # HPLUG-2 read-only Hermes tool schemas
     tools.py             # HPLUG-2 JSON-string tool handlers
-    slash_commands/      # future optional slash-command wiring
+    slash_commands/      # future optional KAN slash-command wiring; unsupported in HPLUG-3
     discord_surface/     # future send_message/gateway helper wrappers
     health.py            # future live daemon compatibility checks
-  skills/kkachi-agent-network/SKILL.md
   tests/
     unit/
     integration/
@@ -62,7 +61,7 @@ Future write-capable Hermes tool/slash command
 
 ## Hermes plugin surface
 
-The plugin currently registers exactly three read-only Hermes tools and no hooks or slash commands:
+The plugin currently registers exactly three read-only Hermes tools and no hooks or KAN slash commands:
 
 - `kan_daemon_status` — fake/injected daemon status read;
 - `kan_compatibility_diagnostics` — fake/injected diagnostics read with redaction;
@@ -74,6 +73,8 @@ Later tasks may provide:
 - delegation and council command tools matching implemented core commands;
 - cursor/session diagnostic tools;
 - transcript/export tools;
-- slash commands for common operations;
+- KAN slash commands for common operations after core command contracts, conformance fixtures, safe handlers, manifest entries, and isolated Hermes/gateway smoke tests exist;
 - bundled skill guidance;
 - Discord surface helper tools that post visible messages through Hermes gateway/send_message and then record delivery evidence through daemon commands.
+
+Hermes host support is not the blocker: `PluginContext.register_command()` can register plugin slash commands. The blocker is KAN readiness. HPLUG-3 documents the unsupported boundary and keeps `provides_commands: []` until a later task has daemon-owned command semantics and fail-closed tests.

@@ -22,7 +22,6 @@ kkachi-agent-network-plugin/
   pyproject.toml
   plugin.yaml
   src/kkachi_agent_network_plugin/
-  skills/kkachi-agent-network/SKILL.md
   tests/unit/
   tests/integration/
   tests/e2e/
@@ -30,13 +29,25 @@ kkachi-agent-network-plugin/
   Makefile
 ```
 
+## KAS / KAH workflow hygiene
+
+Kan-plugin KAS workflow guidance is maintained in the installed Hermes profile KAS reference, not in a project-local `skills/` directory:
+
+```text
+/Users/draccoon/.hermes/profiles/hwangchung/skills/kkachi-orchestrate/references/kan-plugin-readiness-and-activation.md
+```
+
+Before a KAH/KAS task starts, refresh CodeGraph with `codegraph index <repo>` when `.codegraph/` exists. If the repository has source but no `.codegraph/`, run `codegraph init -i <repo>`. For a completely empty bootstrap project, record a deferred CodeGraph reason in `codegraph-evidence.md`, then run `codegraph init -i <repo>` after source files exist and before final verification.
+
+The project `.gitignore` must include `.kkachi/`, `.codegraph/`, `.omx/`, `.omc/`, and `.claude-octopus/` so local KAH, CodeGraph, and review-tool state stays out of source control. The `.kkachi-workflow.yaml` graph may opt into KAH checks with `codegraph.evidence` and `gitignore.contains_all` gates.
+
 ## Makefile targets
 
 `make test-prepare` runs formatting, lint, type checking, docs guardrails, the Makefile target-contract check, and the bootstrap smoke check.
 
 `make check-make-contract` verifies required single-line target declarations, `.PHONY` coverage, `make test` dependencies, preparation-gate dependencies, scoped tool commands, offline integration defaults, and isolated E2E environment variables.
 
-`make check-bootstrap-smoke` verifies the package import/metadata, HPLUG-2 plugin manifest shape, exact read-only tool registrations, callable handler presence, and root directory-plugin entrypoint availability without registering hooks or slash commands.
+`make check-bootstrap-smoke` verifies the package import/metadata, HPLUG-2/HPLUG-3 plugin manifest shape, exact read-only tool registrations, callable handler presence, and root directory-plugin entrypoint availability without registering hooks or KAN slash commands.
 
 `make test-unit` runs `pytest tests/unit`.
 
@@ -61,12 +72,12 @@ SCAFF-5 delivers a scaffold smoke gate for the first plugin scaffold PR. It prov
 - the plugin package imports through the `src/` layout and exposes stable metadata;
 - the plugin manifest is a YAML mapping with the expected name, version, standalone kind, exact `provides_tools: [kan_daemon_status, kan_compatibility_diagnostics, kan_stream_tail]`, and explicit empty `provides_hooks: []` / `provides_commands: []` declarations;
 - the root directory-plugin entrypoint exposes `register(ctx)`;
-- the HPLUG-2 entrypoint registers callable read-only JSON-string handlers and does not register hooks or commands;
+- the HPLUG-2/HPLUG-3 entrypoint registers callable read-only JSON-string handlers and does not register hooks or KAN slash commands;
 - `make test` succeeds without live Hermes, Discord, daemon, or network resources.
 
 DAEMN-1 added fake daemon compatibility probes for the client foundation only. At that stage, full plugin-bootstrap checks that required real declared tool handlers and handler JSON-string return contracts were deferred. HPLUG-2 now enables those checks for the three read-only JSON-string handlers.
 
-SCAFF-5 introduced smoke coverage in `scripts/check_bootstrap_smoke.py` and `tests/unit/test_bootstrap_smoke.py`; HPLUG-2 updates it for the three read-only tool registrations. This proves manifest/entrypoint/handler-contract readiness only; it does not claim installed Hermes plugin loading.
+SCAFF-5 introduced smoke coverage in `scripts/check_bootstrap_smoke.py` and `tests/unit/test_bootstrap_smoke.py`; HPLUG-2 updates it for the three read-only tool registrations, and HPLUG-3 keeps the explicit empty command surface while documenting future slash-command requirements. This proves manifest/entrypoint/handler-contract readiness only; it does not claim installed Hermes plugin loading.
 
 ## DAEMN-1 client modules
 

@@ -19,9 +19,14 @@ def load_bootstrap_smoke() -> ModuleType:
     return module
 
 
-def hplug2_register_lines(*, include_hook: bool = False) -> str:
+def hplug2_register_lines(*, include_hook: bool = False, include_command: bool = False) -> str:
     hook_line = (
         '    ctx.register_hook("message.created", lambda event: event)\n' if include_hook else ""
+    )
+    command_line = (
+        '    ctx.register_command("kan", lambda args: "{}", "unsupported", None)\n'
+        if include_command
+        else ""
     )
     return (
         "def register(ctx: object) -> None:\n"
@@ -44,6 +49,7 @@ def hplug2_register_lines(*, include_hook: bool = False) -> str:
         '        handler=lambda args: "{}",\n'
         "    )\n"
         f"{hook_line}"
+        f"{command_line}"
     )
 
 
@@ -188,7 +194,21 @@ def test_bootstrap_smoke_rejects_entrypoint_that_registers_hooks(tmp_path: Path)
         + hplug2_register_lines(include_hook=True),
     )
 
-    with pytest.raises(SystemExit, match="entrypoint registered HPLUG-2-forbidden hooks"):
+    with pytest.raises(SystemExit, match="entrypoint registered HPLUG-2/HPLUG-3-forbidden hooks"):
+        bootstrap_smoke.main(root=tmp_path)
+
+
+def test_bootstrap_smoke_rejects_entrypoint_that_registers_commands(tmp_path: Path) -> None:
+    bootstrap_smoke = load_bootstrap_smoke()
+    write_bootstrap_fixture(
+        tmp_path,
+        root_entrypoint="from __future__ import annotations\n\n"
+        + hplug2_register_lines(include_command=True),
+    )
+
+    with pytest.raises(
+        SystemExit, match="entrypoint registered HPLUG-2/HPLUG-3-forbidden commands"
+    ):
         bootstrap_smoke.main(root=tmp_path)
 
 

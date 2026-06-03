@@ -9,3 +9,6 @@ build/
 .DS_Store
 .kkachi/
 .codegraph/
+.omx/
+.omc/
+.claude-octopus/

@@ -11,6 +11,7 @@ The plugin may provide a Discord visible surface for KAN council sessions by usi
 - The plugin records delivery success/failure by sending typed commands to `kkachi-agent-networkd`.
 - The daemon must not require raw Discord tokens.
 - Free-form Discord replies are never parsed as authoritative lifecycle transitions.
+- KAN slash-command invocations are not supported in HPLUG-3. Native Discord slash commands may only become supported after a later task proves the Hermes command binding, KAN daemon command contract, delivery-evidence path, and isolated Discord test target.
 
 ## Testing
 

@@ -1,6 +1,6 @@
 # kkachi-agent-network-plugin
 
-`kkachi-agent-network-plugin` is the Python Hermes plugin adapter for KAN. In the current DAEMN-2 state it contains an import-safe Python daemon-client foundation exercised only through fake/injected transports; Hermes tools, slash commands, Discord helpers, and live daemon support remain unexposed future surfaces.
+`kkachi-agent-network-plugin` is the Python Hermes plugin adapter for KAN. In the current HPLUG-1 state it exposes two read-only Hermes plugin tools through fake/injected transports only: `kan_daemon_status` and `kan_compatibility_diagnostics`. The plugin still has no live daemon discovery, slash commands, Discord helpers, write tools, or installed-plugin smoke claim.
 
 The plugin is not the source of truth. `kkachi-agent-networkd` owns `channel.jsonl`, SQLite projections, locks, replay, cursors, and state transitions.
 
@@ -24,7 +24,7 @@ Key docs:
 
 ## Current state
 
-DAEMN-2 fake/fixture parser stage. Python package layout, build configuration, package metadata, tiered unit/integration/e2e test infrastructure, plugin manifest, and minimal no-op Hermes directory entrypoint are in place. The daemon client foundation now supports status/version parsing, deterministic command envelopes, structured error decoding, stream tail frame parsing, diagnostics response decoding, and conformance-manifest guards through explicit fake/injected transports only. Stream tail reads require positive `stream_frame` feature compatibility evidence before the stream operation runs. Real plugin tools, slash commands, install smoke tests, live daemon support, and live Hermes integration remain pending later tasks.
+HPLUG-1 fake/injected read-only plugin stage. Python package layout, build configuration, package metadata, tiered unit/integration/e2e tests, plugin manifest, root Hermes directory entrypoint, daemon status tool schema/handler, and compatibility diagnostics tool schema/handler are in place. Handlers return JSON strings, preserve fail-closed error categories, redact sensitive diagnostics, and require explicit fake/injected `DaemonClient` factories. `kan_session_status` is intentionally deferred until the core repo provides fixture/protocol authority for `session.status.read`. Stream/tail plugin tools, slash commands, install smoke tests, live daemon support, and live Hermes integration remain pending later tasks.
 
 ## Test targets
 

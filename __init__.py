@@ -1,21 +1,20 @@
 """Hermes directory plugin entrypoint for kkachi-agent-network-plugin.
 
-SCAFF-2 intentionally registers no tools or hooks. Real KAN tool schemas,
-handlers, slash commands, and daemon client behavior are introduced by later
-DAEMN/HPLUG tasks after their core contracts and tests exist.
+HPLUG-1 registers read-only status and compatibility diagnostics tools only.
+Handlers fail closed unless a fake or explicitly injected daemon client factory is
+supplied by tests/future plugin wiring; there is no live daemon, Hermes,
+Discord, auth, token, gateway, socket, or CLI fallback.
 """
 
 from __future__ import annotations
 
+from kkachi_agent_network_plugin.tools import ToolRegistrationContext, register_tools
 
-def register(ctx: object) -> None:
-    """Register the scaffold-only plugin surface with Hermes.
 
-    The context is accepted to match Hermes' directory-plugin contract, but the
-    scaffold performs no registration yet so the manifest does not overclaim
-    unavailable tools or hooks.
-    """
-    _ = ctx
+def register(ctx: ToolRegistrationContext) -> None:
+    """Register the HPLUG-1 read-only plugin surface with Hermes."""
+
+    register_tools(ctx)
 
 
 __all__ = ["register"]

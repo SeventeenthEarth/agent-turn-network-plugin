@@ -19,6 +19,28 @@ def load_bootstrap_smoke() -> ModuleType:
     return module
 
 
+def hplug1_register_lines(*, include_hook: bool = False) -> str:
+    hook_line = (
+        '    ctx.register_hook("message.created", lambda event: event)\n' if include_hook else ""
+    )
+    return (
+        "def register(ctx: object) -> None:\n"
+        "    ctx.register_tool(\n"
+        '        name="kan_daemon_status",\n'
+        '        toolset="kkachi_agent_network",\n'
+        '        schema={"name": "kan_daemon_status"},\n'
+        '        handler=lambda args: "{}",\n'
+        "    )\n"
+        "    ctx.register_tool(\n"
+        '        name="kan_compatibility_diagnostics",\n'
+        '        toolset="kkachi_agent_network",\n'
+        '        schema={"name": "kan_compatibility_diagnostics"},\n'
+        '        handler=lambda args: "{}",\n'
+        "    )\n"
+        f"{hook_line}"
+    )
+
+
 def write_bootstrap_fixture(
     root: Path,
     *,
@@ -26,8 +48,9 @@ def write_bootstrap_fixture(
     package_metadata: str | None = None,
     manifest_text: str | None = None,
     manifest_version: str = "0.1.0",
-    provides_tools: str = "[]",
+    provides_tools: str = '["kan_daemon_status", "kan_compatibility_diagnostics"]',
     provides_hooks: str = "[]",
+    provides_commands: str = "[]",
     root_entrypoint: str | None = None,
 ) -> None:
     package = root / "src" / "kkachi_agent_network_plugin"
@@ -52,14 +75,12 @@ def write_bootstrap_fixture(
         'author: "17번째 지구 Kkachi"\n'
         "kind: standalone\n"
         f"provides_tools: {provides_tools}\n"
-        f"provides_hooks: {provides_hooks}\n",
+        f"provides_hooks: {provides_hooks}\n"
+        f"provides_commands: {provides_commands}\n",
         encoding="utf-8",
     )
     root.joinpath("__init__.py").write_text(
-        root_entrypoint
-        or "from __future__ import annotations\n\n"
-        "def register(ctx: object) -> None:\n"
-        "    _ = ctx\n",
+        root_entrypoint or "from __future__ import annotations\n\n" + hplug1_register_lines(),
         encoding="utf-8",
     )
 
@@ -77,11 +98,11 @@ def test_bootstrap_smoke_accepts_minimal_scaffold_fixture(tmp_path: Path) -> Non
     bootstrap_smoke.main(root=tmp_path)
 
 
-def test_bootstrap_smoke_rejects_manifest_tool_overclaim(tmp_path: Path) -> None:
+def test_bootstrap_smoke_rejects_manifest_tool_mismatch(tmp_path: Path) -> None:
     bootstrap_smoke = load_bootstrap_smoke()
     write_bootstrap_fixture(tmp_path, provides_tools='["kan_status"]')
 
-    with pytest.raises(SystemExit, match="manifest provides_tools must remain explicit empty list"):
+    with pytest.raises(SystemExit, match="manifest provides_tools mismatch"):
         bootstrap_smoke.main(root=tmp_path)
 
 
@@ -90,6 +111,16 @@ def test_bootstrap_smoke_rejects_manifest_hook_overclaim(tmp_path: Path) -> None
     write_bootstrap_fixture(tmp_path, provides_hooks='["message.created"]')
 
     with pytest.raises(SystemExit, match="manifest provides_hooks must remain explicit empty list"):
+        bootstrap_smoke.main(root=tmp_path)
+
+
+def test_bootstrap_smoke_rejects_manifest_command_overclaim(tmp_path: Path) -> None:
+    bootstrap_smoke = load_bootstrap_smoke()
+    write_bootstrap_fixture(tmp_path, provides_commands='["/kan"]')
+
+    with pytest.raises(
+        SystemExit, match="manifest provides_commands must remain explicit empty list"
+    ):
         bootstrap_smoke.main(root=tmp_path)
 
 
@@ -124,7 +155,9 @@ def test_bootstrap_smoke_rejects_missing_package_metadata(tmp_path: Path) -> Non
         bootstrap_smoke.main(root=tmp_path)
 
 
-def test_bootstrap_smoke_rejects_entrypoint_that_registers_tools(tmp_path: Path) -> None:
+def test_bootstrap_smoke_rejects_entrypoint_that_registers_unexpected_tools(
+    tmp_path: Path,
+) -> None:
     bootstrap_smoke = load_bootstrap_smoke()
     write_bootstrap_fixture(
         tmp_path,
@@ -135,7 +168,7 @@ def test_bootstrap_smoke_rejects_entrypoint_that_registers_tools(tmp_path: Path)
         ),
     )
 
-    with pytest.raises(SystemExit, match="entrypoint registered scaffold-forbidden tools"):
+    with pytest.raises(SystemExit, match="entrypoint tool registration mismatch"):
         bootstrap_smoke.main(root=tmp_path)
 
 
@@ -143,14 +176,11 @@ def test_bootstrap_smoke_rejects_entrypoint_that_registers_hooks(tmp_path: Path)
     bootstrap_smoke = load_bootstrap_smoke()
     write_bootstrap_fixture(
         tmp_path,
-        root_entrypoint=(
-            "from __future__ import annotations\n\n"
-            "def register(ctx: object) -> None:\n"
-            '    ctx.register_hook("message.created", lambda event: event)\n'
-        ),
+        root_entrypoint="from __future__ import annotations\n\n"
+        + hplug1_register_lines(include_hook=True),
     )
 
-    with pytest.raises(SystemExit, match="entrypoint registered scaffold-forbidden hooks"):
+    with pytest.raises(SystemExit, match="entrypoint registered HPLUG-1-forbidden hooks"):
         bootstrap_smoke.main(root=tmp_path)
 
 

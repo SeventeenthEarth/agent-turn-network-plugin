@@ -13,8 +13,8 @@ The core-side SOT is `../../kkachi-agent-network/docs/21-cross-repo-development.
 | Core repo | `../../kkachi-agent-network` |
 | Protocol version | `kan-protocol-v1alpha0` |
 | Fixture manifest | `../../kkachi-agent-network/testdata/conformance/manifest.json` |
-| Stability | draft, docs/scaffold/client-foundation only |
-| Plugin behavior on mismatch | fail closed; no DAEMN-1 live fallback or tool exposure |
+| Stability | draft, docs/scaffold/client-foundation plus fake/injected HPLUG-1 read-only status/diagnostics tools |
+| Plugin behavior on mismatch | fail closed; no live fallback; affected tool returns `ok:false` |
 
 ## Compatibility checks
 
@@ -80,3 +80,9 @@ DAEMN-1 does not contact a live daemon. Status/version reads and command submiss
 DAEMN-2 adds fake/fixture-only stream tail parsing and diagnostics decoding. Stream tail reads are gated by a `version.read` compatibility probe that must report `stream_frame` in `feature_groups` before `stream.tail` is attempted. Missing `stream_frame`, unsupported protocol versions, malformed frames, malformed diagnostics payloads, unsupported frame/event schema versions, and oversized frame/check arrays fail closed.
 
 This does not change live readiness. Core conformance fixtures are still draft/manifest-only, and live stream transport remains blocked/deferred until stable core stream/status fixtures and endpoint declarations exist.
+
+## HPLUG-1 tool compatibility guard
+
+HPLUG-1 exposes `kan_daemon_status` and `kan_compatibility_diagnostics` only through explicit fake/injected client factories. Missing factories, unsupported protocol versions, missing feature groups, malformed status/diagnostics payloads, and sensitive diagnostics all fail closed or redact before returning JSON to Hermes.
+
+`kan_session_status` is not exposed because no authoritative core fixture/protocol operation exists for `session.status.read`; this avoids plugin-owned state authority or schema-only overclaiming.

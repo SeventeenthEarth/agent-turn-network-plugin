@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import os
 
 import pytest
@@ -10,6 +11,7 @@ from kkachi_agent_network_plugin.errors import (
     DaemonProtocolError,
     DaemonTransportError,
 )
+from kkachi_agent_network_plugin.tools import handle_daemon_status
 
 
 def test_e2e_no_live_daemon_fallback_even_when_live_env_names_exist(
@@ -50,3 +52,15 @@ def test_e2e_stream_tail_requires_version_probe_even_with_live_env_vars(
 
     with pytest.raises(DaemonTransportError, match="version.read"):
         client.read_stream_tail(session_id="sess-e2e", member="agent-1")
+
+
+def test_e2e_plugin_handler_does_not_use_live_env_fallback(monkeypatch: pytest.MonkeyPatch) -> None:
+    assert os.environ.get("KAN_E2E") == "1"
+    monkeypatch.setenv("KAN_DAEMON_URL", "http://127.0.0.1:65535")
+    monkeypatch.setenv("DISCORD_TOKEN", "fake-token")
+
+    result = json.loads(handle_daemon_status({}))
+
+    assert result["ok"] is False
+    assert result["error"]["category"] == "unavailable"
+    assert "client factory" in result["error"]["message"]

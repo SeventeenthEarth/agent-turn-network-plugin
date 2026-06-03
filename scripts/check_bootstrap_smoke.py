@@ -12,6 +12,7 @@ import yaml
 ROOT = Path(__file__).resolve().parents[1]
 PACKAGE_MODULE = "kkachi_agent_network_plugin"
 PACKAGE_NAME = "kkachi-agent-network-plugin"
+EXPECTED_TOOLS = ["kan_daemon_status", "kan_compatibility_diagnostics"]
 
 
 def load_module(path: Path, name: str, *, package_root: bool = False) -> ModuleType:
@@ -104,19 +105,22 @@ def require_manifest(root: Path, *, package_version: str) -> None:
     if actual_kind != "standalone":
         raise SystemExit(f"manifest kind mismatch: got {actual_kind!r}, expected 'standalone'")
 
-    # The scaffold contract intentionally requires explicit empty lists. Omitted
-    # fields are rejected so the manifest cannot silently overclaim later surfaces.
     actual_tools = manifest.get("provides_tools")
-    if actual_tools != []:
+    if actual_tools != EXPECTED_TOOLS:
         raise SystemExit(
-            f"manifest provides_tools must remain explicit empty list for scaffold smoke: "
-            f"got {actual_tools!r}"
+            f"manifest provides_tools mismatch: got {actual_tools!r}, expected {EXPECTED_TOOLS!r}"
         )
     actual_hooks = manifest.get("provides_hooks")
     if actual_hooks != []:
         raise SystemExit(
-            f"manifest provides_hooks must remain explicit empty list for scaffold smoke: "
+            f"manifest provides_hooks must remain explicit empty list for HPLUG-1: "
             f"got {actual_hooks!r}"
+        )
+    actual_commands = manifest.get("provides_commands")
+    if actual_commands != []:
+        raise SystemExit(
+            f"manifest provides_commands must remain explicit empty list for HPLUG-1: "
+            f"got {actual_commands!r}"
         )
 
 
@@ -136,12 +140,23 @@ def require_entrypoint(root: Path) -> None:
         register(context)
     except Exception as exc:
         raise SystemExit(f"entrypoint register failed during bootstrap smoke: {exc}") from exc
-    if context.registered_tools:
-        raise SystemExit("entrypoint registered scaffold-forbidden tools")
+    registered_tool_names = [tool.get("name") for tool in context.registered_tools]
+    if registered_tool_names != EXPECTED_TOOLS:
+        raise SystemExit(
+            f"entrypoint tool registration mismatch: got {registered_tool_names!r}, "
+            f"expected {EXPECTED_TOOLS!r}"
+        )
+    for tool in context.registered_tools:
+        if tool.get("toolset") != "kkachi_agent_network":
+            raise SystemExit(f"entrypoint toolset mismatch: {tool!r}")
+        if not isinstance(tool.get("schema"), dict):
+            raise SystemExit(f"entrypoint tool schema must be a mapping: {tool!r}")
+        if not callable(tool.get("handler")):
+            raise SystemExit(f"entrypoint tool handler is not callable: {tool!r}")
     if context.registered_hooks:
-        raise SystemExit("entrypoint registered scaffold-forbidden hooks")
+        raise SystemExit("entrypoint registered HPLUG-1-forbidden hooks")
     if context.registered_commands:
-        raise SystemExit("entrypoint registered scaffold-forbidden commands")
+        raise SystemExit("entrypoint registered HPLUG-1-forbidden commands")
 
 
 class FakePluginContext:

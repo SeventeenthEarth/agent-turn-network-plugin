@@ -1,18 +1,18 @@
-# Core Compatibility
+# Control Compatibility
 
 ## Goal
 
-Let `kkachi-agent-network-plugin` develop independently from the Go core while proving compatibility with the core daemon contract.
+Let `kkachi-agent-network-plugin` develop independently from the Go control runtime while proving compatibility with the control daemon contract.
 
-The core-side SOT is `../../kkachi-agent-network/docs/21-cross-repo-development.md`.
+The control-side SOT is `../../kkachi-agent-network-control/docs/21-cross-repo-development.md`.
 
-## Current supported core contract
+## Current supported control contract
 
 | Field | Value |
 | --- | --- |
-| Core repo | `../../kkachi-agent-network` |
+| Control repo | `../../kkachi-agent-network-control` |
 | Protocol version | `kan-protocol-v1alpha0` |
-| Fixture manifest | `../../kkachi-agent-network/testdata/conformance/manifest.json` |
+| Fixture manifest | `../../kkachi-agent-network-control/testdata/conformance/manifest.json` |
 | Stability | draft, docs/scaffold/client-foundation plus fake/injected HPLUG-2 read-only status/diagnostics/stream-tail tools and HPLUG-3 unsupported slash-command documentation |
 | Plugin behavior on mismatch | fail closed; no live fallback; affected tool returns `ok:false` |
 
@@ -32,11 +32,11 @@ The plugin must check:
 
 ### Fake daemon mode
 
-Default for unit and integration tests before the core daemon exists. Fake daemon responses are derived from the core conformance manifest and fixtures.
+Default for unit and integration tests before the control daemon exists. Fake daemon responses are derived from the control conformance manifest and fixtures.
 
 ### Fixture mode
 
-The Python client parses core fixtures without starting the real daemon. This is required for P1 and later.
+The Python client parses control fixtures without starting the real daemon. This is required for P1 and later.
 
 ### Future live local daemon mode
 
@@ -48,12 +48,12 @@ Uses disposable Hermes home/profile and dedicated Discord test target. It must n
 
 ## Plugin milestone matrix
 
-| Plugin milestone | Core milestone checked | Allowed before core implementation | Release-ready requires |
+| Plugin milestone | Control milestone checked | Allowed before control implementation | Release-ready requires |
 | --- | --- | --- | --- |
-| P0 Scaffold | core cross-repo docs and manifest exist | yes | root/docs/Makefile guardrails pass |
+| P0 Scaffold | control cross-repo docs and manifest exist | yes | root/docs/Makefile guardrails pass |
 | P1 Python daemon client | version/features, command envelope, stream/error fixtures | yes, fake daemon | conformance tests against fixture manifest |
-| P2 Hermes status/diagnostic tools | daemon status/session/stream fixtures | yes, fake daemon | implemented core status/stream contract |
-| P3 Delegation/review tools | delegation/review command fixtures | skeleton only | implemented core commands and fake+live-local tests |
+| P2 Hermes status/diagnostic tools | daemon status/session/stream fixtures | yes, fake daemon | implemented control status/stream contract |
+| P3 Delegation/review tools | delegation/review command fixtures | skeleton only | implemented control commands and fake+live-local tests |
 | P4 Council/Discord surface | council + delivery evidence fixtures | skeleton/fake only | isolated E2E target and delivery evidence contract |
 | P5 Skill/distribution | implemented command matrix | docs-only draft | compatibility matrix and install smoke tests |
 
@@ -63,7 +63,7 @@ Uses disposable Hermes home/profile and dedicated Discord test target. It must n
 make check-core-contract
 ```
 
-This command checks that the sibling core repo exposes the expected docs, manifest, protocol version, and reciprocal `check-plugin-contract` target.
+This command checks that the sibling control repo exposes the expected docs, manifest, protocol version, and reciprocal `check-plugin-contract` target.
 
 ## Fail-closed rule
 
@@ -71,7 +71,7 @@ Plugin compatibility checks are safety gates. If the daemon reports an unsupport
 
 ## DAEMN-1 manifest guard
 
-The client foundation parses both the plugin-local draft manifest and the core conformance manifest. `fixtures: []` is valid only when `stability` is explicitly draft/scaffold-like. Empty fixtures always force `live_readiness: false`, even if a malformed manifest tries to claim otherwise. Unsupported protocol versions, missing required feature groups, malformed fixture lists, or non-boolean live-readiness values fail closed before any future live operation can be considered safe.
+The client foundation parses both the plugin-local draft manifest and the control conformance manifest. `fixtures: []` is valid only when `stability` is explicitly draft/scaffold-like. Empty fixtures always force `live_readiness: false`, even if a malformed manifest tries to claim otherwise. Unsupported protocol versions, missing required feature groups, malformed fixture lists, or non-boolean live-readiness values fail closed before any future live operation can be considered safe.
 
 DAEMN-1 does not contact a live daemon. Status/version reads and command submission require an explicit fake or injected transport. No localhost, CLI, Hermes, Discord, KAB, auth, token, or gateway fallback is implemented.
 
@@ -79,14 +79,14 @@ DAEMN-1 does not contact a live daemon. Status/version reads and command submiss
 
 DAEMN-2 adds fake/fixture-only stream tail parsing and diagnostics decoding. Stream tail reads are gated by a `version.read` compatibility probe that must report `stream_frame` in `feature_groups` before `stream.tail` is attempted. Missing `stream_frame`, unsupported protocol versions, malformed frames, malformed diagnostics payloads, unsupported frame/event schema versions, and oversized frame/check arrays fail closed.
 
-This does not change live readiness. Core conformance fixtures are still draft/manifest-only, and live stream transport remains blocked/deferred until stable core stream/status fixtures and endpoint declarations exist.
+This does not change live readiness. Control conformance fixtures are still draft/manifest-only, and live stream transport remains blocked/deferred until stable control stream/status fixtures and endpoint declarations exist.
 
 ## HPLUG-2 tool compatibility guard
 
 HPLUG-2 exposes `kan_daemon_status`, `kan_compatibility_diagnostics`, and `kan_stream_tail` only through explicit fake/injected client factories. Missing factories, unsupported protocol versions, missing feature groups, malformed status/diagnostics/stream payloads, and sensitive diagnostics/stream payloads all fail closed or redact before returning JSON to Hermes.
 
-`kan_stream_tail` inherits DAEMN-2 stream safety: it must receive positive `stream_frame` compatibility from `version.read` before `stream.tail` is attempted. `kan_session_status` is not exposed because no authoritative core fixture/protocol operation exists for `session.status.read`; this avoids plugin-owned state authority or schema-only overclaiming.
+`kan_stream_tail` inherits DAEMN-2 stream safety: it must receive positive `stream_frame` compatibility from `version.read` before `stream.tail` is attempted. `kan_session_status` is not exposed because no authoritative control fixture/protocol operation exists for `session.status.read`; this avoids plugin-owned state authority or schema-only overclaiming.
 
 ## HPLUG-3 slash-command compatibility guard
 
-Hermes host slash-command support exists through `PluginContext.register_command`, but KAN plugin slash commands are not compatible-ready. Core KAN must first provide daemon command authority, protocol fixtures, idempotency/error semantics, and delivery-evidence rules for the specific operation. Until then, `provides_commands: []` is the correct manifest state and no slash-command handler should be registered. See `docs/08-unsupported-surfaces.md` for the operator-facing unsupported-surface matrix and future binding checklist.
+Hermes host slash-command support exists through `PluginContext.register_command`, but KAN plugin slash commands are not compatible-ready. Control KAN must first provide daemon command authority, protocol fixtures, idempotency/error semantics, and delivery-evidence rules for the specific operation. Until then, `provides_commands: []` is the correct manifest state and no slash-command handler should be registered. See `docs/08-unsupported-surfaces.md` for the operator-facing unsupported-surface matrix and future binding checklist.

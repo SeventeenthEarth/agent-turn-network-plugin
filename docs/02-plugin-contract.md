@@ -2,7 +2,7 @@
 
 ## Compatibility source
 
-The core repo owns protocol schemas and conformance fixtures. The plugin consumes that contract and proves compatibility through tests.
+The control repo owns protocol schemas and conformance fixtures. The plugin consumes that contract and proves compatibility through tests.
 
 Required compatibility checks:
 
@@ -30,13 +30,13 @@ Hermes tool handlers must:
 
 CLI fallback is not implemented in DAEMN-1. If a later task adds one, it must be explicit, argv-only, equivalent to an operator running `kkachi-agent-network` manually, and covered by tests.
 
-## Plugin/core equivalence
+## Plugin/control equivalence
 
-For every plugin write operation, there must be a documented equivalent daemon/CLI command in the core repo. Equivalence means same state transition, same validation, same idempotency behavior, and compatible structured errors.
+For every plugin write operation, there must be a documented equivalent daemon/CLI command in the control repo. Equivalence means same state transition, same validation, same idempotency behavior, and compatible structured errors.
 
 ## DAEMN-1 draft client foundation
 
-DAEMN-1 implements only the import-safe Python client foundation. It requires an explicit fake or injected transport and does not open localhost sockets, call the core CLI, inspect Hermes runtime state, touch Discord/gateway/auth/token data, or expose Hermes plugin tools.
+DAEMN-1 implements only the import-safe Python client foundation. It requires an explicit fake or injected transport and does not open localhost sockets, call the control CLI, inspect Hermes runtime state, touch Discord/gateway/auth/token data, or expose Hermes plugin tools.
 
 The foundation currently covers:
 
@@ -45,7 +45,7 @@ The foundation currently covers:
 - structured daemon error decoding that preserves command/session/event/request identifiers while redacting token/secret-like diagnostics;
 - conformance manifest parsing where `fixtures: []` is accepted only for draft/scaffold stability and always forces `live_readiness: false`.
 
-Live daemon support and plugin tool readiness remain blocked until stable core fixtures and endpoint declarations exist.
+Live daemon support and plugin tool readiness remain blocked until stable control fixtures and endpoint declarations exist.
 
 ## HPLUG-2 read-only Hermes tools
 
@@ -67,14 +67,14 @@ Failure mapping is fail-closed:
 
 `kan_stream_tail` success data contains `frames` and `next_cursor`. Each frame includes cursor/replay metadata and an event envelope; stream payload/details are redacted with the same sensitive-key rules before Hermes receives them.
 
-`kan_session_status` is deliberately not exposed in HPLUG-2 because the core conformance manifest still has `fixtures: []` and no `session.status.read` authority. It remains deferred until core fixture/protocol evidence exists.
+`kan_session_status` is deliberately not exposed in HPLUG-2 because the control conformance manifest still has `fixtures: []` and no `session.status.read` authority. It remains deferred until control fixture/protocol evidence exists.
 
 ## DAEMN-2 fake stream and diagnostics surfaces
 
 DAEMN-2 extends the same explicit-transport boundary with fake/fixture-only stream and diagnostics client surfaces:
 
 - `read_stream_tail()` probes `version.read` and requires positive `stream_frame` feature-group support before `stream.tail` is attempted;
-- stream frames parse from mappings or NDJSON lines shaped as `{cursor, is_replay, event}` with the full event envelope from the core protocol docs;
+- stream frames parse from mappings or NDJSON lines shaped as `{cursor, is_replay, event}` with the full event envelope from the control protocol docs;
 - malformed stream data fails closed for invalid JSON, non-object roots, unknown explicit `kind`, missing/invalid cursor, invalid `is_replay`, missing/malformed event objects, unsupported frame/event schema versions, invalid optional sequence values, malformed payload/details objects, and oversized frame arrays;
 - diagnostics responses decode checks through explicit fake/injected responses and redact token/secret-like details with the DAEMN-1 redaction rules;
 - structured stream error frames and diagnostics errors preserve daemon categories and command/session/event/request identifiers while redacting sensitive diagnostics.

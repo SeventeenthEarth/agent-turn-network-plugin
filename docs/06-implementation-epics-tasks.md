@@ -2,7 +2,7 @@
 
 ## Scope
 
-This roadmap and task backlog is for `kkachi-agent-network-plugin`. Core daemon/CLI roadmap lives in `../../kkachi-agent-network/docs/09-implementation-epics.md` and `../../kkachi-agent-network/docs/roadmap.md`.
+This roadmap and task backlog is for `kkachi-agent-network-plugin`. Control daemon/CLI roadmap lives in `../../kkachi-agent-network-control/docs/09-implementation-epics.md` and `../../kkachi-agent-network-control/docs/roadmap.md`.
 
 Task status values are limited to:
 
@@ -26,16 +26,16 @@ Each task should normally include:
 
 Split a task only when the dependency, approval gate, failure domain, or reviewer specialty is materially different. Do not split schema from handler, handler from error behavior, or client implementation from conformance coverage when those pieces are required to prove the same operator-facing capability.
 
-## Core dependency gates
+## Control dependency gates
 
-The plugin may develop ahead of `kkachi-agent-network` only when a task can be completed against docs, local fakes, or core conformance fixtures. When a task requires a core daemon capability, command, feature flag, fixture, or delivery-evidence path that does not exist yet, keep or move that task to `blocked` instead of inventing plugin-side fallback behavior.
+The plugin may develop ahead of `kkachi-agent-network-control` only when a task can be completed against docs, local fakes, or control conformance fixtures. When a task requires a control daemon capability, command, feature flag, fixture, or delivery-evidence path that does not exist yet, keep or move that task to `blocked` instead of inventing plugin-side fallback behavior.
 
 Use `docs/07-core-compatibility.md` as the compatibility SOT. The short rule is:
 
-- `SCAFF` can complete before core implementation because it is scaffold/docs/test harness work.
-- `DAEMN` can progress with fixtures and fake daemon responses; live/client completion waits for stable core protocol fixtures and daemon status/version surfaces.
-- `HPLUG` can define and test read-only plugin surfaces ahead of core only when matching fake responses or conformance fixtures exist; live tool completion waits for matching daemon/session/status/stream contracts.
-- `DELRV` waits for implemented core delegation/review commands before non-skeleton completion.
+- `SCAFF` can complete before control implementation because it is scaffold/docs/test harness work.
+- `DAEMN` can progress with fixtures and fake daemon responses; live/client completion waits for stable control protocol fixtures and daemon status/version surfaces.
+- `HPLUG` can define and test read-only plugin surfaces ahead of control only when matching fake responses or conformance fixtures exist; live tool completion waits for matching daemon/session/status/stream contracts.
+- `DELRV` waits for implemented control delegation/review commands before non-skeleton completion.
 - `CNDIS` waits for implemented council and delivery-evidence command paths before non-skeleton completion.
 - `SKILL` waits for a real plugin-load/install path and a completed compatibility matrix before release-ready completion.
 
@@ -43,7 +43,7 @@ Use `docs/07-core-compatibility.md` as the compatibility SOT. The short rule is:
 
 Epic ID: `SCAFF`
 
-Exit: `make test` and `make check-core-contract` pass without live Hermes, Discord, daemon, or network resources. `make check-core-contract` intentionally requires the local companion core repository, or `KAN_CORE_REPO`, so protocol drift is detected. This epic may claim scaffold readiness only; do not claim installed/working Hermes integration until an install/plugin-load smoke test exists in `SKILL`.
+Exit: `make test` and `make check-core-contract` pass without live Hermes, Discord, daemon, or network resources. `make check-core-contract` intentionally requires the local companion control repository, `KAN_CONTROL_REPO`, or legacy `KAN_CORE_REPO`, so protocol drift is detected. This epic may claim scaffold readiness only; do not claim installed/working Hermes integration until an install/plugin-load smoke test exists in `SKILL`.
 
 SCAFF intentionally used smaller tasks to validate KAH/KAS/Codex collaboration and review gates. Future epics use larger capability slices to reduce KAH overhead while preserving evidence, review, feedback, and approval gates.
 
@@ -63,7 +63,7 @@ Exit: the plugin has a fail-closed Python client foundation that can speak to th
 
 | Task ID | Task Title | Task Status | Task Description |
 |---|---|---|---|
-| DAEMN-1 | Implement core protocol client foundation | completed | Implemented status/version reads, command envelope serialization, structured daemon error decoding, idempotency-ready request metadata, and conformance/fake-daemon tests for the minimum safe daemon client. This is fake/injected transport only; live-client readiness remains blocked until stable core status/version fixtures and protocol declarations exist. |
+| DAEMN-1 | Implement control protocol client foundation | completed | Implemented status/version reads, command envelope serialization, structured daemon error decoding, idempotency-ready request metadata, and conformance/fake-daemon tests for the minimum safe daemon client. This is fake/injected transport only; live-client readiness remains blocked until stable control status/version fixtures and protocol declarations exist. |
 | DAEMN-2 | Implement stream and diagnostics client surfaces | completed | Implemented stream frame parsing, malformed-frame protection, diagnostics response decoding, and fake-daemon coverage for tail/read-only diagnostic paths. Stream tail reads require positive `stream_frame` feature compatibility before `stream.tail` runs. Live stream claims remain blocked until the core stream/status contracts exist. |
 
 ## HPLUG: Hermes plugin surface
@@ -82,12 +82,12 @@ Exit: read-only Hermes plugin tools expose the daemon client safely through JSON
 
 Epic ID: `DELRV`
 
-Exit: delegation and review plugin tools map to implemented core commands with idempotency, structured errors, fake-daemon coverage, and no plugin-owned state authority.
+Exit: delegation and review plugin tools map to implemented control commands with idempotency, structured errors, fake-daemon coverage, and no plugin-owned state authority.
 
 | Task ID | Task Title | Task Status | Task Description |
 |---|---|---|---|
-| DELRV-1 | Add delegation and review command tools | blocked | Map implemented core delegation/review commands into plugin tools, including request/response schemas, idempotency guarantees, duplicate handling, and error category preservation. Block until the corresponding core commands and fixtures exist. |
-| DELRV-2 | Add delegation/review failure coverage | blocked | Add fake-daemon integration tests for delegation/review success, retry, duplicate, permission/error, and malformed response cases. Block until core fixtures define the expected command and error shapes. |
+| DELRV-1 | Add delegation and review command tools | blocked | Map implemented control delegation/review commands into plugin tools, including request/response schemas, idempotency guarantees, duplicate handling, and error category preservation. Block until the corresponding control commands and fixtures exist. |
+| DELRV-2 | Add delegation/review failure coverage | blocked | Add fake-daemon integration tests for delegation/review success, retry, duplicate, permission/error, and malformed response cases. Block until control fixtures define the expected command and error shapes. |
 
 ## CNDIS: Council and Discord surface
 
@@ -97,7 +97,7 @@ Exit: council and delivery-evidence surfaces preserve core-owned state and evide
 
 | Task ID | Task Title | Task Status | Task Description |
 |---|---|---|---|
-| CNDIS-1 | Add council and delivery-evidence plugin tools | blocked | Expose implemented council command and delivery-evidence command surfaces through plugin tools while preserving daemon-owned logs, locks, cursors, and evidence transitions. Block until core council and delivery-evidence command paths exist. |
+| CNDIS-1 | Add council and delivery-evidence plugin tools | blocked | Expose implemented council command and delivery-evidence command surfaces through plugin tools while preserving daemon-owned logs, locks, cursors, and evidence transitions. Block until control council and delivery-evidence command paths exist. |
 | CNDIS-2 | Add Discord helper and isolated E2E coverage | planned | Add Hermes gateway/send_message boundary helpers and gated isolated E2E coverage that never defaults to the live Discord or current Hermes session. Any real Discord target remains explicit opt-in with visible test labels and cleanup guidance. |
 
 ## SKILL: Skill and distribution
@@ -109,4 +109,4 @@ Exit: the plugin has operator-facing skill/docs, compatibility matrix, troublesh
 | Task ID | Task Title | Task Status | Task Description |
 |---|---|---|---|
 | SKILL-1 | Add bundled KAN skill and operator docs | planned | Add the bundled KAN skill surface, install/enable/rollback documentation, and troubleshooting guide aligned with the plugin's actual capabilities and unsupported surfaces. |
-| SKILL-2 | Add compatibility matrix and plugin-load smoke | blocked | Record supported core protocol versions, Hermes expectations, unsupported/degraded combinations, and install/plugin-load smoke tests. Block release-ready completion until the real supported plugin-load path exists. |
+| SKILL-2 | Add compatibility matrix and plugin-load smoke | blocked | Record supported control protocol versions, Hermes expectations, unsupported/degraded combinations, and install/plugin-load smoke tests. Block release-ready completion until the real supported plugin-load path exists. |

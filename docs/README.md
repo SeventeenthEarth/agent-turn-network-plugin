@@ -2,7 +2,7 @@
 
 This directory is the source of truth for the **Python Hermes plugin adapter** for KAN.
 
-Core daemon/CLI authority lives in `../../kkachi-agent-network/docs/`. The plugin is not the source of truth. It provides Hermes-facing tools, slash commands, skill guidance, and Discord visible-surface helpers over the daemon protocol contract.
+Control daemon/CLI authority lives in `../../kkachi-agent-network-control/docs/`. The plugin is not the source of truth. It provides Hermes-facing tools, slash commands, skill guidance, and Discord visible-surface helpers over the daemon protocol contract.
 
 ## Documents
 
@@ -13,7 +13,7 @@ Core daemon/CLI authority lives in `../../kkachi-agent-network/docs/`. The plugi
 5. `04-tooling.md` — Python packaging and Makefile target contract
 6. `05-discord-surface.md` — Discord helper behavior and evidence rules
 7. `06-implementation-epics-tasks.md` — plugin implementation roadmap and task backlog
-8. `07-core-compatibility.md` — core protocol compatibility, milestone matrix, and cross-repo checks
+8. `07-core-compatibility.md` — control protocol compatibility, milestone matrix, and cross-repo checks
 9. `08-unsupported-surfaces.md` — unsupported Hermes/plugin surfaces and future binding requirements
 
 ## Required Makefile targets
@@ -24,7 +24,7 @@ make test-unit     # Python unit tests
 make test-int      # integration tests using fake daemon/Hermes/gateway only
 make test-e2e      # real external tests only in isolated test environment
 make test          # sequential: prepare -> unit -> int -> e2e
-make check-core-contract  # verify companion core milestone/contract readiness
+make check-core-contract  # verify companion control milestone/contract readiness
 ```
 
 Python package scaffolding and the minimal Hermes plugin manifest/entrypoint now exist. Makefile code checks are active when `uv` and `pyproject.toml` are available; docs guardrails must always run.

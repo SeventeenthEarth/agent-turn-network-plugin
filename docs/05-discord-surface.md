@@ -7,7 +7,7 @@ The plugin may provide a Discord visible surface for KAN council sessions by usi
 ## Rules
 
 - Discord message IDs, channel IDs, and thread IDs are evidence pointers.
-- `channel.jsonl` in the core daemon remains the SOT.
+- `channel.jsonl` in the control daemon remains the SOT.
 - The plugin records delivery success/failure by sending typed commands to `kkachi-agent-networkd`.
 - The daemon must not require raw Discord tokens.
 - Free-form Discord replies are never parsed as authoritative lifecycle transitions.

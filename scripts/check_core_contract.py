@@ -6,9 +6,10 @@ import re
 from pathlib import Path
 
 PLUGIN = Path(__file__).resolve().parents[1]
-CORE = Path(os.environ.get("KAN_CORE_REPO", PLUGIN.parent / "kkachi-agent-network")).resolve()
+CONTROL_REPO = os.environ.get("KAN_CONTROL_REPO") or os.environ.get("KAN_CORE_REPO")
+CORE = Path(CONTROL_REPO or PLUGIN.parent / "kkachi-agent-network-control").resolve()
 EXPECTED_PROTOCOL = "kan-protocol-v1alpha0"
-REQUIRED_CORE_PHRASES = [
+REQUIRED_CONTROL_PHRASES = [
     EXPECTED_PROTOCOL,
     "Milestone unlock matrix",
     "make check-plugin-contract",
@@ -31,27 +32,27 @@ def main(*, plugin: Path = PLUGIN, core: Path = CORE) -> None:
     core = core.resolve()
 
     manifest_path = core / "testdata" / "conformance" / "manifest.json"
-    manifest = json.loads(require(manifest_path, "core conformance manifest"))
+    manifest = json.loads(require(manifest_path, "control conformance manifest"))
     if manifest.get("protocol_version") != EXPECTED_PROTOCOL:
         raise SystemExit(
-            f"core manifest protocol mismatch: {manifest.get('protocol_version')} != {EXPECTED_PROTOCOL}"
+            f"control manifest protocol mismatch: {manifest.get('protocol_version')} != {EXPECTED_PROTOCOL}"
         )
 
-    cross = require(core / "docs" / "21-cross-repo-development.md", "core cross-repo development doc")
-    dist = require(core / "docs" / "11-distribution-and-plugin.md", "core distribution/plugin doc")
-    makefile = require(core / "Makefile", "core Makefile")
-    compat = require(plugin / "docs" / "07-core-compatibility.md", "plugin core compatibility doc")
+    cross = require(core / "docs" / "21-cross-repo-development.md", "control cross-repo development doc")
+    dist = require(core / "docs" / "11-distribution-and-plugin.md", "control distribution/plugin doc")
+    makefile = require(core / "Makefile", "control Makefile")
+    compat = require(plugin / "docs" / "07-core-compatibility.md", "plugin control compatibility doc")
 
-    for phrase in REQUIRED_CORE_PHRASES:
+    for phrase in REQUIRED_CONTROL_PHRASES:
         if phrase not in cross:
-            raise SystemExit(f"core cross-repo doc missing phrase: {phrase}")
+            raise SystemExit(f"control cross-repo doc missing phrase: {phrase}")
 
     if not has_make_target(makefile, "check-plugin-contract"):
-        raise SystemExit("core Makefile missing check-plugin-contract target")
+        raise SystemExit("control Makefile missing check-plugin-contract target")
     if EXPECTED_PROTOCOL not in compat:
         raise SystemExit("plugin compatibility doc does not declare expected protocol")
     if "conformance fixture version" not in dist and "conformance fixture" not in dist:
-        raise SystemExit("core distribution doc does not describe conformance fixture handoff")
+        raise SystemExit("control distribution doc does not describe conformance fixture handoff")
 
     print(f"check-core-contract: ok ({core})")
 

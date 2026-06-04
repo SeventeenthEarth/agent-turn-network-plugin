@@ -7,7 +7,7 @@ The plugin is not the source of truth. `kkachi-agent-networkd` owns `channel.jso
 ## Repository boundary
 
 - This repo: Python plugin code, fake/injected-transport daemon client foundation, Hermes tool schemas/handlers, future KAN slash-command bindings, bundled skill material, fake-daemon integration tests, isolated plugin E2E tests.
-- Core repo: Go daemon/CLI, protocol SOT, event/state/storage/security/recovery docs.
+- Control repo: `../kkachi-agent-network-control`, Go daemon/CLI, protocol SOT, event/state/storage/security/recovery docs.
 - Discord helper behavior must record delivery evidence back through typed daemon commands and must not move raw Discord tokens into the daemon.
 
 ## Documentation
@@ -25,7 +25,7 @@ Key docs:
 
 ## Current state
 
-HPLUG-3 fake/injected read-only plugin stage. Python package layout, build configuration, package metadata, tiered unit/integration/e2e tests, plugin manifest, root Hermes directory entrypoint, daemon status tool schema/handler, compatibility diagnostics tool schema/handler, and stream tail tool schema/handler are in place. Handlers return JSON strings, preserve fail-closed error categories, redact sensitive diagnostics/stream payloads, and require explicit fake/injected `DaemonClient` factories. `kan_stream_tail` preserves DAEMN-2 behavior by probing `version.read` for `stream_frame` compatibility before `stream.tail`. `kan_session_status` remains deferred until the core repo provides fixture/protocol authority for `session.status.read`. HPLUG-3 documents that Hermes can host plugin slash commands through `ctx.register_command`, while KAN slash commands remain unsupported until concrete daemon command contracts, fixtures, manifest entries, fail-closed handlers, and isolated install/gateway tests exist. Install smoke tests, live daemon support, and live Hermes integration remain pending later tasks.
+HPLUG-3 fake/injected read-only plugin stage. Python package layout, build configuration, package metadata, tiered unit/integration/e2e tests, plugin manifest, root Hermes directory entrypoint, daemon status tool schema/handler, compatibility diagnostics tool schema/handler, and stream tail tool schema/handler are in place. Handlers return JSON strings, preserve fail-closed error categories, redact sensitive diagnostics/stream payloads, and require explicit fake/injected `DaemonClient` factories. `kan_stream_tail` preserves DAEMN-2 behavior by probing `version.read` for `stream_frame` compatibility before `stream.tail`. `kan_session_status` remains deferred until the control repo provides fixture/protocol authority for `session.status.read`. HPLUG-3 documents that Hermes can host plugin slash commands through `ctx.register_command`, while KAN slash commands remain unsupported until concrete daemon command contracts, fixtures, manifest entries, fail-closed handlers, and isolated install/gateway tests exist. Install smoke tests, live daemon support, and live Hermes integration remain pending later tasks.
 
 ## Test targets
 
@@ -35,7 +35,7 @@ make test-unit     # unit tests for Python package scaffold and later plugin cod
 make test-int      # fake daemon/Hermes/Discord integration; no external resources
 make test-e2e      # isolated Hermes/Discord test environment only
 make test          # sequential all targets
-make check-core-contract  # verify companion core milestone/contract readiness
+make check-core-contract  # verify companion control milestone/contract readiness
 ```
 
 `make test-e2e` must never target the currently running Hermes or active Discord thread by default.

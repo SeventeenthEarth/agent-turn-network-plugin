@@ -19,7 +19,9 @@ PLUGIN_DRAFT_MANIFEST = (
     / "conformance"
     / "manifest.draft.json"
 )
-CORE_MANIFEST = ROOT.parent / "kkachi-agent-network" / "testdata" / "conformance" / "manifest.json"
+CORE_MANIFEST = (
+    ROOT.parent / "kkachi-agent-network-control" / "testdata" / "conformance" / "manifest.json"
+)
 
 BASE_MANIFEST = {
     "manifest_version": 1,

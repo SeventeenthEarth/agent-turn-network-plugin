@@ -68,7 +68,7 @@ def test_core_contract_rejects_protocol_mismatch(tmp_path: Path) -> None:
     check_core_contract = load_check_core_contract()
     plugin, core = write_contract_fixture(tmp_path, protocol="wrong-protocol")
 
-    with pytest.raises(SystemExit, match="core manifest protocol mismatch"):
+    with pytest.raises(SystemExit, match="control manifest protocol mismatch"):
         check_core_contract.main(plugin=plugin, core=core)
 
 
@@ -90,5 +90,5 @@ def test_core_contract_rejects_makefile_target_only_in_comment(tmp_path: Path) -
         encoding="utf-8",
     )
 
-    with pytest.raises(SystemExit, match="core Makefile missing check-plugin-contract target"):
+    with pytest.raises(SystemExit, match="control Makefile missing check-plugin-contract target"):
         check_core_contract.main(plugin=plugin, core=core)

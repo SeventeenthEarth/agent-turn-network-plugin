@@ -27,7 +27,7 @@ Integration tests use mock/fake/stub components only:
 - fake stream source with replay/follow frames;
 - fake Hermes tool invocation context;
 - fake `send_message`/gateway delivery function;
-- copied/plugin-local draft conformance manifests from the core repo.
+- copied/plugin-local draft conformance manifests from the control repo.
 
 Integration tests must not contact real Hermes, live Discord, or the current daemon.
 

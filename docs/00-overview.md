@@ -28,6 +28,6 @@ It does not own:
 - live daemon/Hermes/Discord/KAB/auth/token/gateway fallback behavior;
 - Hermes core changes.
 
-## Companion core repo
+## Companion control repo
 
-Core docs and protocol SOT live in `../../kkachi-agent-network/docs/`. The plugin should copy only the minimum compatibility summary needed for operators and should link back to the core docs for authority.
+Control docs and protocol SOT live in `../../kkachi-agent-network-control/docs/`. The plugin should copy only the minimum compatibility summary needed for operators and should link back to the control docs for authority.

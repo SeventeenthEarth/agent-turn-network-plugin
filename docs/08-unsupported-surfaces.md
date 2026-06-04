@@ -43,7 +43,7 @@ KAN plugin readiness boundary:
 Before a KAN slash command can be added, a later task must provide all of the following evidence:
 
 1. A concrete command name and no-conflict mapping against Hermes built-ins.
-2. A daemon-owned operation or CLI-equivalent command in the core KAN contract.
+2. A daemon-owned operation or CLI-equivalent command in the control KAN contract.
 3. Fake or conformance fixtures for success, validation failure, duplicate/idempotent request, permission or compatibility failure, and malformed daemon payloads.
 4. A fail-closed handler that returns a safe string/JSON response and never turns daemon failure into success.
 5. No live daemon, Hermes, Discord, gateway, auth, token, localhost, socket, or CLI fallback unless that fallback is explicitly designed, approved, and tested.
@@ -53,4 +53,4 @@ Before a KAN slash command can be added, a later task must provide all of the fo
 
 ## Non-goals for HPLUG-3
 
-HPLUG-3 is documentation only. It does not add command handlers, alter plugin registration code, change Hermes core, change KAN daemon/core behavior, or claim live install readiness.
+HPLUG-3 is documentation only. It does not add command handlers, alter plugin registration code, change Hermes core, change KAN daemon/control behavior, or claim live install readiness.

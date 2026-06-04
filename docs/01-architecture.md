@@ -52,7 +52,7 @@ Future write-capable Hermes tool/slash command
 
 ## Boundary rules
 
-- The plugin calls the daemon protocol; it does not write core storage files.
+- The plugin calls the daemon protocol; it does not write control storage files.
 - The plugin returns daemon errors as authoritative failures.
 - HPLUG-2 handlers have no shell, localhost, Hermes, Discord, KAB, auth, token, gateway, or CLI fallback; callers must inject a client factory explicitly for success paths.
 - Stream tail reads first require positive `stream_frame` feature-group evidence from the injected transport before the `stream.tail` operation is attempted.
@@ -69,11 +69,11 @@ The plugin currently registers exactly three read-only Hermes tools and no hooks
 
 Later tasks may provide:
 
-- `kan_session_status` after core `session.status.read` fixture/protocol authority exists;
-- delegation and council command tools matching implemented core commands;
+- `kan_session_status` after control `session.status.read` fixture/protocol authority exists;
+- delegation and council command tools matching implemented control commands;
 - cursor/session diagnostic tools;
 - transcript/export tools;
-- KAN slash commands for common operations after core command contracts, conformance fixtures, safe handlers, manifest entries, and isolated Hermes/gateway smoke tests exist;
+- KAN slash commands for common operations after control command contracts, conformance fixtures, safe handlers, manifest entries, and isolated Hermes/gateway smoke tests exist;
 - bundled skill guidance;
 - Discord surface helper tools that post visible messages through Hermes gateway/send_message and then record delivery evidence through daemon commands.
 

@@ -48,14 +48,14 @@ Uses disposable Hermes home/profile and dedicated Discord test target. It must n
 
 ## Plugin milestone matrix
 
-| Plugin milestone | Control milestone checked | Allowed before control implementation | Release-ready requires |
+| Plugin milestone | Control task gate checked | Allowed before control implementation | Release-ready requires |
 | --- | --- | --- | --- |
-| P0 Scaffold | control cross-repo docs and manifest exist | yes | root/docs/Makefile guardrails pass |
-| P1 Python daemon client | version/features, command envelope, stream/error fixtures | yes, fake daemon | conformance tests against fixture manifest |
-| P2 Hermes status/diagnostic tools | daemon status/session/stream fixtures | yes, fake daemon | implemented control status/stream contract |
-| P3 Delegation/review tools | delegation/review command fixtures | skeleton only | implemented control commands and fake+live-local tests |
-| P4 Council/Discord surface | council + delivery evidence fixtures | skeleton/fake only | isolated E2E target and delivery evidence contract |
-| P5 Skill/distribution | implemented command matrix | docs-only draft | compatibility matrix and install smoke tests |
+| P0 Scaffold | BOOTS-001 plus control cross-repo docs and manifest exist | yes | root/docs/Makefile guardrails pass |
+| P1 Python daemon client | DAEMN-002 version/features, command envelope, stream/error fixtures | yes, fake daemon | conformance tests against fixture manifest |
+| P2 Hermes status/diagnostic tools | DAEMN-002 daemon status/session/stream fixtures | yes, fake daemon | implemented control status/stream contract |
+| P3 Delegation/review tools | DELEG-001 delegation/review command fixtures | skeleton only | implemented control commands and fake+live-local tests |
+| P4 Council/Discord surface | COUNC-001 council fixtures plus DAEMN-002 delivery evidence fixtures | skeleton/fake only | isolated E2E target and delivery evidence contract |
+| P5 Skill/distribution | TRANS-001/RELIA-001 implemented command matrix and release-readiness evidence | docs-only draft | compatibility matrix and install smoke tests |
 
 ## Cross-repo check command
 

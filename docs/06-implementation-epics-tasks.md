@@ -30,14 +30,16 @@ Split a task only when the dependency, approval gate, failure domain, or reviewe
 
 The plugin may develop ahead of `kkachi-agent-network-control` only when a task can be completed against docs, local fakes, or control conformance fixtures. When a task requires a control daemon capability, command, feature flag, fixture, or delivery-evidence path that does not exist yet, keep or move that task to `blocked` instead of inventing plugin-side fallback behavior.
 
+Control roadmap IDs use five-letter uppercase epic slugs and `{EPIC}-001` task IDs. Plugin epic/task IDs are unchanged; the mappings below name only upstream control gates.
+
 Use `docs/07-core-compatibility.md` as the compatibility SOT. The short rule is:
 
-- `SCAFF` can complete before control implementation because it is scaffold/docs/test harness work.
-- `DAEMN` can progress with fixtures and fake daemon responses; live/client completion waits for stable control protocol fixtures and daemon status/version surfaces.
-- `HPLUG` can define and test read-only plugin surfaces ahead of control only when matching fake responses or conformance fixtures exist; live tool completion waits for matching daemon/session/status/stream contracts.
-- `DELRV` waits for implemented control delegation/review commands before non-skeleton completion.
-- `CNDIS` waits for implemented council and delivery-evidence command paths before non-skeleton completion.
-- `SKILL` waits for a real plugin-load/install path and a completed compatibility matrix before release-ready completion.
+- `SCAFF` can complete before control implementation because it is scaffold/docs/test harness work; its upstream scaffold gate is `BOOTS-001`.
+- `DAEMN` can progress with fixtures and fake daemon responses; live/client completion waits for stable control protocol fixtures and daemon status/version surfaces from `DAEMN-002`.
+- `HPLUG` can define and test read-only plugin surfaces ahead of control only when matching fake responses or conformance fixtures exist; live tool completion waits for matching daemon/session/status/stream contracts from `DAEMN-002`.
+- `DELRV` waits for implemented control delegation/review commands and fixtures from `DELEG-001` before non-skeleton completion.
+- `CNDIS` waits for implemented council paths from `COUNC-001` and delivery-evidence command paths from `DAEMN-002` before non-skeleton completion.
+- `SKILL` waits for a real plugin-load/install path plus completed compatibility/release evidence from `TRANS-001`/`RELIA-001` before release-ready completion.
 
 ## SCAFF: Scaffold
 
@@ -86,8 +88,8 @@ Exit: delegation and review plugin tools map to implemented control commands wit
 
 | Task ID | Task Title | Task Status | Task Description |
 |---|---|---|---|
-| DELRV-1 | Add delegation and review command tools | blocked | Map implemented control delegation/review commands into plugin tools, including request/response schemas, idempotency guarantees, duplicate handling, and error category preservation. Block until the corresponding control commands and fixtures exist. |
-| DELRV-2 | Add delegation/review failure coverage | blocked | Add fake-daemon integration tests for delegation/review success, retry, duplicate, permission/error, and malformed response cases. Block until control fixtures define the expected command and error shapes. |
+| DELRV-1 | Add delegation and review command tools | blocked | Map implemented control delegation/review commands into plugin tools, including request/response schemas, idempotency guarantees, duplicate handling, and error category preservation. Block until `DELEG-001` provides the corresponding control commands and fixtures. |
+| DELRV-2 | Add delegation/review failure coverage | blocked | Add fake-daemon integration tests for delegation/review success, retry, duplicate, permission/error, and malformed response cases. Block until `DELEG-001` fixtures define the expected command and error shapes. |
 
 ## CNDIS: Council and Discord surface
 
@@ -97,7 +99,7 @@ Exit: council and delivery-evidence surfaces preserve core-owned state and evide
 
 | Task ID | Task Title | Task Status | Task Description |
 |---|---|---|---|
-| CNDIS-1 | Add council and delivery-evidence plugin tools | blocked | Expose implemented council command and delivery-evidence command surfaces through plugin tools while preserving daemon-owned logs, locks, cursors, and evidence transitions. Block until control council and delivery-evidence command paths exist. |
+| CNDIS-1 | Add council and delivery-evidence plugin tools | blocked | Expose implemented council command and delivery-evidence command surfaces through plugin tools while preserving daemon-owned logs, locks, cursors, and evidence transitions. Block until `COUNC-001` council paths and `DAEMN-002` delivery-evidence command paths exist. |
 | CNDIS-2 | Add Discord helper and isolated E2E coverage | planned | Add Hermes gateway/send_message boundary helpers and gated isolated E2E coverage that never defaults to the live Discord or current Hermes session. Any real Discord target remains explicit opt-in with visible test labels and cleanup guidance. |
 
 ## SKILL: Skill and distribution
@@ -109,4 +111,4 @@ Exit: the plugin has operator-facing skill/docs, compatibility matrix, troublesh
 | Task ID | Task Title | Task Status | Task Description |
 |---|---|---|---|
 | SKILL-1 | Add bundled KAN skill and operator docs | planned | Add the bundled KAN skill surface, install/enable/rollback documentation, and troubleshooting guide aligned with the plugin's actual capabilities and unsupported surfaces. |
-| SKILL-2 | Add compatibility matrix and plugin-load smoke | blocked | Record supported control protocol versions, Hermes expectations, unsupported/degraded combinations, and install/plugin-load smoke tests. Block release-ready completion until the real supported plugin-load path exists. |
+| SKILL-2 | Add compatibility matrix and plugin-load smoke | blocked | Record supported control protocol versions, Hermes expectations, unsupported/degraded combinations, and install/plugin-load smoke tests. Block release-ready completion until the real supported plugin-load path exists and `TRANS-001`/`RELIA-001` compatibility evidence is available. |

@@ -54,6 +54,7 @@ TARGET_MARKERS = {
     "test-int": (("KAN_EXTERNAL=0", "offline integration default"),),
     "test-e2e": (
         ("KAN_E2E=1", "explicit e2e marker"),
+        ("KAN_DISCORD_E2E=0", "Discord E2E opt-in default off"),
         ("HERMES_TEST_HOME", "isolated Hermes test home override"),
         ('DISCORD_TEST_TARGET=""', "Discord target isolation"),
     ),

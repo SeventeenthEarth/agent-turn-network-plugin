@@ -8,6 +8,12 @@ from typing import Final, Protocol, cast
 
 from . import schemas
 from .client import DaemonClient
+from .discord_surface import (
+    DiscordMessageResult,
+    DiscordMessageTarget,
+    SendMessageFn,
+    send_discord_message,
+)
 from .errors import (
     DaemonCommandError,
     DaemonCompatibilityError,
@@ -284,10 +290,36 @@ def handle_delivery_evidence(
         return _json_error(tool, exc)
 
 
+def handle_discord_send_message(
+    args: object | None = None,
+    *,
+    send_message: SendMessageFn | None = None,
+    **_kwargs: object,
+) -> str:
+    """Send Discord message through an explicit injected sender or fail closed."""
+
+    tool = "kan_discord_send_message"
+    try:
+        payload = _coerce_args(args, allowed_keys=frozenset({"content", "target"}))
+        target_value = payload.get("target")
+        if not isinstance(target_value, Mapping):
+            raise ValueError("target must be a JSON object")
+        target = DiscordMessageTarget.from_mapping(target_value)
+        result = send_discord_message(
+            target=target,
+            content=_required_string(payload.get("content"), label="content"),
+            sender=send_message,
+        )
+        return _json_discord_success(tool, result)
+    except Exception as exc:  # noqa: BLE001 - Hermes handlers must never raise.
+        return _json_error(tool, exc)
+
+
 def register_tools(
     ctx: ToolRegistrationContext,
     *,
     client_factory: ClientFactory | None = None,
+    send_message: SendMessageFn | None = None,
 ) -> None:
     """Register fake/injected KAN tools with a Hermes plugin context."""
 
@@ -312,6 +344,9 @@ def register_tools(
     def delivery_evidence_handler(args: object | None = None) -> str:
         return handle_delivery_evidence(args, client_factory=client_factory)
 
+    def discord_send_message_handler(args: object | None = None) -> str:
+        return handle_discord_send_message(args, send_message=send_message)
+
     registrations: tuple[tuple[str, dict[str, object], Callable[[object | None], str]], ...]
     registrations = (
         ("kan_daemon_status", schemas.KAN_DAEMON_STATUS, daemon_status_handler),
@@ -325,6 +360,11 @@ def register_tools(
         ("kan_delegate_action", schemas.KAN_DELEGATE_ACTION, delegate_action_handler),
         ("kan_council_command", schemas.KAN_COUNCIL_COMMAND, council_command_handler),
         ("kan_delivery_evidence", schemas.KAN_DELIVERY_EVIDENCE, delivery_evidence_handler),
+        (
+            "kan_discord_send_message",
+            schemas.KAN_DISCORD_SEND_MESSAGE,
+            discord_send_message_handler,
+        ),
     )
     for name, schema, handler in registrations:
         ctx.register_tool(
@@ -581,6 +621,17 @@ def _json_command_success(tool: str, result: CommandResult) -> str:
     )
 
 
+def _json_discord_success(tool: str, result: DiscordMessageResult) -> str:
+    return _dumps(
+        {
+            "ok": True,
+            "tool": tool,
+            "live_readiness": False,
+            "data": result.to_mapping(),
+        }
+    )
+
+
 def _json_error(tool: str, exc: Exception) -> str:
     live_readiness = False
     return _dumps(
@@ -626,6 +677,7 @@ __all__ = [
     "handle_delegate_action",
     "handle_delegate_new",
     "handle_delivery_evidence",
+    "handle_discord_send_message",
     "handle_stream_tail",
     "register_tools",
 ]

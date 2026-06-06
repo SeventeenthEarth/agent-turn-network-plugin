@@ -72,6 +72,12 @@ def hplug_register_lines(*, include_hook: bool = False, include_command: bool = 
         '        schema={"name": "kan_delivery_evidence"},\n'
         '        handler=lambda args: "{}",\n'
         "    )\n"
+        "    ctx.register_tool(\n"
+        '        name="kan_discord_send_message",\n'
+        '        toolset="kkachi_agent_network",\n'
+        '        schema={"name": "kan_discord_send_message"},\n'
+        '        handler=lambda args: "{}",\n'
+        "    )\n"
         f"{hook_line}"
         f"{command_line}"
     )
@@ -87,7 +93,7 @@ def write_bootstrap_fixture(
     provides_tools: str = (
         '["kan_daemon_status", "kan_compatibility_diagnostics", "kan_stream_tail", '
         '"kan_delegate_new", "kan_delegate_action", "kan_council_command", '
-        '"kan_delivery_evidence"]'
+        '"kan_delivery_evidence", "kan_discord_send_message"]'
     ),
     provides_hooks: str = "[]",
     provides_commands: str = "[]",

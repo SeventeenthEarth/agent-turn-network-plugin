@@ -1008,3 +1008,132 @@ def test_cndis_malformed_daemon_response_fails_closed_after_feature_probe() -> N
     assert result["ok"] is False
     assert result["tool"] == "kan_delivery_evidence"
     assert result["error"]["category"] == "protocol"
+
+
+def _discord_tool_args(target: JsonObject | None = None) -> JsonObject:
+    return {
+        "content": "CNDIS-2 isolated Discord helper smoke",
+        "target": target
+        or {
+            "channel_id": "discord-test-channel-123",
+            "thread_id": "discord-test-thread-456",
+            "dedicated_test_target": True,
+            "label": "[Kkachi CNDIS-2 isolated E2E]",
+            "cleanup_hint": "Delete CNDIS-2 helper test messages.",
+        },
+    }
+
+
+def test_discord_send_message_handler_fails_closed_without_sender() -> None:
+    from kkachi_agent_network_plugin.tools import handle_discord_send_message
+
+    result = decode(handle_discord_send_message(_discord_tool_args()))
+
+    assert result["ok"] is False
+    assert result["tool"] == "kan_discord_send_message"
+    assert result["live_readiness"] is False
+    assert result["error"] == {
+        "category": "validation",
+        "message": "explicit Discord send_message sender is required; no live Discord fallback",
+        "retryable": False,
+    }
+
+
+def test_discord_send_message_handler_rejects_missing_target_before_sender() -> None:
+    from kkachi_agent_network_plugin.discord_surface import (
+        DiscordMessageResult,
+        DiscordMessageTarget,
+    )
+    from kkachi_agent_network_plugin.tools import handle_discord_send_message
+
+    sender_called = False
+
+    def sender(*, target: DiscordMessageTarget, content: str) -> DiscordMessageResult:
+        nonlocal sender_called
+        sender_called = True
+        _ = (target, content)
+        return DiscordMessageResult(message_id="msg-1", channel_id="discord-test-channel-123")
+
+    result = decode(handle_discord_send_message({"content": "hello"}, send_message=sender))
+
+    assert result["ok"] is False
+    assert result["error"] == {
+        "category": "validation",
+        "message": "target must be a JSON object",
+        "retryable": False,
+    }
+    assert sender_called is False
+
+
+def test_discord_send_message_handler_rejects_active_target_before_sender() -> None:
+    from kkachi_agent_network_plugin.discord_surface import (
+        DiscordMessageResult,
+        DiscordMessageTarget,
+    )
+    from kkachi_agent_network_plugin.tools import handle_discord_send_message
+
+    sender_called = False
+
+    def sender(*, target: DiscordMessageTarget, content: str) -> DiscordMessageResult:
+        nonlocal sender_called
+        sender_called = True
+        _ = (target, content)
+        return DiscordMessageResult(message_id="msg-1", channel_id=target.channel_id)
+
+    result = decode(
+        handle_discord_send_message(
+            _discord_tool_args(
+                {
+                    "channel_id": "current-thread",
+                    "dedicated_test_target": True,
+                    "label": "[Kkachi CNDIS-2 isolated E2E]",
+                    "cleanup_hint": "Delete CNDIS-2 helper test messages.",
+                }
+            ),
+            send_message=sender,
+        )
+    )
+
+    assert result["ok"] is False
+    assert result["error"]["category"] == "validation"
+    assert "current or active Discord targets" in result["error"]["message"]
+    assert sender_called is False
+
+
+def test_discord_send_message_handler_calls_fake_sender_once_on_valid_target() -> None:
+    from kkachi_agent_network_plugin.discord_surface import (
+        DiscordMessageResult,
+        DiscordMessageTarget,
+    )
+    from kkachi_agent_network_plugin.tools import handle_discord_send_message
+
+    calls: list[tuple[DiscordMessageTarget, str]] = []
+
+    def sender(*, target: DiscordMessageTarget, content: str) -> DiscordMessageResult:
+        calls.append((target, content))
+        return DiscordMessageResult(
+            message_id="msg-1",
+            channel_id=target.channel_id,
+            thread_id=target.thread_id,
+            message_ref="discord://discord-test-channel-123/discord-test-thread-456/msg-1",
+            label=target.label,
+            cleanup_hint=target.cleanup_hint,
+        )
+
+    result = decode(handle_discord_send_message(_discord_tool_args(), send_message=sender))
+
+    assert result == {
+        "ok": True,
+        "tool": "kan_discord_send_message",
+        "live_readiness": False,
+        "data": {
+            "message_id": "msg-1",
+            "channel_id": "discord-test-channel-123",
+            "thread_id": "discord-test-thread-456",
+            "message_ref": "discord://discord-test-channel-123/discord-test-thread-456/msg-1",
+            "label": "[Kkachi CNDIS-2 isolated E2E]",
+            "cleanup_hint": "Delete CNDIS-2 helper test messages.",
+        },
+    }
+    assert len(calls) == 1
+    assert calls[0][1] == "CNDIS-2 isolated Discord helper smoke"

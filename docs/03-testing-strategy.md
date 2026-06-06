@@ -47,7 +47,7 @@ When required environment variables are absent, E2E tests must skip with a clear
 
 `make check-make-contract` verifies required single-line target declarations, `.PHONY` coverage, `make test` dependencies, preparation-gate dependencies, scoped tool commands, offline integration defaults, and isolated E2E environment variables. `make test-prepare` includes this check so target-contract drift is caught before tests run.
 
-`make check-bootstrap-smoke` verifies fake/injected plugin bootstrap readiness: package import/metadata through the `src/` layout, plugin manifest shape with exactly `kan_daemon_status`, `kan_compatibility_diagnostics`, `kan_stream_tail`, `kan_delegate_new`, `kan_delegate_action`, `kan_council_command`, and `kan_delivery_evidence`, explicit empty hook/command declarations, and root entrypoint registration of callable JSON-string handlers without hooks or slash commands.
+`make check-bootstrap-smoke` verifies fake/injected plugin bootstrap readiness: package import/metadata through the `src/` layout, plugin manifest shape with exactly `kan_daemon_status`, `kan_compatibility_diagnostics`, `kan_stream_tail`, `kan_delegate_new`, `kan_delegate_action`, `kan_council_command`, `kan_delivery_evidence`, and `kan_discord_send_message`, explicit empty hook/command declarations, and root entrypoint registration of callable JSON-string handlers without hooks or slash commands.
 
 Once the Python scaffold exists, missing `uv` or `pyproject.toml` is a fail-safe prerequisite error for code/test targets rather than a silent pass. Live external resources remain forbidden by default.
 
@@ -95,7 +95,29 @@ CNDIS-1 remains fake/injected-only by default:
 - `tests/integration/test_cndis_conformance.py` consumes the sibling control conformance manifest and all COUNC-001 council request/response fixtures plus both delivery-evidence fixtures read-only, with fake transport only;
 - bootstrap and core-contract tests assert the two CNDIS tools are declared while `provides_hooks: []` and `provides_commands: []` remain unchanged and the control manifest includes `delivery_evidence` and `council.lifecycle`.
 
-These tests do not claim live daemon readiness, plugin-load readiness, slash commands, Discord helper/send_message readiness, gateway delivery, or plugin-owned council/delivery-evidence state.
+These tests do not claim live daemon readiness, plugin-load readiness, slash commands, live/default Discord helper/send_message readiness, gateway delivery, or plugin-owned council/delivery-evidence state.
+
+## CNDIS-2 injected Discord helper coverage
+
+CNDIS-2 remains fake/injected-only by default:
+
+- unit tests cover `discord_surface.py` target/result validation, missing sender failures,
+  missing or non-dedicated target failures, current/active target rejection, live opt-in
+  label/cleanup requirements, fake sender exactly-once behavior, and inert E2E config
+  parsing from a supplied mapping;
+- unit tool-handler tests cover `kan_discord_send_message` schema/handler fail-closed
+  behavior, missing target validation before sender, active-target rejection before
+  sender, and fake sender success envelopes;
+- integration tests use a fake Hermes context and injected sender to invoke
+  `kan_discord_send_message`, while separately proving the registered helper does not add
+  hooks or slash commands;
+- E2E tests run with `KAN_DISCORD_E2E=0` by default, set live-looking Discord/Hermes
+  environment names, and still prove no live post occurs without an injected sender.
+
+The opt-in E2E parser accepts a target only when `KAN_DISCORD_E2E=1`,
+`DISCORD_TEST_TARGET` names a dedicated test target, `DISCORD_TEST_DEDICATED=1`, and
+cleanup guidance is present. The accepted path asserts the visible label and cleanup
+guidance but still does not perform a live send by default.
 
 ## DELRV-2 delegation/review conformance coverage
 

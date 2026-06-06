@@ -53,7 +53,7 @@ The project `.gitignore` must include `.kkachi/`, `.codegraph/`, `.omx/`, `.omc/
 
 `make test-int` runs `pytest tests/integration` with fake daemon/Hermes/Discord components and `KAN_EXTERNAL=0`.
 
-`make test-e2e` runs `pytest tests/e2e` only against an isolated test environment. It must not touch the current running Hermes or Discord environment.
+`make test-e2e` runs `pytest tests/e2e` with `KAN_E2E=1`, `KAN_DISCORD_E2E=0`, an isolated `HERMES_HOME`, and an empty `DISCORD_TEST_TARGET` by default. It must not touch the current running Hermes or Discord environment.
 
 `make test` depends on `test-prepare`, `test-unit`, `test-int`, and `test-e2e`; the preparation gate must complete before the test tiers under normal serial `make`.
 
@@ -70,14 +70,14 @@ After the Python scaffold exists, `uv` and `pyproject.toml` are required for cod
 SCAFF-5 delivers a scaffold smoke gate for the first plugin scaffold PR. It proves:
 
 - the plugin package imports through the `src/` layout and exposes stable metadata;
-- the plugin manifest is a YAML mapping with the expected name, version, standalone kind, exact `provides_tools: [kan_daemon_status, kan_compatibility_diagnostics, kan_stream_tail, kan_delegate_new, kan_delegate_action, kan_council_command, kan_delivery_evidence]`, and explicit empty `provides_hooks: []` / `provides_commands: []` declarations;
+- the plugin manifest is a YAML mapping with the expected name, version, standalone kind, exact `provides_tools: [kan_daemon_status, kan_compatibility_diagnostics, kan_stream_tail, kan_delegate_new, kan_delegate_action, kan_council_command, kan_delivery_evidence, kan_discord_send_message]`, and explicit empty `provides_hooks: []` / `provides_commands: []` declarations;
 - the root directory-plugin entrypoint exposes `register(ctx)`;
 - the entrypoint registers callable fake/injected JSON-string handlers and does not register hooks or KAN slash commands;
 - `make test` succeeds without live Hermes, Discord, daemon, or network resources.
 
 DAEMN-1 added fake daemon compatibility probes for the client foundation only. At that stage, full plugin-bootstrap checks that required real declared tool handlers and handler JSON-string return contracts were deferred. HPLUG-2 now enables those checks for the three read-only JSON-string handlers.
 
-SCAFF-5 introduced smoke coverage in `scripts/check_bootstrap_smoke.py` and `tests/unit/test_bootstrap_smoke.py`; HPLUG-2 updated it for the three read-only tool registrations, DELRV-1 extended it for the two delegation/review command-envelope tools, and CNDIS-1 extends it for the council and delivery-evidence command tools while keeping the explicit empty slash-command surface. This proves manifest/entrypoint/handler-contract readiness only; it does not claim installed Hermes plugin loading.
+SCAFF-5 introduced smoke coverage in `scripts/check_bootstrap_smoke.py` and `tests/unit/test_bootstrap_smoke.py`; HPLUG-2 updated it for the three read-only tool registrations, DELRV-1 extended it for the two delegation/review command-envelope tools, CNDIS-1 extended it for the council and delivery-evidence command tools, and CNDIS-2 extends it for the injected-only Discord helper while keeping the explicit empty slash-command surface. This proves manifest/entrypoint/handler-contract readiness only; it does not claim installed Hermes plugin loading.
 
 ## DAEMN-1 client modules
 
@@ -133,3 +133,21 @@ CNDIS-1 maps exact daemon-owned council and delivery-evidence command names into
 - `plugin.yaml`, the root entrypoint, and bootstrap smoke tests declare the two CNDIS-1 tools while preserving `provides_hooks: []` and `provides_commands: []`.
 
 No live daemon discovery, localhost/socket transport, Hermes/Discord/gateway/auth/token/KAB access, CLI fallback, plugin-owned logs/locks/cursors, council lifecycle/consensus state, idempotency/dedupe, or delivery-evidence transitions are introduced.
+
+## CNDIS-2 Discord helper module
+
+CNDIS-2 adds `discord_surface.py` and the `kan_discord_send_message` schema/handler
+without adding dependencies:
+
+- `discord_surface.py` defines typed target/result objects, a `SendMessageFn` protocol,
+  `send_discord_message(...)`, and inert `e2e_config_from_env(...)` parsing from an
+  explicitly supplied mapping;
+- `schemas.py` declares a target-gated `kan_discord_send_message` tool schema;
+- `tools.py` requires an injected sender and renders fail-closed JSON when the sender,
+  target, dedicated-test marker, visible live label, or cleanup hint is missing;
+- `plugin.yaml`, the root entrypoint, and bootstrap smoke tests declare the helper tool
+  while preserving `provides_hooks: []` and `provides_commands: []`.
+
+No environment read, live Discord discovery, Hermes current-session lookup, gateway/auth
+token usage, native Discord slash command, KAN slash command, or daemon delivery-evidence
+transition is introduced.

@@ -100,7 +100,7 @@ Exit: council and delivery-evidence surfaces preserve core-owned state and evide
 | Task ID | Task Title | Task Status | Task Description |
 |---|---|---|---|
 | CNDIS-1 | Add council and delivery-evidence plugin tools | completed | Expose implemented council command and delivery-evidence command surfaces through plugin tools while preserving daemon-owned logs, locks, cursors, and evidence transitions. Completed after kan-control `COUNC-001` council paths and `DAEMN-002` delivery-evidence command paths, local verification, first color review, official GLM Octo PASS, post-Octo feedback handling, and final Gray traceability follow-up acceptance. |
-| CNDIS-2 | Add Discord helper and isolated E2E coverage | planned | Add Hermes gateway/send_message boundary helpers and gated isolated E2E coverage that never defaults to the live Discord or current Hermes session. Any real Discord target remains explicit opt-in with visible test labels and cleanup guidance. |
+| CNDIS-2 | Add Discord helper and isolated E2E coverage | completed | Added the injected-only `kan_discord_send_message` helper and isolated no-live E2E coverage. It never defaults to live Discord or the current Hermes session; any real send path requires an injected sender, dedicated target metadata, visible labels, and cleanup guidance. Completed after local verification, first color review, official GLM Octo PASS, post-Octo feedback handling, and post-Octo Red/Orange/Gray re-review acceptance. |
 
 ## SKILL: Skill and distribution
 

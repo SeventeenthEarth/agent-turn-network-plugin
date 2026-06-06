@@ -20,6 +20,7 @@ EXPECTED_TOOLS = [
     "kan_delegate_action",
     "kan_council_command",
     "kan_delivery_evidence",
+    "kan_discord_send_message",
 ]
 
 

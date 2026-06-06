@@ -2,7 +2,7 @@
 
 ## Purpose
 
-`kkachi-agent-network-plugin` is the Python Hermes plugin adapter for KAN. In the current CNDIS-1 state it provides fake/injected Hermes tool surfaces for daemon status, compatibility diagnostics, stream tail reads, delegation/review command-envelope submission, council lifecycle command submission, and delivery-evidence command submission backed by the DAEMN client foundation. Hermes provides a plugin slash-command host API, but `kan_session_status`, KAN slash commands, skills, live daemon discovery, Discord helper posting, and live Hermes/Discord integration are not exposed yet.
+`kkachi-agent-network-plugin` is the Python Hermes plugin adapter for KAN. In the current CNDIS-2 state it provides fake/injected Hermes tool surfaces for daemon status, compatibility diagnostics, stream tail reads, delegation/review command-envelope submission, council lifecycle command submission, delivery-evidence command submission, and an injected-only Discord helper backed by the DAEMN client foundation. Hermes provides a plugin slash-command host API, but `kan_session_status`, KAN slash commands, skills, live daemon discovery, live/default Discord helper posting, and live Hermes/Discord integration are not exposed yet.
 
 The plugin is not the source of truth. `kkachi-agent-networkd` owns state, event append, locks, replay, projections, and lifecycle decisions.
 
@@ -15,9 +15,10 @@ This repository owns:
 - HPLUG-2 read-only Hermes tool schemas and JSON-string handlers for `kan_daemon_status`, `kan_compatibility_diagnostics`, and `kan_stream_tail`;
 - DELRV-1 fake/injected command-envelope tool schemas and JSON-string handlers for `kan_delegate_new` and `kan_delegate_action`;
 - CNDIS-1 fake/injected command-envelope tool schemas and JSON-string handlers for `kan_council_command` and `kan_delivery_evidence`;
+- CNDIS-2 injected-only Discord helper schema, target validation, and JSON-string handler for `kan_discord_send_message`;
 - future KAN slash-command bindings after concrete daemon command contracts, fixtures, manifest declarations, and isolated tests exist;
 - bundled KAN skill material when that task lands;
-- future Discord visible-surface helpers through Hermes gateway/send_message after isolated helper tests exist;
+- future live Discord visible-surface wiring through Hermes gateway/send_message after explicit isolated live-target tests exist;
 - plugin tests and plugin docs.
 
 It does not own:

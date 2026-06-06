@@ -95,6 +95,27 @@ Before `command.submit`, `kan_council_command` calls injected `version.read` and
 
 This is fake/injected CNDIS readiness only. It does not prove live daemon, installed Hermes plugin-load, slash-command, Discord helper/send_message, gateway, auth, token, socket, localhost, CLI, or KAB readiness.
 
+## CNDIS-2 injected Discord helper
+
+CNDIS-2 adds `kan_discord_send_message` as a narrow injected-only Hermes tool wrapper over
+`discord_surface.py`:
+
+- callers must supply `content` and an explicit Discord target object;
+- the target must set `dedicated_test_target: true` and must not point at current/active
+  user or Hermes thread labels;
+- when `live_opt_in: true`, the target must include a visible `label` and
+  `cleanup_hint`;
+- the handler requires an injected `send_message` callable and returns `unavailable` or
+  `validation` failure JSON when injection/validation is missing;
+- success data contains only Discord evidence pointers such as `message_id`,
+  `channel_id`, optional `thread_id`, optional `message_ref`, label, and cleanup hint.
+
+The helper never reads environment variables, opens live gateway/socket/CLI paths,
+discovers the current Hermes session, uses auth/token/credential config, registers slash
+commands, or records daemon delivery evidence by itself. If a caller wants daemon-owned
+delivery evidence, it must still submit the existing fake/injected `kan_delivery_evidence`
+command with Discord IDs treated only as evidence pointers.
+
 ## DAEMN-2 fake stream and diagnostics surfaces
 
 DAEMN-2 extends the same explicit-transport boundary with fake/fixture-only stream and diagnostics client surfaces:

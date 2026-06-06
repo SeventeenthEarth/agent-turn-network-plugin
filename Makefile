@@ -47,4 +47,4 @@ test-int: require-uv
 	@KAN_EXTERNAL=0 $(UV) run pytest tests/integration
 
 test-e2e: require-uv
-	@KAN_E2E=1 HERMES_HOME="$${HERMES_TEST_HOME:-$$(mktemp -d)}" DISCORD_TEST_TARGET="" $(UV) run pytest tests/e2e
+	@KAN_E2E=1 KAN_DISCORD_E2E=0 HERMES_HOME="$${HERMES_TEST_HOME:-$$(mktemp -d)}" DISCORD_TEST_TARGET="" $(UV) run pytest tests/e2e

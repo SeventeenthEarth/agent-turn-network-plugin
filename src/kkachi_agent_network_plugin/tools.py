@@ -18,6 +18,8 @@ from .errors import (
     redact_sensitive,
 )
 from .protocol import (
+    COUNCIL_LIFECYCLE_REQUIRED_FEATURE_GROUPS,
+    DELIVERY_EVIDENCE_REQUIRED_FEATURE_GROUPS,
     STREAM_TAIL_FRAME_LIMIT,
     CommandResult,
     DaemonDiagnostics,
@@ -204,6 +206,84 @@ def handle_delegate_action(
         return _json_error(tool, exc)
 
 
+def handle_council_command(
+    args: object | None = None,
+    *,
+    client_factory: ClientFactory | None = None,
+    **_kwargs: object,
+) -> str:
+    """Submit an exact council.* lifecycle envelope as JSON or fail closed."""
+
+    tool = "kan_council_command"
+    try:
+        payload = _coerce_args(
+            args,
+            allowed_keys=frozenset(
+                {"command", "session_id", "request_id", "idempotency_key", "payload"}
+            ),
+        )
+        session_id = _required_string(payload.get("session_id"), label="session_id")
+        command = _required_string(payload.get("command"), label="command")
+        if command not in schemas.COUNCIL_COMMANDS:
+            raise ValueError(f"unsupported council command: {command}")
+        request_id = _required_string(payload.get("request_id"), label="request_id")
+        idempotency_key = _required_string(payload.get("idempotency_key"), label="idempotency_key")
+        command_payload = _required_json_object(payload.get("payload"), label="payload")
+        _validate_council_payload(command, command_payload)
+        command_payload = {**command_payload, "session_id": session_id}
+
+        return _submit_feature_gated_command(
+            tool=tool,
+            client_factory=client_factory,
+            required_feature_groups=COUNCIL_LIFECYCLE_REQUIRED_FEATURE_GROUPS,
+            command=command,
+            payload=command_payload,
+            request_id=request_id,
+            idempotency_key=idempotency_key,
+        )
+    except Exception as exc:  # noqa: BLE001 - Hermes handlers must never raise.
+        return _json_error(tool, exc)
+
+
+def handle_delivery_evidence(
+    args: object | None = None,
+    *,
+    client_factory: ClientFactory | None = None,
+    **_kwargs: object,
+) -> str:
+    """Submit an exact delivery-evidence envelope as JSON or fail closed."""
+
+    tool = "kan_delivery_evidence"
+    try:
+        payload = _coerce_args(
+            args,
+            allowed_keys=frozenset(
+                {"command", "session_id", "request_id", "idempotency_key", "payload"}
+            ),
+        )
+        session_id = _required_string(payload.get("session_id"), label="session_id")
+        command = _required_string(payload.get("command"), label="command")
+        if command not in schemas.DELIVERY_EVIDENCE_COMMANDS:
+            raise ValueError(f"unsupported delivery evidence command: {command}")
+        request_id = _required_string(payload.get("request_id"), label="request_id")
+        idempotency_key = _required_string(payload.get("idempotency_key"), label="idempotency_key")
+        command_payload = _required_json_object(payload.get("payload"), label="payload")
+        _validate_delivery_evidence_payload(command, command_payload)
+        command_payload = {**command_payload, "session_id": session_id}
+
+        return _submit_feature_gated_command(
+            tool=tool,
+            client_factory=client_factory,
+            required_feature_groups=DELIVERY_EVIDENCE_REQUIRED_FEATURE_GROUPS,
+            command=command,
+            payload=command_payload,
+            request_id=request_id,
+            idempotency_key=idempotency_key,
+        )
+    except Exception as exc:  # noqa: BLE001 - Hermes handlers must never raise.
+        return _json_error(tool, exc)
+
+
 def register_tools(
     ctx: ToolRegistrationContext,
     *,
@@ -226,6 +306,12 @@ def register_tools(
     def delegate_action_handler(args: object | None = None) -> str:
         return handle_delegate_action(args, client_factory=client_factory)
 
+    def council_command_handler(args: object | None = None) -> str:
+        return handle_council_command(args, client_factory=client_factory)
+
+    def delivery_evidence_handler(args: object | None = None) -> str:
+        return handle_delivery_evidence(args, client_factory=client_factory)
+
     registrations: tuple[tuple[str, dict[str, object], Callable[[object | None], str]], ...]
     registrations = (
         ("kan_daemon_status", schemas.KAN_DAEMON_STATUS, daemon_status_handler),
@@ -237,6 +323,8 @@ def register_tools(
         ("kan_stream_tail", schemas.KAN_STREAM_TAIL, stream_tail_handler),
         ("kan_delegate_new", schemas.KAN_DELEGATE_NEW, delegate_new_handler),
         ("kan_delegate_action", schemas.KAN_DELEGATE_ACTION, delegate_action_handler),
+        ("kan_council_command", schemas.KAN_COUNCIL_COMMAND, council_command_handler),
+        ("kan_delivery_evidence", schemas.KAN_DELIVERY_EVIDENCE, delivery_evidence_handler),
     )
     for name, schema, handler in registrations:
         ctx.register_tool(
@@ -294,6 +382,46 @@ def _required_json_array(value: object, *, label: str) -> list[JsonValue]:
     return cast(list[JsonValue], decoded)
 
 
+def _require_payload_string(payload: Mapping[str, object], key: str) -> str:
+    return _required_string(payload.get(key), label=f"payload.{key}")
+
+
+def _require_payload_object(payload: Mapping[str, object], key: str) -> JsonObject:
+    return _required_json_object(payload.get(key), label=f"payload.{key}")
+
+
+def _require_payload_array(payload: Mapping[str, object], key: str) -> list[JsonValue]:
+    return _required_json_array(payload.get(key), label=f"payload.{key}")
+
+
+def _validate_council_payload(command: str, payload: Mapping[str, object]) -> None:
+    _require_payload_string(payload, "command_id")
+    if command == "council.new":
+        _require_payload_string(payload, "moderator")
+        _require_payload_array(payload, "members")
+        _require_payload_string(payload, "title")
+        _require_payload_object(payload, "surface")
+        _require_payload_string(payload, "event_id")
+        return
+    _require_payload_string(payload, "actor")
+    _require_payload_object(payload, "payload")
+
+
+def _validate_delivery_evidence_payload(command: str, payload: Mapping[str, object]) -> None:
+    _require_payload_string(payload, "escalation")
+    _require_payload_string(payload, "command_id")
+    if command == "delegate.escalation_delivered":
+        _require_payload_string(payload, "delivery_target")
+        _require_payload_string(payload, "platform")
+        _optional_string(payload.get("message_ref"), label="payload.message_ref")
+        _optional_string(payload.get("reporter"), label="payload.reporter")
+        return
+    _require_payload_string(payload, "target")
+    _require_payload_string(payload, "reason")
+    _require_payload_array(payload, "will_retry_targets")
+    _optional_string(payload.get("reporter"), label="payload.reporter")
+
+
 def _optional_limit(value: object) -> int:
     if value is None:
         return 100
@@ -322,6 +450,27 @@ def _submit_command(
     idempotency_key: str,
 ) -> str:
     client = _require_client(client_factory)
+    envelope = client.build_command_envelope(
+        command=command,
+        payload=payload,
+        request_id=request_id,
+        idempotency_key=idempotency_key,
+    )
+    return _json_command_success(tool, client.submit_command(envelope))
+
+
+def _submit_feature_gated_command(
+    *,
+    tool: str,
+    client_factory: ClientFactory | None,
+    required_feature_groups: tuple[str, ...],
+    command: str,
+    payload: JsonObject,
+    request_id: str,
+    idempotency_key: str,
+) -> str:
+    client = _require_client(client_factory)
+    client.require_feature_groups(required_feature_groups)
     envelope = client.build_command_envelope(
         command=command,
         payload=payload,
@@ -471,10 +620,12 @@ def _dumps(value: Mapping[str, JsonValue]) -> str:
 
 __all__ = [
     "TOOLSET",
+    "handle_council_command",
     "handle_compatibility_diagnostics",
     "handle_daemon_status",
     "handle_delegate_action",
     "handle_delegate_new",
+    "handle_delivery_evidence",
     "handle_stream_tail",
     "register_tools",
 ]

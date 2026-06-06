@@ -1,10 +1,10 @@
 """Hermes directory plugin entrypoint for kkachi-agent-network-plugin.
 
-Registers read-only status/diagnostics/stream-tail tools and DELRV-1
-delegation/review command-envelope tools. Handlers fail closed unless a fake or
-explicitly injected daemon client factory is supplied by tests or non-live
-wiring; there is no live daemon, Hermes, Discord, auth, token, gateway, socket,
-or CLI fallback.
+Registers read-only status/diagnostics/stream-tail tools, DELRV-1
+delegation/review command-envelope tools, and CNDIS-1 council/delivery-evidence
+command tools. Handlers fail closed unless a fake or explicitly injected daemon
+client factory is supplied by tests or non-live wiring; there is no live daemon,
+Hermes, Discord, auth, token, gateway, socket, or CLI fallback.
 """
 
 from __future__ import annotations

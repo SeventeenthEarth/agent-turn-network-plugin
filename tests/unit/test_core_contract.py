@@ -31,7 +31,12 @@ def write_contract_fixture(
     (core / "testdata" / "conformance").mkdir(parents=True)
 
     (core / "testdata" / "conformance" / "manifest.json").write_text(
-        json.dumps({"protocol_version": protocol}),
+        json.dumps(
+            {
+                "protocol_version": protocol,
+                "required_feature_groups": ["delivery_evidence", "council.lifecycle"],
+            }
+        ),
         encoding="utf-8",
     )
     (core / "docs" / "21-cross-repo-development.md").write_text(
@@ -91,4 +96,18 @@ def test_core_contract_rejects_makefile_target_only_in_comment(tmp_path: Path) -
     )
 
     with pytest.raises(SystemExit, match="control Makefile missing check-plugin-contract target"):
+        check_core_contract.main(plugin=plugin, core=core)
+
+
+def test_core_contract_rejects_missing_cndis_feature_groups(tmp_path: Path) -> None:
+    check_core_contract = load_check_core_contract()
+    plugin, core = write_contract_fixture(tmp_path)
+    (core / "testdata" / "conformance" / "manifest.json").write_text(
+        json.dumps(
+            {"protocol_version": PROTOCOL, "required_feature_groups": ["delivery_evidence"]}
+        ),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(SystemExit, match="missing required CNDIS feature groups"):
         check_core_contract.main(plugin=plugin, core=core)

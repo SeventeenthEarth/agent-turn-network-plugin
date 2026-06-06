@@ -47,6 +47,14 @@ DELRV-1 Hermes command-envelope tool
       -> command.submit fake transport operation
       <- structured success/error
     -> plugin renders JSON-string success or fail-closed error
+
+CNDIS-1 Hermes command-envelope tool
+  -> plugin handler
+    -> explicit fake/injected Python KAN daemon client
+      -> version.read feature probe for council.lifecycle or delivery_evidence
+      -> command.submit fake transport operation
+      <- structured success/error
+    -> plugin renders JSON-string success or fail-closed error
 ```
 
 ## Boundary rules
@@ -55,23 +63,24 @@ DELRV-1 Hermes command-envelope tool
 - The plugin returns daemon errors as authoritative failures.
 - Handlers have no shell, localhost, Hermes, Discord, KAB, auth, token, gateway, or CLI fallback; callers must inject a client factory explicitly for success paths.
 - Stream tail reads first require positive `stream_frame` feature-group evidence from the injected transport before the `stream.tail` operation is attempted.
-- The plugin must pass a compatibility health check before exposing any future write tools as safe to use.
+- CNDIS write-like command tools must pass an injected `version.read` feature-group probe before submit; missing `council.lifecycle` or `delivery_evidence` fails closed before transport submission.
 - Hermes restart/plugin reload must not affect daemon state.
 
 ## Hermes plugin surface
 
-The plugin currently registers five fake/injected Hermes tools and no hooks or KAN slash commands:
+The plugin currently registers seven fake/injected Hermes tools and no hooks or KAN slash commands:
 
 - `kan_daemon_status` — fake/injected daemon status read;
 - `kan_compatibility_diagnostics` — fake/injected diagnostics read with redaction;
 - `kan_stream_tail` — fake/injected retained stream tail read that requires positive `stream_frame` compatibility before `stream.tail`.
 - `kan_delegate_new` — fake/injected `delegate.new` command-envelope submission with caller-supplied request/idempotency metadata;
 - `kan_delegate_action` — fake/injected closed-enum `delegate.*` action/review/delivery command-envelope submission. Its top-level `session_id` overrides/sets `payload.session_id` before submit.
+- `kan_council_command` — fake/injected closed-enum `council.*` lifecycle command-envelope submission with `council.lifecycle` pre-probe and no plugin-owned council state;
+- `kan_delivery_evidence` — fake/injected closed-enum `delegate.escalation_delivered` / `delegate.escalation_delivery_failed` command-envelope submission with `delivery_evidence` pre-probe and no plugin-owned delivery-evidence transitions.
 
 Later tasks may provide:
 
 - `kan_session_status` after control `session.status.read` fixture/protocol authority exists;
-- council command tools matching implemented control commands;
 - cursor/session diagnostic tools;
 - transcript/export tools;
 - KAN slash commands for common operations after control command contracts, conformance fixtures, safe handlers, manifest entries, and isolated Hermes/gateway smoke tests exist;

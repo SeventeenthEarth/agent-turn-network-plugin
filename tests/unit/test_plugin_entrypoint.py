@@ -16,6 +16,8 @@ EXPECTED_TOOLS = [
     "kan_stream_tail",
     "kan_delegate_new",
     "kan_delegate_action",
+    "kan_council_command",
+    "kan_delivery_evidence",
 ]
 
 
@@ -26,9 +28,9 @@ def test_plugin_manifest_declares_fake_injected_tool_surface() -> None:
         "name": "kkachi-agent-network-plugin",
         "version": "0.1.0",
         "description": (
-            "Hermes plugin adapter for kkachi-agent-network; DELRV-1 exposes "
-            "fake/injected read-only tools plus delegation/review command-envelope tools "
-            "without slash-command bindings."
+            "Hermes plugin adapter for kkachi-agent-network; exposes fake/injected "
+            "read-only tools, delegation/review command-envelope tools, and CNDIS "
+            "council/delivery-evidence tools without slash-command bindings."
         ),
         "author": "17번째 지구 Kkachi",
         "kind": "standalone",

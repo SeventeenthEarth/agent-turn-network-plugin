@@ -44,6 +44,8 @@ def test_core_conformance_manifest_uses_control_feature_group_names() -> None:
     manifest = load_conformance_manifest(CORE_MANIFEST)
 
     assert "version.read" in manifest.required_feature_groups
+    assert "delivery_evidence" in manifest.required_feature_groups
+    assert "council.lifecycle" in manifest.required_feature_groups
     assert "version_features" not in manifest.required_feature_groups
     if not manifest.fixtures:
         assert manifest.live_readiness is False

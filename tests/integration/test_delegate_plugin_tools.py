@@ -5,20 +5,32 @@ from collections.abc import Callable
 from typing import Any
 
 from kkachi_agent_network_plugin.client import DaemonClient, StaticDaemonTransport
-from kkachi_agent_network_plugin.client.daemon import OP_COMMAND_SUBMIT
+from kkachi_agent_network_plugin.client.daemon import OP_COMMAND_SUBMIT, OP_VERSION_READ
 from kkachi_agent_network_plugin.tools import register_tools
 
 
 def test_fake_hermes_context_invokes_registered_delegate_handlers() -> None:
     transport = StaticDaemonTransport(
         {
+            OP_VERSION_READ: {
+                "protocol_version": "kan-protocol-v1alpha0",
+                "daemon_version": "0.0.0-fake",
+                "feature_groups": [
+                    "version.read",
+                    "command_envelope",
+                    "structured_error",
+                    "delivery_evidence",
+                    "council.lifecycle",
+                ],
+                "live_readiness": False,
+            },
             OP_COMMAND_SUBMIT: {
                 "ok": True,
                 "command_id": "cmd-1",
                 "event_id": "evt-1",
                 "session_id": "sess-1",
                 "request_id": "req-1",
-            }
+            },
         }
     )
     ctx = FakePluginContext()
@@ -30,6 +42,8 @@ def test_fake_hermes_context_invokes_registered_delegate_handlers() -> None:
         "kan_stream_tail",
         "kan_delegate_new",
         "kan_delegate_action",
+        "kan_council_command",
+        "kan_delivery_evidence",
     ]
 
     delegate_new = json.loads(
@@ -61,9 +75,43 @@ def test_fake_hermes_context_invokes_registered_delegate_handlers() -> None:
             }
         )
     )
+    council_command = json.loads(
+        ctx.handlers["kan_council_command"](
+            {
+                "session_id": "sess-council",
+                "command": "council.ready",
+                "request_id": "req-3",
+                "idempotency_key": "idem-3",
+                "payload": {
+                    "session_id": "payload-session-is-overridden",
+                    "actor": "agent-1",
+                    "command_id": "cmd-ready",
+                    "payload": {"summary": "ready"},
+                },
+            }
+        )
+    )
+    delivery_evidence = json.loads(
+        ctx.handlers["kan_delivery_evidence"](
+            {
+                "session_id": "sess-1",
+                "command": "delegate.escalation_delivered",
+                "request_id": "req-4",
+                "idempotency_key": "idem-4",
+                "payload": {
+                    "escalation": "evt-user-escalation",
+                    "delivery_target": "origin",
+                    "platform": "hermes",
+                    "command_id": "cmd-delivered",
+                },
+            }
+        )
+    )
 
     assert delegate_new["ok"] is True
     assert delegate_action["ok"] is True
+    assert council_command["ok"] is True
+    assert delivery_evidence["ok"] is True
     assert transport.requests[0][0] == OP_COMMAND_SUBMIT
     assert transport.requests[0][1] is not None
     assert transport.requests[0][1]["command"] == "delegate.new"
@@ -78,6 +126,29 @@ def test_fake_hermes_context_invokes_registered_delegate_handlers() -> None:
         "session_id": "sess-1",
         "delivered_batch_id": None,
     }
+    assert transport.requests[2] == (
+        OP_VERSION_READ,
+        {"protocol_version": "kan-protocol-v1alpha0"},
+    )
+    assert transport.requests[3][0] == OP_COMMAND_SUBMIT
+    assert transport.requests[3][1] is not None
+    assert transport.requests[3][1]["command"] == "council.ready"
+    assert transport.requests[3][1]["request_id"] == "req-3"
+    assert transport.requests[3][1]["idempotency_key"] == "idem-3"
+    assert transport.requests[3][1]["payload"] == {
+        "session_id": "sess-council",
+        "actor": "agent-1",
+        "command_id": "cmd-ready",
+        "payload": {"summary": "ready"},
+    }
+    assert transport.requests[4] == (
+        OP_VERSION_READ,
+        {"protocol_version": "kan-protocol-v1alpha0"},
+    )
+    assert transport.requests[5][0] == OP_COMMAND_SUBMIT
+    assert transport.requests[5][1] is not None
+    assert transport.requests[5][1]["command"] == "delegate.escalation_delivered"
+    assert transport.requests[5][1]["request_id"] == "req-4"
 
 
 class FakePluginContext:

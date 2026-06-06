@@ -45,7 +45,7 @@ The foundation currently covers:
 - structured daemon error decoding that preserves command/session/event/request identifiers while redacting token/secret-like diagnostics;
 - conformance manifest parsing where `fixtures: []` is accepted only for draft/scaffold stability and always forces `live_readiness: false`.
 
-Live daemon support and plugin tool readiness remain blocked until stable control fixtures and endpoint declarations exist.
+Live daemon support remains blocked until stable endpoint declarations and installed-plugin evidence exist. Current plugin tools are fake/injected only and succeed only when a caller supplies an explicit `DaemonClient` transport.
 
 ## HPLUG-2 read-only Hermes tools
 
@@ -81,6 +81,19 @@ Both tools require caller-supplied non-empty `request_id` and `idempotency_key`.
 For `kan_delegate_action`, the top-level `session_id` is authoritative: handlers always overwrite/set `payload.session_id` with that value before submitting the envelope. Remaining payload fields stay opaque for daemon-side validation.
 
 This is fake/injected DELRV-1 readiness only. The tools use `DaemonClient.build_command_envelope(...)` and `submit_command(...)` through an injected client factory; they do not prove live daemon, installed Hermes plugin-load, slash-command, Discord, gateway, auth, token, socket, localhost, or CLI readiness.
+
+## CNDIS-1 council and delivery-evidence command tools
+
+CNDIS-1 adds fake/injected-only Hermes tool schemas for daemon-owned council lifecycle and delivery-evidence command envelopes:
+
+- `kan_council_command` builds and submits a closed enum of exact implemented `council.*` commands: `council.new`, `council.request_attendance`, `council.attend`, `council.lock_agenda`, `council.prepare`, `council.ready`, `council.prepared_partial`, `council.poll`, `council.hand_raise`, `council.grant`, `council.speak`, `council.intervene`, `council.propose`, `council.revise`, `council.request_vote`, `council.vote`, `council.finalize`, and `council.unresolved`.
+- `kan_delivery_evidence` builds and submits only `delegate.escalation_delivered` and `delegate.escalation_delivery_failed`. `kan_delegate_action` keeps accepting those commands for DELRV compatibility; `kan_delivery_evidence` is the clearer CNDIS surface.
+
+Both tools require caller-supplied non-empty `request_id` and `idempotency_key`. The plugin does not generate IDs, cache/dedupe, own council lifecycle/consensus state, write logs/locks/cursors, or transition delivery evidence locally. The top-level `session_id` is authoritative and overwrites/sets `payload.session_id` before submit.
+
+Before `command.submit`, `kan_council_command` calls injected `version.read` and requires `council.lifecycle`; `kan_delivery_evidence` requires `delivery_evidence`. Missing feature groups return `compatibility` before submit. Unknown commands, missing IDs, non-object payloads, and command-specific missing payload fields return `validation` before the client factory or submit path is used.
+
+This is fake/injected CNDIS readiness only. It does not prove live daemon, installed Hermes plugin-load, slash-command, Discord helper/send_message, gateway, auth, token, socket, localhost, CLI, or KAB readiness.
 
 ## DAEMN-2 fake stream and diagnostics surfaces
 

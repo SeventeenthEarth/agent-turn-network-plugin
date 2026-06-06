@@ -18,6 +18,8 @@ EXPECTED_TOOLS = [
     "kan_stream_tail",
     "kan_delegate_new",
     "kan_delegate_action",
+    "kan_council_command",
+    "kan_delivery_evidence",
 ]
 
 

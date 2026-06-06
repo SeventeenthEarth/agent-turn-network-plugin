@@ -15,6 +15,7 @@ REQUIRED_CONTROL_PHRASES = [
     "make check-plugin-contract",
     "testdata/conformance/manifest.json",
 ]
+REQUIRED_CONTROL_FEATURE_GROUPS = ["delivery_evidence", "council.lifecycle"]
 
 
 def require(path: Path, label: str) -> str:
@@ -36,6 +37,16 @@ def main(*, plugin: Path = PLUGIN, core: Path = CORE) -> None:
     if manifest.get("protocol_version") != EXPECTED_PROTOCOL:
         raise SystemExit(
             f"control manifest protocol mismatch: {manifest.get('protocol_version')} != {EXPECTED_PROTOCOL}"
+        )
+    feature_groups = manifest.get("required_feature_groups")
+    if not isinstance(feature_groups, list):
+        raise SystemExit("control manifest required_feature_groups must be a list")
+    missing_feature_groups = [
+        feature for feature in REQUIRED_CONTROL_FEATURE_GROUPS if feature not in feature_groups
+    ]
+    if missing_feature_groups:
+        raise SystemExit(
+            f"control manifest missing required CNDIS feature groups: {missing_feature_groups}"
         )
 
     cross = require(core / "docs" / "21-cross-repo-development.md", "control cross-repo development doc")

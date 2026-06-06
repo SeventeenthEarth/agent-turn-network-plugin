@@ -47,7 +47,7 @@ When required environment variables are absent, E2E tests must skip with a clear
 
 `make check-make-contract` verifies required single-line target declarations, `.PHONY` coverage, `make test` dependencies, preparation-gate dependencies, scoped tool commands, offline integration defaults, and isolated E2E environment variables. `make test-prepare` includes this check so target-contract drift is caught before tests run.
 
-`make check-bootstrap-smoke` verifies fake/injected plugin bootstrap readiness: package import/metadata through the `src/` layout, plugin manifest shape with exactly `kan_daemon_status`, `kan_compatibility_diagnostics`, `kan_stream_tail`, `kan_delegate_new`, and `kan_delegate_action`, explicit empty hook/command declarations, and root entrypoint registration of callable JSON-string handlers without hooks or slash commands.
+`make check-bootstrap-smoke` verifies fake/injected plugin bootstrap readiness: package import/metadata through the `src/` layout, plugin manifest shape with exactly `kan_daemon_status`, `kan_compatibility_diagnostics`, `kan_stream_tail`, `kan_delegate_new`, `kan_delegate_action`, `kan_council_command`, and `kan_delivery_evidence`, explicit empty hook/command declarations, and root entrypoint registration of callable JSON-string handlers without hooks or slash commands.
 
 Once the Python scaffold exists, missing `uv` or `pyproject.toml` is a fail-safe prerequisite error for code/test targets rather than a silent pass. Live external resources remain forbidden by default.
 
@@ -85,6 +85,17 @@ DELRV-1 remains fake/injected-only by default:
 - bootstrap tests assert the two DELRV-1 tools are declared while `provides_commands: []` remains unchanged.
 
 These tests do not claim live daemon readiness, plugin-load readiness, slash commands, Discord/gateway delivery, or plugin-owned lifecycle/idempotency state.
+
+## CNDIS-1 council and delivery-evidence coverage
+
+CNDIS-1 remains fake/injected-only by default:
+
+- unit tests cover `kan_council_command` and `kan_delivery_evidence` schemas, exact closed council and delivery-evidence enums, feature probes before submit, missing-feature compatibility failures before submit, caller-supplied `request_id`/`idempotency_key`, deterministic `session_id` payload normalization, command-specific payload validation before transport, duplicate idempotency pass-through without local dedupe, structured daemon error preservation, malformed response protocol failures, and missing-client `unavailable` behavior;
+- integration tests use a fake Hermes context plus `StaticDaemonTransport` to invoke both handlers and assert exact `version.read` then `command.submit` sequencing;
+- `tests/integration/test_cndis_conformance.py` consumes the sibling control conformance manifest and all COUNC-001 council request/response fixtures plus both delivery-evidence fixtures read-only, with fake transport only;
+- bootstrap and core-contract tests assert the two CNDIS tools are declared while `provides_hooks: []` and `provides_commands: []` remain unchanged and the control manifest includes `delivery_evidence` and `council.lifecycle`.
+
+These tests do not claim live daemon readiness, plugin-load readiness, slash commands, Discord helper/send_message readiness, gateway delivery, or plugin-owned council/delivery-evidence state.
 
 ## DELRV-2 delegation/review conformance coverage
 

@@ -13,7 +13,7 @@ The control-side SOT is `../../kkachi-agent-network-control/docs/21-cross-repo-d
 | Control repo | `../../kkachi-agent-network-control` |
 | Protocol version | `kan-protocol-v1alpha0` |
 | Fixture manifest | `../../kkachi-agent-network-control/testdata/conformance/manifest.json` |
-| Stability | draft, docs/scaffold/client-foundation plus fake/injected HPLUG-2 read-only status/diagnostics/stream-tail tools and HPLUG-3 unsupported slash-command documentation |
+| Stability | draft, docs/scaffold/client-foundation plus fake/injected HPLUG-2 read-only status/diagnostics/stream-tail tools, DELRV command tools, CNDIS council/delivery-evidence tools, and HPLUG-3 unsupported slash-command documentation |
 | Plugin behavior on mismatch | fail closed; no live fallback; affected tool returns `ok:false` |
 
 ## Compatibility checks
@@ -26,6 +26,7 @@ The plugin must check:
 - command envelope schema supported;
 - stream frame schema supported;
 - structured error schema supported;
+- `delivery_evidence` and `council.lifecycle` feature groups supported before CNDIS command submits are marked compatible;
 - delivery evidence command path supported before Discord helper posts are marked complete.
 
 ## Parallel development modes
@@ -54,7 +55,7 @@ Uses disposable Hermes home/profile and dedicated Discord test target. It must n
 | P1 Python daemon client | DAEMN-002 version/features, command envelope, stream/error fixtures | yes, fake daemon | conformance tests against fixture manifest |
 | P2 Hermes status/diagnostic tools | DAEMN-002 daemon status/session/stream fixtures | yes, fake daemon | implemented control status/stream contract |
 | P3 Delegation/review tools | DELEG-001 delegation/review command fixtures | yes, fake/injected only | implemented control commands, fake-daemon coverage, review gates, and final evidence; no live-local/plugin-load readiness claim |
-| P4 Council/Discord surface | COUNC-001 council fixtures plus DAEMN-002 delivery evidence fixtures | skeleton/fake only | isolated E2E target and delivery evidence contract |
+| P4 Council/Discord surface | COUNC-001 council fixtures plus DAEMN-002 delivery evidence fixtures | yes, fake/injected CNDIS tool-ready | isolated E2E target, Discord helper contract, and installed-plugin evidence before live Discord readiness |
 | P5 Skill/distribution | TRANS-001/RELIA-001 implemented command matrix and release-readiness evidence | docs-only draft | compatibility matrix and install smoke tests |
 
 ## Cross-repo check command
@@ -67,7 +68,7 @@ This command checks that the sibling control repo exposes the expected docs, man
 
 ## Fail-closed rule
 
-Plugin compatibility checks are safety gates. If the daemon reports an unsupported protocol version, missing required feature, malformed structured error, or missing delivery evidence command path, the plugin must not expose the affected write operation as safe. DAEMN-1 stops at an operator-friendly failure; it does not call a live daemon or CLI fallback.
+Plugin compatibility checks are safety gates. If the daemon reports an unsupported protocol version, missing required feature, malformed structured error, or missing delivery evidence/council lifecycle command path, the plugin must not expose the affected write operation as safe. DAEMN-1 stops at an operator-friendly failure; it does not call a live daemon or CLI fallback.
 
 ## DAEMN-1 manifest guard
 
@@ -94,6 +95,16 @@ DELRV-1 exposes `kan_delegate_new` and `kan_delegate_action` only through explic
 The plugin requires caller-supplied non-empty `request_id` and `idempotency_key`, does not generate hidden identifiers, does not cache/dedupe locally, and owns no delegation/review lifecycle state. The daemon remains authoritative for domain validation, idempotency semantics, duplicate handling, state transitions, and structured errors. Local validation maps to `validation`; missing injected clients map to `unavailable`; malformed daemon responses map to `protocol`; structured daemon failures such as `conflict` are preserved.
 
 This is fake/injected compatibility only and does not change live readiness, installed plugin-load readiness, slash-command readiness, Discord/gateway readiness, or auth/token boundaries.
+
+## CNDIS-1 council and delivery-evidence compatibility guard
+
+CNDIS-1 exposes `kan_council_command` and `kan_delivery_evidence` only through explicit fake/injected client factories and the existing `command.submit` operation. `kan_council_command` accepts only the implemented `council.*` enum from COUNC-001. `kan_delivery_evidence` accepts only `delegate.escalation_delivered` and `delegate.escalation_delivery_failed`.
+
+Before submit, `kan_council_command` requires injected `version.read` to report `council.lifecycle`; `kan_delivery_evidence` requires `delivery_evidence`. Missing feature groups fail closed with `compatibility` before `command.submit`.
+
+The plugin requires caller-supplied non-empty `request_id` and `idempotency_key`, does not generate hidden identifiers, does not cache/dedupe locally, and owns no logs, locks, cursors, council lifecycle/consensus state, or delivery-evidence transitions. The daemon remains authoritative for domain validation, idempotency semantics, duplicate handling, state transitions, and structured errors.
+
+CNDIS conformance coverage consumes the sibling control repo's COUNC-001 council fixtures and delivery-evidence fixtures read-only from `testdata/conformance`; it asserts the exact `version.read` then `command.submit` operation sequence through `StaticDaemonTransport`. This is fake/injected compatibility only and does not change live readiness, installed plugin-load readiness, slash-command readiness, Discord helper/gateway readiness, KAB readiness, or auth/token boundaries.
 
 ## DELRV-2 DELEG-002 conformance guard
 

@@ -17,9 +17,11 @@ from kkachi_agent_network_plugin.client.daemon import (
 from kkachi_agent_network_plugin.protocol import JsonObject
 from kkachi_agent_network_plugin.tools import (
     handle_compatibility_diagnostics,
+    handle_council_command,
     handle_daemon_status,
     handle_delegate_action,
     handle_delegate_new,
+    handle_delivery_evidence,
     handle_stream_tail,
 )
 
@@ -37,6 +39,24 @@ BASE_VERSION_WITH_STREAM: JsonObject = {
     "live_readiness": False,
 }
 BASE_VERSION_WITHOUT_STREAM: JsonObject = {
+    "protocol_version": "kan-protocol-v1alpha0",
+    "daemon_version": "0.0.0-fake",
+    "feature_groups": ["version.read", "command_envelope", "structured_error"],
+    "live_readiness": False,
+}
+BASE_VERSION_WITH_CNDIS: JsonObject = {
+    "protocol_version": "kan-protocol-v1alpha0",
+    "daemon_version": "0.0.0-fake",
+    "feature_groups": [
+        "version.read",
+        "command_envelope",
+        "structured_error",
+        "delivery_evidence",
+        "council.lifecycle",
+    ],
+    "live_readiness": False,
+}
+BASE_VERSION_WITHOUT_CNDIS: JsonObject = {
     "protocol_version": "kan-protocol-v1alpha0",
     "daemon_version": "0.0.0-fake",
     "feature_groups": ["version.read", "command_envelope", "structured_error"],
@@ -701,3 +721,290 @@ def test_delegate_handlers_fail_closed_without_client_factory() -> None:
     assert delegate_action["ok"] is False
     assert delegate_action["tool"] == "kan_delegate_action"
     assert delegate_action["error"]["category"] == "unavailable"
+
+
+def _council_args(command: str, payload: JsonObject | None = None) -> JsonObject:
+    if payload is None:
+        payload = {
+            "actor": "agent-mod",
+            "command_id": f"cmd-{command.replace('.', '-')}",
+            "payload": {"note": "ok"},
+        }
+    return {
+        "session_id": "sess-council",
+        "command": command,
+        "request_id": f"req-{command.replace('.', '-')}",
+        "idempotency_key": "idem-shared",
+        "payload": payload,
+    }
+
+
+def _delivery_args(command: str, payload: JsonObject | None = None) -> JsonObject:
+    if payload is None and command == "delegate.escalation_delivered":
+        payload = {
+            "escalation": "evt-escalation",
+            "delivery_target": "origin",
+            "platform": "hermes",
+            "message_ref": "msg-1",
+            "command_id": "cmd-delivered",
+        }
+    if payload is None:
+        payload = {
+            "escalation": "evt-escalation",
+            "target": "telegram",
+            "reason": "unreachable",
+            "will_retry_targets": ["origin"],
+            "command_id": "cmd-failed",
+        }
+    return {
+        "session_id": "sess-delegate",
+        "command": command,
+        "request_id": f"req-{command.replace('.', '-')}",
+        "idempotency_key": "idem-delivery",
+        "payload": payload,
+    }
+
+
+@pytest.mark.parametrize(
+    ("command", "payload"),
+    [
+        (
+            "council.new",
+            {
+                "session_id": "payload-session-is-overridden",
+                "moderator": "agent-mod",
+                "members": ["agent-1", "agent-2"],
+                "title": "Static council",
+                "surface": {"kind": "discord_thread", "thread_id": "thread-1"},
+                "event_id": "evt-council",
+                "command_id": "cmd-council-new",
+            },
+        ),
+        (
+            "council.ready",
+            {"actor": "agent-1", "command_id": "cmd-ready", "payload": {"summary": "ready"}},
+        ),
+        (
+            "council.finalize",
+            {"actor": "agent-mod", "command_id": "cmd-finalize", "payload": {"done": True}},
+        ),
+    ],
+)
+def test_council_command_submits_after_feature_probe(command: str, payload: JsonObject) -> None:
+    transport = StaticDaemonTransport(
+        {OP_VERSION_READ: BASE_VERSION_WITH_CNDIS, OP_COMMAND_SUBMIT: BASE_COMMAND_SUCCESS}
+    )
+
+    result = decode(
+        handle_council_command(
+            _council_args(command, payload),
+            client_factory=factory_for_transport(transport),
+        )
+    )
+
+    assert result["ok"] is True
+    assert transport.requests[0] == (
+        OP_VERSION_READ,
+        {"protocol_version": "kan-protocol-v1alpha0"},
+    )
+    operation, body = transport.requests[1]
+    assert operation == OP_COMMAND_SUBMIT
+    assert body is not None
+    assert body["command"] == command
+    assert body["request_id"] == f"req-{command.replace('.', '-')}"
+    assert body["idempotency_key"] == "idem-shared"
+    submitted_payload = cast(JsonObject, body["payload"])
+    assert submitted_payload["session_id"] == "sess-council"
+
+
+@pytest.mark.parametrize(
+    "command",
+    ["delegate.escalation_delivered", "delegate.escalation_delivery_failed"],
+)
+def test_delivery_evidence_submits_after_feature_probe(command: str) -> None:
+    transport = StaticDaemonTransport(
+        {OP_VERSION_READ: BASE_VERSION_WITH_CNDIS, OP_COMMAND_SUBMIT: BASE_COMMAND_SUCCESS}
+    )
+
+    result = decode(
+        handle_delivery_evidence(
+            _delivery_args(command),
+            client_factory=factory_for_transport(transport),
+        )
+    )
+
+    assert result["ok"] is True
+    assert [operation for operation, _body in transport.requests] == [
+        OP_VERSION_READ,
+        OP_COMMAND_SUBMIT,
+    ]
+    submitted = transport.requests[1][1]
+    assert submitted is not None
+    assert submitted["command"] == command
+    assert submitted["request_id"] == f"req-{command.replace('.', '-')}"
+    assert submitted["idempotency_key"] == "idem-delivery"
+    assert cast(JsonObject, submitted["payload"])["session_id"] == "sess-delegate"
+
+
+@pytest.mark.parametrize(
+    ("handler", "args", "missing_feature"),
+    [
+        (
+            handle_council_command,
+            _council_args("council.ready"),
+            "council.lifecycle",
+        ),
+        (
+            handle_delivery_evidence,
+            _delivery_args("delegate.escalation_delivered"),
+            "delivery_evidence",
+        ),
+    ],
+)
+def test_cndis_handlers_fail_compatibility_before_submit_when_feature_missing(
+    handler: Callable[..., str], args: JsonObject, missing_feature: str
+) -> None:
+    transport = StaticDaemonTransport(
+        {OP_VERSION_READ: BASE_VERSION_WITHOUT_CNDIS, OP_COMMAND_SUBMIT: BASE_COMMAND_SUCCESS}
+    )
+
+    result = decode(handler(args, client_factory=factory_for_transport(transport)))
+
+    assert result["ok"] is False
+    assert result["error"]["category"] == "compatibility"
+    assert missing_feature in result["error"]["message"]
+    assert transport.requests == [(OP_VERSION_READ, {"protocol_version": "kan-protocol-v1alpha0"})]
+
+
+@pytest.mark.parametrize(
+    ("handler", "args", "message"),
+    [
+        (
+            handle_council_command,
+            _council_args("council.unknown"),
+            "unsupported council command: council.unknown",
+        ),
+        (
+            handle_council_command,
+            _council_args("council.ready", {"actor": "agent-1", "payload": {}}),
+            "payload.command_id must be a non-empty string",
+        ),
+        (
+            handle_council_command,
+            _council_args("council.new", {"command_id": "cmd"}),
+            "payload.moderator must be a non-empty string",
+        ),
+        (
+            handle_delivery_evidence,
+            _delivery_args("delegate.unknown", {}),
+            "unsupported delivery evidence command: delegate.unknown",
+        ),
+        (
+            handle_delivery_evidence,
+            _delivery_args("delegate.escalation_delivered", {"command_id": "cmd"}),
+            "payload.escalation must be a non-empty string",
+        ),
+        (
+            handle_delivery_evidence,
+            _delivery_args(
+                "delegate.escalation_delivery_failed",
+                {"escalation": "evt", "command_id": "cmd"},
+            ),
+            "payload.target must be a non-empty string",
+        ),
+    ],
+)
+def test_cndis_handlers_reject_invalid_args_before_transport(
+    handler: Callable[..., str], args: JsonObject, message: str
+) -> None:
+    client_factory_called = False
+
+    def client_factory() -> DaemonClient:
+        nonlocal client_factory_called
+        client_factory_called = True
+        raise AssertionError("client factory must not be called")
+
+    result = decode(handler(args, client_factory=client_factory))
+
+    assert result["ok"] is False
+    assert result["error"] == {"category": "validation", "message": message, "retryable": False}
+    assert client_factory_called is False
+
+
+def test_cndis_duplicate_idempotency_key_is_sent_twice_without_local_dedupe() -> None:
+    responses = iter((BASE_COMMAND_SUCCESS, {**BASE_COMMAND_SUCCESS, "event_id": "evt-2"}))
+
+    def submit(_: JsonObject | None) -> JsonObject:
+        return next(responses)
+
+    transport = StaticDaemonTransport(
+        {OP_VERSION_READ: BASE_VERSION_WITH_CNDIS, OP_COMMAND_SUBMIT: submit}
+    )
+
+    first = decode(
+        handle_council_command(
+            _council_args("council.ready"), client_factory=factory_for_transport(transport)
+        )
+    )
+    second = decode(
+        handle_council_command(
+            _council_args("council.ready"), client_factory=factory_for_transport(transport)
+        )
+    )
+
+    assert first["ok"] is True
+    assert second["ok"] is True
+    submit_bodies = [
+        body for operation, body in transport.requests if operation == OP_COMMAND_SUBMIT
+    ]
+    assert len(submit_bodies) == 2
+    assert submit_bodies[0] is not None
+    assert submit_bodies[1] is not None
+    assert submit_bodies[0]["idempotency_key"] == submit_bodies[1]["idempotency_key"]
+
+
+def test_cndis_handler_preserves_structured_daemon_error_after_feature_probe() -> None:
+    transport = StaticDaemonTransport(
+        {
+            OP_VERSION_READ: BASE_VERSION_WITH_CNDIS,
+            OP_COMMAND_SUBMIT: {
+                "ok": False,
+                "error": {
+                    "category": "validation",
+                    "message": "only the council moderator may perform this action",
+                    "retryable": False,
+                    "request_id": "req-council-ready",
+                },
+            },
+        }
+    )
+
+    result = decode(
+        handle_council_command(
+            _council_args("council.ready"), client_factory=factory_for_transport(transport)
+        )
+    )
+
+    assert result["ok"] is False
+    assert result["tool"] == "kan_council_command"
+    assert result["error"] == {
+        "category": "validation",
+        "message": "only the council moderator may perform this action",
+        "retryable": False,
+        "request_id": "req-council-ready",
+    }
+
+
+def test_cndis_malformed_daemon_response_fails_closed_after_feature_probe() -> None:
+    result = decode(
+        handle_delivery_evidence(
+            _delivery_args("delegate.escalation_delivered"),
+            client_factory=factory_for(
+                {OP_VERSION_READ: BASE_VERSION_WITH_CNDIS, OP_COMMAND_SUBMIT: {"ok": True}}
+            ),
+        )
+    )
+
+    assert result["ok"] is False
+    assert result["tool"] == "kan_delivery_evidence"
+    assert result["error"]["category"] == "protocol"

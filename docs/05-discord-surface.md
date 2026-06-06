@@ -8,10 +8,12 @@ The plugin may provide a Discord visible surface for KAN council sessions by usi
 
 - Discord message IDs, channel IDs, and thread IDs are evidence pointers.
 - `channel.jsonl` in the control daemon remains the SOT.
-- The plugin records delivery success/failure by sending typed commands to `kkachi-agent-networkd`.
+- The plugin records delivery success/failure only through fake/injected `kan_delivery_evidence` command submission; no Discord helper sends messages yet.
 - The daemon must not require raw Discord tokens.
 - Free-form Discord replies are never parsed as authoritative lifecycle transitions.
-- KAN slash-command invocations are not supported in HPLUG-3. Native Discord slash commands may only become supported after a later task proves the Hermes command binding, KAN daemon command contract, delivery-evidence path, and isolated Discord test target.
+- KAN slash-command invocations are not supported in HPLUG-3/CNDIS-1. Native Discord slash commands may only become supported after a later task proves the Hermes command binding, KAN daemon command contract, delivery-evidence path, and isolated Discord test target.
+
+CNDIS-1 supports council and delivery-evidence command tools through explicit fake/injected daemon clients only. It does not post to Discord, call Hermes gateway/send_message, or infer delivery evidence from live Discord state.
 
 ## Testing
 

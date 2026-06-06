@@ -70,14 +70,14 @@ After the Python scaffold exists, `uv` and `pyproject.toml` are required for cod
 SCAFF-5 delivers a scaffold smoke gate for the first plugin scaffold PR. It proves:
 
 - the plugin package imports through the `src/` layout and exposes stable metadata;
-- the plugin manifest is a YAML mapping with the expected name, version, standalone kind, exact `provides_tools: [kan_daemon_status, kan_compatibility_diagnostics, kan_stream_tail, kan_delegate_new, kan_delegate_action]`, and explicit empty `provides_hooks: []` / `provides_commands: []` declarations;
+- the plugin manifest is a YAML mapping with the expected name, version, standalone kind, exact `provides_tools: [kan_daemon_status, kan_compatibility_diagnostics, kan_stream_tail, kan_delegate_new, kan_delegate_action, kan_council_command, kan_delivery_evidence]`, and explicit empty `provides_hooks: []` / `provides_commands: []` declarations;
 - the root directory-plugin entrypoint exposes `register(ctx)`;
 - the entrypoint registers callable fake/injected JSON-string handlers and does not register hooks or KAN slash commands;
 - `make test` succeeds without live Hermes, Discord, daemon, or network resources.
 
 DAEMN-1 added fake daemon compatibility probes for the client foundation only. At that stage, full plugin-bootstrap checks that required real declared tool handlers and handler JSON-string return contracts were deferred. HPLUG-2 now enables those checks for the three read-only JSON-string handlers.
 
-SCAFF-5 introduced smoke coverage in `scripts/check_bootstrap_smoke.py` and `tests/unit/test_bootstrap_smoke.py`; HPLUG-2 updated it for the three read-only tool registrations, and DELRV-1 extends it for the two delegation/review command-envelope tools while keeping the explicit empty slash-command surface. This proves manifest/entrypoint/handler-contract readiness only; it does not claim installed Hermes plugin loading.
+SCAFF-5 introduced smoke coverage in `scripts/check_bootstrap_smoke.py` and `tests/unit/test_bootstrap_smoke.py`; HPLUG-2 updated it for the three read-only tool registrations, DELRV-1 extended it for the two delegation/review command-envelope tools, and CNDIS-1 extends it for the council and delivery-evidence command tools while keeping the explicit empty slash-command surface. This proves manifest/entrypoint/handler-contract readiness only; it does not claim installed Hermes plugin loading.
 
 ## DAEMN-1 client modules
 
@@ -121,3 +121,15 @@ DELRV-1 maps exact daemon-owned delegation/review command names into fake/inject
 - `plugin.yaml`, the root entrypoint, and bootstrap smoke tests declare the two DELRV-1 tools while preserving `provides_commands: []`.
 
 No live daemon discovery, localhost/socket transport, Hermes/Discord/gateway/auth/token access, or CLI fallback is introduced.
+
+## CNDIS-1 plugin modules
+
+CNDIS-1 maps exact daemon-owned council and delivery-evidence command names into fake/injected Hermes tools without adding dependencies:
+
+- `protocol.py` declares `delivery_evidence` and `council.lifecycle` feature groups and required feature tuples.
+- `client/daemon.py` exposes `require_feature_groups(...)`, which performs injected `version.read` only and fails closed before submit on missing features.
+- `schemas.py` declares `kan_council_command` and `kan_delivery_evidence` with closed enums and `additionalProperties: false`.
+- `tools.py` validates command-specific payload fields, preserves caller-supplied `request_id`/`idempotency_key`, normalizes top-level `session_id` into the command payload, probes required features, and submits through the explicit fake/injected client.
+- `plugin.yaml`, the root entrypoint, and bootstrap smoke tests declare the two CNDIS-1 tools while preserving `provides_hooks: []` and `provides_commands: []`.
+
+No live daemon discovery, localhost/socket transport, Hermes/Discord/gateway/auth/token/KAB access, CLI fallback, plugin-owned logs/locks/cursors, council lifecycle/consensus state, idempotency/dedupe, or delivery-evidence transitions are introduced.

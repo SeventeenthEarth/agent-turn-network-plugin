@@ -51,6 +51,12 @@ class DaemonClient:
         response = self._request(OP_VERSION_READ, _protocol_probe_body())
         return _parse_version(response)
 
+    def require_feature_groups(self, required_feature_groups: tuple[str, ...]) -> DaemonVersion:
+        """Probe injected `version.read` and fail closed unless features exist."""
+
+        response = self._request(OP_VERSION_READ, _protocol_probe_body())
+        return _parse_version(response, required_feature_groups=required_feature_groups)
+
     def read_status(self) -> DaemonStatus:
         response = self._request(OP_STATUS_READ, _protocol_probe_body())
         return _parse_status(response)
@@ -69,10 +75,7 @@ class DaemonClient:
         before the stream operation is attempted.
         """
 
-        _parse_version(
-            self._request(OP_VERSION_READ, _protocol_probe_body()),
-            required_feature_groups=STREAM_REQUIRED_FEATURE_GROUPS,
-        )
+        self.require_feature_groups(STREAM_REQUIRED_FEATURE_GROUPS)
         body: JsonObject = {
             "protocol_version": SUPPORTED_PROTOCOL_VERSION,
             "session_id": _require_string(session_id, label="session_id"),

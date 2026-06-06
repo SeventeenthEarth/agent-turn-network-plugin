@@ -53,7 +53,7 @@ Uses disposable Hermes home/profile and dedicated Discord test target. It must n
 | P0 Scaffold | BOOTS-001 plus control cross-repo docs and manifest exist | yes | root/docs/Makefile guardrails pass |
 | P1 Python daemon client | DAEMN-002 version/features, command envelope, stream/error fixtures | yes, fake daemon | conformance tests against fixture manifest |
 | P2 Hermes status/diagnostic tools | DAEMN-002 daemon status/session/stream fixtures | yes, fake daemon | implemented control status/stream contract |
-| P3 Delegation/review tools | DELEG-001 delegation/review command fixtures | skeleton only | implemented control commands and fake+live-local tests |
+| P3 Delegation/review tools | DELEG-001 delegation/review command fixtures | yes, fake/injected only | implemented control commands, fake-daemon coverage, review gates, and final evidence; no live-local/plugin-load readiness claim |
 | P4 Council/Discord surface | COUNC-001 council fixtures plus DAEMN-002 delivery evidence fixtures | skeleton/fake only | isolated E2E target and delivery evidence contract |
 | P5 Skill/distribution | TRANS-001/RELIA-001 implemented command matrix and release-readiness evidence | docs-only draft | compatibility matrix and install smoke tests |
 
@@ -86,6 +86,14 @@ This does not change live readiness. Control conformance fixtures are still draf
 HPLUG-2 exposes `kan_daemon_status`, `kan_compatibility_diagnostics`, and `kan_stream_tail` only through explicit fake/injected client factories. Missing factories, unsupported protocol versions, missing feature groups, malformed status/diagnostics/stream payloads, and sensitive diagnostics/stream payloads all fail closed or redact before returning JSON to Hermes.
 
 `kan_stream_tail` inherits DAEMN-2 stream safety: it must receive positive `stream_frame` compatibility from `version.read` before `stream.tail` is attempted. `kan_session_status` is not exposed because no authoritative control fixture/protocol operation exists for `session.status.read`; this avoids plugin-owned state authority or schema-only overclaiming.
+
+## DELRV-1 command-envelope compatibility guard
+
+DELRV-1 exposes `kan_delegate_new` and `kan_delegate_action` only through explicit fake/injected client factories and the existing `command.submit` operation. `kan_delegate_new` always submits `delegate.new`. `kan_delegate_action` accepts only the exact implemented `delegate.*` action/review/delivery enum and rejects `delegate.request`, top-level `review`, and any unknown command before transport.
+
+The plugin requires caller-supplied non-empty `request_id` and `idempotency_key`, does not generate hidden identifiers, does not cache/dedupe locally, and owns no delegation/review lifecycle state. The daemon remains authoritative for domain validation, idempotency semantics, duplicate handling, state transitions, and structured errors. Local validation maps to `validation`; missing injected clients map to `unavailable`; malformed daemon responses map to `protocol`; structured daemon failures such as `conflict` are preserved.
+
+This is fake/injected compatibility only and does not change live readiness, installed plugin-load readiness, slash-command readiness, Discord/gateway readiness, or auth/token boundaries.
 
 ## HPLUG-3 slash-command compatibility guard
 

@@ -21,7 +21,7 @@ def test_fake_hermes_context_invokes_registered_readonly_handlers() -> None:
                 "protocol_version": "kan-protocol-v1alpha0",
                 "daemon_version": "0.0.0-fake",
                 "status": "fake-ready",
-                "feature_groups": ["version_features", "command_envelope", "structured_error"],
+                "feature_groups": ["version.read", "command_envelope", "structured_error"],
                 "live_readiness": False,
             },
             OP_DIAGNOSTICS_READ: {
@@ -34,7 +34,7 @@ def test_fake_hermes_context_invokes_registered_readonly_handlers() -> None:
                 "protocol_version": "kan-protocol-v1alpha0",
                 "daemon_version": "0.0.0-fake",
                 "feature_groups": [
-                    "version_features",
+                    "version.read",
                     "command_envelope",
                     "structured_error",
                     "stream_frame",
@@ -68,6 +68,8 @@ def test_fake_hermes_context_invokes_registered_readonly_handlers() -> None:
         "kan_daemon_status",
         "kan_compatibility_diagnostics",
         "kan_stream_tail",
+        "kan_delegate_new",
+        "kan_delegate_action",
     ]
     status = json.loads(ctx.handlers["kan_daemon_status"]({}))
     diagnostics = json.loads(

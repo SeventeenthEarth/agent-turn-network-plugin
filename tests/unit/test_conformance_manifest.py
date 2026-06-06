@@ -28,7 +28,7 @@ BASE_MANIFEST = {
     "protocol_version": "kan-protocol-v1alpha0",
     "stability": "draft-docs-scaffold",
     "fixtures": [],
-    "required_feature_groups": ["version_features", "command_envelope", "structured_error"],
+    "required_feature_groups": ["version.read", "command_envelope", "structured_error"],
 }
 
 
@@ -40,11 +40,13 @@ def test_plugin_local_zero_fixture_manifest_is_draft_only_and_not_live_ready() -
     assert manifest.live_readiness is False
 
 
-def test_core_zero_fixture_manifest_is_allowed_only_as_draft_scaffold() -> None:
+def test_core_conformance_manifest_uses_control_feature_group_names() -> None:
     manifest = load_conformance_manifest(CORE_MANIFEST)
 
-    assert manifest.fixtures == ()
-    assert manifest.live_readiness is False
+    assert "version.read" in manifest.required_feature_groups
+    assert "version_features" not in manifest.required_feature_groups
+    if not manifest.fixtures:
+        assert manifest.live_readiness is False
 
 
 def test_zero_fixture_manifest_without_draft_stability_fails_closed() -> None:
@@ -65,7 +67,7 @@ def test_empty_fixtures_force_live_readiness_false_even_when_manifest_claims_tru
         {**BASE_MANIFEST, "stability": ""},
         {**BASE_MANIFEST, "fixtures": "not-list"},
         {**BASE_MANIFEST, "fixtures": [""]},
-        {**BASE_MANIFEST, "required_feature_groups": ["version_features"]},
+        {**BASE_MANIFEST, "required_feature_groups": ["version.read"]},
         {**BASE_MANIFEST, "live_readiness": "yes"},
         {**BASE_MANIFEST, "manifest_version": True},
     ],

@@ -1,12 +1,12 @@
 # kkachi-agent-network-plugin
 
-`kkachi-agent-network-plugin` is the Python Hermes plugin adapter for KAN. In the current HPLUG-3 state it exposes three read-only Hermes plugin tools through fake/injected transports only: `kan_daemon_status`, `kan_compatibility_diagnostics`, and `kan_stream_tail`. Hermes has a plugin slash-command host API, but this plugin still has no KAN slash-command bindings, live daemon discovery, Discord helpers, write tools, session-status tool, or installed-plugin smoke claim.
+`kkachi-agent-network-plugin` is the Python Hermes plugin adapter for KAN. In the current DELRV-1 state it exposes fake/injected Hermes plugin tools only: read-only `kan_daemon_status`, `kan_compatibility_diagnostics`, `kan_stream_tail`, plus command-envelope `kan_delegate_new` and `kan_delegate_action`. Hermes has a plugin slash-command host API, but this plugin still has no KAN slash-command bindings, live daemon discovery, Discord helpers, session-status tool, or installed-plugin smoke claim.
 
 The plugin is not the source of truth. `kkachi-agent-networkd` owns `channel.jsonl`, SQLite projections, locks, replay, cursors, and state transitions.
 
 ## Repository boundary
 
-- This repo: Python plugin code, fake/injected-transport daemon client foundation, Hermes tool schemas/handlers, future KAN slash-command bindings, bundled skill material, fake-daemon integration tests, isolated plugin E2E tests.
+- This repo: Python plugin code, fake/injected-transport daemon client foundation, Hermes tool schemas/handlers, future KAN-facing surfaces as separate tasks land, fake-daemon integration tests, isolated plugin E2E tests.
 - Control repo: `../kkachi-agent-network-control`, Go daemon/CLI, protocol SOT, event/state/storage/security/recovery docs.
 - Discord helper behavior must record delivery evidence back through typed daemon commands and must not move raw Discord tokens into the daemon.
 
@@ -25,7 +25,11 @@ Key docs:
 
 ## Current state
 
-HPLUG-3 fake/injected read-only plugin stage. Python package layout, build configuration, package metadata, tiered unit/integration/e2e tests, plugin manifest, root Hermes directory entrypoint, daemon status tool schema/handler, compatibility diagnostics tool schema/handler, and stream tail tool schema/handler are in place. Handlers return JSON strings, preserve fail-closed error categories, redact sensitive diagnostics/stream payloads, and require explicit fake/injected `DaemonClient` factories. `kan_stream_tail` preserves DAEMN-2 behavior by probing `version.read` for `stream_frame` compatibility before `stream.tail`. `kan_session_status` remains deferred until the control repo provides fixture/protocol authority for `session.status.read`. HPLUG-3 documents that Hermes can host plugin slash commands through `ctx.register_command`, while KAN slash commands remain unsupported until concrete daemon command contracts, fixtures, manifest entries, fail-closed handlers, and isolated install/gateway tests exist. Install smoke tests, live daemon support, and live Hermes integration remain pending later tasks.
+DELRV-1 fake/injected plugin stage. The package layout, plugin manifest, root Hermes directory entrypoint, status/diagnostics/stream-tail tools, and delegation/review command-envelope tools are in place. Handlers return JSON strings, preserve fail-closed error categories, redact sensitive diagnostics/stream payloads, and require explicit fake/injected `DaemonClient` factories.
+
+`kan_stream_tail` probes `version.read` for `stream_frame` compatibility before `stream.tail`. `kan_delegate_new` submits `delegate.new`; `kan_delegate_action` accepts only the exact implemented `delegate.*` action/review/delivery enum, rejects `delegate.request` and top-level `review`, requires caller-supplied `request_id`/`idempotency_key`, and owns no lifecycle/idempotency state.
+
+`kan_session_status` remains deferred until the control repo provides fixture/protocol authority for `session.status.read`. KAN slash commands remain unsupported and `provides_commands: []` remains unchanged. Install smoke tests, live daemon support, and live Hermes integration remain pending later tasks.
 
 ## Test targets
 

@@ -23,7 +23,7 @@ def valid_diagnostics() -> JsonObject:
                 "message": "fake fixture supports stream_frame",
                 "details": {
                     "feature_groups": [
-                        "version_features",
+                        "version.read",
                         "command_envelope",
                         "stream_frame",
                         "structured_error",
@@ -58,7 +58,7 @@ def test_diagnostics_response_decodes_checks_and_redacts_details() -> None:
     assert diagnostics.checks[0].ok is True
     assert diagnostics.checks[0].details == {
         "feature_groups": [
-            "version_features",
+            "version.read",
             "command_envelope",
             "stream_frame",
             "structured_error",

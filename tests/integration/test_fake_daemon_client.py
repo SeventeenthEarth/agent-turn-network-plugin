@@ -14,7 +14,7 @@ from kkachi_agent_network_plugin.protocol import JsonObject
 BASE_RESPONSE: JsonObject = {
     "protocol_version": "kan-protocol-v1alpha0",
     "daemon_version": "0.0.0-fake",
-    "feature_groups": ["version_features", "command_envelope", "structured_error"],
+    "feature_groups": ["version.read", "command_envelope", "structured_error"],
     "live_readiness": False,
 }
 

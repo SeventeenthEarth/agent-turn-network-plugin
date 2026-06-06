@@ -18,7 +18,7 @@ COMMAND_ENVELOPE_VERSION: Final = "kan-command-envelope-v1alpha0"
 CLIENT_NAME: Final = "kkachi-agent-network-plugin"
 CLIENT_VERSION: Final = "0.1.0"
 REQUIRED_FEATURE_GROUPS: Final[tuple[str, ...]] = (
-    "version_features",
+    "version.read",
     "command_envelope",
     "structured_error",
 )

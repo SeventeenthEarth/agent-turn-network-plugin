@@ -88,7 +88,7 @@ Exit: delegation and review plugin tools map to implemented control commands wit
 
 | Task ID | Task Title | Task Status | Task Description |
 |---|---|---|---|
-| DELRV-1 | Add delegation and review command tools | blocked | Map implemented control delegation/review commands into plugin tools, including request/response schemas, idempotency guarantees, duplicate handling, and error category preservation. Block until `DELEG-001` provides the corresponding control commands and fixtures. |
+| DELRV-1 | Add delegation and review command tools | completed | Implemented and locally verified fake/injected-only `kan_delegate_new` -> `delegate.new` and `kan_delegate_action` -> exact implemented `delegate.*` action/review/delivery command-envelope tools. The plugin requires caller-supplied `request_id`/`idempotency_key`, rejects `delegate.request`, top-level `review`, and non-enum commands before transport, preserves structured daemon errors, keeps `provides_commands: []`, and does not claim live daemon/plugin-load/release readiness. Completion evidence: KAH `run-20260605T182154Z-3fbf63b18b6e`, local `make test-prepare`, `make check-core-contract`, and `make test` pass after optimize, first color review, GLM Octo feedback handling, post-Octo re-review, final KAH gate pass, and 주군 commit approval. |
 | DELRV-2 | Add delegation/review failure coverage | blocked | Add fake-daemon integration tests for delegation/review success, retry, duplicate, permission/error, and malformed response cases. Block until `DELEG-001` fixtures define the expected command and error shapes. |
 
 ## CNDIS: Council and Discord surface

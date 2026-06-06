@@ -10,23 +10,29 @@ import yaml  # type: ignore[import-untyped]
 ROOT = Path(__file__).resolve().parents[2]
 
 
-def test_plugin_manifest_declares_hplug3_readonly_surface() -> None:
+EXPECTED_TOOLS = [
+    "kan_daemon_status",
+    "kan_compatibility_diagnostics",
+    "kan_stream_tail",
+    "kan_delegate_new",
+    "kan_delegate_action",
+]
+
+
+def test_plugin_manifest_declares_fake_injected_tool_surface() -> None:
     manifest = yaml.safe_load((ROOT / "plugin.yaml").read_text(encoding="utf-8"))
 
     assert manifest == {
         "name": "kkachi-agent-network-plugin",
         "version": "0.1.0",
         "description": (
-            "Hermes plugin adapter for kkachi-agent-network; HPLUG-3 exposes "
-            "fake/injected read-only tools and documents unsupported KAN slash-command bindings."
+            "Hermes plugin adapter for kkachi-agent-network; DELRV-1 exposes "
+            "fake/injected read-only tools plus delegation/review command-envelope tools "
+            "without slash-command bindings."
         ),
         "author": "17번째 지구 Kkachi",
         "kind": "standalone",
-        "provides_tools": [
-            "kan_daemon_status",
-            "kan_compatibility_diagnostics",
-            "kan_stream_tail",
-        ],
+        "provides_tools": EXPECTED_TOOLS,
         "provides_hooks": [],
         "provides_commands": [],
     }
@@ -39,11 +45,7 @@ def test_root_entrypoint_matches_hermes_directory_plugin_contract() -> None:
     fake_ctx = FakePluginContext()
     module.register(fake_ctx)
 
-    assert [tool["name"] for tool in fake_ctx.registered_tools] == [
-        "kan_daemon_status",
-        "kan_compatibility_diagnostics",
-        "kan_stream_tail",
-    ]
+    assert [tool["name"] for tool in fake_ctx.registered_tools] == EXPECTED_TOOLS
     assert all(callable(tool["handler"]) for tool in fake_ctx.registered_tools)
     assert fake_ctx.registered_hooks == []
     assert fake_ctx.registered_commands == []

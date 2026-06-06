@@ -15,7 +15,7 @@ BASE_VERSION_WITH_STREAM: JsonObject = {
     "protocol_version": "kan-protocol-v1alpha0",
     "daemon_version": "0.0.0-fake",
     "feature_groups": [
-        "version_features",
+        "version.read",
         "command_envelope",
         "stream_frame",
         "structured_error",
@@ -91,7 +91,7 @@ def test_fake_daemon_stream_tail_missing_stream_frame_feature_fails_before_strea
         {
             OP_VERSION_READ: {
                 **BASE_VERSION_WITH_STREAM,
-                "feature_groups": ["version_features", "command_envelope", "structured_error"],
+                "feature_groups": ["version.read", "command_envelope", "structured_error"],
             },
             OP_STREAM_TAIL: {"protocol_version": "kan-protocol-v1alpha0", "frames": []},
         }
@@ -134,7 +134,7 @@ def test_fake_daemon_diagnostics_decodes_and_redacts() -> None:
                     "ok": True,
                     "details": {
                         "feature_groups": [
-                            "version_features",
+                            "version.read",
                             "command_envelope",
                             "stream_frame",
                             "structured_error",
@@ -153,7 +153,7 @@ def test_fake_daemon_diagnostics_decodes_and_redacts() -> None:
     assert result.checks[0].name == "stream_frame"
     assert result.checks[0].details == {
         "feature_groups": [
-            "version_features",
+            "version.read",
             "command_envelope",
             "stream_frame",
             "structured_error",

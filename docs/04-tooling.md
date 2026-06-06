@@ -47,7 +47,7 @@ The project `.gitignore` must include `.kkachi/`, `.codegraph/`, `.omx/`, `.omc/
 
 `make check-make-contract` verifies required single-line target declarations, `.PHONY` coverage, `make test` dependencies, preparation-gate dependencies, scoped tool commands, offline integration defaults, and isolated E2E environment variables.
 
-`make check-bootstrap-smoke` verifies the package import/metadata, HPLUG-2/HPLUG-3 plugin manifest shape, exact read-only tool registrations, callable handler presence, and root directory-plugin entrypoint availability without registering hooks or KAN slash commands.
+`make check-bootstrap-smoke` verifies the package import/metadata, fake/injected plugin manifest shape, exact tool registrations, callable handler presence, and root directory-plugin entrypoint availability without registering hooks or KAN slash commands.
 
 `make test-unit` runs `pytest tests/unit`.
 
@@ -70,14 +70,14 @@ After the Python scaffold exists, `uv` and `pyproject.toml` are required for cod
 SCAFF-5 delivers a scaffold smoke gate for the first plugin scaffold PR. It proves:
 
 - the plugin package imports through the `src/` layout and exposes stable metadata;
-- the plugin manifest is a YAML mapping with the expected name, version, standalone kind, exact `provides_tools: [kan_daemon_status, kan_compatibility_diagnostics, kan_stream_tail]`, and explicit empty `provides_hooks: []` / `provides_commands: []` declarations;
+- the plugin manifest is a YAML mapping with the expected name, version, standalone kind, exact `provides_tools: [kan_daemon_status, kan_compatibility_diagnostics, kan_stream_tail, kan_delegate_new, kan_delegate_action]`, and explicit empty `provides_hooks: []` / `provides_commands: []` declarations;
 - the root directory-plugin entrypoint exposes `register(ctx)`;
-- the HPLUG-2/HPLUG-3 entrypoint registers callable read-only JSON-string handlers and does not register hooks or KAN slash commands;
+- the entrypoint registers callable fake/injected JSON-string handlers and does not register hooks or KAN slash commands;
 - `make test` succeeds without live Hermes, Discord, daemon, or network resources.
 
 DAEMN-1 added fake daemon compatibility probes for the client foundation only. At that stage, full plugin-bootstrap checks that required real declared tool handlers and handler JSON-string return contracts were deferred. HPLUG-2 now enables those checks for the three read-only JSON-string handlers.
 
-SCAFF-5 introduced smoke coverage in `scripts/check_bootstrap_smoke.py` and `tests/unit/test_bootstrap_smoke.py`; HPLUG-2 updates it for the three read-only tool registrations, and HPLUG-3 keeps the explicit empty command surface while documenting future slash-command requirements. This proves manifest/entrypoint/handler-contract readiness only; it does not claim installed Hermes plugin loading.
+SCAFF-5 introduced smoke coverage in `scripts/check_bootstrap_smoke.py` and `tests/unit/test_bootstrap_smoke.py`; HPLUG-2 updated it for the three read-only tool registrations, and DELRV-1 extends it for the two delegation/review command-envelope tools while keeping the explicit empty slash-command surface. This proves manifest/entrypoint/handler-contract readiness only; it does not claim installed Hermes plugin loading.
 
 ## DAEMN-1 client modules
 
@@ -109,4 +109,15 @@ HPLUG-2 maps DAEMN-2 stream-tail support into the plugin layer without adding de
 
 - `schemas.py` declares `kan_stream_tail` with required `session_id`/`member`, optional `since_cursor`, bounded `limit`, and `additionalProperties: false`.
 - `tools.py` validates stream-tail args before transport, requires explicit `client_factory`, calls `read_stream_tail()`, serializes frames/events into JSON, and redacts sensitive payload/details values.
-- `plugin.yaml`, the root entrypoint, and bootstrap smoke tests now declare exactly three read-only tools and still no hooks or commands.
+- `plugin.yaml`, the root entrypoint, and bootstrap smoke tests include these read-only tools and still no hooks or slash commands.
+
+## DELRV-1 plugin modules
+
+DELRV-1 maps exact daemon-owned delegation/review command names into fake/injected Hermes tools without adding dependencies:
+
+- `schemas.py` declares `kan_delegate_new` and `kan_delegate_action`; the action schema uses a closed enum for implemented `delegate.*` commands and omits `delegate.request` / top-level `review`.
+- `tools.py` validates required caller-supplied `request_id` and `idempotency_key`, builds command envelopes through `DaemonClient.build_command_envelope(...)`, submits via `submit_command(...)`, preserves structured daemon errors, and does not generate IDs or keep lifecycle/idempotency state.
+- `kan_delegate_action` always overwrites/sets `payload.session_id` from the top-level `session_id` before submit.
+- `plugin.yaml`, the root entrypoint, and bootstrap smoke tests declare the two DELRV-1 tools while preserving `provides_commands: []`.
+
+No live daemon discovery, localhost/socket transport, Hermes/Discord/gateway/auth/token access, or CLI fallback is introduced.

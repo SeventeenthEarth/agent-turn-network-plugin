@@ -19,7 +19,7 @@ def load_bootstrap_smoke() -> ModuleType:
     return module
 
 
-def hplug2_register_lines(*, include_hook: bool = False, include_command: bool = False) -> str:
+def hplug_register_lines(*, include_hook: bool = False, include_command: bool = False) -> str:
     hook_line = (
         '    ctx.register_hook("message.created", lambda event: event)\n' if include_hook else ""
     )
@@ -48,6 +48,18 @@ def hplug2_register_lines(*, include_hook: bool = False, include_command: bool =
         '        schema={"name": "kan_stream_tail"},\n'
         '        handler=lambda args: "{}",\n'
         "    )\n"
+        "    ctx.register_tool(\n"
+        '        name="kan_delegate_new",\n'
+        '        toolset="kkachi_agent_network",\n'
+        '        schema={"name": "kan_delegate_new"},\n'
+        '        handler=lambda args: "{}",\n'
+        "    )\n"
+        "    ctx.register_tool(\n"
+        '        name="kan_delegate_action",\n'
+        '        toolset="kkachi_agent_network",\n'
+        '        schema={"name": "kan_delegate_action"},\n'
+        '        handler=lambda args: "{}",\n'
+        "    )\n"
         f"{hook_line}"
         f"{command_line}"
     )
@@ -61,7 +73,8 @@ def write_bootstrap_fixture(
     manifest_text: str | None = None,
     manifest_version: str = "0.1.0",
     provides_tools: str = (
-        '["kan_daemon_status", "kan_compatibility_diagnostics", "kan_stream_tail"]'
+        '["kan_daemon_status", "kan_compatibility_diagnostics", "kan_stream_tail", '
+        '"kan_delegate_new", "kan_delegate_action"]'
     ),
     provides_hooks: str = "[]",
     provides_commands: str = "[]",
@@ -94,7 +107,7 @@ def write_bootstrap_fixture(
         encoding="utf-8",
     )
     root.joinpath("__init__.py").write_text(
-        root_entrypoint or "from __future__ import annotations\n\n" + hplug2_register_lines(),
+        root_entrypoint or "from __future__ import annotations\n\n" + hplug_register_lines(),
         encoding="utf-8",
     )
 
@@ -191,10 +204,10 @@ def test_bootstrap_smoke_rejects_entrypoint_that_registers_hooks(tmp_path: Path)
     write_bootstrap_fixture(
         tmp_path,
         root_entrypoint="from __future__ import annotations\n\n"
-        + hplug2_register_lines(include_hook=True),
+        + hplug_register_lines(include_hook=True),
     )
 
-    with pytest.raises(SystemExit, match="entrypoint registered HPLUG-2/HPLUG-3-forbidden hooks"):
+    with pytest.raises(SystemExit, match="entrypoint registered HPLUG/DELRV-1-forbidden hooks"):
         bootstrap_smoke.main(root=tmp_path)
 
 
@@ -203,12 +216,10 @@ def test_bootstrap_smoke_rejects_entrypoint_that_registers_commands(tmp_path: Pa
     write_bootstrap_fixture(
         tmp_path,
         root_entrypoint="from __future__ import annotations\n\n"
-        + hplug2_register_lines(include_command=True),
+        + hplug_register_lines(include_command=True),
     )
 
-    with pytest.raises(
-        SystemExit, match="entrypoint registered HPLUG-2/HPLUG-3-forbidden commands"
-    ):
+    with pytest.raises(SystemExit, match="entrypoint registered HPLUG/DELRV-1-forbidden commands"):
         bootstrap_smoke.main(root=tmp_path)
 
 

@@ -2,7 +2,7 @@
 
 This directory is the source of truth for the **Python Hermes plugin adapter** for KAN.
 
-Control daemon/CLI authority lives in `../../kkachi-agent-network-control/docs/`. The plugin is not the source of truth. It provides Hermes-facing tools, slash commands, skill guidance, and Discord visible-surface helpers over the daemon protocol contract.
+Control daemon/CLI authority lives in `../../kkachi-agent-network-control/docs/`. The plugin is not the source of truth. Its current surface is fake/injected Hermes tools over the daemon protocol contract; slash commands, skill guidance, and Discord visible-surface helpers remain future task areas.
 
 ## Documents
 

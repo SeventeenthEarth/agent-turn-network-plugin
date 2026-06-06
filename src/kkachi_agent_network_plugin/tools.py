@@ -1,4 +1,4 @@
-"""JSON-string Hermes handlers for HPLUG-2 read-only tools."""
+"""JSON-string Hermes handlers for fake/injected KAN plugin tools."""
 
 from __future__ import annotations
 
@@ -19,14 +19,17 @@ from .errors import (
 )
 from .protocol import (
     STREAM_TAIL_FRAME_LIMIT,
+    CommandResult,
     DaemonDiagnostics,
     DaemonStatus,
     DiagnosticCheck,
     JsonObject,
     JsonValue,
+    ProtocolValidationError,
     StreamEvent,
     StreamFrame,
     StreamTail,
+    require_json_object,
 )
 
 ClientFactory = Callable[[], DaemonClient]
@@ -105,12 +108,108 @@ def handle_stream_tail(
         return _json_error("kan_stream_tail", exc)
 
 
+def handle_delegate_new(
+    args: object | None = None,
+    *,
+    client_factory: ClientFactory | None = None,
+    **_kwargs: object,
+) -> str:
+    """Submit a delegate.new envelope as a JSON string or fail closed."""
+
+    tool = "kan_delegate_new"
+    try:
+        payload = _coerce_args(
+            args,
+            allowed_keys=frozenset(
+                {
+                    "session_id",
+                    "moderator",
+                    "assignee",
+                    "title",
+                    "task",
+                    "context",
+                    "participants",
+                    "acceptance",
+                    "expected_outputs",
+                    "limits",
+                    "request_id",
+                    "idempotency_key",
+                }
+            ),
+        )
+        command_payload: JsonObject = {
+            "session_id": _required_string(payload.get("session_id"), label="session_id"),
+            "moderator": _required_string(payload.get("moderator"), label="moderator"),
+            "assignee": _required_string(payload.get("assignee"), label="assignee"),
+            "title": _required_string(payload.get("title"), label="title"),
+            "task": _required_string(payload.get("task"), label="task"),
+            "context": _required_json_object(payload.get("context"), label="context"),
+            "participants": _required_json_array(payload.get("participants"), label="participants"),
+            "acceptance": _required_json_array(payload.get("acceptance"), label="acceptance"),
+            "expected_outputs": _required_json_array(
+                payload.get("expected_outputs"), label="expected_outputs"
+            ),
+            "limits": _required_json_object(payload.get("limits"), label="limits"),
+        }
+        request_id = _required_string(payload.get("request_id"), label="request_id")
+        idempotency_key = _required_string(payload.get("idempotency_key"), label="idempotency_key")
+        return _submit_command(
+            tool=tool,
+            client_factory=client_factory,
+            command=schemas.DELEGATE_NEW_COMMAND,
+            payload=command_payload,
+            request_id=request_id,
+            idempotency_key=idempotency_key,
+        )
+    except Exception as exc:  # noqa: BLE001 - Hermes handlers must never raise.
+        return _json_error(tool, exc)
+
+
+def handle_delegate_action(
+    args: object | None = None,
+    *,
+    client_factory: ClientFactory | None = None,
+    **_kwargs: object,
+) -> str:
+    """Submit an exact delegate.* action envelope as JSON or fail closed."""
+
+    tool = "kan_delegate_action"
+    try:
+        payload = _coerce_args(
+            args,
+            allowed_keys=frozenset(
+                {"session_id", "command", "request_id", "idempotency_key", "payload"}
+            ),
+        )
+        session_id = _required_string(payload.get("session_id"), label="session_id")
+        command = _required_string(payload.get("command"), label="command")
+        if command not in schemas.DELEGATE_ACTION_COMMANDS:
+            raise ValueError(f"unsupported delegate action command: {command}")
+        request_id = _required_string(payload.get("request_id"), label="request_id")
+        idempotency_key = _required_string(payload.get("idempotency_key"), label="idempotency_key")
+        command_payload = _required_json_object(payload.get("payload"), label="payload")
+        # Deterministic normalization rule: the top-level session_id is authoritative
+        # and always overwrites/sets payload.session_id before the envelope is submitted.
+        command_payload = {**command_payload, "session_id": session_id}
+
+        return _submit_command(
+            tool=tool,
+            client_factory=client_factory,
+            command=command,
+            payload=command_payload,
+            request_id=request_id,
+            idempotency_key=idempotency_key,
+        )
+    except Exception as exc:  # noqa: BLE001 - Hermes handlers must never raise.
+        return _json_error(tool, exc)
+
+
 def register_tools(
     ctx: ToolRegistrationContext,
     *,
     client_factory: ClientFactory | None = None,
 ) -> None:
-    """Register HPLUG-2 read-only tools with a Hermes plugin context."""
+    """Register fake/injected KAN tools with a Hermes plugin context."""
 
     def daemon_status_handler(args: object | None = None) -> str:
         return handle_daemon_status(args, client_factory=client_factory)
@@ -121,6 +220,12 @@ def register_tools(
     def stream_tail_handler(args: object | None = None) -> str:
         return handle_stream_tail(args, client_factory=client_factory)
 
+    def delegate_new_handler(args: object | None = None) -> str:
+        return handle_delegate_new(args, client_factory=client_factory)
+
+    def delegate_action_handler(args: object | None = None) -> str:
+        return handle_delegate_action(args, client_factory=client_factory)
+
     registrations: tuple[tuple[str, dict[str, object], Callable[[object | None], str]], ...]
     registrations = (
         ("kan_daemon_status", schemas.KAN_DAEMON_STATUS, daemon_status_handler),
@@ -130,6 +235,8 @@ def register_tools(
             compatibility_diagnostics_handler,
         ),
         ("kan_stream_tail", schemas.KAN_STREAM_TAIL, stream_tail_handler),
+        ("kan_delegate_new", schemas.KAN_DELEGATE_NEW, delegate_new_handler),
+        ("kan_delegate_action", schemas.KAN_DELEGATE_ACTION, delegate_action_handler),
     )
     for name, schema, handler in registrations:
         ctx.register_tool(
@@ -165,6 +272,28 @@ def _optional_string(value: object, *, label: str) -> str | None:
     return value
 
 
+def _required_json_object(value: object, *, label: str) -> JsonObject:
+    if not isinstance(value, Mapping):
+        raise ValueError(f"{label} must be a JSON object")
+    try:
+        return require_json_object(value, label=label)
+    except ProtocolValidationError as exc:
+        raise ValueError(str(exc)) from exc
+
+
+def _required_json_array(value: object, *, label: str) -> list[JsonValue]:
+    if not isinstance(value, list):
+        raise ValueError(f"{label} must be a JSON array")
+    try:
+        encoded = json.dumps(value, ensure_ascii=False, sort_keys=True, allow_nan=False)
+        decoded = json.loads(encoded)
+    except (TypeError, ValueError) as exc:
+        raise ValueError(f"{label} must contain only JSON-compatible values") from exc
+    if not isinstance(decoded, list):
+        raise ValueError(f"{label} must be a JSON array")
+    return cast(list[JsonValue], decoded)
+
+
 def _optional_limit(value: object) -> int:
     if value is None:
         return 100
@@ -181,6 +310,25 @@ def _require_client(client_factory: ClientFactory | None) -> DaemonClient:
             "explicit daemon client factory is required; no live daemon/Hermes/Discord fallback"
         )
     return client_factory()
+
+
+def _submit_command(
+    *,
+    tool: str,
+    client_factory: ClientFactory | None,
+    command: str,
+    payload: JsonObject,
+    request_id: str,
+    idempotency_key: str,
+) -> str:
+    client = _require_client(client_factory)
+    envelope = client.build_command_envelope(
+        command=command,
+        payload=payload,
+        request_id=request_id,
+        idempotency_key=idempotency_key,
+    )
+    return _json_command_success(tool, client.submit_command(envelope))
 
 
 def _status_data(status: DaemonStatus) -> JsonObject:
@@ -266,6 +414,24 @@ def _json_stream_success(tool: str, source: StreamTail, data: JsonObject) -> str
     )
 
 
+def _json_command_success(tool: str, result: CommandResult) -> str:
+    data: JsonObject = {"command_id": result.command_id}
+    if result.event_id is not None:
+        data["event_id"] = result.event_id
+    if result.session_id is not None:
+        data["session_id"] = result.session_id
+    if result.request_id is not None:
+        data["request_id"] = result.request_id
+    return _dumps(
+        {
+            "ok": True,
+            "tool": tool,
+            "live_readiness": False,
+            "data": data,
+        }
+    )
+
+
 def _json_error(tool: str, exc: Exception) -> str:
     live_readiness = False
     return _dumps(
@@ -307,6 +473,8 @@ __all__ = [
     "TOOLSET",
     "handle_compatibility_diagnostics",
     "handle_daemon_status",
+    "handle_delegate_action",
+    "handle_delegate_new",
     "handle_stream_tail",
     "register_tools",
 ]

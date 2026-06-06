@@ -49,7 +49,7 @@ Live daemon support and plugin tool readiness remain blocked until stable contro
 
 ## HPLUG-2 read-only Hermes tools
 
-HPLUG-2 exposes exactly three Hermes tool schemas through the root plugin entrypoint and `plugin.yaml`:
+HPLUG-2 introduced three read-only Hermes tool schemas through the root plugin entrypoint and `plugin.yaml`:
 
 - `kan_daemon_status` calls `DaemonClient.read_status()` through an explicit fake/injected client factory.
 - `kan_compatibility_diagnostics` calls `DaemonClient.read_diagnostics(session_id=...)` through an explicit fake/injected client factory.
@@ -69,6 +69,19 @@ Failure mapping is fail-closed:
 
 `kan_session_status` is deliberately not exposed in HPLUG-2 because the control conformance manifest still has `fixtures: []` and no `session.status.read` authority. It remains deferred until `DAEMN-002` or a later control task provides control fixture/protocol evidence.
 
+## DELRV-1 delegation/review command-envelope tools
+
+DELRV-1 adds fake/injected-only Hermes tool schemas for daemon-owned delegation and review command envelopes:
+
+- `kan_delegate_new` builds and submits command envelope `delegate.new`.
+- `kan_delegate_action` builds and submits a closed enum of exact implemented `delegate.*` action/review/delivery commands: `delegate.ack`, `delegate.message`, `delegate.clarify`, `delegate.answer_clarification`, `delegate.update`, `delegate.request_update`, `delegate.submit`, `delegate.review`, `delegate.review_question`, `delegate.review_answer`, `delegate.review_submit`, `delegate.revise`, `delegate.accept`, `delegate.escalate`, `delegate.escalation_flush`, `delegate.resolve_escalation`, `delegate.escalation_delivered`, `delegate.escalation_delivery_failed`.
+
+Both tools require caller-supplied non-empty `request_id` and `idempotency_key`. The plugin does not generate hidden identifiers, cache/dedupe requests, own delegation lifecycle state, or perform daemon discovery. Local validation rejects `delegate.request`, top-level `review`, missing metadata, non-object payloads, and any command outside the closed enum before transport. Structured daemon failures such as `conflict` are preserved in the JSON error envelope.
+
+For `kan_delegate_action`, the top-level `session_id` is authoritative: handlers always overwrite/set `payload.session_id` with that value before submitting the envelope. Remaining payload fields stay opaque for daemon-side validation.
+
+This is fake/injected DELRV-1 readiness only. The tools use `DaemonClient.build_command_envelope(...)` and `submit_command(...)` through an injected client factory; they do not prove live daemon, installed Hermes plugin-load, slash-command, Discord, gateway, auth, token, socket, localhost, or CLI readiness.
+
 ## DAEMN-2 fake stream and diagnostics surfaces
 
 DAEMN-2 extends the same explicit-transport boundary with fake/fixture-only stream and diagnostics client surfaces:
@@ -83,7 +96,7 @@ This is parser and fake-daemon readiness only. HPLUG-2 maps the existing fake/in
 
 ## HPLUG-3 unsupported slash-command bindings
 
-Hermes provides a plugin slash-command host API through `PluginContext.register_command(name, handler, description, args_hint)`. KAN plugin command exposure remains unsupported in HPLUG-3. The plugin manifest must keep `provides_commands: []`, and the root entrypoint must not register command handlers until a later task supplies a concrete KAN daemon command contract.
+Hermes provides a plugin slash-command host API through `PluginContext.register_command(name, handler, description, args_hint)`. KAN plugin slash-command exposure remains unsupported. The plugin manifest must keep `provides_commands: []`, and the root entrypoint must not register command handlers until a later task supplies a concrete slash-command binding contract and isolated verification.
 
 Future KAN slash-command bindings must preserve the same fail-closed boundary as tools: no live daemon discovery, Hermes, Discord, gateway, auth, token, localhost, socket, or CLI fallback unless explicitly designed and tested. A command must have daemon-owned state semantics, fake or conformance fixtures, duplicate/idempotency handling, structured error preservation, argument validation, redaction coverage, manifest declaration, and isolated Hermes/gateway smoke evidence before readiness is claimed.
 

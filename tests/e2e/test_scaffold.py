@@ -33,7 +33,7 @@ def test_e2e_readonly_handler_smoke_uses_explicit_fake_transport_only() -> None:
                             "daemon_version": "0.0.0-fake",
                             "status": "fake-ready",
                             "feature_groups": [
-                                "version_features",
+                                "version.read",
                                 "command_envelope",
                                 "structured_error",
                             ],
@@ -61,7 +61,7 @@ def test_e2e_stream_tail_handler_smoke_uses_explicit_fake_transport_only() -> No
                             "protocol_version": "kan-protocol-v1alpha0",
                             "daemon_version": "0.0.0-fake",
                             "feature_groups": [
-                                "version_features",
+                                "version.read",
                                 "command_envelope",
                                 "structured_error",
                                 "stream_frame",

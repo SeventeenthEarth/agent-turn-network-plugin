@@ -4,8 +4,11 @@ import json
 from collections.abc import Callable
 from typing import Any, cast
 
+import pytest
+
 from kkachi_agent_network_plugin.client import DaemonClient, StaticDaemonTransport
 from kkachi_agent_network_plugin.client.daemon import (
+    OP_COMMAND_SUBMIT,
     OP_DIAGNOSTICS_READ,
     OP_STATUS_READ,
     OP_STREAM_TAIL,
@@ -15,6 +18,8 @@ from kkachi_agent_network_plugin.protocol import JsonObject
 from kkachi_agent_network_plugin.tools import (
     handle_compatibility_diagnostics,
     handle_daemon_status,
+    handle_delegate_action,
+    handle_delegate_new,
     handle_stream_tail,
 )
 
@@ -22,19 +27,19 @@ BASE_STATUS: JsonObject = {
     "protocol_version": "kan-protocol-v1alpha0",
     "daemon_version": "0.0.0-fake",
     "status": "fake-ready",
-    "feature_groups": ["version_features", "command_envelope", "structured_error"],
+    "feature_groups": ["version.read", "command_envelope", "structured_error"],
     "live_readiness": False,
 }
 BASE_VERSION_WITH_STREAM: JsonObject = {
     "protocol_version": "kan-protocol-v1alpha0",
     "daemon_version": "0.0.0-fake",
-    "feature_groups": ["version_features", "command_envelope", "structured_error", "stream_frame"],
+    "feature_groups": ["version.read", "command_envelope", "structured_error", "stream_frame"],
     "live_readiness": False,
 }
 BASE_VERSION_WITHOUT_STREAM: JsonObject = {
     "protocol_version": "kan-protocol-v1alpha0",
     "daemon_version": "0.0.0-fake",
-    "feature_groups": ["version_features", "command_envelope", "structured_error"],
+    "feature_groups": ["version.read", "command_envelope", "structured_error"],
     "live_readiness": False,
 }
 BASE_FRAME: JsonObject = {
@@ -70,6 +75,13 @@ BASE_DIAGNOSTICS: JsonObject = {
         }
     ],
 }
+BASE_COMMAND_SUCCESS: JsonObject = {
+    "ok": True,
+    "command_id": "cmd-1",
+    "event_id": "evt-1",
+    "session_id": "sess-1",
+    "request_id": "req-1",
+}
 
 
 def factory_for(responses: dict[str, JsonObject]) -> Callable[[], DaemonClient]:
@@ -78,6 +90,10 @@ def factory_for(responses: dict[str, JsonObject]) -> Callable[[], DaemonClient]:
         responses,
     )
     return lambda: DaemonClient(StaticDaemonTransport(typed_responses))
+
+
+def factory_for_transport(transport: StaticDaemonTransport) -> Callable[[], DaemonClient]:
+    return lambda: DaemonClient(transport)
 
 
 def decode(payload: str) -> dict[str, Any]:
@@ -99,7 +115,7 @@ def test_daemon_status_handler_returns_json_success_from_explicit_fake_client() 
         "data": {
             "daemon_version": "0.0.0-fake",
             "status": "fake-ready",
-            "feature_groups": ["version_features", "command_envelope", "structured_error"],
+            "feature_groups": ["version.read", "command_envelope", "structured_error"],
         },
     }
 
@@ -356,3 +372,332 @@ def test_stream_tail_handler_malformed_stream_payload_fails_closed() -> None:
     assert result["ok"] is False
     assert result["error"]["category"] == "protocol"
     assert result["live_readiness"] is False
+
+
+def test_delegate_new_submits_delegate_new_envelope_with_caller_metadata() -> None:
+    transport = StaticDaemonTransport({OP_COMMAND_SUBMIT: BASE_COMMAND_SUCCESS})
+
+    result = decode(
+        handle_delegate_new(
+            {
+                "session_id": "sess-1",
+                "moderator": "agent-mod",
+                "assignee": "agent-impl",
+                "title": "Implement DELRV-1",
+                "task": "Add fake command envelope tools",
+                "context": {"run_id": "run-1"},
+                "participants": [{"id": "agent-mod"}, {"id": "agent-impl"}],
+                "acceptance": ["tests pass"],
+                "expected_outputs": ["summary"],
+                "limits": {"no_live": True},
+                "request_id": "req-1",
+                "idempotency_key": "idem-1",
+            },
+            client_factory=factory_for_transport(transport),
+        )
+    )
+
+    assert result == {
+        "ok": True,
+        "tool": "kan_delegate_new",
+        "live_readiness": False,
+        "data": {
+            "command_id": "cmd-1",
+            "event_id": "evt-1",
+            "session_id": "sess-1",
+            "request_id": "req-1",
+        },
+    }
+    assert transport.requests == [
+        (
+            OP_COMMAND_SUBMIT,
+            {
+                "protocol_version": "kan-protocol-v1alpha0",
+                "envelope_version": "kan-command-envelope-v1alpha0",
+                "command": "delegate.new",
+                "payload": {
+                    "session_id": "sess-1",
+                    "moderator": "agent-mod",
+                    "assignee": "agent-impl",
+                    "title": "Implement DELRV-1",
+                    "task": "Add fake command envelope tools",
+                    "context": {"run_id": "run-1"},
+                    "participants": [{"id": "agent-mod"}, {"id": "agent-impl"}],
+                    "acceptance": ["tests pass"],
+                    "expected_outputs": ["summary"],
+                    "limits": {"no_live": True},
+                },
+                "request_id": "req-1",
+                "idempotency_key": "idem-1",
+                "client_metadata": {
+                    "name": "kkachi-agent-network-plugin",
+                    "version": "0.1.0",
+                    "transport": "injected",
+                },
+            },
+        )
+    ]
+
+
+@pytest.mark.parametrize(
+    ("field", "bad_value", "message"),
+    [
+        ("context", {"nested": object()}, "context must contain only JSON-compatible values"),
+        ("limits", {"nested": object()}, "limits must contain only JSON-compatible values"),
+        (
+            "participants",
+            [{"nested": object()}],
+            "participants must contain only JSON-compatible values",
+        ),
+        ("acceptance", [object()], "acceptance must contain only JSON-compatible values"),
+        (
+            "expected_outputs",
+            [{"nested": object()}],
+            "expected_outputs must contain only JSON-compatible values",
+        ),
+    ],
+)
+def test_delegate_new_rejects_nested_non_json_values_before_transport(
+    field: str,
+    bad_value: object,
+    message: str,
+) -> None:
+    client_factory_called = False
+
+    def client_factory() -> DaemonClient:
+        nonlocal client_factory_called
+        client_factory_called = True
+        raise AssertionError("client factory must not be called")
+
+    args: dict[str, object] = {
+        "session_id": "sess-1",
+        "moderator": "agent-mod",
+        "assignee": "agent-impl",
+        "title": "Implement DELRV-1",
+        "task": "Add fake command envelope tools",
+        "context": {"run_id": "run-1"},
+        "participants": [{"id": "agent-mod"}, {"id": "agent-impl"}],
+        "acceptance": ["tests pass"],
+        "expected_outputs": ["summary"],
+        "limits": {"no_live": True},
+        "request_id": "req-1",
+        "idempotency_key": "idem-1",
+    }
+    args[field] = bad_value
+
+    result = decode(handle_delegate_new(args, client_factory=client_factory))
+
+    assert result["ok"] is False
+    assert result["tool"] == "kan_delegate_new"
+    assert result["error"] == {
+        "category": "validation",
+        "message": message,
+        "retryable": False,
+    }
+    assert client_factory_called is False
+
+
+@pytest.mark.parametrize(
+    "command",
+    ["delegate.review", "delegate.review_submit", "delegate.escalation_delivered"],
+)
+def test_delegate_action_submits_representative_closed_enum_commands(command: str) -> None:
+    transport = StaticDaemonTransport({OP_COMMAND_SUBMIT: BASE_COMMAND_SUCCESS})
+
+    result = decode(
+        handle_delegate_action(
+            {
+                "session_id": "sess-top",
+                "command": command,
+                "request_id": "req-1",
+                "idempotency_key": "idem-1",
+                "payload": {
+                    "session_id": "payload-session-is-overridden",
+                    "body": {"ok": True},
+                },
+            },
+            client_factory=factory_for_transport(transport),
+        )
+    )
+
+    assert result["ok"] is True
+    operation, body = transport.requests[0]
+    assert operation == OP_COMMAND_SUBMIT
+    assert body is not None
+    assert body["command"] == command
+    assert body["request_id"] == "req-1"
+    assert body["idempotency_key"] == "idem-1"
+    assert body["payload"] == {"session_id": "sess-top", "body": {"ok": True}}
+
+
+@pytest.mark.parametrize("command", ["delegate.request", "review", "delegate.unknown"])
+def test_delegate_action_rejects_commands_outside_closed_enum_before_transport(
+    command: str,
+) -> None:
+    client_factory_called = False
+
+    def client_factory() -> DaemonClient:
+        nonlocal client_factory_called
+        client_factory_called = True
+        raise AssertionError("client factory must not be called")
+
+    result = decode(
+        handle_delegate_action(
+            {
+                "session_id": "sess-1",
+                "command": command,
+                "request_id": "req-1",
+                "idempotency_key": "idem-1",
+                "payload": {},
+            },
+            client_factory=client_factory,
+        )
+    )
+
+    assert result["ok"] is False
+    assert result["error"] == {
+        "category": "validation",
+        "message": f"unsupported delegate action command: {command}",
+        "retryable": False,
+    }
+    assert client_factory_called is False
+
+
+@pytest.mark.parametrize("idempotency_value", ["", None])
+def test_delegate_action_rejects_missing_or_empty_idempotency_before_transport(
+    idempotency_value: object,
+) -> None:
+    client_factory_called = False
+
+    def client_factory() -> DaemonClient:
+        nonlocal client_factory_called
+        client_factory_called = True
+        raise AssertionError("client factory must not be called")
+
+    base_args: dict[str, object] = {
+        "session_id": "sess-1",
+        "command": "delegate.review",
+        "request_id": "req-1",
+        "idempotency_key": "idem-1",
+        "payload": {},
+    }
+    if idempotency_value is None:
+        del base_args["idempotency_key"]
+    else:
+        base_args["idempotency_key"] = idempotency_value
+
+    result = decode(handle_delegate_action(base_args, client_factory=client_factory))
+
+    assert result["ok"] is False
+    assert result["error"]["category"] == "validation"
+    assert result["error"]["message"] == "idempotency_key must be a non-empty string"
+    assert client_factory_called is False
+
+
+def test_delegate_action_preserves_structured_daemon_conflict_error() -> None:
+    transport = StaticDaemonTransport(
+        {
+            OP_COMMAND_SUBMIT: {
+                "ok": False,
+                "error": {
+                    "category": "conflict",
+                    "message": "duplicate idempotency key",
+                    "retryable": True,
+                    "command_id": "cmd-old",
+                    "session_id": "sess-1",
+                    "request_id": "req-1",
+                    "diagnostics": {"duplicate": True},
+                },
+            }
+        }
+    )
+
+    result = decode(
+        handle_delegate_action(
+            {
+                "session_id": "sess-1",
+                "command": "delegate.review",
+                "request_id": "req-1",
+                "idempotency_key": "idem-1",
+                "payload": {},
+            },
+            client_factory=factory_for_transport(transport),
+        )
+    )
+
+    assert result["ok"] is False
+    assert result["tool"] == "kan_delegate_action"
+    assert result["error"] == {
+        "category": "conflict",
+        "message": "duplicate idempotency key",
+        "retryable": True,
+        "command_id": "cmd-old",
+        "session_id": "sess-1",
+        "request_id": "req-1",
+        "diagnostics": {"duplicate": True},
+    }
+
+
+def test_delegate_new_malformed_daemon_response_fails_closed_as_protocol_error() -> None:
+    result = decode(
+        handle_delegate_new(
+            {
+                "session_id": "sess-1",
+                "moderator": "agent-mod",
+                "assignee": "agent-impl",
+                "title": "Implement DELRV-1",
+                "task": "Add fake command envelope tools",
+                "context": {},
+                "participants": [],
+                "acceptance": [],
+                "expected_outputs": [],
+                "limits": {},
+                "request_id": "req-1",
+                "idempotency_key": "idem-1",
+            },
+            client_factory=factory_for({OP_COMMAND_SUBMIT: {"ok": True}}),
+        )
+    )
+
+    assert result["ok"] is False
+    assert result["tool"] == "kan_delegate_new"
+    assert result["error"]["category"] == "protocol"
+    assert result["live_readiness"] is False
+
+
+def test_delegate_handlers_fail_closed_without_client_factory() -> None:
+    delegate_new = decode(
+        handle_delegate_new(
+            {
+                "session_id": "sess-1",
+                "moderator": "agent-mod",
+                "assignee": "agent-impl",
+                "title": "Implement DELRV-1",
+                "task": "Add fake command envelope tools",
+                "context": {},
+                "participants": [],
+                "acceptance": [],
+                "expected_outputs": [],
+                "limits": {},
+                "request_id": "req-1",
+                "idempotency_key": "idem-1",
+            }
+        )
+    )
+    delegate_action = decode(
+        handle_delegate_action(
+            {
+                "session_id": "sess-1",
+                "command": "delegate.review",
+                "request_id": "req-1",
+                "idempotency_key": "idem-1",
+                "payload": {},
+            }
+        )
+    )
+
+    assert delegate_new["ok"] is False
+    assert delegate_new["error"]["category"] == "unavailable"
+    assert delegate_action["ok"] is False
+    assert delegate_action["tool"] == "kan_delegate_action"
+    assert delegate_action["error"]["category"] == "unavailable"

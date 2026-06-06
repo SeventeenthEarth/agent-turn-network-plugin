@@ -6,7 +6,7 @@
   "consumer_repo": "kkachi-agent-network-plugin",
   "fixtures": [],
   "required_feature_groups": [
-    "version_features",
+    "version.read",
     "command_envelope",
     "structured_error"
   ],

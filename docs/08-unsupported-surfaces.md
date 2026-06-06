@@ -4,7 +4,7 @@
 
 This document records the current unsupported Hermes surfaces for `kkachi-agent-network-plugin` so operators do not confuse host capability with KAN plugin readiness.
 
-Hermes currently provides a real plugin slash-command host API through `PluginContext.register_command(name, handler, description, args_hint)`. The KAN plugin still exposes no KAN slash commands. Its manifest must continue to declare `provides_commands: []` until a later task implements and verifies concrete command handlers.
+Hermes currently provides a real plugin slash-command host API through `PluginContext.register_command(name, handler, description, args_hint)`. The KAN plugin still exposes no KAN slash commands. Its manifest must continue to declare `provides_commands: []` until a later task implements and verifies concrete slash-command handlers.
 
 ## Current KAN plugin exposure
 
@@ -13,12 +13,14 @@ Supported now:
 - `kan_daemon_status` — read-only fake/injected daemon status tool.
 - `kan_compatibility_diagnostics` — read-only fake/injected diagnostics tool with redaction.
 - `kan_stream_tail` — read-only fake/injected retained stream tail tool with `stream_frame` pre-probe.
+- `kan_delegate_new` — fake/injected `delegate.new` command-envelope submission tool with caller-supplied request/idempotency metadata.
+- `kan_delegate_action` — fake/injected closed-enum `delegate.*` action/review/delivery command-envelope submission tool.
 
 Unsupported now:
 
 - KAN slash commands through `ctx.register_command`.
 - Native Discord slash-command registration for KAN operations.
-- Write-capable KAN tools or commands.
+- Write-capable KAN tools beyond the two DELRV-1 fake/injected command-envelope tools.
 - `kan_session_status` and any `session.status.read` surface.
 - Live daemon discovery, localhost/socket/SSE/WebSocket transport, or CLI fallback.
 - Hermes gateway/send_message delivery helpers that claim daemon-recorded evidence.
@@ -34,7 +36,7 @@ Hermes host evidence:
 
 KAN plugin readiness boundary:
 
-- HPLUG-3 does not register slash commands because no KAN command operation is yet safe to expose through a slash-command handler.
+- The plugin does not register slash commands; DELRV-1 command-envelope tools are Hermes tools, not slash-command bindings.
 - The plugin is not installed/enabled as a live Hermes plugin in the active environment, so no installed-plugin command claim is valid.
 - Free-form Discord replies or slash invocations must not become authoritative lifecycle transitions; daemon events remain the SOT.
 

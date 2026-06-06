@@ -85,3 +85,25 @@ DELRV-1 remains fake/injected-only by default:
 - bootstrap tests assert the two DELRV-1 tools are declared while `provides_commands: []` remains unchanged.
 
 These tests do not claim live daemon readiness, plugin-load readiness, slash commands, Discord/gateway delivery, or plugin-owned lifecycle/idempotency state.
+
+## DELRV-2 delegation/review conformance coverage
+
+DELRV-2 adds fake-daemon coverage against the sibling control DELEG-002
+fixture matrix:
+
+- success cases load the control-owned `delegate.new`, `delegate.submit`,
+  `delegate.review`, `delegate.review_submit`, and `delegate.accept` fixtures
+  read-only and submit them through `StaticDaemonTransport` as `command.submit`
+  envelopes;
+- duplicate/idempotency coverage sends the duplicate `delegate.submit` action
+  again and asserts daemon-returned command/event/request identity is preserved;
+- permission/validation coverage consumes the DELEG-002 unauthorized actor,
+  wrong review phase, and invalid verdict structured-error fixtures;
+- retryable and malformed-response cases stay plugin-local because DELEG-002
+  publishes no public retryable fixture or valid malformed-payload manifest
+  entry.
+
+These tests remain fake/injected-only. They do not start or discover a daemon,
+call a CLI, open localhost/socket transport, contact Hermes, Discord, KAB,
+gateway, auth, or token surfaces, add slash commands, or change
+`provides_commands: []`.

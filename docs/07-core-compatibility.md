@@ -95,6 +95,29 @@ The plugin requires caller-supplied non-empty `request_id` and `idempotency_key`
 
 This is fake/injected compatibility only and does not change live readiness, installed plugin-load readiness, slash-command readiness, Discord/gateway readiness, or auth/token boundaries.
 
+## DELRV-2 DELEG-002 conformance guard
+
+DELRV-2 consumes the sibling control repo's DELEG-002 conformance fixture matrix
+read-only from `testdata/conformance`. The plugin-side tests adapt valid
+control command fixtures into fake `command.submit` transport responses to
+verify plugin pass-through behavior. The control repo remains authoritative for
+command semantics, permission rules, validation messages, and structured-error
+shapes.
+
+The covered success matrix is `delegate.new`, `delegate.submit`,
+`delegate.review`, `delegate.review_submit`, and `delegate.accept`. Duplicate
+coverage sends the duplicate submit through the fake transport again and asserts
+the plugin preserves the daemon-returned command/event/request identity instead
+of serving a local cache. Error coverage consumes the DELEG-002 unauthorized
+actor, wrong review phase, and invalid verdict fixtures.
+
+Retryability and malformed fake-daemon responses remain plugin-local negative
+inputs unless a future control task publishes corresponding valid fixtures.
+Malformed success/error envelopes still map to `protocol`. This guard does not
+add live daemon discovery, localhost/socket transport, CLI fallback, Hermes,
+Discord, KAB, gateway, auth, token behavior, slash commands, installed
+plugin-load readiness, or any change to `provides_commands: []`.
+
 ## HPLUG-3 slash-command compatibility guard
 
 Hermes host slash-command support exists through `PluginContext.register_command`, but KAN plugin slash commands are not compatible-ready. Control KAN must first provide daemon command authority, protocol fixtures, idempotency/error semantics, and delivery-evidence rules for the specific operation. Until then, `provides_commands: []` is the correct manifest state and no slash-command handler should be registered. See `docs/08-unsupported-surfaces.md` for the operator-facing unsupported-surface matrix and future binding checklist.

@@ -4,7 +4,7 @@
 
 Let `kkachi-agent-network-plugin` develop independently from the Go control runtime while proving compatibility with the control daemon contract.
 
-The control-side SOT is `../../kkachi-agent-network-control/docs/21-cross-repo-development.md`.
+The control-side SOT is `../../kkachi-agent-network-control/docs/21-cross-repo-development.md`. For live-local transport work, the control-side companion SOT is `../../kkachi-agent-network-control/docs/24-live-transport-control-sot.md` and the plugin-side SOT is `docs/10-live-transport-sot.md`.
 
 ## Current supported control contract
 
@@ -39,15 +39,17 @@ Default for unit and integration tests before the control daemon exists. Fake da
 
 The Python client parses control fixtures without starting the real daemon. This is required for P1 and later.
 
-### Future live local daemon mode
+### Planned live local daemon mode
 
-Not part of DAEMN-1. A later milestone may use a locally built `kkachi-agent-networkd` with disposable data home, but only when explicitly configured.
+Planned `LTRAN` work may use a locally built `kkachi-agent-networkd` with disposable data home, but only after the control `LTRAN` epic is complete and the plugin task explicitly configures live transport. Active task transfer between control and plugin happens only at epic boundaries.
 
 ### Isolated Hermes/Discord mode
 
 Uses disposable Hermes home/profile and dedicated Discord test target. It must never default to the current running Hermes gateway or active Discord thread.
 
 ## Plugin milestone matrix
+
+Historical pre-live plugin milestones keep their original `P0`/`P1` labels and completed task references for traceability. New post-Release live-local epics use five-letter uppercase epic IDs and three-digit task IDs. In cross-repo evidence, use repo-qualified references such as `control/LTRAN-001` and `plugin/LTRAN-001`.
 
 | Plugin milestone | Control task gate checked | Allowed before control implementation | Release-ready requires |
 | --- | --- | --- | --- |
@@ -57,6 +59,9 @@ Uses disposable Hermes home/profile and dedicated Discord test target. It must n
 | P3 Delegation/review tools | DELEG-001 delegation/review command fixtures | yes, fake/injected only | implemented control commands, fake-daemon coverage, review gates, and final evidence; no live-local/plugin-load readiness claim |
 | P4 Council/Discord surface | COUNC-001 council fixtures plus DAEMN-002 delivery evidence fixtures | yes, fake/injected CNDIS tool-ready | isolated E2E target, Discord helper contract, and installed-plugin evidence before live Discord readiness |
 | P5 Skill/distribution | TRANS-001/RELIA-001 implemented command matrix and release evidence | docs-only draft | compatibility matrix and local isolated plugin-load smoke |
+| LTRAN Live daemon transport | control `LTRAN` complete | no; block until control `LTRAN` evidence exists | explicit configured live daemon transport and plugin/CLI/daemon equivalence evidence |
+| PARTC Participant client path | control `MEMBR` complete | no; block until real participant invocation evidence exists | participant stream/write path and selected response proof through plugin/protocol client |
+| SURFD Surface delivery | control `SURFD` complete | no; block until rendering/evidence contract exists | visible helper/rendering boundary with daemon event data and evidence pointers |
 
 ## SKILL-2 compatibility matrix
 
@@ -78,6 +83,7 @@ tests, and `make check-plugin-load-smoke` local isolated plugin-load smoke gate.
 | `export.bundle` | Control-supported capability | Not exposed as a plugin tool in SKILL-2 | Control `TRANS-001`/`RELIA-001` completion is recorded as unblock evidence only | No `kan_export_bundle` tool, command, hook, or live fallback is added. |
 | Packaged skill resource | Python package includes `bundled_skills/kan-plugin/SKILL.md` | Supported for import-safe package resource reads | `tests/unit/test_bundled_skills.py`, `make check-plugin-load-smoke` | The package does not install into the user's Hermes profile. |
 | Local isolated plugin-load smoke | Hermes-compatible root `register(ctx)` entrypoint can be loaded with a fake context | Supported only as local isolated plugin-load smoke | `scripts/check_plugin_load_smoke.py`, `tests/unit/test_plugin_load_smoke.py`, `make check-plugin-load-smoke` | This is not production activation, live plugin readiness, KAB readiness, live Hermes readiness, or live Discord readiness. |
+| Live-local daemon transport | Planned control `LTRAN` gate | Planned for plugin `LTRAN` only after the control `LTRAN` epic completes | `docs/10-live-transport-sot.md`, control `docs/24-live-transport-control-sot.md` | Until implemented, live sockets, localhost, CLI fallback, daemon discovery, Hermes gateway, auth/token, and fake success remain unsupported. |
 | `kan_session_status` | No authoritative `session.status.read` plugin contract | Unsupported | Guardrails, schema tests, docs | Do not add `kan_session_status` or `session.status.read` support. |
 | KAN slash commands | Hermes host can register commands, but plugin has no approved KAN command contract | Unsupported; `provides_commands: []` stays unchanged | `plugin.yaml`, bootstrap smoke, plugin-load smoke, docs guardrails | Any `provides_commands: [kan]` or `register_command` drift fails local smoke. |
 | Native Discord slash commands | No supported plugin/native Discord slash-command contract | Unsupported | `docs/05-discord-surface.md`, `docs/08-unsupported-surfaces.md` | No native Discord command registration or gateway fallback. |

@@ -30,7 +30,7 @@ Split a task only when the dependency, approval gate, failure domain, or reviewe
 
 The plugin may develop ahead of `kkachi-agent-network-control` only when a task can be completed against docs, local fakes, or control conformance fixtures. When a task requires a control daemon capability, command, feature flag, fixture, or delivery-evidence path that does not exist yet, keep or move that task to `blocked` instead of inventing plugin-side fallback behavior.
 
-Control roadmap IDs use five-letter uppercase epic slugs and `{EPIC}-001` task IDs. Plugin epic/task IDs are unchanged; the mappings below name only upstream control gates.
+Historical completed plugin tasks before the post-Release live-local work preserve their original short task IDs such as `SCAFF-1`, `DAEMN-1`, and `SKILL-2` for audit continuity. New post-Release cross-repo live-local epics introduced by this update use five-letter uppercase epic IDs and three-digit task IDs: `LTRAN-001`, `PARTC-001`, and `SURFD-001`. Control roadmap IDs use the same five-letter/three-digit convention. When a task ID is cited outside its repo-local roadmap, qualify it as `plugin/<task-id>` or `control/<task-id>`.
 
 Use `docs/07-core-compatibility.md` as the compatibility SOT. The short rule is:
 
@@ -123,3 +123,48 @@ Exit: disposable-profile activation blockers discovered by local pilots are capt
 | Task ID | Task Title | Task Status | Task Description |
 |---|---|---|---|
 | REL-PILOT-FIX-001 | Repair root plugin activation blockers | completed | Repairs the root directory-plugin entrypoint so a cloned/staged repository can load its bundled `src/` package without external `PYTHONPATH`, replaces Python 3.12-only protocol type-alias syntax with Python 3.11-compatible aliases, lowers packaging/tooling metadata to Python `>=3.11`, and strengthens local smoke/unit coverage so production-style root entrypoint loading and Python 3.11 syntax compatibility fail fast. This remains local-only activation-smoke evidence and does not claim live Discord readiness, live daemon discovery, KAB readiness, or live Hermes production readiness. Completed after final gates, 주군 commit approval, and committed-HEAD disposable profile install verification. |
+
+## LTRAN: Live daemon transport
+
+Epic ID: `LTRAN`
+
+Exit: the plugin has an explicit, locally verified live daemon transport that preserves daemon authority, keeps the CLI as the main-agent control plane, keeps the plugin as the participant-agent KAN client surface, and proves plugin reads/writes address the same daemon contract as the CLI. This exit is not production activation, live/default Discord delivery, gateway/auth/token mutation, or KAB bridge readiness.
+
+SOT: `docs/10-live-transport-sot.md`. Control companion SOT: `../../kkachi-agent-network-control/docs/24-live-transport-control-sot.md`.
+
+Dependency gate: complete the control `LTRAN` epic before starting the plugin `LTRAN` implementation epic. Do not switch from plugin `LTRAN` to control tasks mid-epic; if a missing control capability is discovered, block the plugin epic and open/complete the needed control epic before resuming plugin work.
+
+| Task ID | Task Title | Task Status | Task Description |
+|---|---|---|---|
+| LTRAN-001 | Lock plugin live transport SOT and mapping | planned | Record the plugin-side daemon/plugin/CLI relationship, main-agent control-plane policy, participant-agent plugin path, operation mapping, ID/idempotency rules, non-scope boundaries, and the control companion SOT dependency. |
+| LTRAN-002 | Add explicit plugin live daemon transport | planned | Add an explicit configured Unix-socket daemon client for plugin tools while preserving no-config fail-closed behavior and rejecting unsafe/missing/malformed/incompatible daemon paths without CLI, localhost, Discord, Hermes, gateway, auth, token, or KAB fallback. |
+| LTRAN-003 | Prove plugin/CLI/daemon equivalence | planned | Run disposable data-home and disposable Hermes/plugin evidence showing CLI status/version/stream/write commands and plugin status/stream/participant-write tools address the same daemon with matching event/idempotency behavior. |
+
+## PARTC: Participant client path
+
+Epic ID: `PARTC`
+
+Exit: participant agents can observe actionable daemon events and submit participant-originated council writes through the plugin/protocol-client path, with member runtime invocation evidence supplied by the completed control `MEMBR` epic. This exit does not claim always-on production runtimes or simulated role substitution.
+
+SOT: `docs/10-live-transport-sot.md`. Control companion SOT: `../../kkachi-agent-network-control/docs/24-live-transport-control-sot.md`.
+
+Dependency gate: complete the control `MEMBR` epic before starting plugin `PARTC`. Active task transfer between repos happens only at the epic boundary.
+
+| Task ID | Task Title | Task Status | Task Description |
+|---|---|---|---|
+| PARTC-001 | Add participant stream and write coverage | planned | Add participant-focused stream/tail/follow/ack support as needed and prove `council.attend`, `council.ready`, `council.prepared_partial`, `council.hand_raise`, `council.speak`, and `council.vote` submit through plugin/protocol-client tools with command-id/idempotency coverage. |
+| PARTC-002 | Prove selected participant response path | planned | In an isolated pilot, consume control `MEMBR` evidence that a real participant profile/wrapper responds to `speaker_selected`, then prove the resulting participant output is recorded as `council.speak` through the plugin/protocol-client path without simulated role substitution. |
+
+## SURFD: Surface delivery
+
+Epic ID: `SURFD`
+
+Exit: the plugin-side visible-surface helper/rendering boundary can present daemon event data and record evidence pointers without becoming lifecycle state authority or enabling live/default Discord from plugin registration.
+
+SOT: `docs/10-live-transport-sot.md`. Control companion SOT: `../../kkachi-agent-network-control/docs/24-live-transport-control-sot.md`.
+
+Dependency gate: complete the control `SURFD` epic before starting plugin `SURFD`. Active task transfer between repos happens only at the epic boundary.
+
+| Task ID | Task Title | Task Status | Task Description |
+|---|---|---|---|
+| SURFD-001 | Render daemon events to visible discussion surface | planned | Define and verify visible-surface rendering from daemon events, including speech/final-result posting and evidence-pointer handling, without treating visible messages as lifecycle state authority or enabling default live Discord from plugin registration. |

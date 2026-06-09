@@ -5,10 +5,12 @@ sot_docs:
   - "docs/02-plugin-contract.md"
   - "docs/01-architecture.md"
   - "docs/09-skill-and-operator-guide.md"
+  - "docs/10-live-transport-sot.md"
 adr_dir: "docs"
 todo_dir: "docs"
 spec_dir: "docs"
 test_commands:
   - "make test-prepare"
+  - "make docs-guardrails"
   - "make check-core-contract"
   - "make test"

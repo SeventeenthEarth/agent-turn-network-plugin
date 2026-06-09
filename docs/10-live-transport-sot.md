@@ -1,0 +1,691 @@
+# LIVE-TRANSPORT Source of Truth
+
+## Status
+
+This document is the plugin-side implementation Source of Truth for the first live transport slice that connects the `kkachi-agent-network-plugin`, `kkachi-agent-networkd`, and `kkachi-agent-network` CLI into a usable council/discussion flow.
+
+The control-side companion SOT is `../../kkachi-agent-network-control/docs/24-live-transport-control-sot.md`. This plugin SOT may describe daemon/CLI/member-runtime responsibilities for boundary clarity, but control-owned behavior is implemented and roadmapped in the control repository.
+
+This document does **not** authorize production activation, live Discord delivery, gateway/auth/token changes, KAB bridge readiness, or active profile mutation by itself. It defines the architecture, component responsibilities, command/data-plane boundaries, plugin implementation slices, cross-repo dependency gates, and verification evidence required before any later activation decision.
+
+## Scope
+
+LIVE-TRANSPORT covers the local KAN runtime path needed for a main agent to control a discussion session while participant agents observe and respond through the daemon event stream.
+
+In scope:
+
+- explicit daemon connection from the plugin through the KAN protocol client/contract;
+- control-plane use of the canonical CLI by a main agent or operator;
+- participant-agent stream observation and typed event writes through plugin/protocol-client tools;
+- council session creation, agenda, attendance, preparation, floor grants, speeches, interventions, voting, finalization, unresolved closure, cancellation, transcript, and recovery semantics as daemon-owned events;
+- local disposable live transport pilots that prove CLI/plugin/daemon equivalence without production activation;
+- documented failure handling for missing daemon, unsafe socket, cursor gaps, unknown schema versions, missing participant runtimes, and delivery failures.
+
+Out of scope for this SOT unless a later task explicitly opens it:
+
+- production Hermes profile enablement;
+- live/default Discord sending from the plugin;
+- Discord thread creation by the daemon;
+- gateway, auth, token, credential, or provider mutation;
+- localhost/TCP/gateway fallback;
+- hidden `plugin -> CLI subprocess -> daemon` fallback;
+- replacing real participant-agent profiles with simulated role prompts;
+- treating Discord message order as lifecycle state;
+- KAB bridge execution claims.
+
+## Terms
+
+| Term | Meaning |
+|---|---|
+| daemon | `kkachi-agent-networkd`, the state/event authority. |
+| CLI | `kkachi-agent-network`, the canonical operator/control and diagnostics surface. |
+| plugin | `kkachi-agent-network-plugin`, the Hermes agent-facing adapter. |
+| main agent | The coordinating moderator runtime that receives user intent, controls sessions, grants floor, and returns outcomes. |
+| participant agent | A real named member runtime/profile that observes session events and emits its own typed responses. |
+| member runtime | The loop or supervisor that watches daemon stream frames for one participant identity and invokes/resumes the real participant-agent profile when action is required. |
+| surface | A human-visible room or record pointer, such as a Discord thread. It is not lifecycle state authority. |
+| control plane | Session creation, agenda, moderation, intervention, finalization, diagnostics, recovery. |
+| agent plane | Participant observation, preparation, hand raising, speech, vote, and cursor acknowledgement. |
+| delivery plane | Human-visible presentation of recorded daemon events, plus evidence pointers such as message IDs. |
+
+## Cross-repo epic ownership and active-task handoff
+
+LIVE-TRANSPORT work is split into repo-owned five-letter epics. A repo switch must happen only at an epic boundary: do not start a control task in the middle of a plugin epic, and do not start a plugin task in the middle of a control epic. If a missing sibling capability is discovered mid-epic, block the active epic with evidence, complete the required sibling epic, then resume.
+
+Recommended execution order:
+
+| Order | Repo | Epic | Purpose | Blocks |
+|---:|---|---|---|---|
+| 1 | control | `LTRAN` | control companion SOT, daemon/CLI compatibility reads, live-local fixture/equivalence support | plugin `LTRAN` |
+| 2 | plugin | `LTRAN` | explicit plugin live daemon transport and plugin/CLI/daemon equivalence evidence | control `MEMBR` |
+| 3 | control | `MEMBR` | real participant profile/wrapper invocation path for selected participants | plugin `PARTC` |
+| 4 | plugin | `PARTC` | participant stream/write path and selected-participant response via plugin/protocol client | control `SURFD` |
+| 5 | control | `SURFD` | event-to-visible-surface rendering and delivery evidence contract | plugin `SURFD` |
+| 6 | plugin | `SURFD` | visible helper/rendering boundary using daemon event data and evidence pointers | release/live pilot decision |
+
+Plugin roadmap entries live in `docs/06-implementation-epics-tasks.md`. Control roadmap entries live in `../../kkachi-agent-network-control/docs/roadmap.md`. When a task ID is referenced outside its repo-local roadmap or SOT table, use repo-qualified notation such as `plugin/LTRAN-001` or `control/LTRAN-001` to avoid ambiguity.
+
+## Architecture decision
+
+The durable relationship is:
+
+```text
+user natural language
+  -> main agent
+  -> CLI control commands
+  -> daemon event/state authority
+  -> daemon stream/replay
+  -> participant member runtimes
+  -> participant agents
+  -> plugin/protocol-client typed writes
+  -> daemon event/state authority
+  -> main agent or delivery helper renders visible surface
+```
+
+The plugin and CLI are not interchangeable in runtime responsibility:
+
+- The CLI is the main agent/operator control plane.
+- The plugin is the participant-agent KAN client surface.
+- Both ultimately speak to the same daemon protocol and must remain equivalent at the daemon command/event level.
+- The daemon remains the only state authority.
+
+The plugin must not shell out to the CLI as its hidden data path. A main agent explicitly using the CLI as an operator is allowed and expected; plugin-internal CLI fallback is not.
+
+## Component responsibilities
+
+### Daemon
+
+The daemon owns:
+
+- `channel.jsonl` event append and ordering;
+- session phase transitions and validation;
+- registry snapshot and participant authority;
+- command idempotency through `command_id`;
+- active-session lock and recovery state;
+- stream replay/follow frame production;
+- cursor acknowledgement records;
+- transcript and export rendering;
+- structured errors and protocol/schema compatibility checks.
+
+The daemon does not:
+
+- create Discord threads;
+- read Discord messages;
+- send Discord messages;
+- interpret user natural language;
+- invoke participant LLMs as hidden role prompts;
+- treat plugin, CLI, or Discord state as lifecycle authority.
+
+### CLI
+
+The CLI owns the canonical operator and main-agent control surface.
+
+Primary control commands include:
+
+```bash
+kkachi-agent-network council new ...
+kkachi-agent-network council request-attendance ...
+kkachi-agent-network council attend ...
+kkachi-agent-network council lock-agenda ...
+kkachi-agent-network council prepare ...
+kkachi-agent-network council poll ...
+kkachi-agent-network council grant ...
+kkachi-agent-network council intervene ...
+kkachi-agent-network council propose ...
+kkachi-agent-network council revise ...
+kkachi-agent-network council request-vote ...
+kkachi-agent-network council finalize ...
+kkachi-agent-network council unresolved ...
+kkachi-agent-network cancel ...
+```
+
+Primary diagnostics/recovery commands include:
+
+```bash
+kkachi-agent-network daemon start
+kkachi-agent-network daemon status
+kkachi-agent-network daemon stop
+kkachi-agent-network doctor
+kkachi-agent-network registry validate
+kkachi-agent-network storage verify
+kkachi-agent-network storage rebuild-projection
+kkachi-agent-network status <session_id> --verbose
+kkachi-agent-network stream <session_id> --member <member> --since <cursor> --follow --format ndjson
+kkachi-agent-network stream ack <session_id> --member <member> --cursor <cursor>
+kkachi-agent-network transcript <session_id> --format md
+kkachi-agent-network export <session_id> --bundle
+```
+
+The CLI must be usable by the main agent through normal terminal execution and by a human operator during diagnostics or recovery.
+
+### Plugin
+
+The plugin owns the participant-agent Hermes tool surface. It provides typed access to daemon status, stream/tail frames, and write commands, but it does not own lifecycle state.
+
+Current and future plugin surfaces for LIVE-TRANSPORT should be classified as follows:
+
+| Surface | Purpose | Plane | Notes |
+|---|---|---|---|
+| `kan_daemon_status` | read daemon status/readiness | agent/diagnostic | live only with explicit config; fail closed otherwise |
+| `kan_compatibility_diagnostics` | read compatibility and redacted checks | agent/diagnostic | no hidden live discovery |
+| `kan_stream_tail` | read retained frames | agent plane | minimum read path; follow/ack may be added later |
+| future `kan_stream_follow` | long poll or follow frames | agent plane | optional; must preserve replay-before-live semantics |
+| future `kan_stream_ack` | acknowledge processed cursor | agent plane | required for long-lived runtimes if not handled by protocol client directly |
+| `kan_council_command` | typed participant writes | agent plane | participant commands such as `ready`, `hand_raise`, `speak`, `vote`; main-agent control use should prefer CLI |
+| `kan_delivery_evidence` | record evidence command where supported | delivery evidence | Discord IDs are evidence pointers only |
+| `kan_discord_send_message` | injected-only visible send helper | delivery plane | no default/live sender; not daemon state |
+
+The plugin must:
+
+- require explicit live transport configuration before opening a daemon socket;
+- fail closed when config is absent, unsafe, unavailable, or incompatible;
+- use bounded timeouts;
+- preserve daemon error categories and identifiers;
+- keep `request_id` and `command_id` distinct;
+- avoid plugin-owned session state, hidden dedupe, or lifecycle projection.
+
+The plugin must not:
+
+- auto-start the daemon;
+- infer current Discord/Hermes thread as a target;
+- use CLI subprocess fallback internally;
+- create, finalize, or mutate sessions without an explicit typed command;
+- substitute fake role-prompt output for a real participant-agent runtime.
+
+### Main agent
+
+The main agent is the user-facing moderator/operator runtime. It converts user natural language into explicit control actions and visible summaries.
+
+The main agent:
+
+- receives user intents such as “create a discussion room”, “change direction”, “grant this participant the floor”, “summarize”, “finish”, or “cancel”;
+- creates or binds a visible surface such as a Discord thread when an external delivery layer permits it;
+- uses the CLI for session creation, agenda lock, preparation, polling, floor grants, interventions, proposals, vote requests, finalization, unresolved closure, cancellation, diagnostics, and recovery;
+- watches daemon stream/status to know when participant outputs arrive;
+- posts or asks a delivery helper to post visible messages to the surface;
+- records delivery evidence where required.
+
+The main agent may use plugin tools for read-only diagnostics if explicitly configured, but the canonical main-agent control path for LIVE-TRANSPORT is CLI first.
+
+### Participant agent and member runtime
+
+A participant agent is not a simulated role prompt. It is a real profile/member runtime with its own identity, memory, skills, workspace, and session handle.
+
+A member runtime:
+
+1. validates its current registry identity before binding to a session;
+2. validates identity against the active session's frozen `registry_snapshot.yaml` after binding;
+3. subscribes to the daemon stream through the plugin/protocol client, or uses CLI stream as diagnostics/recovery fallback;
+4. replays missed frames before live frames;
+5. filters events by type, sender, recipient hints, phase, role, and local policy;
+6. invokes or resumes the real participant-agent profile only when action is required;
+7. emits typed KAN writes through plugin/protocol-client tools, or CLI fallback in recovery/manual mode;
+8. acknowledges cursors only after successful local processing or durable failure handling.
+
+A `speaker_selected` event is not a direct push message to an LLM. It is a durable floor-grant event. A member runtime observes it, decides that its participant identity must act, invokes/resumes the participant agent, and records the result as `council.speak`.
+
+### Delivery layer
+
+The delivery layer renders daemon events to a human-visible surface. It may be the main agent, a helper, or a dedicated integration.
+
+Delivery responsibilities:
+
+- announce session creation and state changes;
+- show floor grants and participant speeches;
+- show moderator interventions and final conclusions;
+- record message IDs or equivalent evidence pointers when needed;
+- report delivery failure without rewriting daemon state.
+
+Delivery must not:
+
+- become lifecycle state authority;
+- create implicit state transitions from free-form visible messages;
+- claim daemon delivery evidence without a daemon-owned evidence command;
+- hide failed sends as successful discussion progress.
+
+## Control-plane and agent-plane split
+
+The preferred split is:
+
+```text
+control plane:
+  user -> main agent -> CLI -> daemon
+
+agent plane:
+  daemon stream -> member runtime -> participant agent -> plugin/protocol client -> daemon
+
+delivery plane:
+  daemon event/projection -> main agent or helper -> visible surface -> evidence pointer
+```
+
+This keeps the user experience simple while preserving auditability:
+
+- users issue natural-language commands only;
+- the main agent performs explicit control actions;
+- participant agents respond only when their real runtimes observe actionable daemon events;
+- every state transition remains a typed daemon event;
+- visible chat messages are presentation and evidence, not the source of truth.
+
+## Canonical council scenario
+
+### 1. Create or bind a room
+
+User intent:
+
+```text
+Create a discussion room about <topic> with <participant list>.
+```
+
+Main agent actions:
+
+1. Create a visible surface, or bind the current surface if already available.
+2. Run CLI:
+
+```bash
+kkachi-agent-network council new "<topic>" \
+  --members <participant-1>,<participant-2>,<participant-3> \
+  --moderator <main-agent-id> \
+  --surface discord-thread \
+  --thread-id <surface-thread-id> \
+  --turn-mode role_order
+```
+
+3. Announce `session_id`, topic, participants, and control policy to the visible surface.
+
+Daemon records `session_created`. The visible surface is metadata/evidence only.
+
+### 2. Lock agenda and prepare
+
+User intent:
+
+```text
+Discuss this in the direction of <decision criteria>.
+```
+
+Main agent actions:
+
+```bash
+kkachi-agent-network council lock-agenda <session_id> \
+  --decision-question "<decision question>" \
+  --max-rounds <n>
+
+kkachi-agent-network council request-attendance <session_id> --timeout 5m
+kkachi-agent-network council prepare <session_id> --timeout 10m
+```
+
+Participant runtime actions:
+
+- observe `attendance_requested`, emit `council.attend`;
+- observe `preparation_requested`, prepare or time out;
+- emit `council.ready` or `council.prepared_partial` through plugin/protocol-client writes.
+
+### 3. Poll and grant floor
+
+Main agent actions:
+
+```bash
+kkachi-agent-network council poll <session_id> --research-timeout 10m
+```
+
+Participant runtime actions:
+
+- observe `hand_raise_requested`;
+- research/fact-check if needed;
+- emit `council.hand_raise` when it has relevant input.
+
+Main agent grants floor:
+
+```bash
+kkachi-agent-network council grant <session_id> \
+  --to <participant-id> \
+  --mode role_order \
+  --round <round-number> \
+  --reason "<why this participant should speak now>"
+```
+
+Daemon records `speaker_selected`.
+
+### 4. Participant speaks
+
+Member runtime for the selected participant observes `speaker_selected` and invokes/resumes the real participant-agent profile.
+
+The participant agent emits:
+
+```text
+kan_council_command(command="council.speak", ...)
+```
+
+or the equivalent protocol-client write. The daemon records `speech`.
+
+The delivery layer renders the speech to the visible surface and stores evidence if required.
+
+### 5. Change discussion direction
+
+For small steering changes, the main agent records an intervention:
+
+```bash
+kkachi-agent-network council intervene <session_id> \
+  --to <participant-id> \
+  --reason "user_direction_change" \
+  --message "<new direction or constraint>"
+```
+
+Participant runtimes observe `moderator_intervention` and adjust subsequent actions.
+
+For material decision-question changes, the safe default is:
+
+1. close the current session as `unresolved` or with a partial conclusion;
+2. create a new council session with a new locked agenda;
+3. link the old session as context/evidence.
+
+A single council has one locked decision question. New topics become follow-up candidates, not silent expansion of the current session.
+
+### 6. Finish, cancel, or mark unresolved
+
+User intent may be natural language, such as:
+
+- “finish and summarize”;
+- “end without conclusion”;
+- “cancel this discussion”.
+
+Main agent maps the intent to explicit CLI commands.
+
+Normal finalization:
+
+```bash
+kkachi-agent-network council propose <session_id> --from-file draft.md
+kkachi-agent-network council request-vote <session_id> --draft-version <n> --timeout 10m
+```
+
+Participant runtimes observe `consensus_vote_requested` and emit `council.vote`.
+
+Main agent finalizes:
+
+```bash
+kkachi-agent-network council finalize <session_id> \
+  --authority-return-status posted \
+  --return-evidence <evidence-pointer>
+```
+
+Unresolved closure:
+
+```bash
+kkachi-agent-network council unresolved <session_id> --reason "<reason>"
+```
+
+Cancellation:
+
+```bash
+kkachi-agent-network cancel <session_id> --reason "<reason>"
+```
+
+## Live daemon transport contract for the plugin
+
+The plugin live transport should be implemented as an explicit local daemon client, for example `ControlSocketTransport`.
+
+Required behavior:
+
+- require explicit config before creating a live `client_factory` during plugin registration;
+- derive socket path only from explicit `data_home`, normally `<data_home>/run/kkachi-agent-networkd.sock`;
+- avoid symlink traversal and unsafe ownership/mode conditions where practical;
+- verify protocol/schema version before marking readiness true;
+- use bounded request timeouts;
+- return structured `unavailable`, `compatibility`, `protocol`, `validation`, or daemon-preserved command/stream errors;
+- preserve `request_id` for wire correlation and `command_id` for daemon idempotency;
+- never inspect or mutate daemon storage files directly.
+
+Explicit config absent means tools may register but live dispatch remains unavailable/fail-closed.
+
+Unsafe socket, stale socket, missing daemon, unsupported protocol, malformed response, and unknown schema all fail closed. They must not silently fall back to CLI, localhost, Discord, gateway, or fake success.
+
+## Operation mapping
+
+Plugin operations and daemon command names are not always identical. LIVE-TRANSPORT must resolve the mapping explicitly.
+
+| Plugin-side operation | Daemon command/path | Requirement |
+|---|---|---|
+| `version.read` | `version.read` | direct mapping |
+| `status.read` | `status` or future `status.read` | response must identify protocol version, daemon version, feature groups, readiness |
+| `diagnostics.read` | `health` or future `diagnostics.read` | normalize to plugin diagnostics without guessing |
+| `stream.tail` | `stream.replay` / bounded tail command | preserve replay-before-live, cursor, member, limit semantics |
+| future `stream.follow` | `stream.replay` with follow or daemon follow stream | bounded and resumable; no silent gaps |
+| future `stream.ack` | `stream.ack` | acknowledge only after processing |
+| `command.submit` | concrete daemon command | unwrap to `delegate.*`, `council.*`, delivery evidence commands; do not assume generic daemon alias unless implemented |
+
+For LIVE-TRANSPORT, participant-agent writes through the plugin should focus on participant-originated events: `council.attend`, `council.ready`, `council.prepared_partial`, `council.hand_raise`, `council.speak`, and `council.vote`. Main-agent control commands should prefer CLI even if the plugin can technically submit the same command envelope.
+
+## ID and idempotency rules
+
+Keep correlation and idempotency distinct:
+
+- `request_id`: one daemon request/response correlation handle;
+- `command_id`: logical state-mutating command identity used by daemon dedupe;
+- `event_id`: daemon-generated or validated event identity;
+- `correlation_id`: logical thread across related commands/events, normally the session.
+
+Current plugin schemas expose `idempotency_key` in some command tools. Before live readiness, prefer migrating to `command_id` or documenting `idempotency_key -> command_id` as a temporary compatibility alias. The long-term SOT term is `command_id`.
+
+Retries for the same logical command must reuse the same `command_id`. A participant runtime must not emit duplicate speeches, votes, or hand raises by generating a new command id after a transport retry unless policy explicitly creates a new logical action.
+
+## Member runtime requirements
+
+LIVE-TRANSPORT cannot rely on plugin tools alone to make participant agents answer. A member runtime is required.
+
+Minimum member-runtime capabilities:
+
+- one runtime identity per participant member;
+- active-session discovery or explicit session binding;
+- stream replay from last acknowledged cursor;
+- event filtering for actionable events;
+- wrapper/profile invocation for the real participant agent;
+- prompt/context construction from agenda, recent transcript, selected event, and participant role;
+- typed write submission through plugin/protocol client;
+- cursor acknowledgement after processing;
+- durable failure handling when wrapper invocation fails.
+
+Action examples:
+
+| Observed event | Participant action |
+|---|---|
+| `attendance_requested` addressed to participant | record `council.attend` |
+| `preparation_requested` addressed to participant | prepare, then record `council.ready` or `council.prepared_partial` |
+| `hand_raise_requested` | decide whether to record `council.hand_raise` |
+| `speaker_selected` addressed to participant | invoke/resume participant agent and record `council.speak` |
+| `moderator_intervention` addressed to participant | adjust next action/speech or withdraw/clarify |
+| `consensus_vote_requested` | evaluate draft and record `council.vote` |
+| terminal phase event | stop or detach from the session after acknowledgement |
+
+Failure to invoke a participant should not be replaced with a simulated role response. Record or surface a participant runtime failure and let the main agent retry, mark partial, intervene, block, or close unresolved according to policy.
+
+## MVP versus target implementation
+
+### MVP: main-agent mediated participant invocation
+
+The MVP may avoid always-on participant runtimes by letting the main agent or a local supervisor invoke the selected participant profile when floor is granted.
+
+MVP flow:
+
+1. main agent uses CLI to grant floor;
+2. supervisor observes `speaker_selected` or main agent reads status/stream;
+3. supervisor invokes/resumes the real participant-agent profile;
+4. participant output is submitted as `council.speak` through plugin/protocol client or explicit CLI fallback;
+5. delivery layer renders the speech.
+
+MVP constraints:
+
+- must invoke a real participant profile/wrapper, not a role prompt;
+- must record durable events in daemon before visible completion claims;
+- must preserve `command_id` and runner/session evidence;
+- must not claim long-lived stream-driven runtime readiness.
+
+### Target: long-lived member runtime
+
+Target flow:
+
+1. each participant runtime continuously follows the daemon stream;
+2. runtimes maintain durable cursor ack state;
+3. runtimes autonomously invoke/resume participant agents when addressed by actionable events;
+4. participants submit typed writes through plugin/protocol-client tools;
+5. main agent only moderates, observes, and controls the session.
+
+Target constraints:
+
+- stream gaps, unknown schema, registry mismatch, stale heartbeat, and unsafe runtime state fail closed;
+- cursor acknowledgement happens only after processing;
+- one participant identity cannot be silently substituted for another;
+- wrapper failures are recorded and surfaced.
+
+## Visibility and delivery evidence
+
+The visible room is not the source of truth.
+
+Rules:
+
+- `channel.jsonl` is canonical for ordering and lifecycle;
+- Discord or other room messages are presentation/evidence;
+- free-form visible replies do not become state unless the main agent or participant runtime emits a typed daemon command;
+- every visible speech should correspond to a daemon `speech` event;
+- every final visible result should correspond to `council_finalized`, `council_unresolved`, or `session_cancelled`;
+- delivery failures are not rewritten as successful discussion progress;
+- delivery evidence, when required, records message ids or report paths as evidence pointers.
+
+## Security and safety boundaries
+
+LIVE-TRANSPORT must preserve these boundaries:
+
+- no credential, token, auth, or gateway mutation without explicit approval;
+- no live Discord default from plugin registration;
+- no current-thread or active-session inference inside plugin helpers;
+- no daemon storage writes outside daemon commands;
+- no participant identity substitution;
+- no hidden CLI fallback inside plugin code;
+- no TCP/localhost fallback unless separately approved and tested;
+- no production activation claim from disposable local pilots;
+- no KAB bridge execution claim from direct CLI/plugin pilots.
+
+## Verification requirements
+
+A LIVE-TRANSPORT implementation is not complete without evidence for all applicable layers.
+
+### Local plugin checks
+
+```bash
+make test-prepare
+make check-core-contract
+make test
+```
+
+Required plugin-specific assertions:
+
+- no-config plugin load still registers tools and fails closed;
+- explicit config with missing daemon returns structured `unavailable`;
+- unsafe data home/socket fails closed;
+- malformed daemon response returns structured `protocol` failure;
+- unsupported protocol/feature returns `compatibility` failure;
+- live disposable daemon status/version path passes;
+- participant write command reaches daemon with preserved `request_id` and `command_id`;
+- duplicate `command_id` proves daemon dedupe behavior;
+- no plugin-internal CLI shell-out occurs.
+
+### CLI/daemon equivalence checks
+
+Disposable data-home pilot should prove:
+
+- CLI `daemon status` and plugin `kan_daemon_status` address the same daemon/data home;
+- CLI `version --features --format json` and plugin compatibility diagnostics agree on required feature groups;
+- CLI council command and plugin participant write produce equivalent daemon events;
+- CLI stream/tail and plugin stream/tail return compatible frames/cursors;
+- transcript/export reflects daemon events, not visible surface guesses.
+
+### Member runtime checks
+
+MVP checks:
+
+- real participant profile/wrapper is invoked when selected;
+- generated speech is recorded as `council.speak` before visible success is reported;
+- wrapper failure is reported without fake replacement;
+- cursor/replay evidence or explicit MVP limitation is recorded.
+
+Target checks:
+
+- participant runtime replays from last cursor;
+- actionable event filtering works;
+- selected participant speaks exactly once per logical floor grant unless retried with same `command_id`;
+- `stream ack` happens after processing;
+- registry mismatch and unknown schema fail closed;
+- stale participant handling is visible to the main agent.
+
+### Delivery checks
+
+- visible message rendering uses daemon event data;
+- delivery evidence is recorded as evidence pointer only;
+- delivery failure does not mark the council finalized/posted unless an explicit failed/pending evidence status is recorded.
+
+## Plugin implementation slices
+
+### LTRAN-001: plugin SOT and cross-repo mapping
+
+Deliverables:
+
+- this plugin SOT and cross-links in docs map/index;
+- cross-link to the control companion SOT;
+- explicit repo-owned epic/task split;
+- no-scope list for production activation, live Discord, gateway/auth/token, KAB, and hidden CLI fallback.
+
+### LTRAN-002: plugin live daemon transport
+
+Deliverables:
+
+- explicit Unix socket client transport;
+- config loader and register-time `client_factory` injection;
+- no-config fail-closed preservation;
+- unsafe/missing/malformed/unsupported daemon tests;
+- disposable live status/version smoke after control `LTRAN` is complete.
+
+### LTRAN-003: plugin/CLI/daemon equivalence pilot
+
+Deliverables:
+
+- disposable data home;
+- daemon started through CLI;
+- plugin configured explicitly against that data home;
+- CLI and plugin status/version/stream/write equivalence evidence;
+- no production activation claim.
+
+### PARTC-001: participant-agent plugin path
+
+Deliverables:
+
+- participant-focused stream/tail/follow/ack support as needed;
+- participant-originated council writes through plugin/protocol client;
+- command-id/idempotency coverage;
+- tests for `ready`, `hand_raise`, `speak`, and `vote` write paths.
+
+### PARTC-002: selected participant response through plugin path
+
+Deliverables:
+
+- consume completed control `MEMBR` evidence for real participant profile/wrapper invocation;
+- `speaker_selected` -> participant response -> plugin/protocol-client `council.speak` proof;
+- failure handling for missing/stalled participant without role-prompt substitution;
+- cursor/replay/ack policy evidence or explicit MVP limitation.
+
+### SURFD-001: visible room helper/rendering boundary
+
+Deliverables:
+
+- main-agent or helper rendering from daemon events;
+- speech/final result posting to visible surface where authorized;
+- delivery evidence pointer handling;
+- failure and pending-follow-up behavior.
+
+## Open decisions before implementation
+
+1. Should existing plugin command schemas rename `idempotency_key` to `command_id` before live readiness, or keep a temporary alias?
+2. Is `status.read` required in the daemon, or can plugin diagnostics safely normalize existing `status`/`health`/`version.read` responses?
+3. Does the first pilot use MVP participant invocation or long-lived member runtimes?
+4. What is the approved explicit plugin config key and storage location for live transport?
+5. Which delivery layer owns visible surface posting in the first pilot?
+6. What is the minimum acceptable evidence that a participant answer came from the real participant-agent profile?
+
+Until these are resolved, implementation may proceed only on slices that do not depend on the unresolved decision, or must record the selected default in the task contract before coding.

@@ -16,6 +16,7 @@ Control daemon/CLI authority lives in `../../kkachi-agent-network-control/docs/`
 8. `07-core-compatibility.md` — control protocol compatibility, milestone matrix, and cross-repo checks
 9. `08-unsupported-surfaces.md` — unsupported Hermes/plugin surfaces and future binding requirements
 10. `09-skill-and-operator-guide.md` — bundled KAN skill install, enable, rollback, troubleshooting, and local isolated plugin-load smoke boundary
+11. `10-live-transport-sot.md` — plugin-side live transport SOT for `LTRAN` / `PARTC` / `SURFD`: main-agent CLI control, participant-agent plugin transport, member runtime response flow, daemon authority boundaries, and control companion SOT dependencies
 
 ## Required Makefile targets
 

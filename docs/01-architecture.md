@@ -95,6 +95,7 @@ Later tasks may provide:
 - `kan_session_status` after control `session.status.read` fixture/protocol authority exists;
 - cursor/session diagnostic tools;
 - transcript/export tools;
+- live transport according to `docs/10-live-transport-sot.md`, where the CLI is the main-agent control plane, the plugin is the participant-agent KAN client surface, member runtimes invoke real participant profiles, the daemon remains the only event/state authority, and companion control `LTRAN` / `MEMBR` / `SURFD` epics must complete before the matching plugin epics start;
 - KAN slash commands for common operations after control command contracts, conformance fixtures, safe handlers, manifest entries, and isolated Hermes/gateway smoke tests exist;
 - bundled skill guidance;
 - live Discord helper wiring that posts visible messages through a dedicated Hermes

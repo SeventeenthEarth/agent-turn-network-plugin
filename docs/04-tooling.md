@@ -65,6 +65,19 @@ After the Python scaffold exists, `uv` and `pyproject.toml` are required for cod
 
 `make check-core-contract` runs `scripts/check_core_contract.py`. The script is import-safe for unit testing and verifies the local companion control repo, `KAN_CONTROL_REPO`, or legacy `KAN_CORE_REPO`, exposes the expected conformance manifest protocol, cross-repo development phrases, distribution fixture handoff wording, reciprocal `check-plugin-contract` Makefile target, and matching plugin compatibility declaration.
 
+## SKILL-1 bundled skill resources
+
+SKILL-1 packages the `kan-plugin` operator skill under
+`src/kkachi_agent_network_plugin/bundled_skills/kan-plugin/SKILL.md` and exposes
+`kkachi_agent_network_plugin.bundled_skills.read_bundled_skill_text(...)` for
+tests and future installers.
+
+The helper reads package resources only. It does not install into a Hermes
+profile, discover current-session state, contact live Hermes/Discord/daemon
+resources, mutate the sibling control repo, or alter `plugin.yaml`. Operator
+install, enable, rollback, troubleshooting, no-live defaults, and the SKILL-2
+plugin-load smoke boundary are documented in `docs/09-skill-and-operator-guide.md`.
+
 ## Bootstrap smoke tests
 
 SCAFF-5 delivers a scaffold smoke gate for the first plugin scaffold PR. It proves:

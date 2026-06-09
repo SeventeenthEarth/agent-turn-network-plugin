@@ -17,6 +17,8 @@ REQUIRED_DOCS = [
     "03-testing-strategy.md",
     "04-tooling.md",
     "05-discord-surface.md",
+    "08-unsupported-surfaces.md",
+    "09-skill-and-operator-guide.md",
     "07-core-compatibility.md",
 ]
 
@@ -33,6 +35,16 @@ def load_guardrails() -> ModuleType:
 def write_docs(root: Path, *, include_fail_closed: bool = True) -> None:
     docs = root / "docs"
     docs.mkdir()
+    skill = root / "src" / "kkachi_agent_network_plugin" / "bundled_skills" / "kan-plugin"
+    skill.mkdir(parents=True)
+    (skill / "SKILL.md").write_text(
+        "---\n"
+        "name: kan-plugin\n"
+        "description: Use when testing bundled skill frontmatter.\n"
+        "---\n"
+        "# KAN Plugin Operator Skill\n",
+        encoding="utf-8",
+    )
     for name in REQUIRED_DOCS:
         (docs / name).write_text(f"# {name}\n", encoding="utf-8")
     required_text = "\n".join(
@@ -45,6 +57,20 @@ def write_docs(root: Path, *, include_fail_closed: bool = True) -> None:
         ]
     )
     (docs / "README.md").write_text(required_text, encoding="utf-8")
+    (docs / "09-skill-and-operator-guide.md").write_text(
+        "\n".join(
+            [
+                "No-live defaults",
+                "Rollback",
+                "Troubleshooting",
+                "does not install the skill into the user's Hermes profile",
+                "provides_commands: []",
+                "kan_session_status",
+                "SKILL-2",
+            ]
+        ),
+        encoding="utf-8",
+    )
 
 
 def test_docs_guardrails_accept_complete_docs(tmp_path: Path) -> None:
@@ -81,4 +107,34 @@ def test_docs_guardrails_reject_stale_sibling_path_in_extra_doc(tmp_path: Path) 
     )
 
     with pytest.raises(SystemExit, match="stale docs-relative sibling path"):
+        guardrails.main(root=tmp_path)
+
+
+def test_docs_guardrails_reject_operator_guide_overclaim(tmp_path: Path) -> None:
+    guardrails = load_guardrails()
+    write_docs(tmp_path)
+    guide = tmp_path / "docs" / "09-skill-and-operator-guide.md"
+    guide.write_text(
+        guide.read_text(encoding="utf-8") + "\nplugin-load smoke passes\n",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(SystemExit, match="operator guide overclaims unsupported surface"):
+        guardrails.main(root=tmp_path)
+
+
+def test_docs_guardrails_reject_bundled_skill_without_frontmatter(tmp_path: Path) -> None:
+    guardrails = load_guardrails()
+    write_docs(tmp_path)
+    skill = (
+        tmp_path
+        / "src"
+        / "kkachi_agent_network_plugin"
+        / "bundled_skills"
+        / "kan-plugin"
+        / "SKILL.md"
+    )
+    skill.write_text("# KAN Plugin Operator Skill\n", encoding="utf-8")
+
+    with pytest.raises(SystemExit, match="bundled skill must start with YAML frontmatter"):
         guardrails.main(root=tmp_path)

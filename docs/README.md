@@ -2,7 +2,7 @@
 
 This directory is the source of truth for the **Python Hermes plugin adapter** for KAN.
 
-Control daemon/CLI authority lives in `../../kkachi-agent-network-control/docs/`. The plugin is not the source of truth. Its current surface is fake/injected Hermes tools over the daemon protocol contract, including CNDIS council and delivery-evidence command submission plus an injected-only Discord helper; slash commands, skill guidance, live daemon discovery, installed-plugin smoke, and live/default Discord visible-surface wiring remain future task areas.
+Control daemon/CLI authority lives in `../../kkachi-agent-network-control/docs/`. The plugin is not the source of truth. Its current surface is fake/injected Hermes tools over the daemon protocol contract, including CNDIS council and delivery-evidence command submission plus an injected-only Discord helper. SKILL-1 adds a packaged operator skill and guide, but slash commands, live daemon discovery, installed-plugin smoke, and live/default Discord visible-surface wiring remain future task areas.
 
 ## Documents
 
@@ -15,6 +15,7 @@ Control daemon/CLI authority lives in `../../kkachi-agent-network-control/docs/`
 7. `06-implementation-epics-tasks.md` — plugin implementation roadmap and task backlog
 8. `07-core-compatibility.md` — control protocol compatibility, milestone matrix, and cross-repo checks
 9. `08-unsupported-surfaces.md` — unsupported Hermes/plugin surfaces and future binding requirements
+10. `09-skill-and-operator-guide.md` — bundled KAN skill install, enable, rollback, troubleshooting, and SKILL-2 smoke boundary
 
 ## Required Makefile targets
 
@@ -27,4 +28,4 @@ make test          # sequential: prepare -> unit -> int -> e2e
 make check-core-contract  # verify companion control milestone/contract readiness
 ```
 
-Python package scaffolding and the minimal Hermes plugin manifest/entrypoint now exist. Makefile code checks are active when `uv` and `pyproject.toml` are available; docs guardrails must always run.
+Python package scaffolding, the minimal Hermes plugin manifest/entrypoint, and the packaged SKILL-1 operator skill now exist. Makefile code checks are active when `uv` and `pyproject.toml` are available; docs guardrails must always run.

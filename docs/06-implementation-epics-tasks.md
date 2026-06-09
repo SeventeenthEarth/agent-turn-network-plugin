@@ -110,5 +110,5 @@ Exit: the plugin has operator-facing skill/docs, compatibility matrix, troublesh
 
 | Task ID | Task Title | Task Status | Task Description |
 |---|---|---|---|
-| SKILL-1 | Add bundled KAN skill and operator docs | planned | Add the bundled KAN skill surface, install/enable/rollback documentation, and troubleshooting guide aligned with the plugin's actual capabilities and unsupported surfaces. |
+| SKILL-1 | Add bundled KAN skill and operator docs | completed | Added the bundled `kan-plugin` skill surface, import-safe resource reader, install/enable/rollback documentation, troubleshooting guide, and docs/tests guardrails aligned with the plugin's actual fake/injected capabilities and unsupported surfaces. This does not claim installed-plugin or live readiness; SKILL-2 owns plugin-load smoke. Completed after KAH verification, Red/Orange/Gray review, Orange feedback handling and re-review, official GLM Octo PASS, final gate evidence, and 주군 commit approval. |
 | SKILL-2 | Add compatibility matrix and plugin-load smoke | blocked | Record supported control protocol versions, Hermes expectations, unsupported/degraded combinations, and install/plugin-load smoke tests. Block release-ready completion until the real supported plugin-load path exists and `TRANS-001`/`RELIA-001` compatibility evidence is available. |

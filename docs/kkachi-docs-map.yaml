@@ -4,6 +4,7 @@ roadmap: "docs/06-implementation-epics-tasks.md"
 sot_docs:
   - "docs/02-plugin-contract.md"
   - "docs/01-architecture.md"
+  - "docs/09-skill-and-operator-guide.md"
 adr_dir: "docs"
 todo_dir: "docs"
 spec_dir: "docs"

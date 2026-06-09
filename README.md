@@ -12,6 +12,21 @@ The plugin is not the source of truth. `kkachi-agent-networkd` owns `channel.jso
   must be recorded separately through typed daemon commands, and raw Discord tokens must
   not move into the daemon.
 
+## Python runtime compatibility
+
+This plugin must remain compatible with the Python version used by the target
+Hermes runtime. Current Hermes runtime compatibility is Python 3.11.
+
+The repository declares `requires-python = ">=3.11"` in `pyproject.toml`, targets
+`py311` for Ruff, type-checks as Python 3.11 with mypy, and includes a Python
+3.11 syntax guard so Python 3.12-only syntax does not re-enter the runtime
+package.
+
+Use `uv`, `pyproject.toml`, and `uv.lock` as the dependency source of truth. A
+separate `requirements.txt` is intentionally not maintained while runtime
+dependencies are empty; add one only if a pip-only install path becomes an
+approved operator surface.
+
 ## Documentation
 
 Start at [`docs/README.md`](docs/README.md).

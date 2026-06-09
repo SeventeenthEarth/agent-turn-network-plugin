@@ -79,6 +79,36 @@ def test_plugin_load_smoke_rejects_entrypoint_command_registration(
         plugin_load_smoke.main(root=root)
 
 
+def test_plugin_load_smoke_requires_entrypoint_to_self_bootstrap_src(
+    plugin_load_smoke: ModuleType,
+    tmp_path: Path,
+) -> None:
+    root = copy_repo_fixture(tmp_path)
+    (root / "__init__.py").write_text(
+        '"""Broken fixture: imports the src package without local path bootstrapping."""\n\n'
+        "from __future__ import annotations\n\n"
+        "from kkachi_agent_network_plugin.tools import register_tools\n\n"
+        "def register(ctx):\n"
+        "    register_tools(ctx)\n",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(SystemExit, match="No module named 'kkachi_agent_network_plugin'"):
+        plugin_load_smoke.main(root=root)
+
+
+def test_plugin_load_smoke_rejects_python312_only_runtime_syntax(
+    plugin_load_smoke: ModuleType,
+    tmp_path: Path,
+) -> None:
+    root = copy_repo_fixture(tmp_path)
+    protocol = root / "src" / "kkachi_agent_network_plugin" / "protocol.py"
+    protocol.write_text("type JsonValue = str\n", encoding="utf-8")
+
+    with pytest.raises(SystemExit, match="Python 3.11 syntax failure"):
+        plugin_load_smoke.main(root=root)
+
+
 def test_plugin_load_smoke_rejects_wheel_package_drift(
     plugin_load_smoke: ModuleType,
     tmp_path: Path,

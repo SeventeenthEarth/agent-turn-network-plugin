@@ -40,6 +40,7 @@ Use `docs/07-core-compatibility.md` as the compatibility SOT. The short rule is:
 - `DELRV` waits for implemented control delegation/review commands and fixtures from `DELEG-001` before non-skeleton completion.
 - `CNDIS` waits for implemented council paths from `COUNC-001` and delivery-evidence command paths from `DAEMN-002` before non-skeleton completion.
 - `SKILL` can complete the local compatibility matrix and local isolated plugin-load smoke once `TRANS-001`/`RELIA-001` evidence is recorded, but still cannot claim production activation, KAB readiness, live plugin readiness, live Discord readiness, or live daemon discovery without separate isolated/live tasks.
+- `REL-PILOT-FIX` may repair local packaging/import blockers discovered by disposable profile pilots, but those repairs remain local activation-smoke evidence only unless a separately approved live-readiness task runs against live Hermes/Discord/daemon resources.
 
 ## SCAFF: Scaffold
 
@@ -112,3 +113,13 @@ Exit: the plugin has operator-facing skill/docs, compatibility matrix, troublesh
 |---|---|---|---|
 | SKILL-1 | Add bundled KAN skill and operator docs | completed | Added the bundled `kan-plugin` skill surface, import-safe resource reader, install/enable/rollback documentation, troubleshooting guide, and docs/tests guardrails aligned with the plugin's actual fake/injected capabilities and unsupported surfaces. This does not claim installed-plugin or live readiness; SKILL-2 owns plugin-load smoke. Completed after KAH verification, Red/Orange/Gray review, Orange feedback handling and re-review, official GLM Octo PASS, final gate evidence, and 주군 commit approval. |
 | SKILL-2 | Add compatibility matrix and plugin-load smoke | completed | Adds the compatibility matrix and `make check-plugin-load-smoke` local isolated plugin-load smoke gate after recording completed control `TRANS-001` and `RELIA-001` evidence as unblock sources. The smoke creates a temporary plugin home from repository files, loads `register(ctx)` with a fake Hermes context, asserts exact tool order, zero hooks, zero commands, fail-closed JSON handlers, live-looking environment inertness, negative command-overclaim fixtures, wheel package inclusion, and bundled skill compatibility. This is local isolated plugin-load smoke only; it does not claim production activation, KAB readiness, live plugin readiness, live daemon discovery, live/default Discord sending, or any change to `provides_commands: []`. Completed after verification, required reviews, final gates, and 주군 commit approval. |
+
+## REL-PILOT-FIX: Release pilot activation repairs
+
+Epic ID: `REL-PILOT-FIX`
+
+Exit: disposable-profile activation blockers discovered by local pilots are captured as regression tests and local smoke coverage while preserving `provides_commands: []`, zero hooks, no live fallback, and no live Discord/Hermes/daemon readiness claim.
+
+| Task ID | Task Title | Task Status | Task Description |
+|---|---|---|---|
+| REL-PILOT-FIX-001 | Repair root plugin activation blockers | completed | Repairs the root directory-plugin entrypoint so a cloned/staged repository can load its bundled `src/` package without external `PYTHONPATH`, replaces Python 3.12-only protocol type-alias syntax with Python 3.11-compatible aliases, lowers packaging/tooling metadata to Python `>=3.11`, and strengthens local smoke/unit coverage so production-style root entrypoint loading and Python 3.11 syntax compatibility fail fast. This remains local-only activation-smoke evidence and does not claim live Discord readiness, live daemon discovery, KAB readiness, or live Hermes production readiness. Completed after final gates, 주군 commit approval, and committed-HEAD disposable profile install verification. |

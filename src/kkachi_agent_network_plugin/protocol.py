@@ -11,7 +11,7 @@ import json
 import math
 from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Final, cast
+from typing import Final, TypeAlias, cast
 
 SUPPORTED_PROTOCOL_VERSION: Final = "kan-protocol-v1alpha0"
 COMMAND_ENVELOPE_VERSION: Final = "kan-command-envelope-v1alpha0"
@@ -42,8 +42,8 @@ STREAM_FRAME_SCHEMA_VERSION: Final = 1
 STREAM_TAIL_FRAME_LIMIT: Final = 1000
 DIAGNOSTIC_CHECK_LIMIT: Final = 128
 
-type JsonValue = None | bool | int | float | str | list[JsonValue] | dict[str, JsonValue]
-type JsonObject = dict[str, JsonValue]
+JsonValue: TypeAlias = None | bool | int | float | str | list["JsonValue"] | dict[str, "JsonValue"]
+JsonObject: TypeAlias = dict[str, JsonValue]
 
 
 class ProtocolValidationError(ValueError):

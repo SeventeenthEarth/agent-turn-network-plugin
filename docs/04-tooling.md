@@ -5,7 +5,7 @@
 | Item | Decision |
 | --- | --- |
 | Language | Python |
-| Minimum Python | `>=3.12` unless Hermes runtime requires otherwise |
+| Minimum Python | `>=3.11` to match Hermes Python 3.11 runtime compatibility |
 | Package manager | `uv` preferred for development |
 | Build backend | `hatchling` or current Hermes-compatible Python packaging |
 | Source layout | `src/kkachi_agent_network_plugin/` |
@@ -49,7 +49,7 @@ The project `.gitignore` must include `.kkachi/`, `.codegraph/`, `.omx/`, `.omc/
 
 `make check-bootstrap-smoke` verifies the package import/metadata, fake/injected plugin manifest shape, exact tool registrations, callable handler presence, and root directory-plugin entrypoint availability without registering hooks or KAN slash commands.
 
-`make check-plugin-load-smoke` verifies local isolated plugin-load smoke. It creates a temporary plugin home from repository-local files, loads the root entrypoint through a fake Hermes registration context, checks exact tool order, zero hooks, zero commands, handler JSON-string fail-closed behavior without injected clients/senders, live-looking environment inertness, negative command-overclaim fixtures, wheel package inclusion, and bundled skill compatibility. It does not inspect or mutate the user's Hermes profile and does not contact daemon, Discord, KAB, gateway, auth, token, provider, localhost, socket, CLI, or network resources.
+`make check-plugin-load-smoke` verifies local isolated plugin-load smoke. It creates a temporary plugin home from repository-local files, loads the root entrypoint through a fake Hermes registration context without externally adding `<plugin>/src` to `PYTHONPATH`, checks exact tool order, zero hooks, zero commands, handler JSON-string fail-closed behavior without injected clients/senders, live-looking environment inertness, negative command-overclaim fixtures, wheel package inclusion, Python 3.11 syntax compatibility, and bundled skill compatibility. It does not inspect or mutate the user's Hermes profile and does not contact daemon, Discord, KAB, gateway, auth, token, provider, localhost, socket, CLI, or network resources.
 
 `make test-unit` runs `pytest tests/unit`.
 
@@ -95,7 +95,9 @@ DAEMN-1 added fake daemon compatibility probes for the client foundation only. A
 
 SCAFF-5 introduced smoke coverage in `scripts/check_bootstrap_smoke.py` and `tests/unit/test_bootstrap_smoke.py`; HPLUG-2 updated it for the three read-only tool registrations, DELRV-1 extended it for the two delegation/review command-envelope tools, CNDIS-1 extended it for the council and delivery-evidence command tools, and CNDIS-2 extends it for the injected-only Discord helper while keeping the explicit empty slash-command surface. This proves manifest/entrypoint/handler-contract readiness only.
 
-SKILL-2 adds `scripts/check_plugin_load_smoke.py` and `tests/unit/test_plugin_load_smoke.py` as a bounded local isolated plugin-load smoke gate. It checks that the repository plugin surface can be discovered and loaded in a temporary fake Hermes context and fails closed for unsupported live surfaces. It is not production activation, live plugin readiness, KAB readiness, or live Hermes/Discord evidence.
+SKILL-2 adds `scripts/check_plugin_load_smoke.py` and `tests/unit/test_plugin_load_smoke.py` as a bounded local isolated plugin-load smoke gate. REL-PILOT-FIX-001 strengthened it so the repository plugin surface must be discovered and loaded in a temporary fake Hermes context without test-side `PYTHONPATH` help; the root entrypoint owns adding its bundled `src/` path before importing runtime modules. The gate also fails closed for unsupported live surfaces. It is not production activation, live plugin readiness, KAB readiness, or live Hermes/Discord evidence.
+
+REL-PILOT-FIX-001 also adds Python 3.11 syntax compatibility coverage. `pyproject.toml` declares `requires-python = ">=3.11"`, Ruff targets `py311`, mypy type checks as Python 3.11, and unit tests parse repository Python sources with `ast.parse(..., feature_version=(3, 11))` so Python 3.12-only syntax such as PEP 695 `type` aliases cannot re-enter unnoticed.
 
 ## DAEMN-1 client modules
 

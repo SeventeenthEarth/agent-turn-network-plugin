@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import ast
 import importlib.util
 import json
 import os
@@ -116,11 +117,53 @@ def require_package_and_bundled_skill(plugin_home: Path) -> None:
         raise SystemExit(f"plugin-load smoke package metadata mismatch: {metadata()!r}")
 
 
+def require_python311_syntax(plugin_home: Path) -> None:
+    for path in sorted([plugin_home / "__init__.py", *(plugin_home / "src").rglob("*.py")]):
+        try:
+            ast.parse(
+                path.read_text(encoding="utf-8"),
+                filename=str(path.relative_to(plugin_home)),
+                feature_version=(3, 11),
+            )
+        except SyntaxError as exc:
+            raise SystemExit(f"plugin-load smoke Python 3.11 syntax failure: {exc}") from exc
+
+
+def path_exposes_package(path: str) -> bool:
+    """Return whether a sys.path entry could satisfy the runtime package import.
+
+    This keeps the smoke from masking root-entrypoint src bootstrapping bugs.
+    """
+
+    base = Path(path or os.getcwd()).resolve()
+    candidates = (base / PACKAGE_MODULE, base / "src" / PACKAGE_MODULE)
+    return any(candidate.is_dir() for candidate in candidates)
+
+
+def entrypoint_sys_path() -> list[str]:
+    return [path for path in sys.path if not path_exposes_package(path)]
+
+
+def pop_package_modules() -> dict[str, ModuleType]:
+    popped: dict[str, ModuleType] = {}
+    for name in list(sys.modules):
+        if name == PACKAGE_MODULE or name.startswith(f"{PACKAGE_MODULE}."):
+            popped[name] = sys.modules.pop(name)
+    return popped
+
+
+def restore_package_modules(previous: dict[str, ModuleType]) -> None:
+    for name in list(sys.modules):
+        if name == PACKAGE_MODULE or name.startswith(f"{PACKAGE_MODULE}."):
+            sys.modules.pop(name)
+    sys.modules.update(previous)
+
+
 def load_entrypoint(plugin_home: Path) -> ModuleType:
     previous_path = list(sys.path)
-    previous_package = sys.modules.pop(PACKAGE_MODULE, None)
+    previous_modules = pop_package_modules()
     try:
-        sys.path.insert(0, str(plugin_home / "src"))
+        sys.path[:] = entrypoint_sys_path()
         return load_module(
             plugin_home / "__init__.py",
             "kkachi_agent_network_plugin_root_plugin_load_smoke",
@@ -128,10 +171,7 @@ def load_entrypoint(plugin_home: Path) -> ModuleType:
         )
     finally:
         sys.path[:] = previous_path
-        if previous_package is None:
-            sys.modules.pop(PACKAGE_MODULE, None)
-        else:
-            sys.modules[PACKAGE_MODULE] = previous_package
+        restore_package_modules(previous_modules)
 
 
 def require_entrypoint_load(plugin_home: Path) -> FakeHermesContext:
@@ -335,6 +375,7 @@ def main(*, root: Path = ROOT) -> None:
     with tempfile.TemporaryDirectory(prefix="kan-plugin-load-smoke-") as temp:
         plugin_home = make_isolated_plugin_home(root, Path(temp))
         require_manifest(plugin_home)
+        require_python311_syntax(plugin_home)
         require_package_and_bundled_skill(plugin_home)
         baseline = require_entrypoint_fail_closed(plugin_home)
         require_live_env_inert(plugin_home, baseline)

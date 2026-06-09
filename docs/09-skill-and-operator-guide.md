@@ -95,6 +95,8 @@ Enabling the skill does not enable new plugin commands or live daemon behavior.
 Before enabling, confirm:
 
 - the package imports without runtime integrations;
+- the root directory-plugin entrypoint loads from the staged repository without
+  external `PYTHONPATH=<plugin>/src` help;
 - `read_bundled_skill_text("kan-plugin")` returns the bundled `SKILL.md`;
 - `plugin.yaml` still lists only the supported tool names and
   `provides_commands: []`;
@@ -124,6 +126,8 @@ gateway config, sockets, or localhost services as part of SKILL-2 rollback.
 | Slash commands appear | Manifest or entrypoint drift | Restore `provides_commands: []` and verify the root entrypoint registers no commands. |
 | `kan_session_status` appears | Unsupported session-status drift | Remove the surface until `session.status.read` fixture/protocol authority exists. |
 | A handler tries localhost, a socket, CLI, gateway, auth, token, Discord, or KAB | No-live boundary violation | Fail closed and remove the fallback; default checks must use explicit fake/injected dependencies only. |
+| Root plugin load fails with `No module named 'kkachi_agent_network_plugin'` | The directory entrypoint is not bootstrapping its bundled `src/` package path | Restore the root entrypoint path bootstrap and rerun `make check-plugin-load-smoke`; do not require operators to supply external `PYTHONPATH`. |
+| Hermes Python 3.11 reports `invalid syntax` in package modules | Python 3.12-only syntax drift | Keep package/tooling metadata at Python `>=3.11`, avoid PEP 695 `type` aliases, and rerun the Python 3.11 syntax compatibility unit test. |
 | Local isolated plugin-load smoke fails | Manifest, entrypoint, packaging, bundled skill, or fail-closed handler drift | Run `make check-plugin-load-smoke`, inspect the first mismatch, and restore exact tool order, zero hooks, zero commands, package inclusion, or handler JSON-string fail-closed behavior. |
 | Live plugin-load readiness is requested | Out of SKILL-2 scope | Do not upgrade local isolated plugin-load smoke into a live Hermes/plugin/KAB readiness claim. |
 | Live-looking environment variables are present | Host shell contamination | Ignore them for default tests; E2E defaults must not target active Hermes or Discord resources. |
@@ -131,12 +135,14 @@ gateway config, sockets, or localhost services as part of SKILL-2 rollback.
 ## SKILL-2 smoke boundary
 
 `make check-plugin-load-smoke` is the SKILL-2 local isolated plugin-load smoke
-gate. It creates a temporary plugin home from repository-local files, loads the
-root `register(ctx)` entrypoint with a fake Hermes context, asserts the exact
-eight tools in order, asserts no hooks or commands, calls representative
-handlers without injected clients/senders and requires JSON `ok:false`, verifies
-that live-looking environment variables do not change behavior, rejects command
-overclaims, and checks wheel package plus bundled skill compatibility.
+gate, strengthened by REL-PILOT-FIX-001. It creates a temporary plugin home from
+repository-local files, loads the root `register(ctx)` entrypoint with a fake
+Hermes context without adding external `PYTHONPATH=<plugin>/src` help, asserts
+the exact eight tools in order, asserts no hooks or commands, calls
+representative handlers without injected clients/senders and requires JSON
+`ok:false`, verifies that live-looking environment variables do not change
+behavior, rejects command overclaims, and checks wheel package plus bundled skill
+compatibility.
 
 This covers only local isolated plugin-load smoke. It does not prove production
 activation, live plugin readiness, KAB readiness, live daemon discovery,

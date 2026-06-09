@@ -24,6 +24,9 @@ def test_pyproject_uses_package_version_as_single_source_of_truth() -> None:
 
     assert "version" not in pyproject["project"]
     assert pyproject["project"]["dynamic"] == ["version"]
+    assert pyproject["project"]["requires-python"] == ">=3.11"
     assert pyproject["tool"]["hatch"]["version"]["path"] == (
         "src/kkachi_agent_network_plugin/__init__.py"
     )
+    assert pyproject["tool"]["ruff"]["target-version"] == "py311"
+    assert pyproject["tool"]["mypy"]["python_version"] == "3.11"

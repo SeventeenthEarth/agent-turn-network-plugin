@@ -7,7 +7,7 @@ name = "kkachi-agent-network-plugin"
 dynamic = ["version"]
 description = "Hermes plugin scaffold for kkachi-agent-network."
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = ">=3.11"
 dependencies = []
 
 [dependency-groups]
@@ -31,13 +31,13 @@ testpaths = ["tests"]
 src = ["src", "tests"]
 include = ["__init__.py", "src/**/*.py", "tests/**/*.py"]
 line-length = 100
-target-version = "py312"
+target-version = "py311"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "SIM"]
 
 [tool.mypy]
-python_version = "3.12"
+python_version = "3.11"
 strict = true
 explicit_package_bases = true
 mypy_path = "src"

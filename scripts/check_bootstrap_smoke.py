@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import importlib
 import importlib.util
+import os
 import sys
 from pathlib import Path
 from types import ModuleType
@@ -133,13 +134,46 @@ def require_manifest(root: Path, *, package_version: str) -> None:
         )
 
 
+def path_exposes_package(path: str) -> bool:
+    base = Path(path or os.getcwd()).resolve()
+    return any(
+        candidate.is_dir() for candidate in (base / PACKAGE_MODULE, base / "src" / PACKAGE_MODULE)
+    )
+
+
+def entrypoint_sys_path() -> list[str]:
+    return [path for path in sys.path if not path_exposes_package(path)]
+
+
+def pop_package_modules() -> dict[str, ModuleType]:
+    popped: dict[str, ModuleType] = {}
+    for name in list(sys.modules):
+        if name == PACKAGE_MODULE or name.startswith(f"{PACKAGE_MODULE}."):
+            popped[name] = sys.modules.pop(name)
+    return popped
+
+
+def restore_package_modules(previous: dict[str, ModuleType]) -> None:
+    for name in list(sys.modules):
+        if name == PACKAGE_MODULE or name.startswith(f"{PACKAGE_MODULE}."):
+            sys.modules.pop(name)
+    sys.modules.update(previous)
+
+
 def require_entrypoint(root: Path) -> None:
     entrypoint_path = root / "__init__.py"
     if not entrypoint_path.exists():
         raise SystemExit(f"missing root plugin entrypoint: {entrypoint_path}")
-    entrypoint = load_module(
-        entrypoint_path, "kkachi_agent_network_plugin_root_bootstrap", package_root=True
-    )
+    previous_path = list(sys.path)
+    previous_modules = pop_package_modules()
+    try:
+        sys.path[:] = entrypoint_sys_path()
+        entrypoint = load_module(
+            entrypoint_path, "kkachi_agent_network_plugin_root_bootstrap", package_root=True
+        )
+    finally:
+        sys.path[:] = previous_path
+        restore_package_modules(previous_modules)
     register = getattr(entrypoint, "register", None)
     if not callable(register):
         raise SystemExit("entrypoint register is not callable")

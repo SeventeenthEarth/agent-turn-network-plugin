@@ -1,0 +1,346 @@
+from __future__ import annotations
+
+import importlib.util
+import json
+import os
+import shutil
+import sys
+import tempfile
+import tomllib
+from collections.abc import Iterator, Mapping
+from contextlib import contextmanager
+from pathlib import Path
+from types import ModuleType
+from typing import Any
+
+import yaml
+
+ROOT = Path(__file__).resolve().parents[1]
+PACKAGE_MODULE = "kkachi_agent_network_plugin"
+PACKAGE_NAME = "kkachi-agent-network-plugin"
+TOOLSET = "kkachi_agent_network"
+EXPECTED_TOOLS = [
+    "kan_daemon_status",
+    "kan_compatibility_diagnostics",
+    "kan_stream_tail",
+    "kan_delegate_new",
+    "kan_delegate_action",
+    "kan_council_command",
+    "kan_delivery_evidence",
+    "kan_discord_send_message",
+]
+LIVE_LOOKING_ENV = {
+    "HERMES_HOME": "/live/hermes/home",
+    "KAN_DAEMON_SOCKET": "/live/kan.sock",
+    "KAN_GATEWAY_TOKEN": "live-looking-token",
+    "KAB_GATEWAY_TOKEN": "live-looking-kab-token",
+    "DISCORD_TOKEN": "live-looking-discord-token",
+    "DISCORD_TEST_TARGET": "active-discord-thread",
+    "KAN_PROVIDER": "live-provider",
+}
+
+
+def load_module(path: Path, name: str, *, package_root: bool = False) -> ModuleType:
+    spec = importlib.util.spec_from_file_location(
+        name,
+        path,
+        submodule_search_locations=[str(path.parent)] if package_root else None,
+    )
+    if spec is None or spec.loader is None:
+        raise SystemExit(f"plugin-load smoke cannot load module spec: {path}")
+    module = importlib.util.module_from_spec(spec)
+    try:
+        spec.loader.exec_module(module)
+    except Exception as exc:
+        raise SystemExit(f"plugin-load smoke failed to load module {path}: {exc}") from exc
+    return module
+
+
+def make_isolated_plugin_home(root: Path, destination: Path) -> Path:
+    plugin_home = destination / "plugin-home" / PACKAGE_NAME
+    plugin_home.mkdir(parents=True)
+    shutil.copy2(root / "plugin.yaml", plugin_home / "plugin.yaml")
+    shutil.copy2(root / "__init__.py", plugin_home / "__init__.py")
+    shutil.copytree(root / "src", plugin_home / "src")
+    shutil.copy2(root / "pyproject.toml", plugin_home / "pyproject.toml")
+    return plugin_home
+
+
+def require_manifest(plugin_home: Path) -> None:
+    manifest = yaml.safe_load((plugin_home / "plugin.yaml").read_text(encoding="utf-8"))
+    if not isinstance(manifest, dict):
+        raise SystemExit("plugin-load smoke manifest must be a YAML mapping")
+    if manifest.get("name") != PACKAGE_NAME:
+        raise SystemExit(f"plugin-load smoke manifest name mismatch: {manifest.get('name')!r}")
+    if manifest.get("provides_tools") != EXPECTED_TOOLS:
+        raise SystemExit(
+            "plugin-load smoke manifest provides_tools mismatch: "
+            f"{manifest.get('provides_tools')!r}"
+        )
+    if manifest.get("provides_hooks") != []:
+        raise SystemExit(
+            "plugin-load smoke manifest provides_hooks must remain explicit empty list"
+        )
+    if manifest.get("provides_commands") != []:
+        raise SystemExit(
+            "plugin-load smoke manifest provides_commands must remain explicit empty list"
+        )
+
+
+def require_package_and_bundled_skill(plugin_home: Path) -> None:
+    pyproject = tomllib.loads((plugin_home / "pyproject.toml").read_text(encoding="utf-8"))
+    wheel = (
+        pyproject.get("tool", {})
+        .get("hatch", {})
+        .get("build", {})
+        .get("targets", {})
+        .get("wheel", {})
+    )
+    if wheel.get("packages") != ["src/kkachi_agent_network_plugin"]:
+        raise SystemExit("plugin-load smoke wheel package inclusion mismatch")
+
+    skill = plugin_home / "src" / PACKAGE_MODULE / "bundled_skills" / "kan-plugin" / "SKILL.md"
+    text = skill.read_text(encoding="utf-8")
+    for phrase in ("name: kan-plugin", "provides_commands: []", "kan_session_status"):
+        if phrase not in text:
+            raise SystemExit(f"plugin-load smoke bundled skill missing phrase: {phrase}")
+
+    package = load_module(
+        plugin_home / "src" / PACKAGE_MODULE / "__init__.py",
+        f"{PACKAGE_MODULE}_plugin_load_smoke",
+    )
+    metadata = getattr(package, "package_metadata", None)
+    if not callable(metadata):
+        raise SystemExit("plugin-load smoke package_metadata is not callable")
+    if metadata().get("name") != PACKAGE_NAME:
+        raise SystemExit(f"plugin-load smoke package metadata mismatch: {metadata()!r}")
+
+
+def load_entrypoint(plugin_home: Path) -> ModuleType:
+    previous_path = list(sys.path)
+    previous_package = sys.modules.pop(PACKAGE_MODULE, None)
+    try:
+        sys.path.insert(0, str(plugin_home / "src"))
+        return load_module(
+            plugin_home / "__init__.py",
+            "kkachi_agent_network_plugin_root_plugin_load_smoke",
+            package_root=True,
+        )
+    finally:
+        sys.path[:] = previous_path
+        if previous_package is None:
+            sys.modules.pop(PACKAGE_MODULE, None)
+        else:
+            sys.modules[PACKAGE_MODULE] = previous_package
+
+
+def require_entrypoint_load(plugin_home: Path) -> FakeHermesContext:
+    entrypoint = load_entrypoint(plugin_home)
+    register = getattr(entrypoint, "register", None)
+    if not callable(register):
+        raise SystemExit("plugin-load smoke entrypoint register is not callable")
+
+    context = FakeHermesContext()
+    try:
+        register(context)
+    except Exception as exc:
+        raise SystemExit(f"plugin-load smoke entrypoint register failed: {exc}") from exc
+
+    registered_tool_names = [tool.get("name") for tool in context.registered_tools]
+    if registered_tool_names != EXPECTED_TOOLS:
+        raise SystemExit(
+            "plugin-load smoke tool registration mismatch: "
+            f"{registered_tool_names!r} != {EXPECTED_TOOLS!r}"
+        )
+    if context.registered_hooks:
+        raise SystemExit("plugin-load smoke registered unsupported hooks")
+    if context.registered_commands:
+        raise SystemExit("plugin-load smoke registered unsupported commands")
+    for tool in context.registered_tools:
+        if tool.get("toolset") != TOOLSET:
+            raise SystemExit(f"plugin-load smoke toolset mismatch: {tool!r}")
+        if not isinstance(tool.get("schema"), dict):
+            raise SystemExit(f"plugin-load smoke tool schema must be a mapping: {tool!r}")
+        if not callable(tool.get("handler")):
+            raise SystemExit(f"plugin-load smoke handler is not callable: {tool!r}")
+    return context
+
+
+def require_handler_fail_closed(context: FakeHermesContext) -> dict[str, str]:
+    outputs: dict[str, str] = {}
+    for tool in context.registered_tools:
+        name = tool["name"]
+        handler = tool["handler"]
+        result = handler(representative_args(str(name)))
+        if not isinstance(result, str):
+            raise SystemExit(f"plugin-load smoke handler did not return JSON string: {name}")
+        body = json.loads(result)
+        if body.get("ok") is not False:
+            raise SystemExit(
+                f"plugin-load smoke handler must fail closed without injection: {body}"
+            )
+        if body.get("tool") != name:
+            raise SystemExit(f"plugin-load smoke handler tool mismatch: {body}")
+        if "error" not in body or not isinstance(body["error"], dict):
+            raise SystemExit(f"plugin-load smoke handler missing structured error: {body}")
+        if body["error"].get("category") not in {"unavailable", "validation"}:
+            raise SystemExit(f"plugin-load smoke unexpected fail-closed category: {body}")
+        outputs[str(name)] = result
+    return outputs
+
+
+def require_entrypoint_fail_closed(plugin_home: Path) -> dict[str, str]:
+    return require_handler_fail_closed(require_entrypoint_load(plugin_home))
+
+
+def representative_args(tool_name: str) -> dict[str, object]:
+    if tool_name == "kan_daemon_status":
+        return {}
+    if tool_name == "kan_compatibility_diagnostics":
+        return {"session_id": "sess-smoke"}
+    if tool_name == "kan_stream_tail":
+        return {"session_id": "sess-smoke", "member": "agent-smoke", "limit": 1}
+    if tool_name == "kan_delegate_new":
+        return {
+            "session_id": "sess-smoke",
+            "moderator": "moderator-smoke",
+            "assignee": "assignee-smoke",
+            "title": "Smoke delegation",
+            "task": "Prove local handler fail-closed behavior.",
+            "context": {},
+            "participants": [],
+            "acceptance": [],
+            "expected_outputs": [],
+            "limits": {},
+            "request_id": "req-smoke-delegate-new",
+            "idempotency_key": "idem-smoke-delegate-new",
+        }
+    if tool_name == "kan_delegate_action":
+        return {
+            "session_id": "sess-smoke",
+            "command": "delegate.submit",
+            "request_id": "req-smoke-delegate-action",
+            "idempotency_key": "idem-smoke-delegate-action",
+            "payload": {"command_id": "cmd-smoke"},
+        }
+    if tool_name == "kan_council_command":
+        return {
+            "session_id": "sess-smoke",
+            "command": "council.ready",
+            "request_id": "req-smoke-council",
+            "idempotency_key": "idem-smoke-council",
+            "payload": {"command_id": "cmd-smoke", "actor": "agent-smoke"},
+        }
+    if tool_name == "kan_delivery_evidence":
+        return {
+            "session_id": "sess-smoke",
+            "command": "delegate.escalation_delivered",
+            "request_id": "req-smoke-delivery",
+            "idempotency_key": "idem-smoke-delivery",
+            "payload": {"command_id": "cmd-smoke", "escalation": "evt-smoke"},
+        }
+    if tool_name == "kan_discord_send_message":
+        return {
+            "content": "local isolated plugin-load smoke",
+            "target": {
+                "platform": "discord",
+                "channel_id": "chan-smoke",
+                "dedicated_test_target": True,
+                "visible_label": "LOCAL-SMOKE",
+                "cleanup_hint": "delete local smoke fixture if copied",
+            },
+        }
+    raise AssertionError(f"unexpected tool: {tool_name}")
+
+
+def require_live_env_inert(plugin_home: Path, baseline: Mapping[str, str]) -> None:
+    with patched_environ(LIVE_LOOKING_ENV):
+        env_outputs = require_entrypoint_fail_closed(plugin_home)
+    if env_outputs != baseline:
+        raise SystemExit("plugin-load smoke changed behavior under live-looking environment")
+
+
+def require_negative_fixtures(plugin_home: Path) -> None:
+    command_manifest = plugin_home / "plugin.yaml"
+    original_manifest = command_manifest.read_text(encoding="utf-8")
+    try:
+        command_manifest.write_text(
+            original_manifest.replace("provides_commands: []", "provides_commands: [kan]"),
+            encoding="utf-8",
+        )
+        try:
+            require_manifest(plugin_home)
+        except SystemExit as exc:
+            if "provides_commands" not in str(exc):
+                raise
+        else:
+            raise SystemExit("plugin-load smoke accepted provides_commands overclaim")
+    finally:
+        command_manifest.write_text(original_manifest, encoding="utf-8")
+
+    entrypoint_path = plugin_home / "__init__.py"
+    original_entrypoint = entrypoint_path.read_text(encoding="utf-8")
+    try:
+        entrypoint_path.write_text(
+            original_entrypoint
+            + "\n\n_original_register = register\n\n"
+            + "def register(ctx):\n"
+            + "    _original_register(ctx)\n"
+            + "    ctx.register_command('kan', lambda args: '{}', 'unsupported', None)\n",
+            encoding="utf-8",
+        )
+        try:
+            require_entrypoint_load(plugin_home)
+        except SystemExit as exc:
+            if "commands" not in str(exc):
+                raise
+        else:
+            raise SystemExit("plugin-load smoke accepted command-registering entrypoint")
+    finally:
+        entrypoint_path.write_text(original_entrypoint, encoding="utf-8")
+
+
+@contextmanager
+def patched_environ(values: Mapping[str, str]) -> Iterator[None]:
+    original = {key: os.environ.get(key) for key in values}
+    os.environ.update(values)
+    try:
+        yield
+    finally:
+        for key, value in original.items():
+            if value is None:
+                os.environ.pop(key, None)
+            else:
+                os.environ[key] = value
+
+
+class FakeHermesContext:
+    def __init__(self) -> None:
+        self.registered_tools: list[dict[str, Any]] = []
+        self.registered_hooks: list[tuple[str, Any]] = []
+        self.registered_commands: list[dict[str, Any]] = []
+
+    def register_tool(self, **kwargs: Any) -> None:
+        self.registered_tools.append(kwargs)
+
+    def register_hook(self, hook_name: str, callback: Any) -> None:
+        self.registered_hooks.append((hook_name, callback))
+
+    def register_command(self, *args: Any, **kwargs: Any) -> None:
+        self.registered_commands.append({"args": args, "kwargs": kwargs})
+
+
+def main(*, root: Path = ROOT) -> None:
+    root = root.resolve()
+    with tempfile.TemporaryDirectory(prefix="kan-plugin-load-smoke-") as temp:
+        plugin_home = make_isolated_plugin_home(root, Path(temp))
+        require_manifest(plugin_home)
+        require_package_and_bundled_skill(plugin_home)
+        baseline = require_entrypoint_fail_closed(plugin_home)
+        require_live_env_inert(plugin_home, baseline)
+        require_negative_fixtures(plugin_home)
+    print("check-plugin-load-smoke: ok")
+
+
+if __name__ == "__main__":
+    main()

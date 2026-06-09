@@ -36,8 +36,9 @@ Supported plugin surfaces in the current package are fake/injected Hermes tools:
 The plugin manifest must continue to declare `provides_commands: []`. KAN slash
 commands, native Discord slash commands, `kan_session_status`, live daemon
 discovery, localhost/socket/SSE/WebSocket transports, CLI fallback, gateway auth,
-token access, current-session lookup, and installed-plugin smoke readiness are
-unsupported in SKILL-1.
+token access, current-session lookup, production activation, KAB readiness, and
+live plugin readiness are unsupported in SKILL-2. The only plugin-load claim is
+local isolated plugin-load smoke.
 
 ## No-live defaults
 
@@ -58,17 +59,19 @@ Default work must stay local and fake/injected only:
 1. Inspect `plugin.yaml` and confirm the tool list plus
    `provides_commands: []`.
 2. Read `docs/09-skill-and-operator-guide.md` for install, enable, rollback,
-   troubleshooting, and SKILL-2 boundaries.
+   troubleshooting, and the SKILL-2 local isolated plugin-load smoke boundary.
 3. Run local verification before claiming the packaged skill/docs are usable:
 
    ```bash
    HOME=/Users/draccoon make test-prepare
+   HOME=/Users/draccoon make check-plugin-load-smoke
    HOME=/Users/draccoon make check-core-contract
    HOME=/Users/draccoon make test
    ```
 
 4. If any command fails, report the exact command and reason. Do not claim live
-   or installed-plugin readiness from these local checks.
+   readiness, production activation, KAB readiness, or live plugin readiness
+   from these local checks.
 
 ## Troubleshooting prompts
 
@@ -81,12 +84,12 @@ Default work must stay local and fake/injected only:
   Tests must not fall back to the current Hermes/Discord/daemon environment.
 - Session status requests: keep `kan_session_status` deferred until the control
   contract publishes `session.status.read` fixture/protocol authority.
-- Plugin-load smoke requests: route to SKILL-2. SKILL-1 covers packaged
-  resource/docs guardrails only.
+- Plugin-load smoke requests: run `make check-plugin-load-smoke` and describe
+  the result only as local isolated plugin-load smoke.
 
 ## Rollback guidance
 
 Rollback is local and reversible: remove the copied skill file or disable the
 profile entry that points at it, restore the previous plugin package version, and
 rerun the local make gates. Do not delete live Hermes state or modify daemon
-storage as part of SKILL-1 rollback.
+storage as part of SKILL-2 rollback.

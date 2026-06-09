@@ -14,6 +14,7 @@ REQUIRED_TARGETS = (
     "test-e2e",
     "check-core-contract",
     "check-bootstrap-smoke",
+    "check-plugin-load-smoke",
     "check-make-contract",
     "docs-guardrails",
     "fmt",
@@ -29,12 +30,14 @@ EXPECTED_PREPARE_DEPS = (
     "docs-guardrails",
     "check-make-contract",
     "check-bootstrap-smoke",
+    "check-plugin-load-smoke",
 )
 REQUIRE_UV_TARGETS = (
     "fmt",
     "lint",
     "typecheck",
     "check-bootstrap-smoke",
+    "check-plugin-load-smoke",
     "test-unit",
     "test-int",
     "test-e2e",
@@ -46,6 +49,9 @@ TARGET_MARKERS = {
     "docs-guardrails": (("scripts/guardrails.py", "docs guardrails script"),),
     "check-core-contract": (("scripts/check_core_contract.py", "core contract script"),),
     "check-bootstrap-smoke": (("scripts/check_bootstrap_smoke.py", "bootstrap smoke script"),),
+    "check-plugin-load-smoke": (
+        ("scripts/check_plugin_load_smoke.py", "plugin-load smoke script"),
+    ),
     "check-make-contract": (("scripts/check_make_contract.py", "Makefile contract script"),),
     "require-uv": (
         ("uv is required for Python scaffold checks", "uv fail-safe message"),

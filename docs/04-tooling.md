@@ -43,11 +43,13 @@ The project `.gitignore` must include `.kkachi/`, `.codegraph/`, `.omx/`, `.omc/
 
 ## Makefile targets
 
-`make test-prepare` runs formatting, lint, type checking, docs guardrails, the Makefile target-contract check, and the bootstrap smoke check.
+`make test-prepare` runs formatting, lint, type checking, docs guardrails, the Makefile target-contract check, the bootstrap smoke check, and the local isolated plugin-load smoke check.
 
 `make check-make-contract` verifies required single-line target declarations, `.PHONY` coverage, `make test` dependencies, preparation-gate dependencies, scoped tool commands, offline integration defaults, and isolated E2E environment variables.
 
 `make check-bootstrap-smoke` verifies the package import/metadata, fake/injected plugin manifest shape, exact tool registrations, callable handler presence, and root directory-plugin entrypoint availability without registering hooks or KAN slash commands.
+
+`make check-plugin-load-smoke` verifies local isolated plugin-load smoke. It creates a temporary plugin home from repository-local files, loads the root entrypoint through a fake Hermes registration context, checks exact tool order, zero hooks, zero commands, handler JSON-string fail-closed behavior without injected clients/senders, live-looking environment inertness, negative command-overclaim fixtures, wheel package inclusion, and bundled skill compatibility. It does not inspect or mutate the user's Hermes profile and does not contact daemon, Discord, KAB, gateway, auth, token, provider, localhost, socket, CLI, or network resources.
 
 `make test-unit` runs `pytest tests/unit`.
 
@@ -65,18 +67,19 @@ After the Python scaffold exists, `uv` and `pyproject.toml` are required for cod
 
 `make check-core-contract` runs `scripts/check_core_contract.py`. The script is import-safe for unit testing and verifies the local companion control repo, `KAN_CONTROL_REPO`, or legacy `KAN_CORE_REPO`, exposes the expected conformance manifest protocol, cross-repo development phrases, distribution fixture handoff wording, reciprocal `check-plugin-contract` Makefile target, and matching plugin compatibility declaration.
 
-## SKILL-1 bundled skill resources
+## Bundled skill resources
 
-SKILL-1 packages the `kan-plugin` operator skill under
+SKILL-1 packaged the `kan-plugin` operator skill under
 `src/kkachi_agent_network_plugin/bundled_skills/kan-plugin/SKILL.md` and exposes
 `kkachi_agent_network_plugin.bundled_skills.read_bundled_skill_text(...)` for
-tests and future installers.
+tests and installer checks. SKILL-2 verifies that resource in the local
+isolated plugin-load smoke gate.
 
 The helper reads package resources only. It does not install into a Hermes
 profile, discover current-session state, contact live Hermes/Discord/daemon
 resources, mutate the sibling control repo, or alter `plugin.yaml`. Operator
 install, enable, rollback, troubleshooting, no-live defaults, and the SKILL-2
-plugin-load smoke boundary are documented in `docs/09-skill-and-operator-guide.md`.
+local isolated plugin-load smoke boundary are documented in `docs/09-skill-and-operator-guide.md`.
 
 ## Bootstrap smoke tests
 
@@ -90,7 +93,9 @@ SCAFF-5 delivers a scaffold smoke gate for the first plugin scaffold PR. It prov
 
 DAEMN-1 added fake daemon compatibility probes for the client foundation only. At that stage, full plugin-bootstrap checks that required real declared tool handlers and handler JSON-string return contracts were deferred. HPLUG-2 now enables those checks for the three read-only JSON-string handlers.
 
-SCAFF-5 introduced smoke coverage in `scripts/check_bootstrap_smoke.py` and `tests/unit/test_bootstrap_smoke.py`; HPLUG-2 updated it for the three read-only tool registrations, DELRV-1 extended it for the two delegation/review command-envelope tools, CNDIS-1 extended it for the council and delivery-evidence command tools, and CNDIS-2 extends it for the injected-only Discord helper while keeping the explicit empty slash-command surface. This proves manifest/entrypoint/handler-contract readiness only; it does not claim installed Hermes plugin loading.
+SCAFF-5 introduced smoke coverage in `scripts/check_bootstrap_smoke.py` and `tests/unit/test_bootstrap_smoke.py`; HPLUG-2 updated it for the three read-only tool registrations, DELRV-1 extended it for the two delegation/review command-envelope tools, CNDIS-1 extended it for the council and delivery-evidence command tools, and CNDIS-2 extends it for the injected-only Discord helper while keeping the explicit empty slash-command surface. This proves manifest/entrypoint/handler-contract readiness only.
+
+SKILL-2 adds `scripts/check_plugin_load_smoke.py` and `tests/unit/test_plugin_load_smoke.py` as a bounded local isolated plugin-load smoke gate. It checks that the repository plugin surface can be discovered and loaded in a temporary fake Hermes context and fails closed for unsupported live surfaces. It is not production activation, live plugin readiness, KAB readiness, or live Hermes/Discord evidence.
 
 ## DAEMN-1 client modules
 

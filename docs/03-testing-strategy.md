@@ -4,7 +4,7 @@
 
 | Target | Plugin meaning | External resources |
 | --- | --- | --- |
-| `test-prepare` | ruff format/check, mypy/typecheck, docs guardrails, Makefile contract check, bootstrap smoke check, static safety checks | forbidden |
+| `test-prepare` | ruff format/check, mypy/typecheck, docs guardrails, Makefile contract check, bootstrap smoke check, local isolated plugin-load smoke check, static safety checks | forbidden |
 | `test-unit` | pure Python units for schemas, error rendering, client request construction | forbidden |
 | `test-int` | fake daemon, fake Hermes registry, fake send_message/gateway | forbidden |
 | `test-e2e` | real daemon/Hermes/Discord only in isolated test environment | allowed only when configured |
@@ -48,6 +48,8 @@ When required environment variables are absent, E2E tests must skip with a clear
 `make check-make-contract` verifies required single-line target declarations, `.PHONY` coverage, `make test` dependencies, preparation-gate dependencies, scoped tool commands, offline integration defaults, and isolated E2E environment variables. `make test-prepare` includes this check so target-contract drift is caught before tests run.
 
 `make check-bootstrap-smoke` verifies fake/injected plugin bootstrap readiness: package import/metadata through the `src/` layout, plugin manifest shape with exactly `kan_daemon_status`, `kan_compatibility_diagnostics`, `kan_stream_tail`, `kan_delegate_new`, `kan_delegate_action`, `kan_council_command`, `kan_delivery_evidence`, and `kan_discord_send_message`, explicit empty hook/command declarations, and root entrypoint registration of callable JSON-string handlers without hooks or slash commands.
+
+`make check-plugin-load-smoke` verifies local isolated plugin-load smoke only. It copies repository-local plugin files into a temporary plugin home, loads the root `register(ctx)` entrypoint with a fake Hermes context, asserts the exact eight tools in order, asserts no hooks or commands, calls representative handlers without injected clients/senders and requires JSON `ok:false`, verifies live-looking environment variables do not change behavior, rejects command-registering entrypoints or `provides_commands: [kan]`, and checks wheel package inclusion plus bundled skill compatibility. It does not read a live Hermes profile, contact a daemon, open sockets, call KAB, contact Discord/gateway/auth/token/provider resources, or prove production activation.
 
 Once the Python scaffold exists, missing `uv` or `pyproject.toml` is a fail-safe prerequisite error for code/test targets rather than a silent pass. Live external resources remain forbidden by default.
 

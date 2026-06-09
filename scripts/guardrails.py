@@ -26,6 +26,7 @@ REQUIRED_PHRASES = [
     "test-e2e",
     "isolated test environment",
     "fail closed",
+    "local isolated plugin-load smoke",
 ]
 FORBIDDEN_PHRASES = ["`../kkachi-agent-network"]
 REQUIRED_OPERATOR_PHRASES = [
@@ -40,6 +41,9 @@ REQUIRED_OPERATOR_PHRASES = [
 FORBIDDEN_OPERATOR_CLAIMS = [
     "installed-plugin smoke passes",
     "plugin-load smoke passes",
+    "production activation is supported",
+    "live plugin readiness is supported",
+    "KAB readiness is supported",
     "kan_session_status is supported",
     "provides_commands: [kan",
 ]

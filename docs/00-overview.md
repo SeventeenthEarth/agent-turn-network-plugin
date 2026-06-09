@@ -2,7 +2,7 @@
 
 ## Purpose
 
-`kkachi-agent-network-plugin` is the Python Hermes plugin adapter for KAN. In the current CNDIS-2 state it provides fake/injected Hermes tool surfaces for daemon status, compatibility diagnostics, stream tail reads, delegation/review command-envelope submission, council lifecycle command submission, delivery-evidence command submission, and an injected-only Discord helper backed by the DAEMN client foundation. Hermes provides a plugin slash-command host API, but `kan_session_status`, KAN slash commands, skills, live daemon discovery, live/default Discord helper posting, and live Hermes/Discord integration are not exposed yet.
+`kkachi-agent-network-plugin` is the Python Hermes plugin adapter for KAN. In the current SKILL-2 state it provides fake/injected Hermes tool surfaces for daemon status, compatibility diagnostics, stream tail reads, delegation/review command-envelope submission, council lifecycle command submission, delivery-evidence command submission, an injected-only Discord helper backed by the DAEMN client foundation, a packaged operator skill, a compatibility matrix, and local isolated plugin-load smoke. Hermes provides a plugin slash-command host API, but `kan_session_status`, KAN slash commands, live daemon discovery, live/default Discord helper posting, production activation, KAB readiness, live plugin readiness, and live Hermes/Discord integration are not exposed.
 
 The plugin is not the source of truth. `kkachi-agent-networkd` owns state, event append, locks, replay, projections, and lifecycle decisions.
 

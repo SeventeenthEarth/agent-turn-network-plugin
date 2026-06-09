@@ -53,6 +53,7 @@ def write_docs(root: Path, *, include_fail_closed: bool = True) -> None:
             "kkachi-agent-networkd",
             "test-prepare test-unit test-int test-e2e",
             "isolated test environment",
+            "local isolated plugin-load smoke",
             "fail closed" if include_fail_closed else "",
         ]
     )

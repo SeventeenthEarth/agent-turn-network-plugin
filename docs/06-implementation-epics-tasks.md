@@ -39,7 +39,7 @@ Use `docs/07-core-compatibility.md` as the compatibility SOT. The short rule is:
 - `HPLUG` can define and test read-only plugin surfaces ahead of control only when matching fake responses or conformance fixtures exist; live tool completion waits for matching daemon/session/status/stream contracts from `DAEMN-002`.
 - `DELRV` waits for implemented control delegation/review commands and fixtures from `DELEG-001` before non-skeleton completion.
 - `CNDIS` waits for implemented council paths from `COUNC-001` and delivery-evidence command paths from `DAEMN-002` before non-skeleton completion.
-- `SKILL` waits for a real plugin-load/install path plus completed compatibility/release evidence from `TRANS-001`/`RELIA-001` before release-ready completion.
+- `SKILL` can complete the local compatibility matrix and local isolated plugin-load smoke once `TRANS-001`/`RELIA-001` evidence is recorded, but still cannot claim production activation, KAB readiness, live plugin readiness, live Discord readiness, or live daemon discovery without separate isolated/live tasks.
 
 ## SCAFF: Scaffold
 
@@ -106,9 +106,9 @@ Exit: council and delivery-evidence surfaces preserve core-owned state and evide
 
 Epic ID: `SKILL`
 
-Exit: the plugin has operator-facing skill/docs, compatibility matrix, troubleshooting, and install/plugin-load smoke evidence sufficient for release-readiness claims.
+Exit: the plugin has operator-facing skill/docs, compatibility matrix, troubleshooting, and local isolated plugin-load smoke evidence. This exit is not a production activation, KAB readiness, live plugin readiness, or live Discord readiness claim.
 
 | Task ID | Task Title | Task Status | Task Description |
 |---|---|---|---|
 | SKILL-1 | Add bundled KAN skill and operator docs | completed | Added the bundled `kan-plugin` skill surface, import-safe resource reader, install/enable/rollback documentation, troubleshooting guide, and docs/tests guardrails aligned with the plugin's actual fake/injected capabilities and unsupported surfaces. This does not claim installed-plugin or live readiness; SKILL-2 owns plugin-load smoke. Completed after KAH verification, Red/Orange/Gray review, Orange feedback handling and re-review, official GLM Octo PASS, final gate evidence, and 주군 commit approval. |
-| SKILL-2 | Add compatibility matrix and plugin-load smoke | blocked | Record supported control protocol versions, Hermes expectations, unsupported/degraded combinations, and install/plugin-load smoke tests. Block release-ready completion until the real supported plugin-load path exists and `TRANS-001`/`RELIA-001` compatibility evidence is available. |
+| SKILL-2 | Add compatibility matrix and plugin-load smoke | completed | Adds the compatibility matrix and `make check-plugin-load-smoke` local isolated plugin-load smoke gate after recording completed control `TRANS-001` and `RELIA-001` evidence as unblock sources. The smoke creates a temporary plugin home from repository files, loads `register(ctx)` with a fake Hermes context, asserts exact tool order, zero hooks, zero commands, fail-closed JSON handlers, live-looking environment inertness, negative command-overclaim fixtures, wheel package inclusion, and bundled skill compatibility. This is local isolated plugin-load smoke only; it does not claim production activation, KAB readiness, live plugin readiness, live daemon discovery, live/default Discord sending, or any change to `provides_commands: []`. Completed after verification, required reviews, final gates, and 주군 commit approval. |

@@ -82,6 +82,33 @@ def test_make_contract_rejects_missing_bootstrap_smoke_require_uv_dependency(
         run_contract_with_makefile(check_make_contract, monkeypatch, broken)
 
 
+def test_make_contract_rejects_missing_plugin_load_smoke_prepare_dependency(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    check_make_contract = load_check_make_contract()
+    makefile = check_make_contract.MAKEFILE.read_text(encoding="utf-8")
+    broken = makefile.replace(
+        "check-make-contract check-bootstrap-smoke check-plugin-load-smoke",
+        "check-make-contract check-bootstrap-smoke",
+    )
+
+    with pytest.raises(SystemExit, match="test-prepare deps mismatch"):
+        run_contract_with_makefile(check_make_contract, monkeypatch, broken)
+
+
+def test_make_contract_rejects_missing_plugin_load_smoke_script_marker(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    check_make_contract = load_check_make_contract()
+    makefile = check_make_contract.MAKEFILE.read_text(encoding="utf-8")
+    broken = makefile.replace(
+        "scripts/check_plugin_load_smoke.py", "scripts/check_bootstrap_smoke.py"
+    )
+
+    with pytest.raises(SystemExit, match="plugin-load smoke script"):
+        run_contract_with_makefile(check_make_contract, monkeypatch, broken)
+
+
 def test_target_dependencies_ignore_inline_comments() -> None:
     check_make_contract = load_check_make_contract()
     makefile = "test: test-prepare test-unit test-int test-e2e # all tiers\n"

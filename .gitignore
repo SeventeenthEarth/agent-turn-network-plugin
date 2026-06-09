@@ -7,6 +7,8 @@ dist/
 build/
 *.egg-info/
 .DS_Store
+
+# Kkachi local runtime/evidence sidecars
 .kkachi/
 .codegraph/
 .omx/

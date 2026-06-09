@@ -58,6 +58,9 @@ def test_bundled_skill_and_operator_docs_do_not_overclaim_unsupported_surfaces()
     for phrase in [
         "installed-plugin smoke passes",
         "plugin-load smoke passes",
+        "production activation is supported",
+        "live plugin readiness is supported",
+        "KAB readiness is supported",
         "kan_session_status is supported",
         "provides_commands: [kan",
         "live daemon discovery is supported",
@@ -67,4 +70,4 @@ def test_bundled_skill_and_operator_docs_do_not_overclaim_unsupported_surfaces()
 
     assert "fake/injected" in combined
     assert "No-live defaults" in combined
-    assert "Plugin-load smoke belongs to SKILL-2" in guide_text
+    assert "local isolated plugin-load smoke" in guide_text

@@ -32,7 +32,8 @@ Unsupported now:
   fallback, or Discord helper behavior that claims daemon-recorded evidence.
 - Any Discord helper path that reads tokens, auth, gateway, credential, localhost, socket,
   CLI, current Hermes, or active user-thread state.
-- Installed-plugin or live Hermes plugin-load smoke readiness claims.
+- Live Hermes plugin-load readiness, production activation, KAB readiness, or any
+  claim broader than local isolated plugin-load smoke.
 
 ## Host capability versus plugin readiness
 
@@ -45,7 +46,7 @@ Hermes host evidence:
 KAN plugin readiness boundary:
 
 - The plugin does not register slash commands; DELRV-1/CNDIS-1 command-envelope tools are Hermes tools, not slash-command bindings.
-- The plugin is not installed/enabled as a live Hermes plugin in the active environment, so no installed-plugin command claim is valid.
+- The plugin is not installed/enabled as a live Hermes plugin in the active environment, so no live plugin command claim is valid.
 - Free-form Discord replies or slash invocations must not become authoritative lifecycle transitions; daemon events remain the SOT.
 - `kan_discord_send_message` does not change daemon evidence. Delivery evidence remains
   daemon-owned through `kan_delivery_evidence`; Discord IDs are evidence pointers only.

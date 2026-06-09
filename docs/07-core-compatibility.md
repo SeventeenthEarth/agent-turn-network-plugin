@@ -13,7 +13,7 @@ The control-side SOT is `../../kkachi-agent-network-control/docs/21-cross-repo-d
 | Control repo | `../../kkachi-agent-network-control` |
 | Protocol version | `kan-protocol-v1alpha0` |
 | Fixture manifest | `../../kkachi-agent-network-control/testdata/conformance/manifest.json` |
-| Stability | draft, docs/scaffold/client-foundation plus fake/injected HPLUG-2 read-only status/diagnostics/stream-tail tools, DELRV command tools, CNDIS council/delivery-evidence tools, and HPLUG-3 unsupported slash-command documentation |
+| Stability | draft, docs/scaffold/client-foundation plus fake/injected HPLUG-2 read-only status/diagnostics/stream-tail tools, DELRV command tools, CNDIS council/delivery-evidence tools, HPLUG-3 unsupported slash-command documentation, SKILL-2 compatibility matrix, and local isolated plugin-load smoke |
 | Plugin behavior on mismatch | fail closed; no live fallback; affected tool returns `ok:false` |
 
 ## Compatibility checks
@@ -56,7 +56,35 @@ Uses disposable Hermes home/profile and dedicated Discord test target. It must n
 | P2 Hermes status/diagnostic tools | DAEMN-002 daemon status/session/stream fixtures | yes, fake daemon | implemented control status/stream contract |
 | P3 Delegation/review tools | DELEG-001 delegation/review command fixtures | yes, fake/injected only | implemented control commands, fake-daemon coverage, review gates, and final evidence; no live-local/plugin-load readiness claim |
 | P4 Council/Discord surface | COUNC-001 council fixtures plus DAEMN-002 delivery evidence fixtures | yes, fake/injected CNDIS tool-ready | isolated E2E target, Discord helper contract, and installed-plugin evidence before live Discord readiness |
-| P5 Skill/distribution | TRANS-001/RELIA-001 implemented command matrix and release-readiness evidence | docs-only draft | compatibility matrix and install smoke tests |
+| P5 Skill/distribution | TRANS-001/RELIA-001 implemented command matrix and release evidence | docs-only draft | compatibility matrix and local isolated plugin-load smoke |
+
+## SKILL-2 compatibility matrix
+
+SKILL-2 records completed control `TRANS-001` and `RELIA-001` gates as unblock
+evidence for this plugin matrix. The plugin does not reuse control `.kkachi/`
+artifacts as plugin evidence; plugin evidence is the repository-local docs,
+tests, and `make check-plugin-load-smoke` local isolated plugin-load smoke gate.
+
+| Surface or feature | Control / Hermes status | Plugin support | Evidence source | Unsupported or degraded behavior |
+| --- | --- | --- | --- | --- |
+| Protocol `kan-protocol-v1alpha0` | Control conformance manifest declares the protocol | Supported for fake/injected client compatibility checks | `make check-core-contract`, `docs/07-core-compatibility.md`, `src/kkachi_agent_network_plugin/protocol.py` | Any other protocol fails closed before compatibility is claimed. |
+| `version.read` | Control-supported compatibility probe | Used by stream, council, and delivery-evidence feature gates through injected clients | `tests/unit/test_status_version_client.py`, `tests/unit/test_tool_handlers.py`, `tests/integration/test_cndis_conformance.py` | `session.status.read` is not implemented or exposed. |
+| Command/event envelope and structured error | Control-supported command envelope and daemon error contract | Supported through `kan_delegate_new`, `kan_delegate_action`, `kan_council_command`, and `kan_delivery_evidence` with caller-supplied request/idempotency IDs | `tests/unit/test_command_envelope.py`, `tests/unit/test_daemon_error_decoding.py`, `tests/integration/test_delegate_plugin_tools.py` | Unknown commands, malformed envelopes, missing IDs, or daemon structured failures return JSON `ok:false`; no local lifecycle or retry state is added. |
+| Stream features | Control feature group `stream_frame` gates retained stream reads | `kan_stream_tail` supported only with positive injected `version.read` compatibility | `tests/unit/test_stream_frame_parsing.py`, `tests/integration/test_fake_daemon_stream_diagnostics.py` | Missing `stream_frame`, malformed frames, live sockets, SSE, WebSocket, CLI, or daemon discovery fail closed / remain unsupported. |
+| Delegation/review fixtures | Control DELEG fixtures cover implemented `delegate.*` commands | `kan_delegate_new` and `kan_delegate_action` expose the closed implemented command set | `tests/integration/test_deleg_002_conformance.py`, `tests/unit/test_tool_handlers.py` | `delegate.request`, top-level `review`, generated IDs, plugin-owned dedupe, and live daemon fallback are unsupported. |
+| Council lifecycle | Control `council.lifecycle` feature and COUNC fixtures exist | `kan_council_command` supports exact implemented `council.*` lifecycle commands through injected clients | `tests/integration/test_cndis_conformance.py`, `tests/unit/test_tool_handlers.py` | Missing feature probe or unsupported command returns `ok:false`; plugin owns no council state. |
+| Delivery evidence | Control `delivery_evidence` feature and command path exist | `kan_delivery_evidence` supports exact delivery-evidence commands through injected clients | `tests/integration/test_cndis_conformance.py`, `tests/unit/test_tool_handlers.py` | Discord IDs are evidence pointers only; plugin owns no delivery transitions and does not default-send Discord messages. |
+| `transcript.render` | Control-supported capability | Not exposed as a plugin tool in SKILL-2 | Control `TRANS-001` completion is recorded as unblock evidence only | No `kan_transcript_render` tool, command, hook, or live fallback is added. |
+| `export.bundle` | Control-supported capability | Not exposed as a plugin tool in SKILL-2 | Control `TRANS-001`/`RELIA-001` completion is recorded as unblock evidence only | No `kan_export_bundle` tool, command, hook, or live fallback is added. |
+| Packaged skill resource | Python package includes `bundled_skills/kan-plugin/SKILL.md` | Supported for import-safe package resource reads | `tests/unit/test_bundled_skills.py`, `make check-plugin-load-smoke` | The package does not install into the user's Hermes profile. |
+| Local isolated plugin-load smoke | Hermes-compatible root `register(ctx)` entrypoint can be loaded with a fake context | Supported only as local isolated plugin-load smoke | `scripts/check_plugin_load_smoke.py`, `tests/unit/test_plugin_load_smoke.py`, `make check-plugin-load-smoke` | This is not production activation, live plugin readiness, KAB readiness, live Hermes readiness, or live Discord readiness. |
+| `kan_session_status` | No authoritative `session.status.read` plugin contract | Unsupported | Guardrails, schema tests, docs | Do not add `kan_session_status` or `session.status.read` support. |
+| KAN slash commands | Hermes host can register commands, but plugin has no approved KAN command contract | Unsupported; `provides_commands: []` stays unchanged | `plugin.yaml`, bootstrap smoke, plugin-load smoke, docs guardrails | Any `provides_commands: [kan]` or `register_command` drift fails local smoke. |
+| Native Discord slash commands | No supported plugin/native Discord slash-command contract | Unsupported | `docs/05-discord-surface.md`, `docs/08-unsupported-surfaces.md` | No native Discord command registration or gateway fallback. |
+| Live daemon discovery | No approved live/default daemon discovery path | Unsupported by default | E2E no-live-fallback tests, docs guardrails | No localhost, socket, provider, or CLI fallback. |
+| Live/default Discord send | Sender must be explicitly injected and target must be dedicated test metadata | Unsupported by default | `tests/unit/test_discord_surface.py`, `tests/e2e/test_discord_surface_no_live.py` | Live-looking env vars do not create a sender or target. |
+| KAB bridge | Out of scope for this direct Codex app-server lane | Unsupported | SKILL-2 task boundary and docs guardrails | No KAB bridge implementation or readiness claim. |
+| Production Hermes activation | No production/live activation evidence in SKILL-2 | Unsupported | Operator guide and smoke boundary | Local isolated plugin-load smoke is the maximum claim. |
 
 ## Cross-repo check command
 
@@ -132,3 +160,22 @@ plugin-load readiness, or any change to `provides_commands: []`.
 ## HPLUG-3 slash-command compatibility guard
 
 Hermes host slash-command support exists through `PluginContext.register_command`, but KAN plugin slash commands are not compatible-ready. Control KAN must first provide daemon command authority, protocol fixtures, idempotency/error semantics, and delivery-evidence rules for the specific operation. Until then, `provides_commands: []` is the correct manifest state and no slash-command handler should be registered. See `docs/08-unsupported-surfaces.md` for the operator-facing unsupported-surface matrix and future binding checklist.
+
+## SKILL-2 local isolated plugin-load guard
+
+SKILL-2 adds `make check-plugin-load-smoke` as a bounded local isolated
+plugin-load smoke gate. The gate creates a temporary plugin home from
+repository-local files, loads the root `__init__.py::register(ctx)` entrypoint
+with a fake Hermes context, asserts the exact eight tool registrations in
+manifest order, asserts no hooks and no commands, checks handler callability,
+and calls representative handlers without injected clients/senders to require
+JSON-string `ok:false` fail-closed responses. It also checks that live-looking
+environment variables do not change local behavior, rejects a fake
+`provides_commands: [kan]` manifest, rejects a command-registering entrypoint,
+and verifies wheel package inclusion plus bundled skill compatibility.
+
+This smoke gate does not read or mutate a live Hermes profile, contact
+kkachi-agent-networkd, open sockets, use localhost, call a CLI, discover
+providers, use auth/token/gateway material, contact Discord, call KAB, prove
+production activation, or prove live plugin readiness. The smoke claim is only
+local isolated plugin-load smoke.

@@ -2,12 +2,12 @@ SHELL := /bin/sh
 PYTHON ?= python3
 UV ?= uv
 
-.PHONY: test test-prepare test-unit test-int test-e2e check-core-contract check-bootstrap-smoke check-make-contract docs-guardrails fmt lint typecheck require-uv
+.PHONY: test test-prepare test-unit test-int test-e2e check-core-contract check-bootstrap-smoke check-plugin-load-smoke check-make-contract docs-guardrails fmt lint typecheck require-uv
 
 test: test-prepare test-unit test-int test-e2e
 
 # Preparation gate: local-only checks that never contact Hermes/Discord or other external services.
-test-prepare: fmt lint typecheck docs-guardrails check-make-contract check-bootstrap-smoke
+test-prepare: fmt lint typecheck docs-guardrails check-make-contract check-bootstrap-smoke check-plugin-load-smoke
 
 require-uv:
 	@if ! command -v $(UV) >/dev/null 2>&1; then \
@@ -39,6 +39,9 @@ check-core-contract:
 
 check-bootstrap-smoke: require-uv
 	@$(UV) run python scripts/check_bootstrap_smoke.py
+
+check-plugin-load-smoke: require-uv
+	@$(UV) run python scripts/check_plugin_load_smoke.py
 
 test-unit: require-uv
 	@$(UV) run pytest tests/unit

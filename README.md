@@ -1,6 +1,6 @@
 # kkachi-agent-network-plugin
 
-`kkachi-agent-network-plugin` is the Python Hermes plugin adapter for KAN. In the current SKILL-1 state it exposes fake/injected Hermes plugin tools only: read-only `kan_daemon_status`, `kan_compatibility_diagnostics`, `kan_stream_tail`, command-envelope `kan_delegate_new` and `kan_delegate_action`, `kan_council_command`, `kan_delivery_evidence`, plus the injected-only `kan_discord_send_message` helper. It also packages a `kan-plugin` operator skill for future installers/tests. Hermes has a plugin slash-command host API, but this plugin still has no KAN slash-command bindings, live daemon discovery, live/default Discord gateway wiring, session-status tool, or installed-plugin smoke claim.
+`kkachi-agent-network-plugin` is the Python Hermes plugin adapter for KAN. In the current SKILL-2 state it exposes fake/injected Hermes plugin tools only: read-only `kan_daemon_status`, `kan_compatibility_diagnostics`, `kan_stream_tail`, command-envelope `kan_delegate_new` and `kan_delegate_action`, `kan_council_command`, `kan_delivery_evidence`, plus the injected-only `kan_discord_send_message` helper. It also packages a `kan-plugin` operator skill and has a local isolated plugin-load smoke gate for the repository entrypoint. Hermes has a plugin slash-command host API, but this plugin still has no KAN slash-command bindings, live daemon discovery, live/default Discord gateway wiring, session-status tool, production activation claim, KAB bridge claim, or live plugin readiness claim.
 
 The plugin is not the source of truth. `kkachi-agent-networkd` owns `channel.jsonl`, SQLite projections, locks, replay, cursors, and state transitions.
 
@@ -23,12 +23,12 @@ Key docs:
 - [`docs/02-plugin-contract.md`](docs/02-plugin-contract.md) — compatibility and fail closed behavior
 - [`docs/03-testing-strategy.md`](docs/03-testing-strategy.md) — fake-only integration and isolated E2E policy
 - [`docs/04-tooling.md`](docs/04-tooling.md) — Python tooling and Makefile contract
-- [`docs/09-skill-and-operator-guide.md`](docs/09-skill-and-operator-guide.md) — bundled skill install, enable, rollback, troubleshooting, and SKILL-2 boundary
+- [`docs/09-skill-and-operator-guide.md`](docs/09-skill-and-operator-guide.md) — bundled skill install, enable, rollback, troubleshooting, and local isolated plugin-load smoke boundary
 - [`docs/08-unsupported-surfaces.md`](docs/08-unsupported-surfaces.md) — unsupported surfaces and future binding requirements
 
 ## Current state
 
-SKILL-1 fake/injected plugin stage. The package layout, plugin manifest, root Hermes directory entrypoint, status/diagnostics/stream-tail tools, delegation/review command-envelope tools, council/delivery-evidence command tools, injected-only Discord helper, and bundled `kan-plugin` operator skill are in place. Handlers return JSON strings, preserve fail-closed error categories, redact sensitive diagnostics/stream payloads, and require explicit fake/injected `DaemonClient` factories or explicit injected Discord senders.
+SKILL-2 fake/injected plugin stage. The package layout, plugin manifest, root Hermes directory entrypoint, status/diagnostics/stream-tail tools, delegation/review command-envelope tools, council/delivery-evidence command tools, injected-only Discord helper, bundled `kan-plugin` operator skill, compatibility matrix, and local isolated plugin-load smoke gate are in place. Handlers return JSON strings, preserve fail-closed error categories, redact sensitive diagnostics/stream payloads, and require explicit fake/injected `DaemonClient` factories or explicit injected Discord senders.
 
 `kan_stream_tail` probes `version.read` for `stream_frame` compatibility before `stream.tail`. `kan_delegate_new` submits `delegate.new`; `kan_delegate_action` accepts only the exact implemented `delegate.*` action/review/delivery enum, rejects `delegate.request` and top-level `review`, requires caller-supplied `request_id`/`idempotency_key`, and owns no lifecycle/idempotency state.
 
@@ -39,12 +39,13 @@ visible label and cleanup hint, then calls only an injected `send_message` calla
 fails closed without sender injection, does not read environment variables or current
 Hermes/Discord state, and treats Discord IDs only as evidence pointers.
 
-`kan_session_status` remains deferred until the control repo provides fixture/protocol authority for `session.status.read`. KAN slash commands remain unsupported and `provides_commands: []` remains unchanged. SKILL-1 does not install into the user's Hermes profile. Install/plugin-load smoke tests, live daemon support, live Discord sending, and live Hermes integration remain pending later tasks.
+`kan_session_status` remains deferred until the control repo provides fixture/protocol authority for `session.status.read`. KAN slash commands remain unsupported and `provides_commands: []` remains unchanged. SKILL-2 does not install into the user's Hermes profile and does not prove live daemon support, live Discord sending, production activation, KAB bridge behavior, or live Hermes integration.
 
 ## Test targets
 
 ```bash
 make test-prepare  # ruff/mypy/docs guardrails; no live external resources
+make check-plugin-load-smoke  # local isolated plugin-load smoke; no live resources
 make test-unit     # unit tests for Python package scaffold and later plugin code
 make test-int      # fake daemon/Hermes/Discord integration; no external resources
 make test-e2e      # isolated Hermes/Discord test environment only

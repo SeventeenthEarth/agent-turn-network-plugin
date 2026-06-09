@@ -45,7 +45,7 @@ The foundation currently covers:
 - structured daemon error decoding that preserves command/session/event/request identifiers while redacting token/secret-like diagnostics;
 - conformance manifest parsing where `fixtures: []` is accepted only for draft/scaffold stability and always forces `live_readiness: false`.
 
-Live daemon support remains blocked until stable endpoint declarations and installed-plugin evidence exist. Current plugin tools are fake/injected only and succeed only when a caller supplies an explicit `DaemonClient` transport.
+Live daemon support remains blocked until stable endpoint declarations and separate live-plugin evidence exist. Current plugin tools are fake/injected only and succeed only when a caller supplies an explicit `DaemonClient` transport.
 
 ## HPLUG-2 read-only Hermes tools
 

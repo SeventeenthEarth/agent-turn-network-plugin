@@ -40,6 +40,7 @@ def test_fake_hermes_context_invokes_registered_delegate_handlers() -> None:
         "kan_daemon_status",
         "kan_compatibility_diagnostics",
         "kan_stream_tail",
+        "kan_stream_ack",
         "kan_delegate_new",
         "kan_delegate_action",
         "kan_council_command",

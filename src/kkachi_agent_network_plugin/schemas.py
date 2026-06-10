@@ -123,6 +123,43 @@ KAN_STREAM_TAIL: Final[dict[str, object]] = {
     },
 }
 
+KAN_STREAM_ACK: Final[dict[str, object]] = {
+    "name": "kan_stream_ack",
+    "description": (
+        "Submit a KAN stream ack through an explicit fake/injected daemon client. "
+        "The caller supplies command_id as the daemon idempotency key; the plugin "
+        "does not dedupe locally or fall back to live daemon discovery, Hermes, "
+        "Discord, auth, token, gateway, localhost/TCP, socket discovery, or CLI."
+    ),
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "session_id": {
+                "type": "string",
+                "minLength": 1,
+                "description": "KAN session identifier whose stream cursor should be acknowledged.",
+            },
+            "member": {
+                "type": "string",
+                "minLength": 1,
+                "description": "Member or agent stream partition acknowledging the cursor.",
+            },
+            "cursor": {
+                "type": "string",
+                "minLength": 1,
+                "description": "Stream cursor being acknowledged.",
+            },
+            "command_id": {
+                "type": "string",
+                "minLength": 1,
+                "description": "Caller-supplied idempotent acknowledgement command identifier.",
+            },
+        },
+        "required": ["session_id", "member", "cursor", "command_id"],
+        "additionalProperties": False,
+    },
+}
+
 KAN_DELEGATE_NEW: Final[dict[str, object]] = {
     "name": "kan_delegate_new",
     "description": (
@@ -431,6 +468,7 @@ KAN_TOOL_SCHEMAS: Final[tuple[dict[str, object], ...]] = (
     KAN_DAEMON_STATUS,
     KAN_COMPATIBILITY_DIAGNOSTICS,
     KAN_STREAM_TAIL,
+    KAN_STREAM_ACK,
     KAN_DELEGATE_NEW,
     KAN_DELEGATE_ACTION,
     KAN_COUNCIL_COMMAND,
@@ -457,6 +495,7 @@ __all__ = [
     "KAN_DELEGATE_NEW",
     "KAN_DELIVERY_EVIDENCE",
     "KAN_DISCORD_SEND_MESSAGE",
+    "KAN_STREAM_ACK",
     "KAN_STREAM_TAIL",
     "KAN_TOOL_SCHEMAS",
     "tool_names",

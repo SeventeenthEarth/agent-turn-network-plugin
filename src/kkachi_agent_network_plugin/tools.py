@@ -117,6 +117,36 @@ def handle_stream_tail(
         return _json_error("kan_stream_tail", exc)
 
 
+def handle_stream_ack(
+    args: object | None = None,
+    *,
+    client_factory: ClientFactory | None = None,
+    **_kwargs: object,
+) -> str:
+    """Submit a stream cursor acknowledgement as JSON or fail closed."""
+
+    tool = "kan_stream_ack"
+    try:
+        payload = _coerce_args(
+            args,
+            allowed_keys=frozenset({"session_id", "member", "cursor", "command_id"}),
+        )
+        session_id = _required_string(payload.get("session_id"), label="session_id")
+        member = _required_string(payload.get("member"), label="member")
+        cursor = _required_string(payload.get("cursor"), label="cursor")
+        command_id = _required_string(payload.get("command_id"), label="command_id")
+        client = _require_client(client_factory)
+        result = client.ack_stream(
+            session_id=session_id,
+            member=member,
+            cursor=cursor,
+            command_id=command_id,
+        )
+        return _json_command_success(tool, result)
+    except Exception as exc:  # noqa: BLE001 - Hermes handlers must never raise.
+        return _json_error(tool, exc)
+
+
 def handle_delegate_new(
     args: object | None = None,
     *,
@@ -340,6 +370,9 @@ def register_tools(
     def stream_tail_handler(args: object | None = None) -> str:
         return handle_stream_tail(args, client_factory=client_factory)
 
+    def stream_ack_handler(args: object | None = None) -> str:
+        return handle_stream_ack(args, client_factory=client_factory)
+
     def delegate_new_handler(args: object | None = None) -> str:
         return handle_delegate_new(args, client_factory=client_factory)
 
@@ -364,6 +397,7 @@ def register_tools(
             compatibility_diagnostics_handler,
         ),
         ("kan_stream_tail", schemas.KAN_STREAM_TAIL, stream_tail_handler),
+        ("kan_stream_ack", schemas.KAN_STREAM_ACK, stream_ack_handler),
         ("kan_delegate_new", schemas.KAN_DELEGATE_NEW, delegate_new_handler),
         ("kan_delegate_action", schemas.KAN_DELEGATE_ACTION, delegate_action_handler),
         ("kan_council_command", schemas.KAN_COUNCIL_COMMAND, council_command_handler),
@@ -626,6 +660,8 @@ def _json_command_success(tool: str, result: CommandResult) -> str:
         data["session_id"] = result.session_id
     if result.request_id is not None:
         data["request_id"] = result.request_id
+    if result.deduplicated is not None:
+        data["deduplicated"] = result.deduplicated
     return _dumps(
         {
             "ok": True,
@@ -693,6 +729,7 @@ __all__ = [
     "handle_delegate_new",
     "handle_delivery_evidence",
     "handle_discord_send_message",
+    "handle_stream_ack",
     "handle_stream_tail",
     "register_tools",
 ]

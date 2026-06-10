@@ -1,0 +1,135 @@
+{
+  "artifact": "plugin/PARTC-001 participant plugin path implementation evidence",
+  "created_at_utc": "2026-06-10T14:05:36Z",
+  "repo": "/Users/draccoon/Workspace/SeventeenthEarth/kkachi/kkachi-agent-network-plugin",
+  "control_repo": "/Users/draccoon/Workspace/SeventeenthEarth/kkachi/kkachi-agent-network-control",
+  "classification": "implementation_proof_gate",
+  "codex_app_server": {
+    "path": "sdk_stdio_session",
+    "sdk_python": "/Users/draccoon/Workspace/Tools/ai-cli/codex/sdk/python/.venv/bin/python",
+    "codex_bin": "/Users/draccoon/.nvm/versions/node/v24.15.0/bin/codex",
+    "server_info": "codex_python_sdk 0.139.0 via codex app-server --listen stdio://",
+    "used_codex_exec": false
+  },
+  "scope": {
+    "in_scope": [
+      "kan_stream_ack plugin tool and client path",
+      "stream.ack Unix-socket command envelope mapping",
+      "stream feature probe before ack",
+      "participant-originated council write coverage for council.attend, council.ready, council.prepared_partial, council.hand_raise, council.speak, and council.vote",
+      "command_id/idempotency evidence through plugin/protocol-client paths",
+      "plugin-load and bootstrap smoke registration coverage"
+    ],
+    "out_of_scope": [
+      "real participant profile invocation",
+      "speaker_selected to real participant response proof",
+      "production activation",
+      "live/default Discord delivery",
+      "gateway/auth/token/credential/provider/profile mutation",
+      "localhost/TCP fallback",
+      "hidden plugin-to-CLI fallback",
+      "KAB bridge readiness claim"
+    ]
+  },
+  "files_changed": [
+    "plugin.yaml",
+    "scripts/check_bootstrap_smoke.py",
+    "scripts/check_plugin_load_smoke.py",
+    "src/kkachi_agent_network_plugin/client/daemon.py",
+    "src/kkachi_agent_network_plugin/client/transport.py",
+    "src/kkachi_agent_network_plugin/protocol.py",
+    "src/kkachi_agent_network_plugin/schemas.py",
+    "src/kkachi_agent_network_plugin/tools.py",
+    "tests/integration/test_delegate_plugin_tools.py",
+    "tests/integration/test_live_unix_socket_transport.py",
+    "tests/integration/test_readonly_plugin_tools.py",
+    "tests/unit/test_bootstrap_smoke.py",
+    "tests/unit/test_plugin_entrypoint.py",
+    "tests/unit/test_tool_handlers.py",
+    "tests/unit/test_tool_schemas.py",
+    "docs/evidence/partc-001-participant-plugin-evidence.json"
+  ],
+  "verification": [
+    {
+      "command": "uv run pytest tests/unit/test_tool_handlers.py::test_stream_ack_handler_submits_ack_after_stream_feature_probe -q",
+      "result": "initial RED failed because ack_stream did not probe version/stream features before stream.ack"
+    },
+    {
+      "command": "uv run pytest tests/unit/test_tool_handlers.py::test_stream_ack_handler_submits_ack_after_stream_feature_probe tests/unit/test_tool_handlers.py::test_stream_ack_duplicate_command_id_is_sent_twice_without_local_dedupe tests/integration/test_live_unix_socket_transport.py::test_unix_socket_transport_maps_stream_ack_to_canonical_daemon_command -q",
+      "result": "3 passed"
+    },
+    {
+      "command": "uv run pytest tests/unit tests/integration/test_live_unix_socket_transport.py -q",
+      "result": "248 passed"
+    },
+    {
+      "command": "make check-core-contract",
+      "result": "check-core-contract: ok (/Users/draccoon/Workspace/SeventeenthEarth/kkachi/kkachi-agent-network-control)"
+    },
+    {
+      "command": "make check-plugin-load-smoke",
+      "result": "check-plugin-load-smoke: ok"
+    },
+    {
+      "command": "make test-prepare",
+      "result": "passed after ruff format/check fix"
+    },
+    {
+      "command": "make test",
+      "result": "test-prepare passed; 240 unit passed; 60 integration passed; 13 e2e passed"
+    },
+    {
+      "command": "git diff --check",
+      "result": "clean"
+    },
+    {
+      "command": "independent delegate_task code review",
+      "result": "initial review found blocking missing dedicated stream.ack feature gate; fixed with STREAM_ACK_REQUIRED_FEATURE_GROUPS and negative coverage"
+    },
+    {
+      "command": "uv run pytest tests/unit/test_tool_handlers.py::test_stream_ack_handler_submits_ack_after_stream_feature_probe tests/unit/test_tool_handlers.py::test_stream_ack_handler_requires_stream_ack_feature_before_ack_operation tests/unit/test_tool_handlers.py::test_stream_ack_duplicate_command_id_is_sent_twice_without_local_dedupe tests/integration/test_live_unix_socket_transport.py::test_unix_socket_transport_maps_stream_ack_to_canonical_daemon_command -q",
+      "result": "4 passed"
+    },
+    {
+      "command": "independent delegate_task re-review after stream.ack feature gate fix",
+      "result": "passed=true; prior blocking issue resolved; no security_concerns or logic_errors"
+    },
+    {
+      "command": "Gray docs remediation t_8c79b542",
+      "result": "completed; PARTC-001 docs/status markers updated to candidate/local implementation proof; kan_stream_ack/stream.ack no longer future; stream.follow deferred; live/PARTC-002 boundaries explicit"
+    },
+    {
+      "command": "python3 -m json.tool docs/evidence/partc-001-participant-plugin-evidence.json >/dev/null && make test-prepare",
+      "result": "passed after docs remediation: JSON valid; ruff format/check passed; mypy passed; docs-guardrails ok; make contract ok; bootstrap smoke ok; plugin-load smoke ok"
+    },
+    {
+      "command": "make test",
+      "result": "passed after docs remediation: 240 unit, 60 integration, 13 e2e passed"
+    }
+  ],
+  "status": "BLUE_ACCEPT_PARTC001_BOUNDED_LOCAL_PROOF: implementation and docs marker remediation accepted within bounded local/candidate scope; PARTC-002/live/runtime claims remain out of scope",
+  "live_readiness": false,
+  "blue_review_gate": {
+    "completed_at_utc": "2026-06-10T14:38:14Z",
+    "review_cards": {
+      "red": "t_41338678 RED_PASS / 조건부 승인 with non-blocking residual risk note",
+      "orange": "t_412e5d6d KAN_ORANGE_PASS_WITH_UX_RISK / 조건부 승인",
+      "gray": "t_f5ef4504 KAN_GRAY_RECORD_WITH_GAPS / 조건부 승인 requiring docs marker remediation",
+      "blue_initial": "t_7ba96532 BLUE_HOLD_FOR_DOCS_MARKER_REMEDIATION",
+      "gray_remediation": "t_8c79b542 KAN_GRAY_RECORDED docs marker remediation completed"
+    },
+    "blue_final_verdict": "BLUE_ACCEPT_PARTC001_BOUNDED_LOCAL_PROOF",
+    "final_acceptance_claimed": true,
+    "acceptance_scope": "bounded local/candidate PARTC-001 implementation proof only; no live/prod/PARTC-002 readiness claim",
+    "remaining_out_of_scope": [
+      "real participant profile invocation",
+      "speaker_selected to real participant response proof",
+      "production activation",
+      "live/default Discord delivery",
+      "gateway/auth/token/credential/provider/profile mutation",
+      "localhost/TCP fallback",
+      "hidden plugin-to-CLI fallback",
+      "KAB bridge readiness claim"
+    ]
+  }
+}

@@ -9,6 +9,7 @@ def test_schemas_expose_only_authorized_fake_injected_tools() -> None:
         "kan_daemon_status",
         "kan_compatibility_diagnostics",
         "kan_stream_tail",
+        "kan_stream_ack",
         "kan_delegate_new",
         "kan_delegate_action",
         "kan_council_command",
@@ -83,6 +84,40 @@ def test_stream_tail_schema_requires_session_and_member_with_bounded_optional_cu
             },
         },
         "required": ["session_id", "member"],
+        "additionalProperties": False,
+    }
+
+
+def test_stream_ack_schema_requires_cursor_and_command_id() -> None:
+    schema = schemas.KAN_STREAM_ACK
+
+    assert schema["name"] == "kan_stream_ack"
+    assert "stream ack" in str(schema["description"]).lower()
+    assert schema["parameters"] == {
+        "type": "object",
+        "properties": {
+            "session_id": {
+                "type": "string",
+                "minLength": 1,
+                "description": "KAN session identifier whose stream cursor should be acknowledged.",
+            },
+            "member": {
+                "type": "string",
+                "minLength": 1,
+                "description": "Member or agent stream partition acknowledging the cursor.",
+            },
+            "cursor": {
+                "type": "string",
+                "minLength": 1,
+                "description": "Stream cursor being acknowledged.",
+            },
+            "command_id": {
+                "type": "string",
+                "minLength": 1,
+                "description": "Caller-supplied idempotent acknowledgement command identifier.",
+            },
+        },
+        "required": ["session_id", "member", "cursor", "command_id"],
         "additionalProperties": False,
     }
 

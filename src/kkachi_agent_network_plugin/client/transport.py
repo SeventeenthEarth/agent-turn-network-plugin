@@ -20,7 +20,7 @@ from ..errors import DaemonProtocolError, DaemonTransportError
 from ..protocol import SUPPORTED_PROTOCOL_VERSION, JsonObject
 
 _LIVE_OPERATIONS: Final = frozenset(
-    {"status.read", "version.read", "stream.tail", "command.submit"}
+    {"status.read", "version.read", "stream.tail", "stream.ack", "command.submit"}
 )
 _MAX_SOCKET_RESPONSE_BYTES: Final = 1024 * 1024
 
@@ -71,7 +71,7 @@ class UnixSocketDaemonTransport:
         if operation not in _LIVE_OPERATIONS:
             raise DaemonTransportError(
                 "explicit Unix socket live transport supports status.read, version.read, "
-                "stream.tail, and command.submit only"
+                "stream.tail, stream.ack, and command.submit only"
             )
         payload = _live_request_payload(operation, body)
         wire = json.dumps(payload, ensure_ascii=False, sort_keys=True).encode("utf-8") + b"\n"
@@ -116,6 +116,13 @@ def _live_request_payload(operation: str, body: JsonObject | None) -> JsonObject
             "command": "stream.replay",
             "params": params,
         }
+    if operation == "stream.ack":
+        return {
+            "schema_version": 1,
+            "request_id": "plugin-live-stream-ack",
+            "command": "stream.ack",
+            "params": _stream_ack_params(_require_body(body, operation=operation)),
+        }
     if operation == "command.submit":
         envelope = _require_body(body, operation=operation)
         command = _require_string(envelope.get("command"), label="command")
@@ -155,11 +162,22 @@ def _stream_replay_params(body: JsonObject) -> JsonObject:
     return params
 
 
+def _stream_ack_params(body: JsonObject) -> JsonObject:
+    return {
+        "session_id": _require_string(body.get("session_id"), label="session_id"),
+        "member": _require_string(body.get("member"), label="member"),
+        "cursor": _require_string(body.get("cursor"), label="cursor"),
+        "command_id": _require_string(body.get("command_id"), label="command_id"),
+    }
+
+
 def _normalize_live_result(
     operation: str, body: JsonObject | None, result: JsonObject
 ) -> JsonObject:
     if operation == "stream.tail":
         return _normalize_stream_tail_result(_require_body(body, operation=operation), result)
+    if operation == "stream.ack":
+        return _normalize_stream_ack_result(_require_body(body, operation=operation), result)
     if operation == "command.submit":
         return _normalize_command_submit_result(_require_body(body, operation=operation), result)
     return result
@@ -195,6 +213,24 @@ def _normalize_command_submit_result(envelope: JsonObject, result: JsonObject) -
         "request_id": _optional_string(result.get("request_id"))
         or _require_string(envelope.get("request_id"), label="request_id"),
     }
+
+
+def _normalize_stream_ack_result(body: JsonObject, result: JsonObject) -> JsonObject:
+    normalized: JsonObject = {
+        "ok": True,
+        "command_id": _optional_string(result.get("command_id"))
+        or _require_string(body.get("command_id"), label="command_id"),
+        "event_id": _optional_string(result.get("event_id")),
+        "session_id": _optional_string(result.get("session_id"))
+        or _require_string(body.get("session_id"), label="session_id"),
+        "request_id": _optional_string(result.get("request_id")) or "plugin-live-stream-ack",
+    }
+    deduplicated = result.get("deduplicated")
+    if deduplicated is not None:
+        if not isinstance(deduplicated, bool):
+            raise DaemonProtocolError("daemon stream.ack result deduplicated must be a boolean")
+        normalized["deduplicated"] = deduplicated
+    return normalized
 
 
 def _last_frame_cursor(frames: Sequence[object]) -> str | None:

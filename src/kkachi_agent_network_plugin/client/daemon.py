@@ -13,6 +13,7 @@ from ..errors import (
 )
 from ..protocol import (
     REQUIRED_FEATURE_GROUPS,
+    STREAM_ACK_REQUIRED_FEATURE_GROUPS,
     STREAM_REQUIRED_FEATURE_GROUPS,
     STREAM_TAIL_FRAME_LIMIT,
     SUPPORTED_PROTOCOL_VERSION,
@@ -33,6 +34,7 @@ OP_STATUS_READ = "status.read"
 OP_VERSION_READ = "version.read"
 OP_COMMAND_SUBMIT = "command.submit"
 OP_STREAM_TAIL = "stream.tail"
+OP_STREAM_ACK = "stream.ack"
 OP_DIAGNOSTICS_READ = "diagnostics.read"
 
 
@@ -86,6 +88,25 @@ class DaemonClient:
             body["since_cursor"] = _require_string(since_cursor, label="since_cursor")
         response = self._request(OP_STREAM_TAIL, body)
         return parse_stream_tail_response(response)
+
+    def ack_stream(
+        self,
+        *,
+        session_id: str,
+        member: str,
+        cursor: str,
+        command_id: str,
+    ) -> CommandResult:
+        self.require_feature_groups(STREAM_ACK_REQUIRED_FEATURE_GROUPS)
+        body: JsonObject = {
+            "protocol_version": SUPPORTED_PROTOCOL_VERSION,
+            "session_id": _require_string(session_id, label="session_id"),
+            "member": _require_string(member, label="member"),
+            "cursor": _require_string(cursor, label="cursor"),
+            "command_id": _require_string(command_id, label="command_id"),
+        }
+        response = self._request(OP_STREAM_ACK, body)
+        return _parse_command_response(response)
 
     def read_diagnostics(self, *, session_id: str | None = None) -> DaemonDiagnostics:
         body: JsonObject = {"protocol_version": SUPPORTED_PROTOCOL_VERSION}
@@ -231,6 +252,7 @@ def _parse_command_response(response: Mapping[str, object]) -> CommandResult:
         event_id=_optional_string(response.get("event_id"), label="event_id"),
         session_id=_optional_string(response.get("session_id"), label="session_id"),
         request_id=_optional_string(response.get("request_id"), label="request_id"),
+        deduplicated=_optional_bool(response.get("deduplicated"), label="deduplicated"),
     )
 
 
@@ -244,11 +266,20 @@ def _require_stream_limit(value: object) -> int:
     return value
 
 
+def _optional_bool(value: object, *, label: str) -> bool | None:
+    if value is None:
+        return None
+    if not isinstance(value, bool):
+        raise DaemonProtocolError(f"daemon {label} must be a boolean when present")
+    return value
+
+
 __all__ = [
     "DaemonClient",
     "OP_COMMAND_SUBMIT",
     "OP_DIAGNOSTICS_READ",
     "OP_STATUS_READ",
+    "OP_STREAM_ACK",
     "OP_STREAM_TAIL",
     "OP_VERSION_READ",
 ]

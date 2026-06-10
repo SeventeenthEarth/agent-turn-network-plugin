@@ -170,9 +170,9 @@ Current and future plugin surfaces for LIVE-TRANSPORT should be classified as fo
 |---|---|---|---|
 | `kan_daemon_status` | read daemon status/readiness | agent/diagnostic | live only with explicit config; fail closed otherwise |
 | `kan_compatibility_diagnostics` | read compatibility and redacted checks | agent/diagnostic | no hidden live discovery |
-| `kan_stream_tail` | read retained frames | agent plane | minimum read path; follow/ack may be added later |
+| `kan_stream_tail` | read retained frames | agent plane | minimum read path; implemented by `plugin/LTRAN-003`; preserve replay-before-live semantics |
 | future `kan_stream_follow` | long poll or follow frames | agent plane | optional; must preserve replay-before-live semantics |
-| future `kan_stream_ack` | acknowledge processed cursor | agent plane | required for long-lived runtimes if not handled by protocol client directly |
+| `kan_stream_ack` | acknowledge processed cursor | agent plane | PARTC-001 candidate implementation; local/candidate proof only, not production/runtime approval |
 | `kan_council_command` | typed participant writes | agent plane | participant commands such as `ready`, `hand_raise`, `speak`, `vote`; main-agent control use should prefer CLI |
 | `kan_delivery_evidence` | record evidence command where supported | delivery evidence | Discord IDs are evidence pointers only |
 | `kan_discord_send_message` | injected-only visible send helper | delivery plane | no default/live sender; not daemon state |
@@ -450,10 +450,11 @@ bounded equivalence pilot: `stream.tail` maps to daemon `stream.replay`, and
 `command.submit` unwraps to a concrete daemon command when `idempotency_key` can
 be represented as the daemon `command_id` (`command_id` or `idem-{command_id}`).
 Unsupported stream/write operations, unrepresentable idempotency, unsafe sockets,
-or malformed daemon responses still fail closed. `diagnostics.read`,
-`stream.follow`, `stream.ack`, broader participant council writes, long-lived
-member runtime behavior, production activation, Discord/gateway delivery, and KAB
-bridge readiness remain later explicitly scoped tasks.
+or malformed daemon responses still fail closed. After LTRAN-003, `stream.ack`
+and broader participant council writes are covered only by the PARTC-001
+candidate/local implementation proof. `diagnostics.read`, `stream.follow`,
+long-lived member runtime behavior, production activation, Discord/gateway
+delivery, and KAB bridge readiness remain later explicitly scoped tasks.
 
 ## Operation mapping
 
@@ -466,7 +467,7 @@ Plugin operations and daemon command names are not always identical. LIVE-TRANSP
 | `diagnostics.read` | `health` or future `diagnostics.read` | normalize to plugin diagnostics without guessing |
 | `stream.tail` | `stream.replay` / bounded tail command | implemented in `plugin/LTRAN-003` for bounded replay tail equivalence; preserve replay-before-live, cursor, member, limit semantics |
 | future `stream.follow` | `stream.replay` with follow or daemon follow stream | bounded and resumable; no silent gaps |
-| future `stream.ack` | `stream.ack` | acknowledge only after processing |
+| `stream.ack` | `stream.ack` | PARTC-001 candidate implementation; acknowledge only after processing and only within explicit live transport configuration |
 | `command.submit` | concrete daemon command | implemented in `plugin/LTRAN-003` for commands that carry a daemon `command_id`; unwrap to `delegate.*`, `council.*`, delivery evidence commands; do not assume generic daemon alias unless implemented |
 
 For LIVE-TRANSPORT, participant-agent writes through the plugin should focus on participant-originated events: `council.attend`, `council.ready`, `council.prepared_partial`, `council.hand_raise`, `council.speak`, and `council.vote`. Main-agent control commands should prefer CLI even if the plugin can technically submit the same command envelope.
@@ -720,10 +721,13 @@ Evidence:
 
 Deliverables:
 
-- participant-focused stream/tail/follow/ack support as needed;
+- participant-focused stream support: `stream.tail` already exists from `plugin/LTRAN-003`; `stream.ack` is implemented in the PARTC-001 candidate;
+- `stream.follow` is intentionally deferred/not required for PARTC-001 unless a separate task scopes it;
 - participant-originated council writes through plugin/protocol client;
 - command-id/idempotency coverage;
 - tests for `ready`, `hand_raise`, `speak`, and `vote` write paths.
+
+PARTC-001 remains candidate/local implementation proof only. It does not claim PARTC-002 selected real participant profile response proof, production activation, live/default Discord delivery, gateway/auth/token/provider/profile mutation, or KAB bridge readiness.
 
 ### PARTC-002: selected participant response through plugin path
 

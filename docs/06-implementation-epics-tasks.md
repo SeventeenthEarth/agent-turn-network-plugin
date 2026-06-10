@@ -152,7 +152,7 @@ Dependency gate: complete the control `MEMBR` epic before starting plugin `PARTC
 
 | Task ID | Task Title | Task Status | Task Description |
 |---|---|---|---|
-| PARTC-001 | Add participant stream and write coverage | planned | Add participant-focused stream/tail/follow/ack support as needed and prove `council.attend`, `council.ready`, `council.prepared_partial`, `council.hand_raise`, `council.speak`, and `council.vote` submit through plugin/protocol-client tools with command-id/idempotency coverage. |
+| PARTC-001 | Add participant stream and write coverage | candidate/local implementation proof | Candidate implementation evidence covers participant-focused `stream.tail` reuse from LTRAN-003, PARTC-001 `stream.ack`, and `council.attend`, `council.ready`, `council.prepared_partial`, `council.hand_raise`, `council.speak`, and `council.vote` submission through plugin/protocol-client tools with command-id/idempotency coverage. `stream.follow` remains deferred/not required for PARTC-001 unless separately scoped. Runtime/live approval remains false: no production activation, no live/default Discord delivery, no real participant profile response proof, no gateway/auth/token/provider/profile mutation, and no KAB bridge readiness claim. |
 | PARTC-002 | Prove selected participant response path | planned | In an isolated pilot, consume control `MEMBR` evidence that a real participant profile/wrapper responds to `speaker_selected`, then prove the resulting participant output is recorded as `council.speak` through the plugin/protocol-client path without simulated role substitution. |
 
 ## SURFD: Surface delivery

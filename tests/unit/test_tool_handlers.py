@@ -11,6 +11,7 @@ from kkachi_agent_network_plugin.client.daemon import (
     OP_COMMAND_SUBMIT,
     OP_DIAGNOSTICS_READ,
     OP_STATUS_READ,
+    OP_STREAM_ACK,
     OP_STREAM_TAIL,
     OP_VERSION_READ,
 )
@@ -22,6 +23,7 @@ from kkachi_agent_network_plugin.tools import (
     handle_delegate_action,
     handle_delegate_new,
     handle_delivery_evidence,
+    handle_stream_ack,
     handle_stream_tail,
 )
 
@@ -37,6 +39,16 @@ BASE_VERSION_WITH_STREAM: JsonObject = {
     "daemon_version": "0.0.0-fake",
     "feature_groups": ["version.read", "command_envelope", "structured_error", "stream_frame"],
     "live_readiness": False,
+}
+BASE_VERSION_WITH_STREAM_ACK: JsonObject = {
+    **BASE_VERSION_WITH_STREAM,
+    "feature_groups": [
+        "version.read",
+        "command_envelope",
+        "structured_error",
+        "stream_frame",
+        "stream.ack",
+    ],
 }
 BASE_VERSION_WITHOUT_STREAM: JsonObject = {
     "protocol_version": "kan-protocol-v1alpha0",
@@ -101,6 +113,14 @@ BASE_COMMAND_SUCCESS: JsonObject = {
     "event_id": "evt-1",
     "session_id": "sess-1",
     "request_id": "req-1",
+}
+BASE_STREAM_ACK_SUCCESS: JsonObject = {
+    "ok": True,
+    "command_id": "cmd-ack-1",
+    "event_id": "evt-ack-1",
+    "session_id": "sess-1",
+    "request_id": "plugin-live-stream-ack",
+    "deduplicated": False,
 }
 
 
@@ -361,6 +381,138 @@ def test_stream_tail_handler_requires_stream_feature_before_tail_operation() -> 
     assert result["ok"] is False
     assert result["error"]["category"] == "compatibility"
     assert transport.requests == [(OP_VERSION_READ, {"protocol_version": "kan-protocol-v1alpha0"})]
+
+
+def test_stream_ack_handler_submits_ack_after_stream_feature_probe() -> None:
+    transport = StaticDaemonTransport(
+        {OP_VERSION_READ: BASE_VERSION_WITH_STREAM_ACK, OP_STREAM_ACK: BASE_STREAM_ACK_SUCCESS}
+    )
+
+    result = decode(
+        handle_stream_ack(
+            {
+                "session_id": "sess-1",
+                "member": "agent-1",
+                "cursor": "cur_000000000012_evt_01HV",
+                "command_id": "cmd-ack-1",
+            },
+            client_factory=factory_for_transport(transport),
+        )
+    )
+
+    assert result == {
+        "ok": True,
+        "tool": "kan_stream_ack",
+        "live_readiness": False,
+        "data": {
+            "command_id": "cmd-ack-1",
+            "event_id": "evt-ack-1",
+            "session_id": "sess-1",
+            "request_id": "plugin-live-stream-ack",
+            "deduplicated": False,
+        },
+    }
+    assert transport.requests == [
+        (OP_VERSION_READ, {"protocol_version": "kan-protocol-v1alpha0"}),
+        (
+            OP_STREAM_ACK,
+            {
+                "protocol_version": "kan-protocol-v1alpha0",
+                "session_id": "sess-1",
+                "member": "agent-1",
+                "cursor": "cur_000000000012_evt_01HV",
+                "command_id": "cmd-ack-1",
+            },
+        ),
+    ]
+
+
+def test_stream_ack_handler_requires_stream_ack_feature_before_ack_operation() -> None:
+    transport = StaticDaemonTransport(
+        {OP_VERSION_READ: BASE_VERSION_WITH_STREAM, OP_STREAM_ACK: BASE_STREAM_ACK_SUCCESS}
+    )
+
+    result = decode(
+        handle_stream_ack(
+            {
+                "session_id": "sess-1",
+                "member": "agent-1",
+                "cursor": "cur_000000000012_evt_01HV",
+                "command_id": "cmd-ack-1",
+            },
+            client_factory=factory_for_transport(transport),
+        )
+    )
+
+    assert result["ok"] is False
+    assert result["tool"] == "kan_stream_ack"
+    assert result["error"]["category"] == "compatibility"
+    assert "stream.ack" in result["error"]["message"]
+    assert transport.requests == [(OP_VERSION_READ, {"protocol_version": "kan-protocol-v1alpha0"})]
+
+
+@pytest.mark.parametrize("field", ["session_id", "member", "cursor", "command_id"])
+def test_stream_ack_handler_rejects_missing_required_args_before_transport(field: str) -> None:
+    client_factory_called = False
+
+    def client_factory() -> DaemonClient:
+        nonlocal client_factory_called
+        client_factory_called = True
+        raise AssertionError("client factory must not be called")
+
+    args: dict[str, object] = {
+        "session_id": "sess-1",
+        "member": "agent-1",
+        "cursor": "cur_000000000012_evt_01HV",
+        "command_id": "cmd-ack-1",
+    }
+    del args[field]
+
+    result = decode(handle_stream_ack(args, client_factory=client_factory))
+
+    assert result["ok"] is False
+    assert result["tool"] == "kan_stream_ack"
+    assert result["error"] == {
+        "category": "validation",
+        "message": f"{field} must be a non-empty string",
+        "retryable": False,
+    }
+    assert client_factory_called is False
+
+
+def test_stream_ack_duplicate_command_id_is_sent_twice_without_local_dedupe() -> None:
+    responses = iter(
+        (
+            BASE_STREAM_ACK_SUCCESS,
+            {**BASE_STREAM_ACK_SUCCESS, "event_id": "evt-ack-2", "deduplicated": True},
+        )
+    )
+
+    def ack(_: JsonObject | None) -> JsonObject:
+        return next(responses)
+
+    transport = StaticDaemonTransport(
+        {OP_VERSION_READ: BASE_VERSION_WITH_STREAM_ACK, OP_STREAM_ACK: ack}
+    )
+    args = {
+        "session_id": "sess-1",
+        "member": "agent-1",
+        "cursor": "cur_000000000012_evt_01HV",
+        "command_id": "cmd-ack-1",
+    }
+
+    first = decode(handle_stream_ack(args, client_factory=factory_for_transport(transport)))
+    second = decode(handle_stream_ack(args, client_factory=factory_for_transport(transport)))
+
+    assert first["data"]["deduplicated"] is False
+    assert second["data"]["deduplicated"] is True
+    assert [operation for operation, _body in transport.requests] == [
+        OP_VERSION_READ,
+        OP_STREAM_ACK,
+        OP_VERSION_READ,
+        OP_STREAM_ACK,
+    ]
+    assert transport.requests[1][1] == transport.requests[3][1]
 
 
 def test_handler_malformed_daemon_payload_fails_closed_as_protocol_error() -> None:
@@ -766,34 +918,28 @@ def _delivery_args(command: str, payload: JsonObject | None = None) -> JsonObjec
 
 
 @pytest.mark.parametrize(
-    ("command", "payload"),
+    ("command", "actor", "command_payload"),
     [
-        (
-            "council.new",
-            {
-                "session_id": "payload-session-is-overridden",
-                "moderator": "agent-mod",
-                "members": ["agent-1", "agent-2"],
-                "title": "Static council",
-                "surface": {"kind": "discord_thread", "thread_id": "thread-1"},
-                "event_id": "evt-council",
-                "command_id": "cmd-council-new",
-            },
-        ),
-        (
-            "council.ready",
-            {"actor": "agent-1", "command_id": "cmd-ready", "payload": {"summary": "ready"}},
-        ),
-        (
-            "council.finalize",
-            {"actor": "agent-mod", "command_id": "cmd-finalize", "payload": {"done": True}},
-        ),
+        ("council.attend", "agent-1", {"availability": "present"}),
+        ("council.ready", "agent-1", {"summary": "ready"}),
+        ("council.prepared_partial", "agent-2", {"summary": "partial", "blocked": True}),
+        ("council.hand_raise", "agent-2", {"topic": "risk"}),
+        ("council.speak", "agent-1", {"message": "bounded response"}),
+        ("council.vote", "agent-2", {"choice": "approve"}),
     ],
 )
-def test_council_command_submits_after_feature_probe(command: str, payload: JsonObject) -> None:
+def test_council_participant_commands_submit_after_feature_probe(
+    command: str, actor: str, command_payload: JsonObject
+) -> None:
     transport = StaticDaemonTransport(
         {OP_VERSION_READ: BASE_VERSION_WITH_CNDIS, OP_COMMAND_SUBMIT: BASE_COMMAND_SUCCESS}
     )
+    command_id = f"cmd-{command.replace('.', '-')}"
+    payload: JsonObject = {
+        "actor": actor,
+        "command_id": command_id,
+        "payload": command_payload,
+    }
 
     result = decode(
         handle_council_command(
@@ -813,8 +959,55 @@ def test_council_command_submits_after_feature_probe(command: str, payload: Json
     assert body["command"] == command
     assert body["request_id"] == f"req-{command.replace('.', '-')}"
     assert body["idempotency_key"] == "idem-shared"
-    submitted_payload = cast(JsonObject, body["payload"])
-    assert submitted_payload["session_id"] == "sess-council"
+    assert body["payload"] == {
+        "session_id": "sess-council",
+        "actor": actor,
+        "command_id": command_id,
+        "payload": command_payload,
+    }
+
+
+@pytest.mark.parametrize(
+    ("command", "payload"),
+    [
+        (
+            "council.new",
+            {
+                "session_id": "payload-session-is-overridden",
+                "moderator": "agent-mod",
+                "members": ["agent-1", "agent-2"],
+                "title": "Static council",
+                "surface": {"kind": "discord_thread", "thread_id": "thread-1"},
+                "event_id": "evt-council",
+                "command_id": "cmd-council-new",
+            },
+        ),
+        (
+            "council.finalize",
+            {"actor": "agent-mod", "command_id": "cmd-finalize", "payload": {"done": True}},
+        ),
+    ],
+)
+def test_council_moderator_commands_submit_after_feature_probe(
+    command: str, payload: JsonObject
+) -> None:
+    transport = StaticDaemonTransport(
+        {OP_VERSION_READ: BASE_VERSION_WITH_CNDIS, OP_COMMAND_SUBMIT: BASE_COMMAND_SUCCESS}
+    )
+
+    result = decode(
+        handle_council_command(
+            _council_args(command, payload),
+            client_factory=factory_for_transport(transport),
+        )
+    )
+
+    assert result["ok"] is True
+    operation, body = transport.requests[1]
+    assert operation == OP_COMMAND_SUBMIT
+    assert body is not None
+    assert body["command"] == command
+    assert cast(JsonObject, body["payload"])["session_id"] == "sess-council"
 
 
 @pytest.mark.parametrize(

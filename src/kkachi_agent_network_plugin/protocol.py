@@ -23,11 +23,16 @@ REQUIRED_FEATURE_GROUPS: Final[tuple[str, ...]] = (
     "structured_error",
 )
 STREAM_FRAME_FEATURE_GROUP: Final = "stream_frame"
+STREAM_ACK_FEATURE_GROUP: Final = "stream.ack"
 DELIVERY_EVIDENCE_FEATURE_GROUP: Final = "delivery_evidence"
 COUNCIL_LIFECYCLE_FEATURE_GROUP: Final = "council.lifecycle"
 STREAM_REQUIRED_FEATURE_GROUPS: Final[tuple[str, ...]] = (
     *REQUIRED_FEATURE_GROUPS,
     STREAM_FRAME_FEATURE_GROUP,
+)
+STREAM_ACK_REQUIRED_FEATURE_GROUPS: Final[tuple[str, ...]] = (
+    *STREAM_REQUIRED_FEATURE_GROUPS,
+    STREAM_ACK_FEATURE_GROUP,
 )
 DELIVERY_EVIDENCE_REQUIRED_FEATURE_GROUPS: Final[tuple[str, ...]] = (
     *REQUIRED_FEATURE_GROUPS,
@@ -191,6 +196,7 @@ class CommandResult:
     event_id: str | None
     session_id: str | None
     request_id: str | None
+    deduplicated: bool | None = None
 
 
 @dataclass(frozen=True)
@@ -257,6 +263,8 @@ __all__ = [
     "JsonValue",
     "ProtocolValidationError",
     "REQUIRED_FEATURE_GROUPS",
+    "STREAM_ACK_FEATURE_GROUP",
+    "STREAM_ACK_REQUIRED_FEATURE_GROUPS",
     "STREAM_EVENT_SCHEMA_VERSION",
     "STREAM_FRAME_FEATURE_GROUP",
     "STREAM_FRAME_SCHEMA_VERSION",

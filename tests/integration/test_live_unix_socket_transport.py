@@ -11,6 +11,7 @@ from kkachi_agent_network_plugin.client import DaemonClient
 from kkachi_agent_network_plugin.client import transport as transport_module
 from kkachi_agent_network_plugin.client.daemon import (
     OP_STATUS_READ,
+    OP_STREAM_ACK,
     OP_VERSION_READ,
 )
 from kkachi_agent_network_plugin.client.live import live_client_factory_from_config
@@ -202,6 +203,68 @@ def test_unix_socket_transport_maps_stream_tail_to_canonical_stream_replay(
                 "since": "cur_prev",
             },
             "request_id": "plugin-live-stream-tail",
+            "schema_version": 1,
+        },
+    ]
+
+
+def test_unix_socket_transport_maps_stream_ack_to_canonical_daemon_command(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    socket_path = "/var/run/kkachi-agent-networkd.sock"
+    socket_script = patch_unix_socket(
+        monkeypatch,
+        socket_path=socket_path,
+        responses={
+            OP_VERSION_READ: {
+                **BASE_RESPONSE,
+                "feature_groups": [
+                    "version.read",
+                    "command_envelope",
+                    "structured_error",
+                    "stream_frame",
+                    "stream.ack",
+                ],
+            },
+            OP_STREAM_ACK: {
+                "command_id": "cmd-stream-ack-partc001",
+                "event_id": "evt_stream_ack_partc001",
+                "session_id": "sess-1",
+                "request_id": "daemon-req-stream-ack",
+                "deduplicated": True,
+            },
+        },
+    )
+    client = DaemonClient(UnixSocketDaemonTransport(socket_path, timeout=1.0))
+
+    result = client.ack_stream(
+        session_id="sess-1",
+        member="agent-1",
+        cursor="cur_000000000012_evt_01HV",
+        command_id="cmd-stream-ack-partc001",
+    )
+
+    assert result.command_id == "cmd-stream-ack-partc001"
+    assert result.event_id == "evt_stream_ack_partc001"
+    assert result.session_id == "sess-1"
+    assert result.request_id == "daemon-req-stream-ack"
+    assert result.deduplicated is True
+    assert socket_script.requests == [
+        {
+            "command": "version.read",
+            "params": {"protocol_version": "kan-protocol-v1alpha0"},
+            "request_id": "plugin-live-version-read",
+            "schema_version": 1,
+        },
+        {
+            "command": "stream.ack",
+            "params": {
+                "command_id": "cmd-stream-ack-partc001",
+                "cursor": "cur_000000000012_evt_01HV",
+                "member": "agent-1",
+                "session_id": "sess-1",
+            },
+            "request_id": "plugin-live-stream-ack",
             "schema_version": 1,
         },
     ]

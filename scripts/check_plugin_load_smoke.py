@@ -24,6 +24,7 @@ EXPECTED_TOOLS = [
     "kan_daemon_status",
     "kan_compatibility_diagnostics",
     "kan_stream_tail",
+    "kan_stream_ack",
     "kan_delegate_new",
     "kan_delegate_action",
     "kan_council_command",
@@ -240,6 +241,13 @@ def representative_args(tool_name: str) -> dict[str, object]:
         return {"session_id": "sess-smoke"}
     if tool_name == "kan_stream_tail":
         return {"session_id": "sess-smoke", "member": "agent-smoke", "limit": 1}
+    if tool_name == "kan_stream_ack":
+        return {
+            "session_id": "sess-smoke",
+            "member": "agent-smoke",
+            "cursor": "cur-smoke",
+            "command_id": "cmd-smoke-stream-ack",
+        }
     if tool_name == "kan_delegate_new":
         return {
             "session_id": "sess-smoke",

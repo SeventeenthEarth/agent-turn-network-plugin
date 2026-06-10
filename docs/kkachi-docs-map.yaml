@@ -19,8 +19,10 @@ live_transport:
   control_sot: "../../kkachi-agent-network-control/docs/24-live-transport-control-sot.md"
   completed_docs_only_task: "plugin/LTRAN-001"
   completed_first_implementation_task: "plugin/LTRAN-002"
+  completed_equivalence_task: "plugin/LTRAN-003"
+  equivalence_evidence: "docs/evidence/ltran-003-plugin-equivalence-evidence.json"
   dependency_evidence:
     - "control/LTRAN-001"
     - "control/LTRAN-002"
     - "control/LTRAN-003"
-  boundary: "plugin/LTRAN-001 was docs/SOT/mapping only; plugin/LTRAN-002 is bounded explicit Unix-socket status/version smoke only; no live/production/Discord/gateway/auth/token/KAB/hidden CLI fallback claim"
+  boundary: "plugin/LTRAN-001 was docs/SOT/mapping only; plugin/LTRAN-002 is bounded explicit Unix-socket status/version smoke only; plugin/LTRAN-003 is bounded explicit Unix-socket stream.tail/command.submit equivalence only; no live/production/Discord/gateway/auth/token/KAB/long-lived-runtime/broad-command/hidden CLI fallback claim"

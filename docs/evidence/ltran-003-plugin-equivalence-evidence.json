@@ -1,0 +1,49 @@
+{
+  "artifact": "plugin/LTRAN-003 real daemon equivalence evidence",
+  "command": "UV_CACHE_DIR=/tmp/kkachi-plugin-uv-cache uv run python /tmp/kan_plugin_ltran003_real_smoke.py",
+  "control_repo": "/Users/draccoon/Workspace/SeventeenthEarth/kkachi/kkachi-agent-network-control",
+  "created_at_utc": "2026-06-10T11:12:05Z",
+  "exit_code": 0,
+  "notes": [
+    "Smoke builds temporary control CLI and daemon binaries.",
+    "Smoke uses a short /tmp/kanl3-* disposable data-home to avoid macOS AF_UNIX socket path length failures.",
+    "Smoke writes a disposable registry with agent-mod and agent-1, then follows delegate.new -> plugin delegate.ack -> plugin delegate.submit lifecycle order.",
+    "Plugin stream.tail event ids are compared against CLI stream before and after plugin writes.",
+    "Duplicate command_id returns the same event_id; conflicting duplicate via CLI exits non-zero with command_id conflict."
+  ],
+  "parsed_result": {
+    "cli_after_events": [
+      "evt_ltran003_plugin_created",
+      "evt_ltran003_plugin_assigned",
+      "evt_assignee_acknowledged_cmd_ltran003_plugin_ack",
+      "evt_work_submitted_cmd_ltran003_plugin_submit"
+    ],
+    "cli_before_events": [
+      "evt_ltran003_plugin_created",
+      "evt_ltran003_plugin_assigned"
+    ],
+    "conflict_exit": 70,
+    "daemon_version": "daemn-002-local",
+    "data_home": "/tmp/kanl3-nswmq3k2/data",
+    "duplicate_event_id": "evt_work_submitted_cmd_ltran003_plugin_submit",
+    "plugin_after_events": [
+      "evt_ltran003_plugin_created",
+      "evt_ltran003_plugin_assigned",
+      "evt_assignee_acknowledged_cmd_ltran003_plugin_ack",
+      "evt_work_submitted_cmd_ltran003_plugin_submit"
+    ],
+    "plugin_before_events": [
+      "evt_ltran003_plugin_created",
+      "evt_ltran003_plugin_assigned"
+    ],
+    "protocol_version": "kan-protocol-v1alpha0",
+    "result": "REAL_DAEMON_LTRAN003_EQUIVALENCE_OK",
+    "socket": "/tmp/kanl3-nswmq3k2/data/run/kkachi-agent-networkd.sock",
+    "status": "running",
+    "stop_exit": 0,
+    "submit_event_id": "evt_work_submitted_cmd_ltran003_plugin_submit"
+  },
+  "raw_output": "warning: `VIRTUAL_ENV=/Users/draccoon/.hermes/hermes-agent/venv` does not match the project environment path `.venv` and will be ignored; use `--active` to target the active environment instead\n{\"cli_after_events\": [\"evt_ltran003_plugin_created\", \"evt_ltran003_plugin_assigned\", \"evt_assignee_acknowledged_cmd_ltran003_plugin_ack\", \"evt_work_submitted_cmd_ltran003_plugin_submit\"], \"cli_before_events\": [\"evt_ltran003_plugin_created\", \"evt_ltran003_plugin_assigned\"], \"conflict_exit\": 70, \"daemon_version\": \"daemn-002-local\", \"data_home\": \"/tmp/kanl3-nswmq3k2/data\", \"duplicate_event_id\": \"evt_work_submitted_cmd_ltran003_plugin_submit\", \"plugin_after_events\": [\"evt_ltran003_plugin_created\", \"evt_ltran003_plugin_assigned\", \"evt_assignee_acknowledged_cmd_ltran003_plugin_ack\", \"evt_work_submitted_cmd_ltran003_plugin_submit\"], \"plugin_before_events\": [\"evt_ltran003_plugin_created\", \"evt_ltran003_plugin_assigned\"], \"protocol_version\": \"kan-protocol-v1alpha0\", \"result\": \"REAL_DAEMON_LTRAN003_EQUIVALENCE_OK\", \"socket\": \"/tmp/kanl3-nswmq3k2/data/run/kkachi-agent-networkd.sock\", \"status\": \"running\", \"stop_exit\": 0, \"submit_event_id\": \"evt_work_submitted_cmd_ltran003_plugin_submit\"}",
+  "repo": "/Users/draccoon/Workspace/SeventeenthEarth/kkachi/kkachi-agent-network-plugin",
+  "scope": "isolated local smoke only; no production activation, Discord/gateway/auth/token/provider/profile mutation, KAB readiness, or hidden CLI fallback claim"
+}

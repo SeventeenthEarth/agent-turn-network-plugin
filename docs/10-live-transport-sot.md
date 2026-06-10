@@ -444,10 +444,16 @@ Explicit config absent means tools may register but live dispatch remains unavai
 
 Unsafe socket, stale socket, missing daemon, unsupported protocol, malformed response, and unknown schema all fail closed. They must not silently fall back to CLI, localhost, Discord, gateway, or fake success.
 
-`plugin/LTRAN-002` implements only `status.read` and `version.read` over this
-transport. `diagnostics.read`, `stream.tail`, `stream.follow`, `stream.ack`,
-`command.submit`, write equivalence, and daemon dedupe proof remain deferred to
-`plugin/LTRAN-003` or later explicitly scoped tasks.
+`plugin/LTRAN-002` implemented `status.read` and `version.read` over this
+transport. `plugin/LTRAN-003` extends the explicit Unix-socket transport to the
+bounded equivalence pilot: `stream.tail` maps to daemon `stream.replay`, and
+`command.submit` unwraps to a concrete daemon command when `idempotency_key` can
+be represented as the daemon `command_id` (`command_id` or `idem-{command_id}`).
+Unsupported stream/write operations, unrepresentable idempotency, unsafe sockets,
+or malformed daemon responses still fail closed. `diagnostics.read`,
+`stream.follow`, `stream.ack`, broader participant council writes, long-lived
+member runtime behavior, production activation, Discord/gateway delivery, and KAB
+bridge readiness remain later explicitly scoped tasks.
 
 ## Operation mapping
 
@@ -458,10 +464,10 @@ Plugin operations and daemon command names are not always identical. LIVE-TRANSP
 | `version.read` | `version.read` | direct mapping |
 | `status.read` | `status` or future `status.read` | response must identify protocol version, daemon version, feature groups, readiness |
 | `diagnostics.read` | `health` or future `diagnostics.read` | normalize to plugin diagnostics without guessing |
-| `stream.tail` | `stream.replay` / bounded tail command | preserve replay-before-live, cursor, member, limit semantics |
+| `stream.tail` | `stream.replay` / bounded tail command | implemented in `plugin/LTRAN-003` for bounded replay tail equivalence; preserve replay-before-live, cursor, member, limit semantics |
 | future `stream.follow` | `stream.replay` with follow or daemon follow stream | bounded and resumable; no silent gaps |
 | future `stream.ack` | `stream.ack` | acknowledge only after processing |
-| `command.submit` | concrete daemon command | unwrap to `delegate.*`, `council.*`, delivery evidence commands; do not assume generic daemon alias unless implemented |
+| `command.submit` | concrete daemon command | implemented in `plugin/LTRAN-003` for commands that carry a daemon `command_id`; unwrap to `delegate.*`, `council.*`, delivery evidence commands; do not assume generic daemon alias unless implemented |
 
 For LIVE-TRANSPORT, participant-agent writes through the plugin should focus on participant-originated events: `council.attend`, `council.ready`, `council.prepared_partial`, `council.hand_raise`, `council.speak`, and `council.vote`. Main-agent control commands should prefer CLI even if the plugin can technically submit the same command envelope.
 
@@ -677,14 +683,38 @@ Deliverables:
 
 ### LTRAN-003: plugin/CLI/daemon equivalence pilot
 
+Status: completed for the bounded live-local equivalence slice. The plugin now
+maps `stream.tail` to the daemon `stream.replay` command and maps
+`command.submit` to concrete daemon commands when the public `idempotency_key` is
+representable as the daemon `command_id`. Unrepresentable idempotency fails
+closed before socket connect. Structured daemon command errors are preserved as
+daemon command errors. This completion does not claim production activation,
+live/default Discord delivery, gateway/auth/token/provider/profile mutation, KAB
+bridge readiness, long-lived member runtime readiness, broad command coverage, or
+hidden CLI fallback.
+
 Deliverables:
 
-- disposable data home;
-- daemon started through CLI;
-- plugin configured explicitly against that data home;
-- CLI and plugin status/version/stream/write equivalence evidence;
-- no production activation claim.
-- stream/write support, command-id/idempotency equivalence, and daemon dedupe proof.
+- disposable data home: completed with `/tmp/kanl3-*` short-path data home;
+- daemon started through CLI: completed with temporary control CLI and daemon binaries;
+- plugin configured explicitly against that data home: completed through
+  `live_transport.unix_socket_path` targeting the disposable daemon socket;
+- CLI and plugin stream/write equivalence evidence: completed;
+- no production activation claim: preserved;
+- stream/write support, command-id/idempotency equivalence, and daemon dedupe
+  proof: completed for the bounded `stream.tail` and `command.submit` slice.
+
+Evidence:
+
+- targeted integration: `UV_CACHE_DIR=/tmp/kkachi-plugin-uv-cache uv run pytest tests/integration/test_live_unix_socket_transport.py -q` → 8 passed;
+- full plugin gates: `make test-prepare && make test && make check-core-contract` → unit 227 passed, integration 59 passed, e2e 13 passed, core contract OK;
+- durable real-daemon smoke evidence:
+  `docs/evidence/ltran-003-plugin-equivalence-evidence.json`;
+- the smoke confirms CLI stream and plugin `stream.tail` event IDs match before
+  and after plugin writes, plugin `delegate.ack` + `delegate.submit` append
+  durable daemon events, duplicate `command_id` returns the same event, a
+  conflicting duplicate fails with daemon `command_id` conflict, and the daemon
+  stops cleanly.
 
 ### PARTC-001: participant-agent plugin path
 
@@ -713,19 +743,32 @@ Deliverables:
 - delivery evidence pointer handling;
 - failure and pending-follow-up behavior.
 
-## Remaining decisions for post-LTRAN-002 slices
+## Remaining decisions for post-LTRAN-003 slices
 
 Resolved for `plugin/LTRAN-002`:
 
 - The approved explicit plugin config key is `live_transport.unix_socket_path`; it is supplied at register/config time and must be an absolute path to an existing Unix socket.
 - The bounded LTRAN-002 live transport slice supports only `status.read` and `version.read` over the explicit Unix socket. Control's current daemon status response may be normalized safely for this read-only smoke slice, while missing or malformed protocol fields fail closed.
-- Existing public schemas keep `idempotency_key` for compatibility; live transport bridges daemon `command_id` only where a future command/write slice explicitly requires it.
+- Existing public schemas keep `idempotency_key` for compatibility; live transport bridges daemon `command_id` only where an explicitly scoped command/write slice requires it.
 
-Still open for later `LTRAN-003`, `PARTC`, or `SURFD` tasks:
+Resolved for `plugin/LTRAN-003`:
+
+- The first stream/write equivalence pilot is bounded to explicit Unix-socket
+  `stream.tail` and `command.submit` against a disposable daemon/data home.
+- `stream.tail` uses daemon `stream.replay`; the plugin applies tail limiting to
+  the final N replayed frames and preserves cursor evidence in the normalized
+  stream result.
+- `command.submit` bridges public `idempotency_key` to daemon `command_id` only
+  when the values are equivalent (`command_id` or `idem-{command_id}`); otherwise
+  it fails closed before socket connect.
+- Real-daemon smoke evidence is recorded at
+  `docs/evidence/ltran-003-plugin-equivalence-evidence.json`.
+
+Still open for later `PARTC`, `SURFD`, or future LTRAN hardening tasks:
 
 1. Does the first participant pilot use MVP participant invocation or long-lived member runtimes?
 2. Which delivery layer owns visible surface posting in the first pilot?
 3. What is the minimum acceptable evidence that a participant answer came from the real participant-agent profile?
-4. What stream/write/equivalence evidence is required before promoting beyond the bounded status/version smoke slice?
+4. Whether production-grade stream tail needs a server-side limit/bounded replay command instead of client-side tail slicing.
 
 Later implementation may proceed only on slices that do not depend on an unresolved future decision, or must record the selected default in the task contract before coding.

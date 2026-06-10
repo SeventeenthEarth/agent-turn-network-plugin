@@ -41,7 +41,7 @@ The Python client parses control fixtures without starting the real daemon. This
 
 ### Explicit live local daemon mode
 
-`LTRAN` live-local plugin work uses a locally built `kkachi-agent-networkd` with disposable data home only when a plugin task explicitly configures live transport. Repo-qualified dependency evidence is recorded from control `docs/24-live-transport-control-sot.md` and control `docs/roadmap.md`: `control/LTRAN-001`, `control/LTRAN-002`, and `control/LTRAN-003` are completed. `plugin/LTRAN-002` has used that handoff evidence to implement the explicit `live_transport.unix_socket_path` status/version smoke slice. This is still not production activation, daemon discovery, stream/write equivalence, Discord/gateway/auth/token mutation, KAB readiness, or a hidden CLI fallback.
+`LTRAN` live-local plugin work uses a locally built `kkachi-agent-networkd` with disposable data home only when a plugin task explicitly configures live transport. Repo-qualified dependency evidence is recorded from control `docs/24-live-transport-control-sot.md` and control `docs/roadmap.md`: `control/LTRAN-001`, `control/LTRAN-002`, and `control/LTRAN-003` are completed. `plugin/LTRAN-002` used that handoff evidence to implement the explicit `live_transport.unix_socket_path` status/version smoke slice, and `plugin/LTRAN-003` now proves bounded explicit Unix-socket `stream.tail`/`command.submit` equivalence against a disposable daemon with durable evidence at `docs/evidence/ltran-003-plugin-equivalence-evidence.json`. This is still not production activation, daemon discovery, live/default Discord, gateway/auth/token mutation, KAB readiness, long-lived member runtime readiness, broad command coverage, or a hidden CLI fallback.
 
 ### Isolated Hermes/Discord mode
 

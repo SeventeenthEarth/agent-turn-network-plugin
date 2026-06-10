@@ -11,12 +11,11 @@ from kkachi_agent_network_plugin.client import DaemonClient
 from kkachi_agent_network_plugin.client import transport as transport_module
 from kkachi_agent_network_plugin.client.daemon import (
     OP_STATUS_READ,
-    OP_STREAM_TAIL,
     OP_VERSION_READ,
 )
 from kkachi_agent_network_plugin.client.live import live_client_factory_from_config
 from kkachi_agent_network_plugin.client.transport import UnixSocketDaemonTransport
-from kkachi_agent_network_plugin.errors import DaemonTransportError
+from kkachi_agent_network_plugin.errors import DaemonCommandError, DaemonTransportError
 from kkachi_agent_network_plugin.protocol import JsonObject
 from kkachi_agent_network_plugin.tools import register_tools
 
@@ -123,19 +122,210 @@ def test_unix_socket_transport_accepts_control_status_shape_without_readiness_fl
     assert status.status == "running"
 
 
-def test_unix_socket_transport_rejects_stream_and_write_operations_before_socket_request(
+def test_unix_socket_transport_maps_stream_tail_to_canonical_stream_replay(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    socket_path = "/var/run/kkachi-agent-networkd.sock"
+    old_frame: JsonObject = {
+        "cursor": "cur_000000000011_evt_old",
+        "is_replay": True,
+        "event": {
+            "schema_version": 1,
+            "event_id": "evt_old",
+            "session_id": "sess-1",
+            "session_type": "delegation",
+            "phase": "running",
+            "type": "member_ready",
+            "from": "agent-1",
+            "to": ["agent-mod"],
+            "created_at": "2026-06-10T00:00:00Z",
+            "payload": {"summary": "old"},
+        },
+    }
+    new_frame: JsonObject = {
+        "cursor": "cur_000000000012_evt_01HV",
+        "is_replay": True,
+        "event": {
+            "schema_version": 1,
+            "event_id": "evt_01HV",
+            "session_id": "sess-1",
+            "session_type": "delegation",
+            "phase": "running",
+            "type": "member_ready",
+            "from": "agent-1",
+            "to": ["agent-mod"],
+            "created_at": "2026-06-10T00:00:00Z",
+            "payload": {"summary": "ok"},
+        },
+    }
+    socket_script = patch_unix_socket(
+        monkeypatch,
+        socket_path=socket_path,
+        responses={
+            OP_VERSION_READ: {
+                **BASE_RESPONSE,
+                "feature_groups": [
+                    "version.read",
+                    "command_envelope",
+                    "structured_error",
+                    "stream_frame",
+                ],
+            },
+            "stream.replay": {"frames": [old_frame, new_frame], "follow_bounded": False},
+        },
+    )
+    client = DaemonClient(UnixSocketDaemonTransport(socket_path, timeout=1.0))
+
+    tail = client.read_stream_tail(
+        session_id="sess-1",
+        member="agent-1",
+        since_cursor="cur_prev",
+        limit=1,
+    )
+
+    assert tail.protocol_version == "kan-protocol-v1alpha0"
+    assert tail.next_cursor == "cur_000000000012_evt_01HV"
+    assert len(tail.frames) == 1
+    assert tail.frames[0].event.event_id == "evt_01HV"
+    assert socket_script.requests == [
+        {
+            "command": OP_VERSION_READ,
+            "params": {"protocol_version": "kan-protocol-v1alpha0"},
+            "request_id": "plugin-live-version-read",
+            "schema_version": 1,
+        },
+        {
+            "command": "stream.replay",
+            "params": {
+                "member": "agent-1",
+                "session_id": "sess-1",
+                "since": "cur_prev",
+            },
+            "request_id": "plugin-live-stream-tail",
+            "schema_version": 1,
+        },
+    ]
+
+
+def test_unix_socket_transport_unwraps_command_submit_to_canonical_daemon_command(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     socket_path = "/var/run/kkachi-agent-networkd.sock"
     socket_script = patch_unix_socket(
         monkeypatch,
         socket_path=socket_path,
-        responses={OP_STATUS_READ: {**BASE_RESPONSE, "status": "unused"}},
+        responses={
+            "council.ready": {
+                "cursor": "cur_000000000005_evt_member_ready_cmd_council_ready_ltran003",
+                "event_id": "evt_member_ready_cmd_council_ready_ltran003",
+                "offset": 5,
+                "deduplicated": False,
+            },
+        },
     )
-    transport = UnixSocketDaemonTransport(socket_path, timeout=1.0)
+    client = DaemonClient(UnixSocketDaemonTransport(socket_path, timeout=1.0))
+    envelope = client.build_command_envelope(
+        command="council.ready",
+        payload={
+            "session_id": "sess-1",
+            "actor": "agent-1",
+            "command_id": "cmd_council_ready_ltran003",
+            "payload": {"summary": "ready"},
+        },
+        request_id="req-council-ready-ltran003",
+        idempotency_key="idem-cmd_council_ready_ltran003",
+    )
 
-    with pytest.raises(DaemonTransportError, match="status.read and version.read only"):
-        transport.request(OP_STREAM_TAIL, {"protocol_version": "kan-protocol-v1alpha0"})
+    result = client.submit_command(envelope)
+
+    assert result.command_id == "cmd_council_ready_ltran003"
+    assert result.event_id == "evt_member_ready_cmd_council_ready_ltran003"
+    assert result.session_id == "sess-1"
+    assert result.request_id == "req-council-ready-ltran003"
+    assert socket_script.requests == [
+        {
+            "command": "council.ready",
+            "params": {
+                "actor": "agent-1",
+                "command_id": "cmd_council_ready_ltran003",
+                "payload": {"summary": "ready"},
+                "session_id": "sess-1",
+            },
+            "request_id": "req-council-ready-ltran003",
+            "schema_version": 1,
+        }
+    ]
+
+
+def test_unix_socket_transport_preserves_command_submit_structured_errors(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    socket_path = "/var/run/kkachi-agent-networkd.sock"
+    patch_unix_socket(
+        monkeypatch,
+        socket_path=socket_path,
+        responses={
+            "council.ready": {
+                "__raw_response__": {
+                    "schema_version": 1,
+                    "request_id": "req-council-ready-ltran003",
+                    "ok": False,
+                    "error": {
+                        "category": "conflict",
+                        "message": "command_id already used with different payload",
+                        "retryable": False,
+                        "command_id": "cmd_council_ready_ltran003",
+                        "session_id": "sess-1",
+                        "request_id": "req-council-ready-ltran003",
+                    },
+                }
+            },
+        },
+    )
+    client = DaemonClient(UnixSocketDaemonTransport(socket_path, timeout=1.0))
+    envelope = client.build_command_envelope(
+        command="council.ready",
+        payload={
+            "session_id": "sess-1",
+            "actor": "agent-1",
+            "command_id": "cmd_council_ready_ltran003",
+            "payload": {"summary": "ready"},
+        },
+        request_id="req-council-ready-ltran003",
+        idempotency_key="idem-cmd_council_ready_ltran003",
+    )
+
+    with pytest.raises(DaemonCommandError) as exc_info:
+        client.submit_command(envelope)
+
+    assert exc_info.value.details.category == "conflict"
+    assert exc_info.value.details.command_id == "cmd_council_ready_ltran003"
+
+
+def test_unix_socket_transport_rejects_unrepresentable_idempotency_boundary_before_socket(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    socket_path = "/var/run/kkachi-agent-networkd.sock"
+    socket_script = patch_unix_socket(
+        monkeypatch,
+        socket_path=socket_path,
+        responses={"council.ready": {"event_id": "unused"}},
+    )
+    client = DaemonClient(UnixSocketDaemonTransport(socket_path, timeout=1.0))
+    envelope = client.build_command_envelope(
+        command="council.ready",
+        payload={
+            "session_id": "sess-1",
+            "actor": "agent-1",
+            "command_id": "cmd_council_ready_ltran003",
+            "payload": {"summary": "ready"},
+        },
+        request_id="req-council-ready-ltran003",
+        idempotency_key="different-idempotency-key",
+    )
+
+    with pytest.raises(DaemonTransportError, match="cannot be represented as daemon command_id"):
+        client.submit_command(envelope)
 
     assert socket_script.requests == []
     assert socket_script.connected_paths == []
@@ -214,14 +404,20 @@ class FakeSocket:
         request = json.loads(payload.decode("utf-8"))
         self.script.requests.append(request)
         operation = request["command"]
+        response = self.script.responses[operation]
+        raw_response = response.get("__raw_response__")
+        if isinstance(raw_response, dict):
+            envelope = raw_response
+        else:
+            envelope = {
+                "schema_version": 1,
+                "request_id": request["request_id"],
+                "ok": True,
+                "result": response,
+            }
         self._response = (
             json.dumps(
-                {
-                    "schema_version": 1,
-                    "request_id": request["request_id"],
-                    "ok": True,
-                    "result": self.script.responses[operation],
-                },
+                envelope,
                 sort_keys=True,
             ).encode("utf-8")
             + b"\n"

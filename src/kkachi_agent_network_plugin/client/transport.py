@@ -11,15 +11,17 @@ import json
 import os
 import socket
 import stat
-from collections.abc import Callable
+from collections.abc import Callable, Mapping, Sequence
 from copy import deepcopy
 from pathlib import Path
 from typing import Final, Protocol, cast
 
 from ..errors import DaemonProtocolError, DaemonTransportError
-from ..protocol import JsonObject
+from ..protocol import SUPPORTED_PROTOCOL_VERSION, JsonObject
 
-_LIVE_SMOKE_OPERATIONS: Final = frozenset({"status.read", "version.read"})
+_LIVE_OPERATIONS: Final = frozenset(
+    {"status.read", "version.read", "stream.tail", "command.submit"}
+)
 _MAX_SOCKET_RESPONSE_BYTES: Final = 1024 * 1024
 
 
@@ -59,24 +61,19 @@ class StaticDaemonTransport:
 
 
 class UnixSocketDaemonTransport:
-    """Explicit AF_UNIX transport for LTRAN-002 live status/version smoke only."""
+    """Explicit AF_UNIX transport for narrow live daemon mappings."""
 
     def __init__(self, socket_path: str, *, timeout: float = 2.0) -> None:
         self.socket_path = _validated_unix_socket_path(socket_path)
         self.timeout = _validated_timeout(timeout)
 
     def request(self, operation: str, body: JsonObject | None = None) -> JsonObject:
-        if operation not in _LIVE_SMOKE_OPERATIONS:
+        if operation not in _LIVE_OPERATIONS:
             raise DaemonTransportError(
-                "explicit Unix socket live transport supports status.read and version.read only"
+                "explicit Unix socket live transport supports status.read, version.read, "
+                "stream.tail, and command.submit only"
             )
-        payload: JsonObject = {
-            "schema_version": 1,
-            "request_id": f"plugin-live-{operation.replace('.', '-')}",
-            "command": operation,
-        }
-        if body:
-            payload["params"] = body
+        payload = _live_request_payload(operation, body)
         wire = json.dumps(payload, ensure_ascii=False, sort_keys=True).encode("utf-8") + b"\n"
         try:
             with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as client:
@@ -94,6 +91,8 @@ class UnixSocketDaemonTransport:
             raise DaemonProtocolError(f"daemon response must be an object: {operation}")
         if response.get("ok") is not True:
             error = response.get("error")
+            if operation == "command.submit" and isinstance(error, dict):
+                return {"ok": False, "error": cast(JsonObject, error)}
             if isinstance(error, dict):
                 message = error.get("message")
                 code = error.get("code")
@@ -105,7 +104,156 @@ class UnixSocketDaemonTransport:
         result = response.get("result")
         if not isinstance(result, dict):
             raise DaemonProtocolError(f"daemon response result must be an object: {operation}")
-        return cast(JsonObject, result)
+        return _normalize_live_result(operation, body, cast(JsonObject, result))
+
+
+def _live_request_payload(operation: str, body: JsonObject | None) -> JsonObject:
+    if operation == "stream.tail":
+        params = _stream_replay_params(_require_body(body, operation=operation))
+        return {
+            "schema_version": 1,
+            "request_id": "plugin-live-stream-tail",
+            "command": "stream.replay",
+            "params": params,
+        }
+    if operation == "command.submit":
+        envelope = _require_body(body, operation=operation)
+        command = _require_string(envelope.get("command"), label="command")
+        request_id = _require_string(envelope.get("request_id"), label="request_id")
+        payload = _require_mapping(envelope.get("payload"), label="payload")
+        command_id = _command_id_for_daemon(payload)
+        idempotency_key = _require_string(envelope.get("idempotency_key"), label="idempotency_key")
+        if idempotency_key not in {command_id, f"idem-{command_id}"}:
+            raise DaemonTransportError("command.submit cannot be represented as daemon command_id")
+        return {
+            "schema_version": 1,
+            "request_id": request_id,
+            "command": command,
+            "params": payload,
+        }
+
+    request_payload: JsonObject = {
+        "schema_version": 1,
+        "request_id": f"plugin-live-{operation.replace('.', '-')}",
+        "command": operation,
+    }
+    if body:
+        request_payload["params"] = body
+    return request_payload
+
+
+def _stream_replay_params(body: JsonObject) -> JsonObject:
+    params: JsonObject = {
+        "session_id": _require_string(body.get("session_id"), label="session_id"),
+        "member": _require_string(body.get("member"), label="member"),
+    }
+    since_cursor = body.get("since_cursor")
+    if since_cursor is not None:
+        params["since"] = _require_string(since_cursor, label="since_cursor")
+    else:
+        params["from_start"] = True
+    return params
+
+
+def _normalize_live_result(
+    operation: str, body: JsonObject | None, result: JsonObject
+) -> JsonObject:
+    if operation == "stream.tail":
+        return _normalize_stream_tail_result(_require_body(body, operation=operation), result)
+    if operation == "command.submit":
+        return _normalize_command_submit_result(_require_body(body, operation=operation), result)
+    return result
+
+
+def _normalize_stream_tail_result(body: JsonObject, result: JsonObject) -> JsonObject:
+    raw_frames = result.get("frames")
+    if not isinstance(raw_frames, list):
+        raise DaemonProtocolError("daemon stream.replay result frames must be a list")
+    limit = _require_int(body.get("limit"), label="stream tail limit")
+    frames = raw_frames[-limit:]
+    normalized = dict(result)
+    normalized["protocol_version"] = SUPPORTED_PROTOCOL_VERSION
+    normalized["frames"] = frames
+    if "next_cursor" not in normalized:
+        next_cursor = _last_frame_cursor(frames)
+        if next_cursor is not None:
+            normalized["next_cursor"] = next_cursor
+    return normalized
+
+
+def _normalize_command_submit_result(envelope: JsonObject, result: JsonObject) -> JsonObject:
+    if result.get("ok") is False:
+        return result
+    payload = _require_mapping(envelope.get("payload"), label="payload")
+    command_id = _command_id_for_daemon(payload)
+    return {
+        "ok": True,
+        "command_id": command_id,
+        "event_id": _optional_string(result.get("event_id")),
+        "session_id": _optional_string(result.get("session_id"))
+        or _optional_string(payload.get("session_id")),
+        "request_id": _optional_string(result.get("request_id"))
+        or _require_string(envelope.get("request_id"), label="request_id"),
+    }
+
+
+def _last_frame_cursor(frames: Sequence[object]) -> str | None:
+    if not frames:
+        return None
+    frame = frames[-1]
+    if isinstance(frame, str):
+        try:
+            decoded = json.loads(frame)
+        except json.JSONDecodeError:
+            return None
+        frame = decoded
+    if not isinstance(frame, Mapping):
+        return None
+    cursor = frame.get("cursor")
+    if isinstance(cursor, str) and cursor:
+        return cursor
+    return None
+
+
+def _require_body(body: JsonObject | None, *, operation: str) -> JsonObject:
+    if not isinstance(body, dict):
+        raise DaemonProtocolError(f"daemon request body must be an object: {operation}")
+    return body
+
+
+def _require_mapping(value: object, *, label: str) -> JsonObject:
+    if not isinstance(value, dict):
+        raise DaemonProtocolError(f"daemon {label} must be an object")
+    return cast(JsonObject, value)
+
+
+def _require_string(value: object, *, label: str) -> str:
+    if not isinstance(value, str) or not value:
+        raise DaemonProtocolError(f"daemon {label} must be a non-empty string")
+    return value
+
+
+def _optional_string(value: object) -> str | None:
+    if value is None:
+        return None
+    if isinstance(value, str) and value:
+        return value
+    return None
+
+
+def _require_int(value: object, *, label: str) -> int:
+    if isinstance(value, bool) or not isinstance(value, int):
+        raise DaemonProtocolError(f"daemon {label} must be an integer")
+    return value
+
+
+def _command_id_for_daemon(payload: JsonObject) -> str:
+    try:
+        return _require_string(payload.get("command_id"), label="payload command_id")
+    except DaemonProtocolError as exc:
+        raise DaemonTransportError(
+            "command.submit cannot be represented as daemon command_id"
+        ) from exc
 
 
 def _validated_unix_socket_path(value: object) -> str:

@@ -282,6 +282,96 @@ def handle_council_command(
         return _json_error(tool, exc)
 
 
+def handle_selected_participant_response(
+    args: object | None = None,
+    *,
+    client_factory: ClientFactory | None = None,
+    **_kwargs: object,
+) -> str:
+    """Submit a selected participant council.speak response, then ack its cursor."""
+
+    tool = "kan_selected_participant_response"
+    try:
+        payload = _coerce_args(
+            args,
+            allowed_keys=frozenset(
+                {
+                    "session_id",
+                    "selected_member",
+                    "speaker_selected_frame",
+                    "participant_response",
+                    "command_id",
+                    "request_id",
+                    "idempotency_key",
+                    "ack_command_id",
+                }
+            ),
+        )
+        session_id = _required_string(payload.get("session_id"), label="session_id")
+        selected_member = _required_string(payload.get("selected_member"), label="selected_member")
+        frame = _required_json_object(
+            payload.get("speaker_selected_frame"), label="speaker_selected_frame"
+        )
+        participant_response = _required_json_object(
+            payload.get("participant_response"), label="participant_response"
+        )
+        command_id = _required_string(payload.get("command_id"), label="command_id")
+        request_id = _required_string(payload.get("request_id"), label="request_id")
+        idempotency_key = _required_string(payload.get("idempotency_key"), label="idempotency_key")
+        ack_command_id = _required_string(payload.get("ack_command_id"), label="ack_command_id")
+
+        selected_context = _selected_context(
+            session_id=session_id,
+            frame=frame,
+            selected_member=selected_member,
+            participant_response=participant_response,
+        )
+        speak_payload: JsonObject = {
+            "actor": selected_member,
+            "command_id": command_id,
+            "payload": {
+                "message": _required_string(
+                    participant_response.get("message"), label="participant_response.message"
+                ),
+                "turn": selected_context["turn"],
+                "evidence": _participant_response_evidence(
+                    participant_response=participant_response,
+                    speaker_selected_event_id=cast(str, selected_context["event_id"]),
+                    speaker_selected_cursor=cast(str, selected_context["cursor"]),
+                ),
+            },
+        }
+        _validate_council_payload(schemas.COUNCIL_SPEAK_COMMAND, speak_payload)
+        speak_payload = {**speak_payload, "session_id": session_id}
+
+        client = _require_client(client_factory)
+        client.require_feature_groups(COUNCIL_LIFECYCLE_REQUIRED_FEATURE_GROUPS)
+        envelope = client.build_command_envelope(
+            command=schemas.COUNCIL_SPEAK_COMMAND,
+            payload=speak_payload,
+            request_id=request_id,
+            idempotency_key=idempotency_key,
+        )
+        speak_result = client.submit_command(envelope)
+        ack_result = client.ack_stream(
+            session_id=session_id,
+            member=selected_member,
+            cursor=cast(str, selected_context["cursor"]),
+            command_id=ack_command_id,
+        )
+        return _json_selected_participant_response_success(
+            tool=tool,
+            selected_member=selected_member,
+            speaker_selected_event_id=cast(str, selected_context["event_id"]),
+            speaker_selected_cursor=cast(str, selected_context["cursor"]),
+            speak_result=speak_result,
+            ack_result=ack_result,
+            participant_response=participant_response,
+        )
+    except Exception as exc:  # noqa: BLE001 - Hermes handlers must never raise.
+        return _json_error(tool, exc)
+
+
 def handle_delivery_evidence(
     args: object | None = None,
     *,
@@ -382,6 +472,9 @@ def register_tools(
     def council_command_handler(args: object | None = None) -> str:
         return handle_council_command(args, client_factory=client_factory)
 
+    def selected_participant_response_handler(args: object | None = None) -> str:
+        return handle_selected_participant_response(args, client_factory=client_factory)
+
     def delivery_evidence_handler(args: object | None = None) -> str:
         return handle_delivery_evidence(args, client_factory=client_factory)
 
@@ -401,6 +494,11 @@ def register_tools(
         ("kan_delegate_new", schemas.KAN_DELEGATE_NEW, delegate_new_handler),
         ("kan_delegate_action", schemas.KAN_DELEGATE_ACTION, delegate_action_handler),
         ("kan_council_command", schemas.KAN_COUNCIL_COMMAND, council_command_handler),
+        (
+            "kan_selected_participant_response",
+            schemas.KAN_SELECTED_PARTICIPANT_RESPONSE,
+            selected_participant_response_handler,
+        ),
         ("kan_delivery_evidence", schemas.KAN_DELIVERY_EVIDENCE, delivery_evidence_handler),
         (
             "kan_discord_send_message",
@@ -502,6 +600,95 @@ def _validate_delivery_evidence_payload(command: str, payload: Mapping[str, obje
     _require_payload_string(payload, "reason")
     _require_payload_array(payload, "will_retry_targets")
     _optional_string(payload.get("reporter"), label="payload.reporter")
+
+
+def _selected_context(
+    *,
+    session_id: str,
+    frame: Mapping[str, object],
+    selected_member: str,
+    participant_response: Mapping[str, object],
+) -> JsonObject:
+    if participant_response.get("role_substitution") is not False:
+        raise ValueError("participant_response.role_substitution must be false")
+    response_member = _required_string(
+        participant_response.get("member"), label="participant_response.member"
+    )
+    if response_member != selected_member:
+        raise ValueError("participant_response.member must match selected_member")
+
+    event = _required_json_object(frame.get("event"), label="speaker_selected_frame.event")
+    if event.get("type") != "speaker_selected":
+        raise ValueError("speaker_selected_frame.event.type must be speaker_selected")
+    if event.get("session_id") != session_id:
+        raise ValueError("speaker_selected_frame.event.session_id must match session_id")
+    event_payload = _required_json_object(
+        event.get("payload"), label="speaker_selected_frame.event.payload"
+    )
+    recipients = event.get("to")
+    if not isinstance(recipients, list) or len(recipients) != 1 or recipients[0] != selected_member:
+        raise ValueError("speaker_selected_frame.event.to must select exactly selected_member")
+    payload_member = event_payload.get("member")
+    if payload_member is not None and payload_member != selected_member:
+        raise ValueError("speaker_selected_frame.event.payload.member must match selected_member")
+    return {
+        "cursor": _required_string(frame.get("cursor"), label="speaker_selected_frame.cursor"),
+        "event_id": _required_string(
+            event.get("event_id"), label="speaker_selected_frame.event.event_id"
+        ),
+        "turn": event_payload.get("turn"),
+    }
+
+
+def _participant_response_evidence(
+    *,
+    participant_response: Mapping[str, object],
+    speaker_selected_event_id: str,
+    speaker_selected_cursor: str,
+) -> JsonObject:
+    source = _required_string(
+        participant_response.get("source"), label="participant_response.source"
+    )
+    if source != "control_membr_evidence":
+        raise ValueError("participant_response.source must be control_membr_evidence")
+    runner = _required_json_object(
+        participant_response.get("runner"), label="participant_response.runner"
+    )
+    adapter_kind = _required_string(
+        runner.get("adapter_kind"), label="participant_response.runner.adapter_kind"
+    )
+    if adapter_kind != "hermes-agent":
+        raise ValueError("participant_response.runner.adapter_kind must be hermes-agent")
+    terminal_event_type = _required_string(
+        runner.get("terminal_event_type"),
+        label="participant_response.runner.terminal_event_type",
+    )
+    if terminal_event_type != "participant_response":
+        raise ValueError(
+            "participant_response.runner.terminal_event_type must be participant_response"
+        )
+    return {
+        "source": source,
+        "speaker_selected_event_id": speaker_selected_event_id,
+        "speaker_selected_cursor": speaker_selected_cursor,
+        "runner_invocation_id": _required_string(
+            runner.get("invocation_id"), label="participant_response.runner.invocation_id"
+        ),
+        "runner_started_event_id": _required_string(
+            runner.get("started_event_id"), label="participant_response.runner.started_event_id"
+        ),
+        "runner_terminal_event_id": _required_string(
+            runner.get("terminal_event_id"), label="participant_response.runner.terminal_event_id"
+        ),
+        "runner_terminal_event_type": terminal_event_type,
+        "adapter_kind": adapter_kind,
+        "wrapper_binding_evidence": _required_string(
+            runner.get("wrapper_binding_evidence"),
+            label="participant_response.runner.wrapper_binding_evidence",
+        ),
+        "no_role_substitution": True,
+        "real_profile_live_invocation": False,
+    }
 
 
 def _optional_limit(value: object) -> int:
@@ -653,6 +840,18 @@ def _json_stream_success(tool: str, source: StreamTail, data: JsonObject) -> str
 
 
 def _json_command_success(tool: str, result: CommandResult) -> str:
+    data = _command_result_data(result)
+    return _dumps(
+        {
+            "ok": True,
+            "tool": tool,
+            "live_readiness": False,
+            "data": data,
+        }
+    )
+
+
+def _command_result_data(result: CommandResult) -> JsonObject:
     data: JsonObject = {"command_id": result.command_id}
     if result.event_id is not None:
         data["event_id"] = result.event_id
@@ -662,12 +861,49 @@ def _json_command_success(tool: str, result: CommandResult) -> str:
         data["request_id"] = result.request_id
     if result.deduplicated is not None:
         data["deduplicated"] = result.deduplicated
+    return data
+
+
+def _json_selected_participant_response_success(
+    *,
+    tool: str,
+    selected_member: str,
+    speaker_selected_event_id: str,
+    speaker_selected_cursor: str,
+    speak_result: CommandResult,
+    ack_result: CommandResult,
+    participant_response: Mapping[str, object],
+) -> str:
+    runner = _required_json_object(
+        participant_response.get("runner"), label="participant_response.runner"
+    )
     return _dumps(
         {
             "ok": True,
             "tool": tool,
             "live_readiness": False,
-            "data": data,
+            "data": {
+                "selected_member": selected_member,
+                "speaker_selected_event_id": speaker_selected_event_id,
+                "speaker_selected_cursor": speaker_selected_cursor,
+                "speak": _command_result_data(speak_result),
+                "ack": _command_result_data(ack_result),
+                "proof": {
+                    "source": _required_string(
+                        participant_response.get("source"), label="participant_response.source"
+                    ),
+                    "runner_invocation_id": _required_string(
+                        runner.get("invocation_id"),
+                        label="participant_response.runner.invocation_id",
+                    ),
+                    "runner_terminal_event_id": _required_string(
+                        runner.get("terminal_event_id"),
+                        label="participant_response.runner.terminal_event_id",
+                    ),
+                    "no_role_substitution": True,
+                    "real_profile_live_invocation": False,
+                },
+            },
         }
     )
 
@@ -729,6 +965,7 @@ __all__ = [
     "handle_delegate_new",
     "handle_delivery_evidence",
     "handle_discord_send_message",
+    "handle_selected_participant_response",
     "handle_stream_ack",
     "handle_stream_tail",
     "register_tools",

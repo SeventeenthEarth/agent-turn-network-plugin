@@ -27,9 +27,11 @@ Supported plugin surfaces in the current package are fake/injected Hermes tools:
 - `kan_daemon_status`
 - `kan_compatibility_diagnostics`
 - `kan_stream_tail`
+- `kan_stream_ack`
 - `kan_delegate_new`
 - `kan_delegate_action`
 - `kan_council_command`
+- `kan_selected_participant_response`
 - `kan_delivery_evidence`
 - `kan_discord_send_message`
 

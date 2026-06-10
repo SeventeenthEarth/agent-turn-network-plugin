@@ -44,6 +44,7 @@ def test_fake_hermes_context_invokes_registered_delegate_handlers() -> None:
         "kan_delegate_new",
         "kan_delegate_action",
         "kan_council_command",
+        "kan_selected_participant_response",
         "kan_delivery_evidence",
         "kan_discord_send_message",
     ]

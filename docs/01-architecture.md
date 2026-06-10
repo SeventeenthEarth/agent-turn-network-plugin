@@ -77,14 +77,17 @@ CNDIS-2 injected Discord helper
 
 ## Hermes plugin surface
 
-The plugin currently registers eight fake/injected Hermes tools and no hooks or KAN slash commands:
+The plugin currently registers ten fake/injected Hermes tools and no hooks or KAN slash commands:
 
 - `kan_daemon_status` — fake/injected daemon status read;
 - `kan_compatibility_diagnostics` — fake/injected diagnostics read with redaction;
 - `kan_stream_tail` — fake/injected retained stream tail read that requires positive `stream_frame` compatibility before `stream.tail`.
+- `kan_stream_ack` — fake/injected stream cursor ack that requires positive `stream.ack` compatibility before `stream.ack`.
 - `kan_delegate_new` — fake/injected `delegate.new` command-envelope submission with caller-supplied request/idempotency metadata;
 - `kan_delegate_action` — fake/injected closed-enum `delegate.*` action/review/delivery command-envelope submission. Its top-level `session_id` overrides/sets `payload.session_id` before submit.
 - `kan_council_command` — fake/injected closed-enum `council.*` lifecycle command-envelope submission with `council.lifecycle` pre-probe and no plugin-owned council state;
+- `kan_selected_participant_response` — fake/injected selected-member `council.speak`
+  proof submission followed by selected-cursor ack only after submit succeeds;
 - `kan_delivery_evidence` — fake/injected closed-enum `delegate.escalation_delivered` / `delegate.escalation_delivery_failed` command-envelope submission with `delivery_evidence` pre-probe and no plugin-owned delivery-evidence transitions.
 - `kan_discord_send_message` — fake/injected Discord helper that requires a dedicated
   test target and an injected `send_message` callable; it returns Discord IDs only as

@@ -164,16 +164,19 @@ The CLI must be usable by the main agent through normal terminal execution and b
 
 The plugin owns the participant-agent Hermes tool surface. It provides typed access to daemon status, stream/tail frames, and write commands, but it does not own lifecycle state.
 
-Current and future plugin surfaces for LIVE-TRANSPORT should be classified as follows:
+Current registered plugin tool inventory is exactly ten fake/injected Hermes tools. One future non-tool placeholder is also listed separately for planning and must not be counted as a registered tool:
 
 | Surface | Purpose | Plane | Notes |
 |---|---|---|---|
 | `kan_daemon_status` | read daemon status/readiness | agent/diagnostic | live only with explicit config; fail closed otherwise |
 | `kan_compatibility_diagnostics` | read compatibility and redacted checks | agent/diagnostic | no hidden live discovery |
 | `kan_stream_tail` | read retained frames | agent plane | minimum read path; implemented by `plugin/LTRAN-003`; preserve replay-before-live semantics |
-| future `kan_stream_follow` | long poll or follow frames | agent plane | optional; must preserve replay-before-live semantics |
+| future non-tool `kan_stream_follow` | long poll or follow frames | agent plane | optional planning placeholder; not registered and not counted in the ten-tool inventory; must preserve replay-before-live semantics if later scoped |
 | `kan_stream_ack` | acknowledge processed cursor | agent plane | PARTC-001 candidate implementation; local/candidate proof only, not production/runtime approval |
+| `kan_delegate_new` | submit `delegate.new` command envelope | agent plane | fake/injected command tool; no plugin-owned lifecycle state |
+| `kan_delegate_action` | submit supported `delegate.*` action command envelopes | agent plane | fake/injected command tool; no plugin-owned lifecycle state |
 | `kan_council_command` | typed participant writes | agent plane | participant commands such as `ready`, `hand_raise`, `speak`, `vote`; main-agent control use should prefer CLI |
+| `kan_selected_participant_response` | convert selected participant response evidence into `council.speak` plus cursor ack | agent plane | PARTC-002 candidate/local bounded no-live proof only; consumes fake/injected control `MEMBR` evidence and does not invoke real profiles or grant runtime activation |
 | `kan_delivery_evidence` | record evidence command where supported | delivery evidence | Discord IDs are evidence pointers only |
 | `kan_discord_send_message` | injected-only visible send helper | delivery plane | no default/live sender; not daemon state |
 
@@ -733,10 +736,28 @@ PARTC-001 remains candidate/local implementation proof only. It does not claim P
 
 Deliverables:
 
-- consume completed control `MEMBR` evidence for real participant profile/wrapper invocation;
-- `speaker_selected` -> participant response -> plugin/protocol-client `council.speak` proof;
-- failure handling for missing/stalled participant without role-prompt substitution;
-- cursor/replay/ack policy evidence or explicit MVP limitation.
+- candidate/local bounded no-live proof for `kan_selected_participant_response` using fake/injected control `MEMBR` evidence only;
+- validate `speaker_selected` recipient/member evidence and participant response provenance without simulated role substitution;
+- submit the resulting participant response through plugin/protocol-client `council.speak`;
+- acknowledge the selected stream cursor only after the `council.speak` submit succeeds;
+- preserve separate evidence for speak, ack, and proof records, with `live_readiness` false.
+
+Evidence:
+
+- implementation and bounded proof manifest:
+  `docs/evidence/partc-002-selected-participant-response-evidence.json`;
+- targeted unit proof:
+  `uv run pytest tests/unit/test_selected_participant_response.py -q` → 12 passed;
+- targeted schema/entrypoint/bootstrap/load smoke:
+  `uv run pytest tests/unit/test_selected_participant_response.py tests/unit/test_tool_schemas.py tests/unit/test_plugin_entrypoint.py tests/unit/test_bootstrap_smoke.py -q && make check-plugin-load-smoke` → 36 passed and plugin-load smoke OK;
+- full local gate recorded by Blue:
+  `make check-core-contract && make test-prepare && make test && git diff --check` → check-core-contract OK, test-prepare OK, unit 252 passed, integration 60 passed, e2e 13 passed, `git diff --check` exit 0.
+
+Boundaries:
+
+- this proof does not consume or invoke a real participant profile/wrapper at runtime;
+- it does not claim production activation, live/default Discord delivery, gateway/auth/token/provider/profile mutation, KAB readiness, or long-lived member runtime readiness;
+- the future real participant-profile pilot remains approval-gated and must provide separate runtime evidence before PARTC-002 can be treated as real-profile/runtime approved.
 
 ### SURFD-001: visible room helper/rendering boundary
 

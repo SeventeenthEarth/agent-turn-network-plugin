@@ -47,6 +47,7 @@ COUNCIL_COMMANDS: Final[tuple[str, ...]] = (
     "council.finalize",
     "council.unresolved",
 )
+COUNCIL_SPEAK_COMMAND: Final = "council.speak"
 DELIVERY_EVIDENCE_COMMANDS: Final[tuple[str, ...]] = (
     "delegate.escalation_delivered",
     "delegate.escalation_delivery_failed",
@@ -397,6 +398,139 @@ KAN_DELIVERY_EVIDENCE: Final[dict[str, object]] = {
     },
 }
 
+KAN_SELECTED_PARTICIPANT_RESPONSE: Final[dict[str, object]] = {
+    "name": "kan_selected_participant_response",
+    "description": (
+        "Submit a no-live selected participant response as council.speak through an "
+        "explicit fake/injected daemon client, then acknowledge the selected stream "
+        "cursor. The plugin preserves all caller-supplied IDs and fails closed before "
+        "transport on role substitution or member mismatches."
+    ),
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "session_id": {
+                "type": "string",
+                "minLength": 1,
+                "description": "Authoritative council session identifier.",
+            },
+            "selected_member": {
+                "type": "string",
+                "minLength": 1,
+                "description": "Member selected by the speaker_selected stream frame.",
+            },
+            "speaker_selected_frame": {
+                "type": "object",
+                "description": "speaker_selected stream frame containing cursor and event payload.",
+                "properties": {
+                    "cursor": {"type": "string", "minLength": 1},
+                    "event": {
+                        "type": "object",
+                        "properties": {
+                            "event_id": {"type": "string", "minLength": 1},
+                            "session_id": {"type": "string", "minLength": 1},
+                            "type": {"type": "string", "const": "speaker_selected"},
+                            "to": {
+                                "type": "array",
+                                "minItems": 1,
+                                "maxItems": 1,
+                                "items": {"type": "string", "minLength": 1},
+                            },
+                            "payload": {
+                                "type": "object",
+                                "properties": {
+                                    "member": {"type": "string", "minLength": 1},
+                                    "turn": {"type": ["integer", "string", "null"]},
+                                },
+                                "additionalProperties": True,
+                            },
+                        },
+                        "required": ["event_id", "session_id", "type", "to", "payload"],
+                        "additionalProperties": True,
+                    },
+                },
+                "required": ["cursor", "event"],
+                "additionalProperties": True,
+            },
+            "participant_response": {
+                "type": "object",
+                "description": (
+                    "Control MEMBR evidence response; source must be control_membr_evidence, "
+                    "member must match selected_member, and role_substitution must be false."
+                ),
+                "properties": {
+                    "source": {"type": "string", "const": "control_membr_evidence"},
+                    "member": {"type": "string", "minLength": 1},
+                    "message": {"type": "string", "minLength": 1},
+                    "role_substitution": {"type": "boolean", "const": False},
+                    "runner": {
+                        "type": "object",
+                        "properties": {
+                            "invocation_id": {"type": "string", "minLength": 1},
+                            "started_event_id": {"type": "string", "minLength": 1},
+                            "terminal_event_id": {"type": "string", "minLength": 1},
+                            "terminal_event_type": {
+                                "type": "string",
+                                "const": "participant_response",
+                            },
+                            "adapter_kind": {"type": "string", "const": "hermes-agent"},
+                            "wrapper_binding_evidence": {"type": "string", "minLength": 1},
+                        },
+                        "required": [
+                            "invocation_id",
+                            "started_event_id",
+                            "terminal_event_id",
+                            "terminal_event_type",
+                            "adapter_kind",
+                            "wrapper_binding_evidence",
+                        ],
+                        "additionalProperties": True,
+                    },
+                },
+                "required": [
+                    "source",
+                    "member",
+                    "message",
+                    "role_substitution",
+                    "runner",
+                ],
+                "additionalProperties": True,
+            },
+            "command_id": {
+                "type": "string",
+                "minLength": 1,
+                "description": "Caller-supplied council.speak command identifier.",
+            },
+            "request_id": {
+                "type": "string",
+                "minLength": 1,
+                "description": "Caller-supplied council.speak request identifier.",
+            },
+            "idempotency_key": {
+                "type": "string",
+                "minLength": 1,
+                "description": "Caller-supplied council.speak idempotency key.",
+            },
+            "ack_command_id": {
+                "type": "string",
+                "minLength": 1,
+                "description": "Caller-supplied stream ack command identifier.",
+            },
+        },
+        "required": [
+            "session_id",
+            "selected_member",
+            "speaker_selected_frame",
+            "participant_response",
+            "command_id",
+            "request_id",
+            "idempotency_key",
+            "ack_command_id",
+        ],
+        "additionalProperties": False,
+    },
+}
+
 KAN_DISCORD_SEND_MESSAGE: Final[dict[str, object]] = {
     "name": "kan_discord_send_message",
     "description": (
@@ -472,6 +606,7 @@ KAN_TOOL_SCHEMAS: Final[tuple[dict[str, object], ...]] = (
     KAN_DELEGATE_NEW,
     KAN_DELEGATE_ACTION,
     KAN_COUNCIL_COMMAND,
+    KAN_SELECTED_PARTICIPANT_RESPONSE,
     KAN_DELIVERY_EVIDENCE,
     KAN_DISCORD_SEND_MESSAGE,
 )
@@ -485,6 +620,7 @@ def tool_names() -> tuple[str, ...]:
 
 __all__ = [
     "COUNCIL_COMMANDS",
+    "COUNCIL_SPEAK_COMMAND",
     "DELIVERY_EVIDENCE_COMMANDS",
     "DELEGATE_ACTION_COMMANDS",
     "DELEGATE_NEW_COMMAND",
@@ -495,6 +631,7 @@ __all__ = [
     "KAN_DELEGATE_NEW",
     "KAN_DELIVERY_EVIDENCE",
     "KAN_DISCORD_SEND_MESSAGE",
+    "KAN_SELECTED_PARTICIPANT_RESPONSE",
     "KAN_STREAM_ACK",
     "KAN_STREAM_TAIL",
     "KAN_TOOL_SCHEMAS",

@@ -18,6 +18,7 @@ EXPECTED_TOOLS = [
     "kan_delegate_new",
     "kan_delegate_action",
     "kan_council_command",
+    "kan_selected_participant_response",
     "kan_delivery_evidence",
     "kan_discord_send_message",
 ]
@@ -31,9 +32,9 @@ def test_plugin_manifest_declares_fake_injected_tool_surface() -> None:
         "version": "0.1.0",
         "description": (
             "Hermes plugin adapter for kkachi-agent-network; exposes fake/injected "
-            "read-only tools, delegation/review command-envelope tools, and CNDIS "
-            "council/delivery-evidence tools and an injected-only Discord helper "
-            "without slash-command bindings."
+            "read-only tools, delegation/review command-envelope tools, CNDIS "
+            "council/delivery-evidence tools, selected participant response proof, "
+            "and an injected-only Discord helper without slash-command bindings."
         ),
         "author": "17번째 지구 Kkachi",
         "kind": "standalone",

@@ -73,6 +73,12 @@ def hplug_register_lines(*, include_hook: bool = False, include_command: bool = 
         '        handler=lambda args: "{}",\n'
         "    )\n"
         "    ctx.register_tool(\n"
+        '        name="kan_selected_participant_response",\n'
+        '        toolset="kkachi_agent_network",\n'
+        '        schema={"name": "kan_selected_participant_response"},\n'
+        '        handler=lambda args: "{}",\n'
+        "    )\n"
+        "    ctx.register_tool(\n"
         '        name="kan_delivery_evidence",\n'
         '        toolset="kkachi_agent_network",\n'
         '        schema={"name": "kan_delivery_evidence"},\n'
@@ -99,7 +105,8 @@ def write_bootstrap_fixture(
     provides_tools: str = (
         '["kan_daemon_status", "kan_compatibility_diagnostics", "kan_stream_tail", '
         '"kan_stream_ack", "kan_delegate_new", "kan_delegate_action", '
-        '"kan_council_command", "kan_delivery_evidence", "kan_discord_send_message"]'
+        '"kan_council_command", "kan_selected_participant_response", '
+        '"kan_delivery_evidence", "kan_discord_send_message"]'
     ),
     provides_hooks: str = "[]",
     provides_commands: str = "[]",

@@ -1,0 +1,142 @@
+{
+  "task_id": "PARTC-002",
+  "title": "Prove selected participant response path",
+  "evidence_kind": "bounded_no_live_fake_injected_implementation_proof",
+  "created_at_utc": "2026-06-10T15:17:39Z",
+  "repo": {
+    "path": "/Users/draccoon/Workspace/SeventeenthEarth/kkachi/kkachi-agent-network-plugin",
+    "base_head": "8378826",
+    "branch": "main",
+    "commit_created": false,
+    "push_performed": false
+  },
+  "codex_app_server": {
+    "used": true,
+    "path": "SDK stdio/session",
+    "codex_bin": "/Users/draccoon/.nvm/versions/node/v24.15.0/bin/codex",
+    "sdk_python": "/Users/draccoon/Workspace/Tools/ai-cli/codex/sdk/python/.venv/bin/python",
+    "server_info": "codex_python_sdk/0.139.0 (Mac OS 26.5.1; arm64)",
+    "not_used": ["codex exec", "localhost/TCP fallback", "plugin CLI subprocess fallback"]
+  },
+  "implemented_surface": {
+    "tool": "kan_selected_participant_response",
+    "scope": "no-live fake/injected control MEMBR evidence consumer",
+    "behavior": [
+      "validate speaker_selected frame event.type, event.session_id, event.to, optional payload.member, selected_member, and participant_response.member",
+      "reject participant_response.role_substitution unless exactly false",
+      "require participant_response.source == control_membr_evidence",
+      "require runner adapter_kind == hermes-agent and terminal_event_type == participant_response",
+      "submit council.speak through injected DaemonClient command envelope after council.lifecycle probe",
+      "ack selected stream cursor with caller-supplied ack_command_id only after council.speak submit succeeds",
+      "return separate speak, ack, and proof evidence with live_readiness false"
+    ],
+    "real_profile_live_invocation": false,
+    "production_activation": false
+  },
+  "changed_files": [
+    "README.md",
+    "docs/01-architecture.md",
+    "docs/03-testing-strategy.md",
+    "docs/04-tooling.md",
+    "docs/07-core-compatibility.md",
+    "docs/09-skill-and-operator-guide.md",
+    "docs/evidence/partc-002-selected-participant-response-evidence.json",
+    "plugin.yaml",
+    "scripts/check_bootstrap_smoke.py",
+    "scripts/check_plugin_load_smoke.py",
+    "src/kkachi_agent_network_plugin/bundled_skills/kan-plugin/SKILL.md",
+    "src/kkachi_agent_network_plugin/schemas.py",
+    "src/kkachi_agent_network_plugin/tools.py",
+    "tests/integration/test_delegate_plugin_tools.py",
+    "tests/integration/test_readonly_plugin_tools.py",
+    "tests/unit/test_bootstrap_smoke.py",
+    "tests/unit/test_plugin_entrypoint.py",
+    "tests/unit/test_selected_participant_response.py",
+    "tests/unit/test_tool_schemas.py"
+  ],
+  "verification": {
+    "red_test_before_implementation": {
+      "command": "uv run pytest tests/unit/test_selected_participant_response.py -q",
+      "result": "failed during collection because handle_selected_participant_response was not implemented"
+    },
+    "targeted_after_remediation": {
+      "command": "uv run pytest tests/unit/test_selected_participant_response.py -q",
+      "result": "12 passed"
+    },
+    "targeted_schema_entrypoint_smoke": {
+      "command": "uv run pytest tests/unit/test_selected_participant_response.py tests/unit/test_tool_schemas.py tests/unit/test_plugin_entrypoint.py tests/unit/test_bootstrap_smoke.py -q && make check-plugin-load-smoke",
+      "result": "36 passed; check-plugin-load-smoke: ok"
+    },
+    "full_gate": {
+      "command": "make check-core-contract && make test-prepare && make test && git diff --check",
+      "result": "check-core-contract ok; test-prepare ok; unit 252 passed; integration 60 passed; e2e 13 passed; git diff --check exit 0"
+    },
+    "static_scan": {
+      "hardcoded_secrets": "none",
+      "shell_injection": "none",
+      "dangerous_eval_exec": "none",
+      "unsafe_deserialization": "none"
+    }
+  },
+  "review": {
+    "first_review": {
+      "verdict": "FAIL then remediated",
+      "evidence_paths": [
+        "Kanban task t_bc0ae375 Gray verdict summary in parent t_cb62fc9f metadata/color_verdicts.gray.blocking_findings",
+        "docs/04-tooling.md:88-89 manifest/tool-list traceability",
+        "tests/unit/test_selected_participant_response.py",
+        "src/kkachi_agent_network_plugin/tools.py",
+        "src/kkachi_agent_network_plugin/schemas.py"
+      ],
+      "blockers": [
+        "speaker_selected event.to was not enforced when payload.member was present",
+        "runner terminal_event_type was not constrained",
+        "docs/tool-list traceability omitted kan_stream_ack and said nine tools",
+        "schema did not expose nested evidence contract clearly enough"
+      ]
+    },
+    "post_remediation_review": {
+      "independent_code_review": {
+        "verdict": "PASS; no blockers",
+        "evidence_paths": [
+          "Kanban task t_cb62fc9f Blue local verification metadata",
+          "tests/unit/test_selected_participant_response.py",
+          "src/kkachi_agent_network_plugin/tools.py",
+          "src/kkachi_agent_network_plugin/schemas.py"
+        ]
+      },
+      "kas_lane_helper": {
+        "verdict": "PASS; no blockers",
+        "residual_risk": "payload.member remains optional when event.to binds selected member",
+        "evidence_paths": [
+          "Kanban task t_df4ee98f Red verdict metadata preserved in parent t_cb62fc9f",
+          "tests/unit/test_selected_participant_response.py",
+          "docs/evidence/partc-002-selected-participant-response-evidence.json remaining_risks"
+        ]
+      },
+      "kah_lane_helper": {
+        "verdict": "PASS; no blockers",
+        "evidence_paths": [
+          "Kanban task t_0b9156b9 Orange verdict metadata preserved in parent t_cb62fc9f",
+          "docs/09-skill-and-operator-guide.md",
+          "docs/10-live-transport-sot.md PARTC-002 section"
+        ]
+      }
+    }
+  },
+  "boundaries": {
+    "no_live_default_discord_delivery": true,
+    "no_gateway_auth_token_provider_profile_mutation": true,
+    "no_cli_subprocess_fallback": true,
+    "no_localhost_tcp_fallback": true,
+    "no_plugin_lifecycle_state_authority": true,
+    "real_participant_profile_invocation_requires_separate_approval": true,
+    "commit_requires_separate_confirmation": true,
+    "push_requires_separate_confirmation": true
+  },
+  "remaining_risks": [
+    "This proof consumes caller/injected control MEMBR evidence; it does not itself invoke a real participant profile.",
+    "If stream ack compatibility or transport fails after successful council.speak submit, the speak may be durable while ack fails; current tests prove no ack after failed speak submit, not atomic all-or-nothing daemon semantics.",
+    "Actual real-profile isolated pilot remains approval-gated."
+  ]
+}

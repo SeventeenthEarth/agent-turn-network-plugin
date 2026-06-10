@@ -28,6 +28,7 @@ EXPECTED_TOOLS = [
     "kan_delegate_new",
     "kan_delegate_action",
     "kan_council_command",
+    "kan_selected_participant_response",
     "kan_delivery_evidence",
     "kan_discord_send_message",
 ]
@@ -278,6 +279,39 @@ def representative_args(tool_name: str) -> dict[str, object]:
             "request_id": "req-smoke-council",
             "idempotency_key": "idem-smoke-council",
             "payload": {"command_id": "cmd-smoke", "actor": "agent-smoke"},
+        }
+    if tool_name == "kan_selected_participant_response":
+        return {
+            "session_id": "sess-smoke",
+            "selected_member": "agent-smoke",
+            "speaker_selected_frame": {
+                "cursor": "cur-smoke-selected",
+                "event": {
+                    "event_id": "evt-smoke-selected",
+                    "session_id": "sess-smoke",
+                    "type": "speaker_selected",
+                    "to": ["agent-smoke"],
+                    "payload": {"turn": 1, "member": "agent-smoke"},
+                },
+            },
+            "participant_response": {
+                "source": "control_membr_evidence",
+                "member": "agent-smoke",
+                "message": "local isolated plugin-load smoke",
+                "role_substitution": False,
+                "runner": {
+                    "invocation_id": "run-smoke",
+                    "started_event_id": "evt-smoke-started",
+                    "terminal_event_id": "evt-smoke-terminal",
+                    "terminal_event_type": "participant_response",
+                    "adapter_kind": "hermes-agent",
+                    "wrapper_binding_evidence": "local-smoke",
+                },
+            },
+            "command_id": "cmd-smoke-speak",
+            "request_id": "req-smoke-speak",
+            "idempotency_key": "idem-smoke-speak",
+            "ack_command_id": "cmd-smoke-ack",
         }
     if tool_name == "kan_delivery_evidence":
         return {

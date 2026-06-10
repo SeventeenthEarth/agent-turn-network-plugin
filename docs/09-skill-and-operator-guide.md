@@ -138,7 +138,7 @@ gateway config, sockets, or localhost services as part of SKILL-2 rollback.
 gate, strengthened by REL-PILOT-FIX-001. It creates a temporary plugin home from
 repository-local files, loads the root `register(ctx)` entrypoint with a fake
 Hermes context without adding external `PYTHONPATH=<plugin>/src` help, asserts
-the exact eight tools in order, asserts no hooks or commands, calls
+the exact ten tools in order, asserts no hooks or commands, calls
 representative handlers without injected clients/senders and requires JSON
 `ok:false`, verifies that live-looking environment variables do not change
 behavior, rejects command overclaims, and checks wheel package plus bundled skill

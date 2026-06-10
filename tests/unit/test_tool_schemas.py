@@ -13,6 +13,7 @@ def test_schemas_expose_only_authorized_fake_injected_tools() -> None:
         "kan_delegate_new",
         "kan_delegate_action",
         "kan_council_command",
+        "kan_selected_participant_response",
         "kan_delivery_evidence",
         "kan_discord_send_message",
     )

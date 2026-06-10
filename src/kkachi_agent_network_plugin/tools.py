@@ -8,6 +8,7 @@ from typing import Final, Protocol, cast
 
 from . import schemas
 from .client import DaemonClient
+from .client.live import configured_live_client_factory
 from .discord_surface import (
     DiscordMessageResult,
     DiscordMessageTarget,
@@ -319,9 +320,16 @@ def register_tools(
     ctx: ToolRegistrationContext,
     *,
     client_factory: ClientFactory | None = None,
+    config: Mapping[str, object] | None = None,
     send_message: SendMessageFn | None = None,
 ) -> None:
-    """Register fake/injected KAN tools with a Hermes plugin context."""
+    """Register KAN tools with an explicit injected or configured client factory."""
+
+    if client_factory is None:
+        try:
+            client_factory = configured_live_client_factory(config)
+        except DaemonTransportError as exc:
+            client_factory = _failing_client_factory(exc)
 
     def daemon_status_handler(args: object | None = None) -> str:
         return handle_daemon_status(args, client_factory=client_factory)
@@ -478,6 +486,13 @@ def _require_client(client_factory: ClientFactory | None) -> DaemonClient:
             "explicit daemon client factory is required; no live daemon/Hermes/Discord fallback"
         )
     return client_factory()
+
+
+def _failing_client_factory(exc: DaemonTransportError) -> ClientFactory:
+    def factory() -> DaemonClient:
+        raise exc
+
+    return factory
 
 
 def _submit_command(

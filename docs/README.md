@@ -2,7 +2,7 @@
 
 This directory is the source of truth for the **Python Hermes plugin adapter** for KAN.
 
-Control daemon/CLI authority lives in `../../kkachi-agent-network-control/docs/`. The plugin is not the source of truth. Its current surface is fake/injected Hermes tools over the daemon protocol contract, including CNDIS council and delivery-evidence command submission plus an injected-only Discord helper. SKILL-2 adds a packaged operator skill guide, compatibility matrix, and local isolated plugin-load smoke gate, but slash commands, live daemon discovery, production activation, KAB bridge behavior, and live/default Discord visible-surface wiring remain unsupported. `plugin/LTRAN-001` is completed as docs-only SOT/mapping work; it does not change backend/source/test code or claim live/production/Discord/gateway/auth/token/KAB/hidden CLI fallback readiness. `plugin/LTRAN-002` remains the first implementation task.
+Control daemon/CLI authority lives in `../../kkachi-agent-network-control/docs/`. The plugin is not the source of truth. Its current surface is fake/injected Hermes tools over the daemon protocol contract, including CNDIS council and delivery-evidence command submission plus an injected-only Discord helper. SKILL-2 adds a packaged operator skill guide, compatibility matrix, and local isolated plugin-load smoke gate. `plugin/LTRAN-002` adds an explicit `live_transport.unix_socket_path` Unix-socket transport for `status.read` and `version.read` smoke only, but slash commands, live daemon discovery, stream/write equivalence, dedupe proof, production activation, KAB bridge behavior, and live/default Discord visible-surface wiring remain unsupported.
 
 ## Documents
 

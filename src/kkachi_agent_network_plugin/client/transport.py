@@ -1,17 +1,26 @@
 """Explicit daemon transport boundary.
 
-Only injected/fake transports are provided here.  There is intentionally no
-localhost, subprocess, Hermes, Discord, auth, token, or gateway fallback.
+Only explicit fake/injected or configured Unix-socket transports are provided
+here.  There is intentionally no localhost, subprocess, Hermes, Discord, auth,
+token, or gateway fallback.
 """
 
 from __future__ import annotations
 
+import json
+import os
+import socket
+import stat
 from collections.abc import Callable
 from copy import deepcopy
-from typing import Protocol
+from pathlib import Path
+from typing import Final, Protocol, cast
 
-from ..errors import DaemonTransportError
+from ..errors import DaemonProtocolError, DaemonTransportError
 from ..protocol import JsonObject
+
+_LIVE_SMOKE_OPERATIONS: Final = frozenset({"status.read", "version.read"})
+_MAX_SOCKET_RESPONSE_BYTES: Final = 1024 * 1024
 
 
 class DaemonTransport(Protocol):
@@ -49,4 +58,125 @@ class StaticDaemonTransport:
         return deepcopy(response)
 
 
-__all__ = ["DaemonTransport", "StaticDaemonTransport"]
+class UnixSocketDaemonTransport:
+    """Explicit AF_UNIX transport for LTRAN-002 live status/version smoke only."""
+
+    def __init__(self, socket_path: str, *, timeout: float = 2.0) -> None:
+        self.socket_path = _validated_unix_socket_path(socket_path)
+        self.timeout = _validated_timeout(timeout)
+
+    def request(self, operation: str, body: JsonObject | None = None) -> JsonObject:
+        if operation not in _LIVE_SMOKE_OPERATIONS:
+            raise DaemonTransportError(
+                "explicit Unix socket live transport supports status.read and version.read only"
+            )
+        payload: JsonObject = {
+            "schema_version": 1,
+            "request_id": f"plugin-live-{operation.replace('.', '-')}",
+            "command": operation,
+        }
+        if body:
+            payload["params"] = body
+        wire = json.dumps(payload, ensure_ascii=False, sort_keys=True).encode("utf-8") + b"\n"
+        try:
+            with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as client:
+                client.settimeout(self.timeout)
+                client.connect(self.socket_path)
+                client.sendall(wire)
+                response = _read_json_line(client, operation=operation)
+        except DaemonProtocolError:
+            raise
+        except OSError as exc:
+            raise DaemonTransportError(
+                f"Unix socket daemon request failed for {operation}: {exc.strerror or exc}"
+            ) from exc
+        if not isinstance(response, dict):
+            raise DaemonProtocolError(f"daemon response must be an object: {operation}")
+        if response.get("ok") is not True:
+            error = response.get("error")
+            if isinstance(error, dict):
+                message = error.get("message")
+                code = error.get("code")
+                if isinstance(message, str) and message:
+                    raise DaemonTransportError(message)
+                if isinstance(code, str) and code:
+                    raise DaemonTransportError(code)
+            raise DaemonProtocolError(f"daemon response was not ok: {operation}")
+        result = response.get("result")
+        if not isinstance(result, dict):
+            raise DaemonProtocolError(f"daemon response result must be an object: {operation}")
+        return cast(JsonObject, result)
+
+
+def _validated_unix_socket_path(value: object) -> str:
+    if not isinstance(value, str) or not value:
+        raise DaemonTransportError(
+            "live_transport.unix_socket_path must be a non-empty absolute Unix socket path"
+        )
+    lowered = value.lower()
+    if value.startswith("~"):
+        raise DaemonTransportError("live_transport.unix_socket_path must not use ~ expansion")
+    if (
+        "://" in value
+        or lowered.startswith(("http:", "https:", "tcp:", "unix:", "ws:", "wss:"))
+        or lowered.startswith(("localhost:", "127.0.0.1:", "[::1]:", "::1:"))
+    ):
+        raise DaemonTransportError(
+            "live_transport.unix_socket_path must be an absolute Unix socket path, "
+            "not a URL/TCP endpoint"
+        )
+    if not Path(value).is_absolute():
+        raise DaemonTransportError("live_transport.unix_socket_path must be absolute")
+    try:
+        mode = os.lstat(value).st_mode
+    except FileNotFoundError as exc:
+        raise DaemonTransportError(
+            f"live_transport.unix_socket_path does not exist: {value}"
+        ) from exc
+    except PermissionError as exc:
+        raise DaemonTransportError(
+            f"live_transport.unix_socket_path permission denied: {value}"
+        ) from exc
+    if stat.S_ISLNK(mode):
+        raise DaemonTransportError(
+            f"live_transport.unix_socket_path must not be a symlink: {value}"
+        )
+    if not stat.S_ISSOCK(mode):
+        raise DaemonTransportError(f"live_transport.unix_socket_path is not a Unix socket: {value}")
+    return value
+
+
+def _validated_timeout(value: float) -> float:
+    if isinstance(value, bool) or not isinstance(value, int | float):
+        raise DaemonTransportError("Unix socket timeout must be numeric")
+    timeout = float(value)
+    if timeout <= 0 or timeout > 30:
+        raise DaemonTransportError("Unix socket timeout must be greater than 0 and at most 30")
+    return timeout
+
+
+def _read_json_line(client: socket.socket, *, operation: str) -> object:
+    chunks: list[bytes] = []
+    total = 0
+    while True:
+        chunk = client.recv(4096)
+        if chunk == b"":
+            break
+        newline_index = chunk.find(b"\n")
+        if newline_index >= 0:
+            chunks.append(chunk[:newline_index])
+            break
+        chunks.append(chunk)
+        total += len(chunk)
+        if total > _MAX_SOCKET_RESPONSE_BYTES:
+            raise DaemonProtocolError(f"daemon response exceeded size limit: {operation}")
+    raw = b"".join(chunks)
+    if not raw:
+        raise DaemonProtocolError(f"daemon response was empty: {operation}")
+    try:
+        return json.loads(raw.decode("utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise DaemonProtocolError(f"daemon response was not valid JSON: {operation}") from exc
+
+
+__all__ = ["DaemonTransport", "StaticDaemonTransport", "UnixSocketDaemonTransport"]

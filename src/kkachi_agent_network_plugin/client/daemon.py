@@ -117,7 +117,7 @@ class DaemonClient:
     def _request(self, operation: str, body: JsonObject | None = None) -> JsonObject:
         try:
             response = self._transport.request(operation, body)
-        except DaemonTransportError:
+        except (DaemonProtocolError, DaemonTransportError):
             raise
         except Exception as exc:
             raise DaemonTransportError(f"injected daemon transport failed: {operation}") from exc
@@ -187,7 +187,7 @@ def _parse_version(
         feature_groups=_feature_groups(
             response.get("feature_groups"), required_feature_groups=required_feature_groups
         ),
-        live_readiness=_require_bool(response.get("live_readiness"), label="live_readiness"),
+        live_readiness=_live_readiness(response),
     )
 
 
@@ -196,10 +196,24 @@ def _parse_status(response: Mapping[str, object]) -> DaemonStatus:
     return DaemonStatus(
         protocol_version=protocol_version,
         daemon_version=_require_string(response.get("daemon_version"), label="daemon_version"),
-        status=_require_string(response.get("status"), label="status"),
+        status=_status_label(response),
         feature_groups=_feature_groups(response.get("feature_groups")),
-        live_readiness=_require_bool(response.get("live_readiness"), label="live_readiness"),
+        live_readiness=_live_readiness(response),
     )
+
+
+def _live_readiness(response: Mapping[str, object]) -> bool:
+    value = response.get("live_readiness")
+    if value is None:
+        return False
+    return _require_bool(value, label="live_readiness")
+
+
+def _status_label(response: Mapping[str, object]) -> str:
+    status = response.get("status")
+    if status is not None:
+        return _require_string(status, label="status")
+    return _require_string(response.get("daemon"), label="daemon")
 
 
 def _parse_command_response(response: Mapping[str, object]) -> CommandResult:

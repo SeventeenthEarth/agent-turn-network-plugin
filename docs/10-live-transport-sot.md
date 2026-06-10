@@ -6,7 +6,7 @@ This document is the plugin-side implementation Source of Truth for the first li
 
 The control-side companion SOT is `../../kkachi-agent-network-control/docs/24-live-transport-control-sot.md`. This plugin SOT may describe daemon/CLI/member-runtime responsibilities for boundary clarity, but control-owned behavior is implemented and roadmapped in the control repository.
 
-`plugin/LTRAN-001` is completed as a documentation, SOT, and mapping task only. It did not change backend/source/test code, implement live transport, open a daemon socket, mutate production/live systems, contact Discord, gateway, auth, token, or KAB surfaces, or add a hidden plugin-to-CLI fallback. The first plugin implementation task remains `plugin/LTRAN-002`.
+`plugin/LTRAN-001` is completed as a documentation, SOT, and mapping task only. It did not change backend/source/test code, implement live transport, open a daemon socket, mutate production/live systems, contact Discord, gateway, auth, token, or KAB surfaces, or add a hidden plugin-to-CLI fallback. `plugin/LTRAN-002` is completed as the first bounded implementation task for explicit Unix-socket `status.read` / `version.read` live smoke only.
 
 This document does **not** authorize production activation, live Discord delivery, gateway/auth/token changes, KAB bridge readiness, or active profile mutation by itself. It defines the architecture, component responsibilities, command/data-plane boundaries, plugin implementation slices, cross-repo dependency gates, and verification evidence required before any later activation decision.
 
@@ -423,12 +423,16 @@ kkachi-agent-network cancel <session_id> --reason "<reason>"
 
 ## Live daemon transport contract for the plugin
 
-The plugin live transport should be implemented as an explicit local daemon client, for example `ControlSocketTransport`.
+The plugin live transport is implemented as an explicit local daemon client for
+the first read-only smoke slice. The approved plugin config key is
+`live_transport.unix_socket_path`; the value must be an absolute filesystem path
+to an existing Unix socket.
 
 Required behavior:
 
 - require explicit config before creating a live `client_factory` during plugin registration;
-- derive socket path only from explicit `data_home`, normally `<data_home>/run/kkachi-agent-networkd.sock`;
+- derive socket path only from explicit `live_transport.unix_socket_path`;
+- reject empty, relative, `~`, URL/scheme, localhost/TCP, missing, regular-file, directory, symlink, and permission-denied paths fail-closed;
 - avoid symlink traversal and unsafe ownership/mode conditions where practical;
 - verify protocol/schema version before marking readiness true;
 - use bounded request timeouts;
@@ -439,6 +443,11 @@ Required behavior:
 Explicit config absent means tools may register but live dispatch remains unavailable/fail-closed.
 
 Unsafe socket, stale socket, missing daemon, unsupported protocol, malformed response, and unknown schema all fail closed. They must not silently fall back to CLI, localhost, Discord, gateway, or fake success.
+
+`plugin/LTRAN-002` implements only `status.read` and `version.read` over this
+transport. `diagnostics.read`, `stream.tail`, `stream.follow`, `stream.ack`,
+`command.submit`, write equivalence, and daemon dedupe proof remain deferred to
+`plugin/LTRAN-003` or later explicitly scoped tasks.
 
 ## Operation mapping
 
@@ -465,7 +474,11 @@ Keep correlation and idempotency distinct:
 - `event_id`: daemon-generated or validated event identity;
 - `correlation_id`: logical thread across related commands/events, normally the session.
 
-Current plugin schemas expose `idempotency_key` in some command tools. Before live readiness, prefer migrating to `command_id` or documenting `idempotency_key -> command_id` as a temporary compatibility alias. The long-term SOT term is `command_id`.
+Current plugin schemas expose `idempotency_key` in some command tools. Keep that
+public schema stable. For daemon-facing write work, document and implement
+`idempotency_key` as the legacy/request-side value that maps internally to the
+daemon `command_id`; do not rename public plugin fields without a separate
+breaking-change task. The long-term daemon SOT term remains `command_id`.
 
 Retries for the same logical command must reuse the same `command_id`. A participant runtime must not emit duplicate speeches, votes, or hand raises by generating a new command id after a transport retry unless policy explicitly creates a new logical action.
 
@@ -627,7 +640,7 @@ Target checks:
 
 ### LTRAN-001: plugin SOT and cross-repo mapping
 
-Status: completed docs-only. This closeout locks the plugin-side source of truth and mapping without changing source code, tests, backend behavior, daemon state, plugin registration, live transport, production activation, Discord delivery, gateway/auth/token behavior, KAB behavior, or any hidden CLI fallback. `plugin/LTRAN-002` remains the first implementation task.
+Status: completed docs-only. This closeout locked the plugin-side source of truth and mapping without changing source code, tests, backend behavior, daemon state, plugin registration, live transport, production activation, Discord delivery, gateway/auth/token behavior, KAB behavior, or any hidden CLI fallback. Follow-on `plugin/LTRAN-002` is now completed as the first bounded implementation task for explicit Unix-socket status/version smoke.
 
 Deliverables:
 
@@ -641,17 +654,26 @@ Repo-qualified dependency evidence:
 - `control/LTRAN-001` is completed in `../../kkachi-agent-network-control/docs/24-live-transport-control-sot.md` and `../../kkachi-agent-network-control/docs/roadmap.md` as the control-side SOT/mapping task.
 - `control/LTRAN-002` is completed with explicit daemon compatibility-read evidence for `version.read`, `status.read`, `diagnostics.read`, bounded stream replay/follow/status/ack, and command-path feature evidence.
 - `control/LTRAN-003` is completed with disposable live-local CLI/daemon evidence and no production activation or plugin mutation claim.
-- These control completions are dependency evidence for planning `plugin/LTRAN-002`; they do not implement plugin live transport or authorize live/production/Discord/gateway/auth/token/KAB/hidden CLI fallback behavior in this repository.
+- These control completions were dependency evidence for `plugin/LTRAN-002`; plugin live transport is implemented only within the bounded explicit status/version smoke slice recorded below. They still do not authorize live/production/Discord/gateway/auth/token/KAB/hidden CLI fallback behavior in this repository.
 
 ### LTRAN-002: plugin live daemon transport
 
+Status: completed for the bounded read-only smoke slice. The plugin now exposes
+an explicit register-time live client factory from `live_transport.unix_socket_path`
+and a Unix-socket JSON request transport for `status.read` and `version.read`
+only. The implementation preserves no-config fail-closed behavior and rejects
+unsafe or unavailable paths without CLI, localhost/TCP, Hermes, Discord,
+gateway, auth, token, KAB, profile/provider mutation, or production activation
+claims.
+
 Deliverables:
 
-- explicit Unix socket client transport;
-- config loader and register-time `client_factory` injection;
-- no-config fail-closed preservation;
-- unsafe/missing/malformed/unsupported daemon tests;
-- disposable live status/version smoke after control `LTRAN` is complete.
+- explicit Unix socket client transport: completed;
+- config loader and register-time `client_factory` injection: completed;
+- no-config fail-closed preservation: completed;
+- unsafe/missing/malformed/unsupported daemon tests: completed;
+- local status/version transport smoke: completed with a socket-boundary test double;
+- disposable real-daemon live status/version smoke: completed against a temporary `/tmp` data-home and sibling control daemon binary, with no production activation claim.
 
 ### LTRAN-003: plugin/CLI/daemon equivalence pilot
 
@@ -662,6 +684,7 @@ Deliverables:
 - plugin configured explicitly against that data home;
 - CLI and plugin status/version/stream/write equivalence evidence;
 - no production activation claim.
+- stream/write support, command-id/idempotency equivalence, and daemon dedupe proof.
 
 ### PARTC-001: participant-agent plugin path
 
@@ -690,13 +713,19 @@ Deliverables:
 - delivery evidence pointer handling;
 - failure and pending-follow-up behavior.
 
-## Open decisions before implementation
+## Remaining decisions for post-LTRAN-002 slices
 
-1. Should existing plugin command schemas rename `idempotency_key` to `command_id` before live readiness, or keep a temporary alias?
-2. Is `status.read` required in the daemon, or can plugin diagnostics safely normalize existing `status`/`health`/`version.read` responses?
-3. Does the first pilot use MVP participant invocation or long-lived member runtimes?
-4. What is the approved explicit plugin config key and storage location for live transport?
-5. Which delivery layer owns visible surface posting in the first pilot?
-6. What is the minimum acceptable evidence that a participant answer came from the real participant-agent profile?
+Resolved for `plugin/LTRAN-002`:
 
-Until these are resolved, implementation may proceed only on slices that do not depend on the unresolved decision, or must record the selected default in the task contract before coding.
+- The approved explicit plugin config key is `live_transport.unix_socket_path`; it is supplied at register/config time and must be an absolute path to an existing Unix socket.
+- The bounded LTRAN-002 live transport slice supports only `status.read` and `version.read` over the explicit Unix socket. Control's current daemon status response may be normalized safely for this read-only smoke slice, while missing or malformed protocol fields fail closed.
+- Existing public schemas keep `idempotency_key` for compatibility; live transport bridges daemon `command_id` only where a future command/write slice explicitly requires it.
+
+Still open for later `LTRAN-003`, `PARTC`, or `SURFD` tasks:
+
+1. Does the first participant pilot use MVP participant invocation or long-lived member runtimes?
+2. Which delivery layer owns visible surface posting in the first pilot?
+3. What is the minimum acceptable evidence that a participant answer came from the real participant-agent profile?
+4. What stream/write/equivalence evidence is required before promoting beyond the bounded status/version smoke slice?
+
+Later implementation may proceed only on slices that do not depend on an unresolved future decision, or must record the selected default in the task contract before coding.

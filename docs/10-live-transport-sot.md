@@ -6,6 +6,8 @@ This document is the plugin-side implementation Source of Truth for the first li
 
 The control-side companion SOT is `../../kkachi-agent-network-control/docs/24-live-transport-control-sot.md`. This plugin SOT may describe daemon/CLI/member-runtime responsibilities for boundary clarity, but control-owned behavior is implemented and roadmapped in the control repository.
 
+`plugin/LTRAN-001` is completed as a documentation, SOT, and mapping task only. It did not change backend/source/test code, implement live transport, open a daemon socket, mutate production/live systems, contact Discord, gateway, auth, token, or KAB surfaces, or add a hidden plugin-to-CLI fallback. The first plugin implementation task remains `plugin/LTRAN-002`.
+
 This document does **not** authorize production activation, live Discord delivery, gateway/auth/token changes, KAB bridge readiness, or active profile mutation by itself. It defines the architecture, component responsibilities, command/data-plane boundaries, plugin implementation slices, cross-repo dependency gates, and verification evidence required before any later activation decision.
 
 ## Scope
@@ -625,12 +627,21 @@ Target checks:
 
 ### LTRAN-001: plugin SOT and cross-repo mapping
 
+Status: completed docs-only. This closeout locks the plugin-side source of truth and mapping without changing source code, tests, backend behavior, daemon state, plugin registration, live transport, production activation, Discord delivery, gateway/auth/token behavior, KAB behavior, or any hidden CLI fallback. `plugin/LTRAN-002` remains the first implementation task.
+
 Deliverables:
 
 - this plugin SOT and cross-links in docs map/index;
 - cross-link to the control companion SOT;
 - explicit repo-owned epic/task split;
 - no-scope list for production activation, live Discord, gateway/auth/token, KAB, and hidden CLI fallback.
+
+Repo-qualified dependency evidence:
+
+- `control/LTRAN-001` is completed in `../../kkachi-agent-network-control/docs/24-live-transport-control-sot.md` and `../../kkachi-agent-network-control/docs/roadmap.md` as the control-side SOT/mapping task.
+- `control/LTRAN-002` is completed with explicit daemon compatibility-read evidence for `version.read`, `status.read`, `diagnostics.read`, bounded stream replay/follow/status/ack, and command-path feature evidence.
+- `control/LTRAN-003` is completed with disposable live-local CLI/daemon evidence and no production activation or plugin mutation claim.
+- These control completions are dependency evidence for planning `plugin/LTRAN-002`; they do not implement plugin live transport or authorize live/production/Discord/gateway/auth/token/KAB/hidden CLI fallback behavior in this repository.
 
 ### LTRAN-002: plugin live daemon transport
 

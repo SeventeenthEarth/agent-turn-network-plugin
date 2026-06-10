@@ -2,7 +2,7 @@
 
 This directory is the source of truth for the **Python Hermes plugin adapter** for KAN.
 
-Control daemon/CLI authority lives in `../../kkachi-agent-network-control/docs/`. The plugin is not the source of truth. Its current surface is fake/injected Hermes tools over the daemon protocol contract, including CNDIS council and delivery-evidence command submission plus an injected-only Discord helper. SKILL-2 adds a packaged operator skill guide, compatibility matrix, and local isolated plugin-load smoke gate, but slash commands, live daemon discovery, production activation, KAB bridge behavior, and live/default Discord visible-surface wiring remain unsupported.
+Control daemon/CLI authority lives in `../../kkachi-agent-network-control/docs/`. The plugin is not the source of truth. Its current surface is fake/injected Hermes tools over the daemon protocol contract, including CNDIS council and delivery-evidence command submission plus an injected-only Discord helper. SKILL-2 adds a packaged operator skill guide, compatibility matrix, and local isolated plugin-load smoke gate, but slash commands, live daemon discovery, production activation, KAB bridge behavior, and live/default Discord visible-surface wiring remain unsupported. `plugin/LTRAN-001` is completed as docs-only SOT/mapping work; it does not change backend/source/test code or claim live/production/Discord/gateway/auth/token/KAB/hidden CLI fallback readiness. `plugin/LTRAN-002` remains the first implementation task.
 
 ## Documents
 
@@ -16,7 +16,7 @@ Control daemon/CLI authority lives in `../../kkachi-agent-network-control/docs/`
 8. `07-core-compatibility.md` — control protocol compatibility, milestone matrix, and cross-repo checks
 9. `08-unsupported-surfaces.md` — unsupported Hermes/plugin surfaces and future binding requirements
 10. `09-skill-and-operator-guide.md` — bundled KAN skill install, enable, rollback, troubleshooting, and local isolated plugin-load smoke boundary
-11. `10-live-transport-sot.md` — plugin-side live transport SOT for `LTRAN` / `PARTC` / `SURFD`: main-agent CLI control, participant-agent plugin transport, member runtime response flow, daemon authority boundaries, and control companion SOT dependencies
+11. `10-live-transport-sot.md` — plugin-side live transport SOT for `LTRAN` / `PARTC` / `SURFD`: main-agent CLI control, participant-agent plugin transport, member runtime response flow, daemon authority boundaries, completed docs-only `plugin/LTRAN-001` mapping, and control companion SOT dependencies
 
 ## Required Makefile targets
 

@@ -4,7 +4,7 @@
 
 Let `kkachi-agent-network-plugin` develop independently from the Go control runtime while proving compatibility with the control daemon contract.
 
-The control-side SOT is `../../kkachi-agent-network-control/docs/21-cross-repo-development.md`. For live-local transport work, the control-side companion SOT is `../../kkachi-agent-network-control/docs/24-live-transport-control-sot.md` and the plugin-side SOT is `docs/10-live-transport-sot.md`.
+The control-side SOT is `../../kkachi-agent-network-control/docs/21-cross-repo-development.md`. For live-local transport work, the control-side companion SOT is `../../kkachi-agent-network-control/docs/24-live-transport-control-sot.md` and the plugin-side SOT is `docs/10-live-transport-sot.md`. `plugin/LTRAN-001` is completed as docs-only SOT/mapping work; it does not implement live transport or claim live/production/Discord/gateway/auth/token/KAB/hidden CLI fallback readiness. `plugin/LTRAN-002` remains the first implementation task.
 
 ## Current supported control contract
 
@@ -41,7 +41,7 @@ The Python client parses control fixtures without starting the real daemon. This
 
 ### Planned live local daemon mode
 
-Planned `LTRAN` work may use a locally built `kkachi-agent-networkd` with disposable data home, but only after the control `LTRAN` epic is complete and the plugin task explicitly configures live transport. Active task transfer between control and plugin happens only at epic boundaries.
+Planned `LTRAN` work may use a locally built `kkachi-agent-networkd` with disposable data home, but only after the control `LTRAN` epic is complete and the plugin task explicitly configures live transport. Repo-qualified dependency evidence is recorded from control `docs/24-live-transport-control-sot.md` and control `docs/roadmap.md`: `control/LTRAN-001`, `control/LTRAN-002`, and `control/LTRAN-003` are completed. That evidence supports the handoff to `plugin/LTRAN-002`; it does not by itself implement plugin live transport. Active task transfer between control and plugin happens only at epic boundaries.
 
 ### Isolated Hermes/Discord mode
 
@@ -83,7 +83,7 @@ tests, and `make check-plugin-load-smoke` local isolated plugin-load smoke gate.
 | `export.bundle` | Control-supported capability | Not exposed as a plugin tool in SKILL-2 | Control `TRANS-001`/`RELIA-001` completion is recorded as unblock evidence only | No `kan_export_bundle` tool, command, hook, or live fallback is added. |
 | Packaged skill resource | Python package includes `bundled_skills/kan-plugin/SKILL.md` | Supported for import-safe package resource reads | `tests/unit/test_bundled_skills.py`, `make check-plugin-load-smoke` | The package does not install into the user's Hermes profile. |
 | Local isolated plugin-load smoke | Hermes-compatible root `register(ctx)` entrypoint can be loaded with a fake context | Supported only as local isolated plugin-load smoke | `scripts/check_plugin_load_smoke.py`, `tests/unit/test_plugin_load_smoke.py`, `make check-plugin-load-smoke` | This is not production activation, live plugin readiness, KAB readiness, live Hermes readiness, or live Discord readiness. |
-| Live-local daemon transport | Planned control `LTRAN` gate | Planned for plugin `LTRAN` only after the control `LTRAN` epic completes | `docs/10-live-transport-sot.md`, control `docs/24-live-transport-control-sot.md` | Until implemented, live sockets, localhost, CLI fallback, daemon discovery, Hermes gateway, auth/token, and fake success remain unsupported. |
+| Live-local daemon transport | `plugin/LTRAN-001` docs-only mapping complete; `control/LTRAN-001`, `control/LTRAN-002`, and `control/LTRAN-003` completed as dependency evidence | Planned for `plugin/LTRAN-002`, the first implementation task | `docs/10-live-transport-sot.md`, control `docs/24-live-transport-control-sot.md`, control `docs/roadmap.md` | Until `plugin/LTRAN-002` implements explicit transport, live sockets, localhost, CLI fallback, daemon discovery, Hermes gateway, auth/token, KAB, hidden CLI fallback, and fake success remain unsupported. |
 | `kan_session_status` | No authoritative `session.status.read` plugin contract | Unsupported | Guardrails, schema tests, docs | Do not add `kan_session_status` or `session.status.read` support. |
 | KAN slash commands | Hermes host can register commands, but plugin has no approved KAN command contract | Unsupported; `provides_commands: []` stays unchanged | `plugin.yaml`, bootstrap smoke, plugin-load smoke, docs guardrails | Any `provides_commands: [kan]` or `register_command` drift fails local smoke. |
 | Native Discord slash commands | No supported plugin/native Discord slash-command contract | Unsupported | `docs/05-discord-surface.md`, `docs/08-unsupported-surfaces.md` | No native Discord command registration or gateway fallback. |

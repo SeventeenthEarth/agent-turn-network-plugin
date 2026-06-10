@@ -14,3 +14,13 @@ test_commands:
   - "make docs-guardrails"
   - "make check-core-contract"
   - "make test"
+live_transport:
+  plugin_sot: "docs/10-live-transport-sot.md"
+  control_sot: "../../kkachi-agent-network-control/docs/24-live-transport-control-sot.md"
+  completed_docs_only_task: "plugin/LTRAN-001"
+  first_implementation_task: "plugin/LTRAN-002"
+  dependency_evidence:
+    - "control/LTRAN-001"
+    - "control/LTRAN-002"
+    - "control/LTRAN-003"
+  boundary: "docs/SOT/mapping only; no backend/source/test code change and no live/production/Discord/gateway/auth/token/KAB/hidden CLI fallback claim"

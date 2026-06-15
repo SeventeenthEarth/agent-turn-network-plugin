@@ -16,6 +16,22 @@ REQUIRED_CONTROL_PHRASES = [
     "testdata/conformance/manifest.json",
 ]
 REQUIRED_CONTROL_FEATURE_GROUPS = ["delivery_evidence", "council.lifecycle"]
+REQUIRED_ARGUE_FIXTURES = [
+    "fixtures/command/council-speak-argument-graph-request.json",
+    "fixtures/command/council-hand-raise-argument-graph-request.json",
+    "fixtures/event/argument-graph-opening-new-axis-council.json",
+    "fixtures/event/argument-graph-support-prior-council.json",
+    "fixtures/event/argument-graph-multi-link-council.json",
+    "fixtures/event/argument-graph-synthesize-council.json",
+    "fixtures/event/argument-graph-dual-field-speech-council.json",
+    "fixtures/event/argument-graph-legacy-only-speech-council.json",
+    "fixtures/event/argument-graph-hand-raise-target-links-council.json",
+    "fixtures/error/argument-graph-invalid-stance.json",
+    "fixtures/error/argument-graph-new-axis-missing-reason.json",
+    "fixtures/error/argument-graph-synthesize-single-target.json",
+    "fixtures/error/argument-graph-quality-required-missing-claims.json",
+    "fixtures/error/argument-graph-quality-required-orphan-speech.json",
+]
 
 
 def require(path: Path, label: str) -> str:
@@ -48,6 +64,14 @@ def main(*, plugin: Path = PLUGIN, core: Path = CORE) -> None:
         raise SystemExit(
             f"control manifest missing required CNDIS feature groups: {missing_feature_groups}"
         )
+    fixtures = manifest.get("fixtures")
+    if not isinstance(fixtures, list):
+        raise SystemExit("control manifest fixtures must be a list")
+    missing_argue_fixtures = [
+        fixture for fixture in REQUIRED_ARGUE_FIXTURES if fixture not in fixtures
+    ]
+    if missing_argue_fixtures:
+        raise SystemExit(f"control manifest missing ARGUE fixtures: {missing_argue_fixtures}")
 
     cross = require(core / "docs" / "21-cross-repo-development.md", "control cross-repo development doc")
     dist = require(core / "docs" / "11-distribution-and-plugin.md", "control distribution/plugin doc")

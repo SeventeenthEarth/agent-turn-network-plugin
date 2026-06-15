@@ -44,6 +44,16 @@ from .surface_rendering import render_surface_projection
 
 ClientFactory = Callable[[], DaemonClient]
 TOOLSET: Final = "kkachi_agent_network"
+ARGUE_SPEECH_PASSTHROUGH_FIELDS: Final[frozenset[str]] = frozenset(
+    {
+        "claims",
+        "stance_links",
+        "contribution_type",
+        "new_axis_reason",
+        "evidence",
+        "responds_to_event_id",
+    }
+)
 
 
 class ToolRegistrationContext(Protocol):
@@ -327,20 +337,31 @@ def handle_selected_participant_response(
             selected_member=selected_member,
             participant_response=participant_response,
         )
+        participant_evidence = _participant_response_evidence(
+            participant_response=participant_response,
+            speaker_selected_event_id=cast(str, selected_context["event_id"]),
+            speaker_selected_cursor=cast(str, selected_context["cursor"]),
+        )
+        speech_payload: JsonObject = {
+            "speech": _required_string(
+                participant_response.get("message"), label="participant_response.message"
+            ),
+            "turn": selected_context["turn"],
+        }
+        participant_argue_fields = _selected_participant_argue_fields(participant_response)
+        if participant_argue_fields:
+            speech_payload.update(participant_argue_fields)
+            if "evidence" in participant_argue_fields:
+                speech_payload["plugin_evidence"] = participant_evidence
+            else:
+                speech_payload["evidence"] = participant_evidence
+        else:
+            speech_payload["evidence"] = participant_evidence
+
         speak_payload: JsonObject = {
             "actor": selected_member,
             "command_id": command_id,
-            "payload": {
-                "speech": _required_string(
-                    participant_response.get("message"), label="participant_response.message"
-                ),
-                "turn": selected_context["turn"],
-                "evidence": _participant_response_evidence(
-                    participant_response=participant_response,
-                    speaker_selected_event_id=cast(str, selected_context["event_id"]),
-                    speaker_selected_cursor=cast(str, selected_context["cursor"]),
-                ),
-            },
+            "payload": speech_payload,
         }
         _validate_council_payload(schemas.COUNCIL_SPEAK_COMMAND, speak_payload)
         speak_payload = {**speak_payload, "session_id": session_id}
@@ -609,7 +630,122 @@ def _validate_council_payload(command: str, payload: Mapping[str, object]) -> No
         _require_payload_string(payload, "event_id")
         return
     _require_payload_string(payload, "actor")
-    _require_payload_object(payload, "payload")
+    command_payload = _require_payload_object(payload, "payload")
+    if command == schemas.COUNCIL_SPEAK_COMMAND:
+        _validate_argue_speech_payload(command_payload, label="payload")
+    elif command == schemas.COUNCIL_HAND_RAISE_COMMAND:
+        _validate_argue_hand_raise_payload(command_payload, label="payload")
+
+
+def _selected_participant_argue_fields(participant_response: Mapping[str, object]) -> JsonObject:
+    fields: dict[str, object] = {}
+    non_evidence_argue_present = any(
+        key in participant_response for key in ARGUE_SPEECH_PASSTHROUGH_FIELDS if key != "evidence"
+    )
+    for key in ARGUE_SPEECH_PASSTHROUGH_FIELDS:
+        if key not in participant_response:
+            continue
+        if (
+            key == "evidence"
+            and not non_evidence_argue_present
+            and not isinstance(participant_response[key], list)
+        ):
+            continue
+        fields[key] = participant_response[key]
+    if not fields:
+        return {}
+    try:
+        validated = require_json_object(fields, label="participant_response ARGUE fields")
+    except ProtocolValidationError as exc:
+        raise ValueError(str(exc)) from exc
+    _validate_argue_speech_payload(validated, label="participant_response")
+    return validated
+
+
+def _validate_argue_speech_payload(payload: Mapping[str, object], *, label: str) -> None:
+    has_argue_fields = any(
+        key in payload for key in ARGUE_SPEECH_PASSTHROUGH_FIELDS if key != "evidence"
+    )
+    if "claims" in payload:
+        _validate_argue_claims(payload["claims"], label=f"{label}.claims")
+    if "stance_links" in payload:
+        _validate_argue_stance_links(payload["stance_links"], label=f"{label}.stance_links")
+    if "contribution_type" in payload:
+        contribution_type = _required_string(
+            payload["contribution_type"], label=f"{label}.contribution_type"
+        )
+        if contribution_type not in schemas.ARGUE_CONTRIBUTION_TYPES:
+            raise ValueError(f"{label}.contribution_type must be an ARGUE contribution type")
+        if contribution_type == "new_axis":
+            _required_string(payload.get("new_axis_reason"), label=f"{label}.new_axis_reason")
+        if contribution_type == "synthesize":
+            stance_links = payload.get("stance_links")
+            if not isinstance(stance_links, list) or len(stance_links) < 2:
+                raise ValueError(
+                    f"{label}.stance_links must include at least two links for synthesize"
+                )
+    if "new_axis_reason" in payload and payload["new_axis_reason"] is not None:
+        _required_string(payload["new_axis_reason"], label=f"{label}.new_axis_reason")
+    if "evidence" in payload and (has_argue_fields or isinstance(payload["evidence"], list)):
+        _required_json_array(payload["evidence"], label=f"{label}.evidence")
+    if "responds_to_event_id" in payload:
+        # Compatibility display hint only. It is validated as a string but never
+        # used to infer, rewrite, or override stance_links.
+        _required_string(payload["responds_to_event_id"], label=f"{label}.responds_to_event_id")
+
+
+def _validate_argue_hand_raise_payload(payload: Mapping[str, object], *, label: str) -> None:
+    if "target_links" in payload:
+        _validate_argue_stance_links(payload["target_links"], label=f"{label}.target_links")
+    if "target_event_ids" in payload:
+        _validate_string_array(payload["target_event_ids"], label=f"{label}.target_event_ids")
+    if "target_claim_ids" in payload:
+        _validate_string_array(payload["target_claim_ids"], label=f"{label}.target_claim_ids")
+
+
+def _validate_argue_claims(value: object, *, label: str) -> None:
+    claims = _required_json_array(value, label=label)
+    claim_ids: set[str] = set()
+    for index, item in enumerate(claims):
+        claim_label = f"{label}[{index}]"
+        if not isinstance(item, Mapping):
+            raise ValueError(f"{claim_label} must be a JSON object")
+        claim = _required_json_object(item, label=claim_label)
+        claim_id = _required_string(claim.get("claim_id"), label=f"{claim_label}.claim_id")
+        if claim_id in claim_ids:
+            raise ValueError(f"{label} claim_id entries must be unique within a speech")
+        claim_ids.add(claim_id)
+        _required_string(claim.get("summary"), label=f"{claim_label}.summary")
+        kind = claim.get("kind")
+        if kind is not None:
+            kind_value = _required_string(kind, label=f"{claim_label}.kind")
+            if kind_value not in schemas.ARGUE_CLAIM_KINDS:
+                raise ValueError(f"{claim_label}.kind must be an ARGUE claim kind")
+
+
+def _validate_argue_stance_links(value: object, *, label: str) -> None:
+    links = _required_json_array(value, label=label)
+    for index, item in enumerate(links):
+        link_label = f"{label}[{index}]"
+        if not isinstance(item, Mapping):
+            raise ValueError(f"{link_label} must be a JSON object")
+        link = _required_json_object(item, label=link_label)
+        _required_string(link.get("target_event_id"), label=f"{link_label}.target_event_id")
+        target_claim_id = link.get("target_claim_id")
+        if target_claim_id is not None:
+            _required_string(target_claim_id, label=f"{link_label}.target_claim_id")
+        stance = _required_string(link.get("stance"), label=f"{link_label}.stance")
+        if stance not in schemas.ARGUE_STANCES:
+            raise ValueError(f"{link_label}.stance must be an ARGUE stance")
+        rationale = link.get("rationale")
+        if rationale is not None:
+            _required_string(rationale, label=f"{link_label}.rationale")
+
+
+def _validate_string_array(value: object, *, label: str) -> None:
+    items = _required_json_array(value, label=label)
+    for index, item in enumerate(items):
+        _required_string(item, label=f"{label}[{index}]")
 
 
 def _validate_delivery_evidence_payload(command: str, payload: Mapping[str, object]) -> None:

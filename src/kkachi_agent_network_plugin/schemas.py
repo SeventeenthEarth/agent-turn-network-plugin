@@ -48,6 +48,92 @@ COUNCIL_COMMANDS: Final[tuple[str, ...]] = (
     "council.unresolved",
 )
 COUNCIL_SPEAK_COMMAND: Final = "council.speak"
+COUNCIL_HAND_RAISE_COMMAND: Final = "council.hand_raise"
+ARGUE_CLAIM_KINDS: Final[tuple[str, ...]] = (
+    "observation",
+    "requirement",
+    "risk",
+    "decision_frame",
+    "evidence",
+    "open_question",
+    "proposal",
+)
+ARGUE_STANCES: Final[tuple[str, ...]] = (
+    "support",
+    "challenge",
+    "refine",
+    "extend",
+    "synthesize",
+    "question",
+    "risk_addition",
+    "decision_frame",
+)
+ARGUE_CONTRIBUTION_TYPES: Final[tuple[str, ...]] = (*ARGUE_STANCES, "new_axis")
+ARGUE_CLAIM_SCHEMA: Final[dict[str, object]] = {
+    "type": "object",
+    "properties": {
+        "claim_id": {"type": "string", "minLength": 1},
+        "summary": {"type": "string", "minLength": 1},
+        "kind": {"type": "string", "enum": list(ARGUE_CLAIM_KINDS)},
+    },
+    "required": ["claim_id", "summary"],
+    "additionalProperties": True,
+}
+ARGUE_STANCE_LINK_SCHEMA: Final[dict[str, object]] = {
+    "type": "object",
+    "properties": {
+        "target_event_id": {"type": "string", "minLength": 1},
+        "target_claim_id": {"type": "string", "minLength": 1},
+        "stance": {"type": "string", "enum": list(ARGUE_STANCES)},
+        "rationale": {"type": "string", "minLength": 1},
+    },
+    "required": ["target_event_id", "stance"],
+    "additionalProperties": True,
+}
+ARGUE_SPEECH_PAYLOAD_PROPERTIES: Final[dict[str, object]] = {
+    "claims": {
+        "type": "array",
+        "items": ARGUE_CLAIM_SCHEMA,
+        "description": "ARGUE claims preserved verbatim for daemon validation.",
+    },
+    "stance_links": {
+        "type": "array",
+        "items": ARGUE_STANCE_LINK_SCHEMA,
+        "description": "ARGUE relation links; relation authority over legacy display hints.",
+    },
+    "contribution_type": {
+        "type": "string",
+        "enum": list(ARGUE_CONTRIBUTION_TYPES),
+    },
+    "new_axis_reason": {"type": ["string", "null"], "minLength": 1},
+    "evidence": {
+        "type": "array",
+        "items": {"type": "object"},
+        "description": "ARGUE evidence array preserved for daemon/control semantics.",
+    },
+    "responds_to_event_id": {
+        "type": "string",
+        "minLength": 1,
+        "description": "Legacy display hint only; never overrides stance_links.",
+    },
+}
+ARGUE_HAND_RAISE_TARGET_LINK_PROPERTIES: Final[dict[str, object]] = {
+    "target_links": {
+        "type": "array",
+        "items": ARGUE_STANCE_LINK_SCHEMA,
+        "description": "Preferred ARGUE hand-raise targets preserved verbatim.",
+    },
+    "target_event_ids": {
+        "type": "array",
+        "items": {"type": "string", "minLength": 1},
+        "description": "Legacy display hints only; not an ARGUE validation authority.",
+    },
+    "target_claim_ids": {
+        "type": "array",
+        "items": {"type": "string", "minLength": 1},
+        "description": "Legacy display hints only; not an ARGUE validation authority.",
+    },
+}
 DELIVERY_EVIDENCE_COMMANDS: Final[tuple[str, ...]] = (
     "delegate.escalation_delivered",
     "delegate.escalation_delivery_failed",
@@ -337,9 +423,24 @@ KAN_COUNCIL_COMMAND: Final[dict[str, object]] = {
             "payload": {
                 "type": "object",
                 "description": (
-                    "Opaque daemon-owned command params. payload.command_id is required; "
-                    "command-specific fields are validated before transport."
+                    "Daemon-owned command params. payload.command_id is required; "
+                    "command-specific fields are validated before transport. "
+                    "For council.speak and council.hand_raise, ARGUE fields are "
+                    "preserved without inferring state from legacy pointers."
                 ),
+                "properties": {
+                    "command_id": {"type": "string", "minLength": 1},
+                    "actor": {"type": "string", "minLength": 1},
+                    "payload": {
+                        "type": "object",
+                        "properties": {
+                            **ARGUE_SPEECH_PAYLOAD_PROPERTIES,
+                            **ARGUE_HAND_RAISE_TARGET_LINK_PROPERTIES,
+                        },
+                        "additionalProperties": True,
+                    },
+                },
+                "additionalProperties": True,
             },
         },
         "required": ["command", "session_id", "request_id", "idempotency_key", "payload"],
@@ -464,6 +565,7 @@ KAN_SELECTED_PARTICIPANT_RESPONSE: Final[dict[str, object]] = {
                     "member": {"type": "string", "minLength": 1},
                     "message": {"type": "string", "minLength": 1},
                     "role_substitution": {"type": "boolean", "const": False},
+                    **ARGUE_SPEECH_PAYLOAD_PROPERTIES,
                     "runner": {
                         "type": "object",
                         "properties": {
@@ -671,7 +773,15 @@ def tool_names() -> tuple[str, ...]:
 
 
 __all__ = [
+    "ARGUE_CLAIM_KINDS",
+    "ARGUE_CLAIM_SCHEMA",
+    "ARGUE_CONTRIBUTION_TYPES",
+    "ARGUE_HAND_RAISE_TARGET_LINK_PROPERTIES",
+    "ARGUE_SPEECH_PAYLOAD_PROPERTIES",
+    "ARGUE_STANCES",
+    "ARGUE_STANCE_LINK_SCHEMA",
     "COUNCIL_COMMANDS",
+    "COUNCIL_HAND_RAISE_COMMAND",
     "COUNCIL_SPEAK_COMMAND",
     "DELIVERY_EVIDENCE_COMMANDS",
     "DELEGATE_ACTION_COMMANDS",

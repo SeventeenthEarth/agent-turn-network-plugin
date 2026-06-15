@@ -40,6 +40,30 @@ DELIVERY_CASES = (
         "fixtures/command/delegate-escalation-delivery-failed-response.json",
     ),
 )
+ARGUE_COMMAND_CASES = (
+    (
+        "council.speak",
+        "fixtures/command/council-speak-argument-graph-request.json",
+    ),
+    (
+        "council.hand_raise",
+        "fixtures/command/council-hand-raise-argument-graph-request.json",
+    ),
+)
+ARGUE_REQUIRED_FIXTURES = (
+    "fixtures/event/argument-graph-opening-new-axis-council.json",
+    "fixtures/event/argument-graph-support-prior-council.json",
+    "fixtures/event/argument-graph-multi-link-council.json",
+    "fixtures/event/argument-graph-synthesize-council.json",
+    "fixtures/event/argument-graph-dual-field-speech-council.json",
+    "fixtures/event/argument-graph-legacy-only-speech-council.json",
+    "fixtures/event/argument-graph-hand-raise-target-links-council.json",
+    "fixtures/error/argument-graph-invalid-stance.json",
+    "fixtures/error/argument-graph-new-axis-missing-reason.json",
+    "fixtures/error/argument-graph-synthesize-single-target.json",
+    "fixtures/error/argument-graph-quality-required-missing-claims.json",
+    "fixtures/error/argument-graph-quality-required-orphan-speech.json",
+)
 
 
 def _load_fixture(relative_path: str) -> JsonObject:
@@ -155,6 +179,13 @@ def test_cndis_manifest_exposes_required_feature_groups() -> None:
     assert "council.lifecycle" in feature_groups
 
 
+def test_argue_control_fixture_dependency_is_present_in_manifest() -> None:
+    manifest_paths = _manifest_fixture_paths()
+
+    for fixture_path in ARGUE_REQUIRED_FIXTURES:
+        assert fixture_path in manifest_paths
+
+
 @pytest.mark.parametrize(("command", "request_path", "response_path"), COUNCIL_CASES)
 def test_council_conformance_fixtures_probe_then_submit_exact_fake_envelopes(
     command: str,
@@ -198,6 +229,52 @@ def test_council_conformance_fixtures_probe_then_submit_exact_fake_envelopes(
     assert (
         payload["session_id"] == _mapping(request_fixture["params"], label="params")["session_id"]
     )
+
+
+@pytest.mark.parametrize(("command", "request_path"), ARGUE_COMMAND_CASES)
+def test_argue_command_fixtures_probe_then_preserve_exact_payloads(
+    command: str,
+    request_path: str,
+) -> None:
+    manifest_paths = _manifest_fixture_paths()
+    assert request_path in manifest_paths
+    request_fixture = _load_fixture(request_path)
+    assert request_fixture["command"] == command
+    transport = StaticDaemonTransport(
+        {
+            OP_VERSION_READ: _version_response(),
+            OP_COMMAND_SUBMIT: _plugin_success_response(
+                request_fixture,
+                {
+                    "request_id": request_fixture["request_id"],
+                    "result": {
+                        "event_id": "evt-argue-static",
+                        "session_id": _mapping(request_fixture["params"], label="params")[
+                            "session_id"
+                        ],
+                    },
+                },
+            ),
+        }
+    )
+
+    result = _decode(
+        handle_council_command(
+            _tool_args(request_fixture), client_factory=_client_factory_for(transport)
+        )
+    )
+
+    assert result["ok"] is True
+    assert result["live_readiness"] is False
+    assert [operation for operation, _body in transport.requests] == [
+        OP_VERSION_READ,
+        OP_COMMAND_SUBMIT,
+    ]
+    body = transport.requests[1][1]
+    assert body is not None
+    assert body["command"] == command
+    payload = _mapping(body["payload"], label="body.payload")
+    assert payload["payload"] == _mapping(request_fixture["params"], label="params")["payload"]
 
 
 @pytest.mark.parametrize(("command", "request_path", "response_path"), DELIVERY_CASES)

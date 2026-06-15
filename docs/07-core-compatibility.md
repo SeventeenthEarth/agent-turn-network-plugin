@@ -13,7 +13,7 @@ The control-side SOT is `../../kkachi-agent-network-control/docs/21-cross-repo-d
 | Control repo | `../../kkachi-agent-network-control` |
 | Protocol version | `kan-protocol-v1alpha0` |
 | Fixture manifest | `../../kkachi-agent-network-control/testdata/conformance/manifest.json` |
-| Stability | draft, docs/scaffold/client-foundation plus fake/injected HPLUG-2 read-only status/diagnostics/stream-tail tools, DELRV command tools, CNDIS council/delivery-evidence tools, HPLUG-3 unsupported slash-command documentation, SKILL-2 compatibility matrix, and local isolated plugin-load smoke |
+| Stability | draft, docs/scaffold/client-foundation plus fake/injected HPLUG-2 read-only status/diagnostics/stream-tail tools, DELRV command tools, CNDIS council/delivery-evidence tools, ARGUE static argument-graph schema/tool contract coverage, HPLUG-3 unsupported slash-command documentation, SKILL-2 compatibility matrix, and local isolated plugin-load smoke |
 | Plugin behavior on mismatch | fail closed; no live fallback; affected tool returns `ok:false` |
 
 ## Compatibility checks
@@ -27,6 +27,7 @@ The plugin must check:
 - stream frame schema supported;
 - structured error schema supported;
 - `delivery_evidence` and `council.lifecycle` feature groups supported before CNDIS command submits are marked compatible;
+- `control/ARGUE-002` static argument-graph command, event, and error fixtures exist before ARGUE schema/tool contract coverage is marked compatible;
 - delivery evidence command path supported before Discord helper posts are marked complete.
 
 ## Parallel development modes
@@ -78,6 +79,7 @@ tests, and `make check-plugin-load-smoke` local isolated plugin-load smoke gate.
 | Stream features | Control feature group `stream_frame` gates retained stream reads | `kan_stream_tail` supported only with positive injected `version.read` compatibility | `tests/unit/test_stream_frame_parsing.py`, `tests/integration/test_fake_daemon_stream_diagnostics.py` | Missing `stream_frame`, malformed frames, live sockets, SSE, WebSocket, CLI, or daemon discovery fail closed / remain unsupported. |
 | Delegation/review fixtures | Control DELEG fixtures cover implemented `delegate.*` commands | `kan_delegate_new` and `kan_delegate_action` expose the closed implemented command set | `tests/integration/test_deleg_002_conformance.py`, `tests/unit/test_tool_handlers.py` | `delegate.request`, top-level `review`, generated IDs, plugin-owned dedupe, and live daemon fallback are unsupported. |
 | Council lifecycle | Control `council.lifecycle` feature and COUNC fixtures exist | `kan_council_command` supports exact implemented `council.*` lifecycle commands through injected clients | `tests/integration/test_cndis_conformance.py`, `tests/unit/test_tool_handlers.py` | Missing feature probe or unsupported command returns `ok:false`; plugin owns no council state. |
+| Council argument graph static contract | Control `ARGUE-002` static fixtures exist for argument-graph speech, hand-raise target links, legacy dual-field preservation, and invalid ARGUE examples | `kan_council_command` and explicit selected-response ARGUE pass-through preserve and locally validate deterministic `claims[]`, `stance_links[]`, `contribution_type`, `new_axis_reason`, `evidence[]`, and `hand_raise.target_links[]` shapes before transport where safe | `tests/unit/test_argue_tool_contract.py`, `tests/unit/test_selected_participant_response.py`, `tests/integration/test_cndis_conformance.py`, `make check-core-contract` | This is static/fake/injected contract coverage only; runtime validation/scoring, participant response generation, visible relation rendering, live Discord, daemon discovery, profile/gateway/auth/token/provider mutation, KAB readiness, and live pilot readiness remain unsupported. |
 | Delivery evidence | Control `delivery_evidence` feature and command path exist | `kan_delivery_evidence` supports exact delivery-evidence commands through injected clients | `tests/integration/test_cndis_conformance.py`, `tests/unit/test_tool_handlers.py` | Discord IDs are evidence pointers only; plugin owns no delivery transitions and does not default-send Discord messages. |
 | `transcript.render` | Control-supported capability | Not exposed as a plugin tool in SKILL-2 | Control `TRANS-001` completion is recorded as unblock evidence only | No `kan_transcript_render` tool, command, hook, or live fallback is added. |
 | `export.bundle` | Control-supported capability | Not exposed as a plugin tool in SKILL-2 | Control `TRANS-001`/`RELIA-001` completion is recorded as unblock evidence only | No `kan_export_bundle` tool, command, hook, or live fallback is added. |
@@ -139,6 +141,27 @@ Before submit, `kan_council_command` requires injected `version.read` to report 
 The plugin requires caller-supplied non-empty `request_id` and `idempotency_key`, does not generate hidden identifiers, does not cache/dedupe locally, and owns no logs, locks, cursors, council lifecycle/consensus state, or delivery-evidence transitions. The daemon remains authoritative for domain validation, idempotency semantics, duplicate handling, state transitions, and structured errors.
 
 CNDIS conformance coverage consumes the sibling control repo's COUNC-001 council fixtures and delivery-evidence fixtures read-only from `testdata/conformance`; it asserts the exact `version.read` then `command.submit` operation sequence through `StaticDaemonTransport`. This is fake/injected compatibility only and does not change live readiness, installed plugin-load readiness, slash-command readiness, Discord helper/gateway readiness, KAB readiness, or auth/token boundaries.
+
+## ARGUE-001 argument-graph static contract guard
+
+ARGUE-001 consumes the sibling control repo's `control/ARGUE-002` static fixtures
+read-only from `testdata/conformance`. The plugin accepts and preserves
+ARGUE-capable `council.speak` and `council.hand_raise` payload fields:
+`claims[]`, `stance_links[]`, `contribution_type`, `new_axis_reason`,
+`evidence[]`, and `hand_raise.payload.target_links[]`.
+
+Local validation is intentionally deterministic and shape-only: claim ids and
+summaries must be non-empty, claim ids must be unique within a speech, claim
+kind / stance / contribution enums must match the SOT, `new_axis` requires
+`new_axis_reason`, and `synthesize` requires at least two `stance_links` before
+transport. Legacy `responds_to_event_id` is accepted only as a display hint; it
+does not rewrite, infer, or override `stance_links[]`.
+
+This guard does not implement `control/ARGUE-003` runtime validation/scoring,
+`plugin/ARGUE-002` participant response generation or runtime-noise handling,
+`plugin/ARGUE-003` visible relation rendering, live daemon discovery, hidden CLI
+fallback, Hermes/Discord state inference, profile/gateway/auth/token/provider
+mutation, KAB readiness, production activation, or live pilot readiness.
 
 ## DELRV-2 DELEG-002 conformance guard
 

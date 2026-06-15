@@ -60,6 +60,12 @@ Default work must stay local and fake/injected only:
    over explicit daemon/control event JSON, never as lifecycle authority. Use
    `visible_transcript` for operator-facing discussion text and keep raw
    cursor/event details in `audit_log`/`rows` evidence.
+6. Treat ARGUE argument-graph support as static/fake/injected schema and tool
+   contract coverage only. The plugin preserves explicit `claims[]`,
+   `stance_links[]`, `contribution_type`, `new_axis_reason`, `evidence[]`, and
+   `hand_raise.target_links[]` fields for daemon/control validation.
+   `responds_to_event_id` remains a legacy display hint and never overrides
+   `stance_links[]`.
 
 ## Operator workflow
 
@@ -91,6 +97,9 @@ Default work must stay local and fake/injected only:
   Tests must not fall back to the current Hermes/Discord/daemon environment.
 - Session status requests: keep `kan_session_status` deferred until the control
   contract publishes `session.status.read` fixture/protocol authority.
+- ARGUE overclaims: do not describe static argument-graph schema/tool coverage as
+  runtime scoring, visible relation rendering, live Discord, production
+  activation, or live pilot readiness.
 - Plugin-load smoke requests: run `make check-plugin-load-smoke` and describe
   the result only as local isolated plugin-load smoke.
 

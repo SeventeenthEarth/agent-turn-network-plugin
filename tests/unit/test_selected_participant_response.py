@@ -190,6 +190,106 @@ def test_selected_participant_response_submits_speak_then_acks_selected_cursor()
     )
 
 
+def test_selected_participant_response_passes_explicit_argue_fields_only_when_supplied() -> None:
+    transport = StaticDaemonTransport(
+        {
+            OP_VERSION_READ: BASE_VERSION_WITH_PARTC,
+            OP_COMMAND_SUBMIT: BASE_COMMAND_SUCCESS,
+            OP_STREAM_ACK: BASE_ACK_SUCCESS,
+        }
+    )
+    args = _args()
+    response = cast(JsonObject, args["participant_response"])
+    response.update(
+        {
+            "claims": [
+                {
+                    "claim_id": "T03.C1",
+                    "summary": "Fixture publication is not runtime validation evidence.",
+                    "kind": "risk",
+                }
+            ],
+            "stance_links": [
+                {
+                    "target_event_id": "evt_argument_graph_support_prior_council",
+                    "target_claim_id": "T02.C1",
+                    "stance": "support",
+                    "rationale": (
+                        "Static fixtures are the right handoff before runtime enforcement."
+                    ),
+                }
+            ],
+            "contribution_type": "support",
+            "new_axis_reason": None,
+            "evidence": [],
+            "responds_to_event_id": "evt_legacy_hint",
+        }
+    )
+
+    result = decode(
+        handle_selected_participant_response(args, client_factory=factory_for_transport(transport))
+    )
+
+    assert result["ok"] is True
+    submitted = transport.requests[1][1]
+    assert submitted is not None
+    submitted_payload = cast(JsonObject, cast(JsonObject, submitted["payload"])["payload"])
+    assert submitted_payload["claims"] == response["claims"]
+    assert submitted_payload["stance_links"] == response["stance_links"]
+    assert submitted_payload["contribution_type"] == "support"
+    assert submitted_payload["new_axis_reason"] is None
+    assert submitted_payload["evidence"] == []
+    assert submitted_payload["responds_to_event_id"] == "evt_legacy_hint"
+    assert "plugin_evidence" in submitted_payload
+    assert (
+        cast(JsonObject, submitted_payload["plugin_evidence"])["source"] == "control_membr_evidence"
+    )
+
+
+def test_selected_participant_response_rejects_invalid_argue_fields_before_transport() -> None:
+    client_factory_called = False
+
+    def client_factory() -> DaemonClient:
+        nonlocal client_factory_called
+        client_factory_called = True
+        raise AssertionError("client factory must not be called")
+
+    args = _args()
+    response = cast(JsonObject, args["participant_response"])
+    response.update(
+        {
+            "claims": [
+                {
+                    "claim_id": "T04.C1",
+                    "summary": "Synthesis needs more than one relation target.",
+                    "kind": "decision_frame",
+                }
+            ],
+            "stance_links": [
+                {
+                    "target_event_id": "evt_argument_graph_support_prior_council",
+                    "target_claim_id": "T02.C1",
+                    "stance": "synthesize",
+                }
+            ],
+            "contribution_type": "synthesize",
+        }
+    )
+
+    result = decode(handle_selected_participant_response(args, client_factory=client_factory))
+
+    assert result["ok"] is False
+    assert result["tool"] == "kan_selected_participant_response"
+    assert result["error"] == {
+        "category": "validation",
+        "message": (
+            "participant_response.stance_links must include at least two links for synthesize"
+        ),
+        "retryable": False,
+    }
+    assert client_factory_called is False
+
+
 def test_selected_participant_response_rejects_role_substitution_before_transport() -> None:
     client_factory_called = False
 

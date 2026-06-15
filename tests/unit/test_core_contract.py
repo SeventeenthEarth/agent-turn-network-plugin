@@ -30,11 +30,13 @@ def write_contract_fixture(
     (core / "docs").mkdir(parents=True)
     (core / "testdata" / "conformance").mkdir(parents=True)
 
+    check_core_contract = load_check_core_contract()
     (core / "testdata" / "conformance" / "manifest.json").write_text(
         json.dumps(
             {
                 "protocol_version": protocol,
                 "required_feature_groups": ["delivery_evidence", "council.lifecycle"],
+                "fixtures": list(check_core_contract.REQUIRED_ARGUE_FIXTURES),
             }
         ),
         encoding="utf-8",
@@ -104,10 +106,32 @@ def test_core_contract_rejects_missing_cndis_feature_groups(tmp_path: Path) -> N
     plugin, core = write_contract_fixture(tmp_path)
     (core / "testdata" / "conformance" / "manifest.json").write_text(
         json.dumps(
-            {"protocol_version": PROTOCOL, "required_feature_groups": ["delivery_evidence"]}
+            {
+                "protocol_version": PROTOCOL,
+                "required_feature_groups": ["delivery_evidence"],
+                "fixtures": list(check_core_contract.REQUIRED_ARGUE_FIXTURES),
+            }
         ),
         encoding="utf-8",
     )
 
     with pytest.raises(SystemExit, match="missing required CNDIS feature groups"):
+        check_core_contract.main(plugin=plugin, core=core)
+
+
+def test_core_contract_rejects_missing_argue_fixtures(tmp_path: Path) -> None:
+    check_core_contract = load_check_core_contract()
+    plugin, core = write_contract_fixture(tmp_path)
+    (core / "testdata" / "conformance" / "manifest.json").write_text(
+        json.dumps(
+            {
+                "protocol_version": PROTOCOL,
+                "required_feature_groups": ["delivery_evidence", "council.lifecycle"],
+                "fixtures": ["fixtures/command/council-speak-request.json"],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(SystemExit, match="control manifest missing ARGUE fixtures"):
         check_core_contract.main(plugin=plugin, core=core)

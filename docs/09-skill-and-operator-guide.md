@@ -67,6 +67,11 @@ Default verification and operator rehearsal are local only:
    explicit daemon/control event JSON, not lifecycle authority. Use
    `visible_transcript` for operator-facing discussion text and keep raw
    cursor/event details in `audit_log`/`rows` evidence.
+6. Treat ARGUE argument-graph support as static/fake/injected schema and tool
+   contract coverage only. `claims[]`, `stance_links[]`, `contribution_type`,
+   `new_axis_reason`, `evidence[]`, and `hand_raise.target_links[]` are
+   preserved for daemon/control validation, while `responds_to_event_id` remains
+   a legacy display hint that never overrides `stance_links[]`.
 
 ## Install guidance
 
@@ -132,6 +137,8 @@ gateway config, sockets, or localhost services as part of SKILL-2 rollback.
 | Skill claims live readiness | Overclaiming docs or stale copied skill | Replace with the bundled skill text; SKILL-2 is fake/injected plus local isolated plugin-load smoke only. |
 | Slash commands appear | Manifest or entrypoint drift | Restore `provides_commands: []` and verify the root entrypoint registers no commands. |
 | `kan_session_status` appears | Unsupported session-status drift | Remove the surface until `session.status.read` fixture/protocol authority exists. |
+| ARGUE fields are dropped or inferred from legacy pointers | Contract drift or hidden state inference | Preserve explicit argument-graph fields verbatim and treat `responds_to_event_id` as display-only; do not infer state from Discord/Hermes order. |
+| ARGUE support is described as runtime scoring or live pilot readiness | Scope overclaim | Keep the claim to static/fake/injected schema and tool contract coverage; runtime validation/scoring, visible relation rendering, and live pilot work remain later tasks. |
 | A handler tries localhost, a socket, CLI, gateway, auth, token, Discord, or KAB | No-live boundary violation | Fail closed and remove the fallback; default checks must use explicit fake/injected dependencies only. |
 | Root plugin load fails with `No module named 'kkachi_agent_network_plugin'` | The directory entrypoint is not bootstrapping its bundled `src/` package path | Restore the root entrypoint path bootstrap and rerun `make check-plugin-load-smoke`; do not require operators to supply external `PYTHONPATH`. |
 | Hermes Python 3.11 reports `invalid syntax` in package modules | Python 3.12-only syntax drift | Keep package/tooling metadata at Python `>=3.11`, avoid PEP 695 `type` aliases, and rerun the Python 3.11 syntax compatibility unit test. |

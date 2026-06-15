@@ -27,6 +27,7 @@ def test_bundled_kan_skill_resource_is_import_safe_and_readable() -> None:
     assert "does not install itself into a Hermes profile" in text
     assert "provides_commands: []" in text
     assert "kan_session_status" in text
+    assert "ARGUE argument-graph support as static/fake/injected" in text
     assert "SKILL-2" in text
 
 

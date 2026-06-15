@@ -64,7 +64,9 @@ Default verification and operator rehearsal are local only:
 4. Treat Discord IDs as evidence pointers only. Daemon-owned delivery evidence
    still goes through `kan_delivery_evidence`.
 5. Treat `kan_surface_render_projection` output as a local projection over
-   explicit daemon/control event JSON, not lifecycle authority.
+   explicit daemon/control event JSON, not lifecycle authority. Use
+   `visible_transcript` for operator-facing discussion text and keep raw
+   cursor/event details in `audit_log`/`rows` evidence.
 
 ## Install guidance
 

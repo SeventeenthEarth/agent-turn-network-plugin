@@ -2,7 +2,7 @@
 
 This directory is the source of truth for the **Python Hermes plugin adapter** for KAN.
 
-Control daemon/CLI authority lives in `../../kkachi-agent-network-control/docs/`. The plugin is not the source of truth. Its current surface is fake/injected Hermes tools over the daemon protocol contract, including CNDIS council and delivery-evidence command submission plus an injected-only Discord helper. SKILL-2 adds a packaged operator skill guide, compatibility matrix, and local isolated plugin-load smoke gate. `plugin/LTRAN-002` adds an explicit `live_transport.unix_socket_path` Unix-socket transport for `status.read` and `version.read` smoke only, but slash commands, live daemon discovery, stream/write equivalence, dedupe proof, production activation, KAB bridge behavior, and live/default Discord visible-surface wiring remain unsupported.
+Control daemon/CLI authority lives in `../../kkachi-agent-network-control/docs/`. The plugin is not the source of truth. Its current surface is fake/injected Hermes tools over the daemon protocol contract, including CNDIS council and delivery-evidence command submission plus an injected-only Discord helper. SKILL-2 adds a packaged operator skill guide, compatibility matrix, and local isolated plugin-load smoke gate. `plugin/LTRAN-002` adds an explicit `live_transport.unix_socket_path` Unix-socket transport for `status.read` and `version.read` smoke only. `plugin/LTRAN-003` adds bounded explicit Unix-socket `stream.tail`/`command.submit` equivalence and dedupe proof, with evidence at `docs/evidence/ltran-003-plugin-equivalence-evidence.json`. `docs/11-council-argument-graph-sot.md` is the plugin-side `ARGUE` SOT for relation-aware participant response, schema, handler, rendering, and packaged guidance work; its control companion is `../../kkachi-agent-network-control/docs/25-council-argument-graph-sot.md`. Slash commands, live daemon discovery, production activation, KAB bridge behavior, long-lived member runtime readiness, broad command coverage, and live/default Discord visible-surface wiring remain unsupported.
 
 ## Documents
 
@@ -17,6 +17,7 @@ Control daemon/CLI authority lives in `../../kkachi-agent-network-control/docs/`
 9. `08-unsupported-surfaces.md` — unsupported Hermes/plugin surfaces and future binding requirements
 10. `09-skill-and-operator-guide.md` — bundled KAN skill install, enable, rollback, troubleshooting, and local isolated plugin-load smoke boundary
 11. `10-live-transport-sot.md` — plugin-side live transport SOT for `LTRAN` / `PARTC` / `SURFD`: main-agent CLI control, participant-agent plugin transport, member runtime response flow, daemon authority boundaries, completed docs-only `plugin/LTRAN-001` mapping, and control companion SOT dependencies
+12. `11-council-argument-graph-sot.md` — plugin-side `ARGUE` SOT for council argument graph schemas, selected participant response, fail-closed handler behavior, visible relation rendering, packaged guidance, and sequential control/plugin implementation DAG
 
 ## Required Makefile targets
 

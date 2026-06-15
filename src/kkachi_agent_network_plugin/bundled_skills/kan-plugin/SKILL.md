@@ -57,7 +57,9 @@ Default work must stay local and fake/injected only:
 4. Treat Discord IDs as evidence pointers only; delivery evidence still belongs
    to daemon-owned command envelopes.
 5. Treat `kan_surface_render_projection` output as a local display projection
-   over explicit daemon/control event JSON, never as lifecycle authority.
+   over explicit daemon/control event JSON, never as lifecycle authority. Use
+   `visible_transcript` for operator-facing discussion text and keep raw
+   cursor/event details in `audit_log`/`rows` evidence.
 
 ## Operator workflow
 

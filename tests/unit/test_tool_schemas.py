@@ -148,6 +148,13 @@ def test_surface_render_projection_schema_is_pure_local_projection_tool() -> Non
                 "properties": {
                     "schema_version": {"type": "integer", "const": 1},
                     "session_id": {"type": "string", "minLength": 1},
+                    "require_terminal_closeout": {
+                        "type": "boolean",
+                        "description": (
+                            "When true, fail closed unless a terminal outcome has posted "
+                            "visible closeout evidence matching the terminal event."
+                        ),
+                    },
                     "events": {
                         "type": "array",
                         "items": {"type": "object"},
@@ -155,7 +162,8 @@ def test_surface_render_projection_schema_is_pure_local_projection_tool() -> Non
                             "Daemon/control events or stream frames. Each item must carry "
                             "a daemon cursor and either event.order or a parseable cur_000... "
                             "cursor; supported event types are session_created, "
-                            "speaker_selected, speech, council_finalized, "
+                            "speaker_selected, speech, draft_conclusion, "
+                            "consensus_vote_requested, consensus_vote, council_finalized, "
                             "council_unresolved, and session_cancelled."
                         ),
                     },

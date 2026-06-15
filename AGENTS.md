@@ -95,6 +95,7 @@ Use this order when claims conflict:
 1. 주군's current instruction.
 2. Team registry SOT: `/Users/draccoon/Workspace/Hermes/17thHermes/01_references/team/team-agent-registry.yaml`.
 3. KAN plugin SOT:
+   - `docs/11-council-argument-graph-sot.md`
    - `docs/10-live-transport-sot.md`
    - `docs/06-implementation-epics-tasks.md`
    - `docs/02-plugin-contract.md`
@@ -102,6 +103,7 @@ Use this order when claims conflict:
    - `docs/07-core-compatibility.md`
    - `docs/09-skill-and-operator-guide.md`
 4. KAN control dependency SOT:
+   - `../kkachi-agent-network-control/docs/25-council-argument-graph-sot.md`
    - `../kkachi-agent-network-control/docs/24-live-transport-control-sot.md`
    - `../kkachi-agent-network-control/docs/roadmap.md`
 5. Active KAH graph: `.kkachi-workflow.yaml`, validated with `kkachi-agent-helper graph validate --json`.

@@ -764,11 +764,14 @@ Boundaries:
 
 SURFD-001 candidate/local implementation proof is in place through
 `kan_surface_render_projection`. The tool renders explicit daemon/control
-projection event JSON into local visible-surface rows and evidence pointers
-without reading daemon state, reading or sending Discord messages, reading
-environment variables, starting or stopping daemons, shelling out to CLI
-fallbacks, mutating gateway/auth/token/provider/profile state, or claiming
-production/live readiness.
+projection event JSON into separated `visible_transcript` and `audit_log`/`rows`:
+operator-facing transcript entries include session header, compact floor grant,
+selected participant speech, draft closeout proposals, vote progress, and final
+moderator closeout, while raw cursors/event ids remain in audit rows and evidence
+artifacts. The tool does this without reading daemon state, reading or sending
+Discord messages, reading environment variables, starting or stopping daemons,
+shelling out to CLI fallbacks, mutating gateway/auth/token/provider/profile
+state, or claiming production/live readiness.
 
 Deliverables:
 
@@ -782,6 +785,13 @@ Local proof boundaries:
 - cursor/order authority stays with daemon/control projection input;
 - `speech` renders only after a prior matching `speaker_selected` floor grant
   for the same turn/member;
+- `draft_conclusion`, `consensus_vote_requested`, and `consensus_vote` render as
+  process/draft/vote transcript entries, not final closeout;
+- when `require_terminal_closeout: true`, the renderer fails closed unless a
+  terminal `council_finalized`, `council_unresolved`, or `session_cancelled`
+  event has posted visible evidence with an explicit reference back to that
+  terminal event; missing or mismatched terminal-event references are not
+  accepted as visible closeout proof;
 - terminal visible/linked-authority status preserves `posted`, `failed`,
   `pending_followup`, and `missing/unproven`;
 - unsupported event types, unsupported schema versions, duplicate cursor

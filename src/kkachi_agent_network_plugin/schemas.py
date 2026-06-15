@@ -401,10 +401,11 @@ KAN_DELIVERY_EVIDENCE: Final[dict[str, object]] = {
 KAN_SELECTED_PARTICIPANT_RESPONSE: Final[dict[str, object]] = {
     "name": "kan_selected_participant_response",
     "description": (
-        "Submit a no-live selected participant response as council.speak through an "
-        "explicit fake/injected daemon client, then acknowledge the selected stream "
-        "cursor. The plugin preserves all caller-supplied IDs and fails closed before "
-        "transport on role substitution or member mismatches."
+        "Submit a selected participant response as canonical council.speak through an "
+        "explicit fake/injected or configured live daemon client, mapping the caller's "
+        "participant_response.message into the daemon-owned speech payload, then acknowledge "
+        "the selected stream cursor. The plugin preserves all caller-supplied IDs and "
+        "fails closed before transport on role substitution or member mismatches."
     ),
     "parameters": {
         "type": "object",
@@ -601,10 +602,11 @@ KAN_DISCORD_SEND_MESSAGE: Final[dict[str, object]] = {
 KAN_SURFACE_RENDER_PROJECTION: Final[dict[str, object]] = {
     "name": "kan_surface_render_projection",
     "description": (
-        "Render explicit daemon/control projection event JSON into local visible-surface "
-        "rows and evidence pointers. This pure tool performs no daemon reads, Discord "
-        "reads or sends, environment reads, lifecycle transitions, provider/profile/auth "
-        "mutation, or CLI fallback; visible IDs remain display/evidence pointers only."
+        "Render explicit daemon/control projection event JSON into separated clean "
+        "visible transcript rows, audit rows, and evidence pointers. This pure tool "
+        "performs no daemon reads, Discord reads or sends, environment reads, lifecycle "
+        "transitions, provider/profile/auth mutation, or CLI fallback; visible IDs remain "
+        "display/evidence pointers only."
     ),
     "parameters": {
         "type": "object",
@@ -618,6 +620,13 @@ KAN_SURFACE_RENDER_PROJECTION: Final[dict[str, object]] = {
                 "properties": {
                     "schema_version": {"type": "integer", "const": 1},
                     "session_id": {"type": "string", "minLength": 1},
+                    "require_terminal_closeout": {
+                        "type": "boolean",
+                        "description": (
+                            "When true, fail closed unless a terminal outcome has posted "
+                            "visible closeout evidence matching the terminal event."
+                        ),
+                    },
                     "events": {
                         "type": "array",
                         "items": {"type": "object"},
@@ -625,7 +634,8 @@ KAN_SURFACE_RENDER_PROJECTION: Final[dict[str, object]] = {
                             "Daemon/control events or stream frames. Each item must carry "
                             "a daemon cursor and either event.order or a parseable cur_000... "
                             "cursor; supported event types are session_created, "
-                            "speaker_selected, speech, council_finalized, "
+                            "speaker_selected, speech, draft_conclusion, "
+                            "consensus_vote_requested, consensus_vote, council_finalized, "
                             "council_unresolved, and session_cancelled."
                         ),
                     },

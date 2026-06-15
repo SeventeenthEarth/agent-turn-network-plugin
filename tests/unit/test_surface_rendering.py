@@ -46,6 +46,7 @@ def test_surface_projection_renders_cursor_ordered_rows_and_evidence_statuses() 
                         "surface_evidence": {
                             "status": "posted",
                             "message_id": "msg-final",
+                            "references_event_id": "evt-final",
                         },
                         "linked_authority_result": {
                             "status": "pending_followup",
@@ -228,6 +229,216 @@ def test_surface_projection_fails_closed_for_duplicate_cursor_authority() -> Non
                             "payload": {},
                         },
                     },
+                ],
+            }
+        )
+
+
+def test_surface_projection_renders_clean_visible_closeout_transcript_and_audit_log() -> None:
+    projection = {
+        "schema_version": 1,
+        "session_id": "sess-visux",
+        "require_terminal_closeout": True,
+        "events": [
+            {
+                "order": 1,
+                "cursor": "cur_000000000001_evt_session",
+                "event": {
+                    "event_id": "evt-session",
+                    "session_id": "sess-visux",
+                    "type": "session_created",
+                    "from": "gongmyeong",
+                    "payload": {
+                        "surface": {"kind": "discord_thread", "thread_id": "thread-visux"},
+                        "linked_authority": {"kanban_card_id": "t_visux"},
+                    },
+                },
+            },
+            {
+                "order": 2,
+                "cursor": "cur_000000000002_evt_grant",
+                "event": {
+                    "event_id": "evt-grant",
+                    "session_id": "sess-visux",
+                    "type": "speaker_selected",
+                    "from": "gongmyeong",
+                    "to": ["seohwang"],
+                    "payload": {"turn": 1, "member": "seohwang"},
+                },
+            },
+            {
+                "order": 3,
+                "cursor": "cur_000000000003_evt_speech",
+                "event": {
+                    "event_id": "evt-speech",
+                    "session_id": "sess-visux",
+                    "type": "speech",
+                    "from": "seohwang",
+                    "payload": {"turn": 1, "speech": "Fail closed on missing final proof."},
+                },
+            },
+            {
+                "order": 4,
+                "cursor": "cur_000000000004_evt_draft",
+                "event": {
+                    "event_id": "evt-draft",
+                    "session_id": "sess-visux",
+                    "type": "draft_conclusion",
+                    "from": "gongmyeong",
+                    "payload": {"draft_version": 1, "draft": "Ship with posted proof only."},
+                },
+            },
+            {
+                "order": 5,
+                "cursor": "cur_000000000005_evt_vote_request",
+                "event": {
+                    "event_id": "evt-vote-request",
+                    "session_id": "sess-visux",
+                    "type": "consensus_vote_requested",
+                    "from": "gongmyeong",
+                    "payload": {"draft_version": 1, "timeout_sec": 600},
+                },
+            },
+            {
+                "order": 6,
+                "cursor": "cur_000000000006_evt_vote",
+                "event": {
+                    "event_id": "evt-vote",
+                    "session_id": "sess-visux",
+                    "type": "consensus_vote",
+                    "from": "seohwang",
+                    "payload": {"draft_version": 1, "vote": "approve", "reason": "Proof present."},
+                },
+            },
+            {
+                "order": 7,
+                "cursor": "cur_000000000007_evt_final",
+                "event": {
+                    "event_id": "evt-final",
+                    "session_id": "sess-visux",
+                    "type": "council_finalized",
+                    "from": "gongmyeong",
+                    "payload": {
+                        "final_summary": "Approved with visible proof.",
+                        "consensus": "approve",
+                        "surface_evidence": {
+                            "status": "posted",
+                            "final_message_id": "msg-final",
+                            "references_event_id": "evt-final",
+                        },
+                        "linked_authority_result": {
+                            "status": "posted",
+                            "kanban_comment_id": "comment-final",
+                        },
+                    },
+                },
+            },
+        ],
+    }
+
+    result = render_surface_projection(projection)
+
+    visible_transcript = result["visible_transcript"]
+    assert [row["kind"] for row in visible_transcript] == [
+        "header",
+        "floor_grant",
+        "speech",
+        "draft_closeout",
+        "vote_request",
+        "vote",
+        "final_closeout",
+    ]
+    assert visible_transcript[-1] == {
+        "kind": "final_closeout",
+        "moderator": "gongmyeong",
+        "outcome": "finalized",
+        "text": "Final closeout: Approved with visible proof.",
+        "consensus": "approve",
+        "evidence_pointer": "msg-final",
+    }
+    assert all("cursor" not in row and "event_id" not in row for row in visible_transcript)
+    assert result["audit_log"][0]["cursor"] == "cur_000000000001_evt_session"
+    assert result["audit_log"][-1]["event_id"] == "evt-final"
+    assert result["source_event_count"] == 7
+
+
+def test_surface_projection_closeout_mode_fails_closed_when_terminal_outcome_missing() -> None:
+    with pytest.raises(ValueError, match="terminal_outcome_missing"):
+        render_surface_projection(
+            {
+                "schema_version": 1,
+                "session_id": "sess-visux",
+                "require_terminal_closeout": True,
+                "events": [
+                    {
+                        "cursor": "cur_000000000001_evt_draft",
+                        "event": {
+                            "event_id": "evt-draft",
+                            "session_id": "sess-visux",
+                            "type": "draft_conclusion",
+                            "from": "gongmyeong",
+                            "payload": {"draft_version": 1, "draft": "Not final."},
+                        },
+                    }
+                ],
+            }
+        )
+
+
+def test_surface_projection_closeout_mode_fails_closed_for_mismatched_evidence() -> None:
+    with pytest.raises(ValueError, match="visible_closeout_evidence_mismatch"):
+        render_surface_projection(
+            {
+                "schema_version": 1,
+                "session_id": "sess-visux",
+                "require_terminal_closeout": True,
+                "events": [
+                    {
+                        "cursor": "cur_000000000001_evt_final",
+                        "event": {
+                            "event_id": "evt-final",
+                            "session_id": "sess-visux",
+                            "type": "council_finalized",
+                            "from": "gongmyeong",
+                            "payload": {
+                                "final_summary": "Approved.",
+                                "surface_evidence": {
+                                    "status": "posted",
+                                    "final_message_id": "msg-final",
+                                    "references_event_id": "evt-other",
+                                },
+                            },
+                        },
+                    }
+                ],
+            }
+        )
+
+
+def test_surface_projection_closeout_mode_fails_closed_for_missing_terminal_reference() -> None:
+    with pytest.raises(ValueError, match="visible_closeout_evidence_reference_missing"):
+        render_surface_projection(
+            {
+                "schema_version": 1,
+                "session_id": "sess-visux",
+                "require_terminal_closeout": True,
+                "events": [
+                    {
+                        "cursor": "cur_000000000001_evt_final",
+                        "event": {
+                            "event_id": "evt-final",
+                            "session_id": "sess-visux",
+                            "type": "council_finalized",
+                            "from": "gongmyeong",
+                            "payload": {
+                                "final_summary": "Approved.",
+                                "surface_evidence": {
+                                    "status": "posted",
+                                    "final_message_id": "msg-final",
+                                },
+                            },
+                        },
+                    }
                 ],
             }
         )

@@ -2,6 +2,7 @@
 project: "kkachi-agent-network-plugin"
 roadmap: "docs/06-implementation-epics-tasks.md"
 sot_docs:
+  - "docs/11-council-argument-graph-sot.md"
   - "docs/10-live-transport-sot.md"
   - "docs/02-plugin-contract.md"
   - "docs/01-architecture.md"
@@ -47,3 +48,13 @@ live_transport:
     - "control/MEMBR"
     - "control/SURFD"
   boundary: "Plugin is participant-agent Hermes tool surface; CLI is main-agent/operator control plane; daemon remains event/state authority. No hidden CLI fallback, live/default Discord delivery, gateway/auth/token/provider/profile mutation, KAB readiness, production activation, or lifecycle authority claim is authorized by this docs map."
+argument_graph:
+  plugin_sot: "docs/11-council-argument-graph-sot.md"
+  control_sot: "../kkachi-agent-network-control/docs/25-council-argument-graph-sot.md"
+  dependency_evidence:
+    - "control/ARGUE-001"
+    - "control/ARGUE-002"
+    - "control/ARGUE-003"
+    - "control/ARGUE-004"
+    - "control/ARGUE-005"
+  boundary: "Plugin docs are independent and complete for the participant-agent tool surface, selected participant response framing, fail-closed handler behavior, visible relation rendering, and packaged guidance. Control remains protocol/event/state/validation authority. Sequential DAG development does not make plugin docs optional."

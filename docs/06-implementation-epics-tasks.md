@@ -168,3 +168,20 @@ Dependency gate: complete the control `SURFD` epic before starting plugin `SURFD
 | Task ID | Task Title | Task Status | Task Description |
 |---|---|---|---|
 | SURFD-001 | Render daemon events to visible discussion surface | candidate/local implementation proof | Candidate implementation evidence covers pure/local `kan_surface_render_projection` rendering from explicit daemon/control projection event JSON into visible rows and evidence pointers. Cursor/order authority is daemon-owned, `speech` requires a prior matching `speaker_selected` floor grant, terminal delivery statuses preserve `posted`, `failed`, `pending_followup`, and `missing/unproven`, and malformed/unsupported/proofless inputs fail closed. Runtime/live approval remains false: no production activation, no live/default Discord delivery, no daemon lifecycle reads/writes, no gateway/auth/token/provider/profile mutation, and no KAB readiness claim. |
+
+## ARGUE: Council argument graph
+
+Epic ID: `ARGUE`
+
+Exit: the plugin can accept, validate where deterministically possible, submit, and render relation-aware council discussion evidence without becoming lifecycle authority. ARGUE completion means participant-agent tool schemas, selected participant response handling, visible projection rendering, and packaged operator guidance preserve `claims[]`, `stance_links[]`, `contribution_type`, `new_axis_reason`, and quality diagnostics supplied by control. This exit is not production activation, live/default Discord delivery, gateway/auth/token/provider/profile mutation, KAB bridge readiness, or a live-local pilot claim.
+
+SOT: `docs/11-council-argument-graph-sot.md`. Control companion SOT: `../../kkachi-agent-network-control/docs/25-council-argument-graph-sot.md`.
+
+Dependency gate: develop ARGUE sequentially through the control/plugin DAG. Control owns protocol/event/state/validation fixtures; plugin implementation starts only after the relevant control ARGUE fixture or gate exists, unless a task explicitly records local fake-fixture scope and keeps control compatibility completion blocked.
+
+| Task ID | Task Title | Task Status | Task Description |
+|---|---|---|---|
+| ARGUE-001 | Add argument graph schemas and tool contract coverage | planned | Extend plugin schemas/client validation for `claims[]`, `stance_links[]`, `contribution_type`, `new_axis_reason`, `evidence[]`, and `hand_raise.target_links[]` while preserving legacy `responds_to_event_id` as a display hint only. Depends on `control/ARGUE-002` fixtures for control-owned shapes before compatibility completion. |
+| ARGUE-002 | Add selected participant relation-aware response handling | planned | Update `kan_selected_participant_response` framing and fail-closed handler behavior so participant output becomes structured relation-aware `council.speak` payloads, runtime warning/noise is rejected before visible speech, and selected cursor ack remains after successful submit only. Depends on `control/ARGUE-003` validation/scoring hooks where daemon behavior is required. |
+| ARGUE-003 | Render visible argument graph relations | planned | Extend `kan_surface_render_projection` to render human-readable relation summaries and preserve machine-readable relation fields/audit diagnostics from daemon projection without inferring state from Discord order. Depends on `control/ARGUE-004` transcript/export/projection relation preservation. |
+| ARGUE-004 | Update packaged operator guidance and pilot harness notes | planned | Update bundled KAN operator guidance and pilot notes for ARGUE response formatting, orphan/repeated-new-axis review signals, and separation of mechanical lifecycle pass from discussion-quality pass. Depends on local plugin ARGUE gates and `control/ARGUE-005` before any live-local quality pilot can be requested. |

@@ -292,6 +292,27 @@ def test_surface_render_projection_handler_returns_local_projection_success() ->
                         },
                     }
                 ],
+                "visible_transcript": [
+                    {
+                        "kind": "header",
+                        "moderator": "moderator",
+                        "text": "Council session opened for local_fixture.",
+                    }
+                ],
+                "audit_log": [
+                    {
+                        "cursor": "cur_000000000001_evt_session",
+                        "order": 1,
+                        "event_id": "evt-session",
+                        "type": "session_created",
+                        "target": "session",
+                        "status": "created",
+                        "evidence": {
+                            "surface": {"kind": "local_fixture"},
+                            "linked_authority": None,
+                        },
+                    }
+                ],
             }
         },
     }

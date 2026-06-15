@@ -40,6 +40,7 @@ Key docs:
 - [`docs/04-tooling.md`](docs/04-tooling.md) — Python tooling and Makefile contract
 - [`docs/09-skill-and-operator-guide.md`](docs/09-skill-and-operator-guide.md) — bundled skill install, enable, rollback, troubleshooting, and local isolated plugin-load smoke boundary
 - [`docs/08-unsupported-surfaces.md`](docs/08-unsupported-surfaces.md) — unsupported surfaces and future binding requirements
+- [`docs/11-council-argument-graph-sot.md`](docs/11-council-argument-graph-sot.md) — plugin-side ARGUE council argument graph SOT and implementation DAG
 
 ## Current state
 
@@ -47,11 +48,16 @@ Local fake/injected plugin stage. The package layout, plugin manifest, root Herm
 
 `kan_stream_tail` probes `version.read` for `stream_frame` compatibility before `stream.tail`. `kan_delegate_new` submits `delegate.new`; `kan_delegate_action` accepts only the exact implemented `delegate.*` action/review/delivery enum, rejects `delegate.request` and top-level `review`, requires caller-supplied `request_id`/`idempotency_key`, and owns no lifecycle/idempotency state.
 
-`kan_council_command` accepts only the exact implemented `council.*` lifecycle enum and probes `version.read` for `council.lifecycle` before `command.submit`. `kan_selected_participant_response` submits a no-live wrapper-proven `council.speak` for the selected member, then acks the selected cursor only after submit succeeds. `kan_delivery_evidence` accepts only `delegate.escalation_delivered` and `delegate.escalation_delivery_failed` and probes for `delivery_evidence` first. These tools preserve caller-supplied IDs and own no logs, locks, cursors, consensus/lifecycle state, idempotency/dedupe, or delivery evidence transitions.
+`kan_council_command` accepts only the exact implemented `council.*` lifecycle enum and probes `version.read` for `council.lifecycle` before `command.submit`. `kan_selected_participant_response` submits a wrapper-proven `council.speak` payload for the selected member, then acks the selected cursor only after submit succeeds. `kan_delivery_evidence` accepts only `delegate.escalation_delivered` and `delegate.escalation_delivery_failed` and probes for `delivery_evidence` first. These tools preserve caller-supplied IDs and own no logs, locks, cursors, consensus/lifecycle state, idempotency/dedupe, or delivery evidence transitions.
 
 `kan_surface_render_projection` is pure/local: it accepts explicit daemon/control
-projection JSON, sorts by daemon cursor/order authority, renders local rows and
-evidence pointers, and returns `live_readiness: false`. It performs no daemon
+projection JSON, sorts by daemon cursor/order authority, renders a clean
+`visible_transcript` for operator-facing discussion text, keeps raw cursors/event
+ids in `audit_log`/`rows`, and returns `live_readiness: false`. In closeout mode
+(`require_terminal_closeout: true`) it fails closed unless a terminal outcome has
+posted visible evidence with an explicit reference back to that terminal event.
+Missing or mismatched terminal-event references are not accepted as visible
+closeout proof. It performs no daemon
 reads, Discord reads or sends, environment reads, lifecycle transitions, or CLI
 fallback.
 

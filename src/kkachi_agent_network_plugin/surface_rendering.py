@@ -20,6 +20,9 @@ SUPPORTED_EVENT_TYPES: Final[frozenset[str]] = frozenset(
         "session_created",
         "speaker_selected",
         "speech",
+        "draft_conclusion",
+        "consensus_vote_requested",
+        "consensus_vote",
         "council_finalized",
         "council_unresolved",
         "session_cancelled",
@@ -42,32 +45,83 @@ def render_surface_projection(projection: Mapping[str, object]) -> JsonObject:
     events = source.get("events")
     if not isinstance(events, list):
         raise ValueError("projection.events must be a JSON array")
+    require_terminal_closeout = _optional_bool(
+        source.get("require_terminal_closeout"), label="projection.require_terminal_closeout"
+    )
 
     normalized_events = [_normalize_event(item, session_id=session_id) for item in events]
     ordered_events = sorted(normalized_events, key=lambda item: cast(int, item["order"]))
     _validate_cursor_authority(ordered_events)
 
     rows: list[JsonObject] = []
+    visible_transcript: list[JsonObject] = []
     floor_grants: dict[tuple[JsonValue, str], JsonObject] = {}
+    linked_authority_configured = False
+    terminal_seen = False
+    terminal_closeout_seen = False
     for item in ordered_events:
         event = cast(JsonObject, item["event"])
         event_type = cast(str, event["type"])
         payload = _mapping_or_empty(event.get("payload"), label=f"{event_type}.payload")
         if event_type == "session_created":
             rows.append(_session_created_row(item=item, payload=payload))
+            visible_transcript.append(_session_header_visible_row(event=event, payload=payload))
+            linked_authority_configured = bool(
+                _mapping_or_empty(
+                    payload.get("linked_authority"),
+                    label="session_created.payload.linked_authority",
+                )
+            )
             continue
         if event_type == "speaker_selected":
             grant = _speaker_grant_row(item=item, event=event, payload=payload)
             rows.append(grant)
+            visible_transcript.append(_speaker_grant_visible_row(grant))
             floor_grants[(grant["turn"], cast(str, grant["member"]))] = grant
             continue
         if event_type == "speech":
-            rows.append(_speech_row(item=item, event=event, payload=payload, grants=floor_grants))
+            speech = _speech_row(item=item, event=event, payload=payload, grants=floor_grants)
+            rows.append(speech)
+            visible_transcript.append(_speech_visible_row(speech))
+            continue
+        if event_type == "draft_conclusion":
+            draft = _draft_conclusion_row(item=item, event=event, payload=payload)
+            rows.append(draft)
+            visible_transcript.append(_draft_conclusion_visible_row(draft))
+            continue
+        if event_type == "consensus_vote_requested":
+            vote_request = _vote_request_row(item=item, event=event, payload=payload)
+            rows.append(vote_request)
+            visible_transcript.append(_vote_request_visible_row(vote_request))
+            continue
+        if event_type == "consensus_vote":
+            vote = _vote_row(item=item, event=event, payload=payload)
+            rows.append(vote)
+            visible_transcript.append(_vote_visible_row(vote))
             continue
         if event_type in {"council_finalized", "council_unresolved", "session_cancelled"}:
-            rows.extend(_terminal_rows(item=item, payload=payload))
+            terminal_seen = True
+            rows.extend(
+                _terminal_rows(
+                    item=item,
+                    payload=payload,
+                    linked_authority_configured=linked_authority_configured,
+                )
+            )
+            closeout = _terminal_visible_row(
+                item=item, event=event, payload=payload, require_closeout=require_terminal_closeout
+            )
+            if closeout is not None:
+                terminal_closeout_seen = True
+                visible_transcript.append(closeout)
+
+    if require_terminal_closeout and not terminal_seen:
+        raise ValueError("terminal_outcome_missing")
+    if require_terminal_closeout and not terminal_closeout_seen:
+        raise ValueError("visible_closeout_missing_or_unproven")
 
     rows_json: list[JsonValue] = list(rows)
+    visible_json: list[JsonValue] = list(visible_transcript)
     return {
         "schema_version": SURFACE_PROJECTION_SCHEMA_VERSION,
         "session_id": session_id,
@@ -75,6 +129,8 @@ def render_surface_projection(projection: Mapping[str, object]) -> JsonObject:
         "source_event_count": len(ordered_events),
         "live_readiness": False,
         "rows": rows_json,
+        "visible_transcript": visible_json,
+        "audit_log": rows_json,
     }
 
 
@@ -180,7 +236,79 @@ def _speech_row(
     }
 
 
-def _terminal_rows(*, item: JsonObject, payload: Mapping[str, object]) -> list[JsonObject]:
+def _draft_conclusion_row(
+    *, item: JsonObject, event: Mapping[str, object], payload: Mapping[str, object]
+) -> JsonObject:
+    draft_version = _turn_value(
+        payload.get("draft_version"), label="draft_conclusion.payload.draft_version"
+    )
+    draft = _required_string(payload.get("draft"), label="draft_conclusion.payload.draft")
+    moderator = _required_string(event.get("from"), label="draft_conclusion.from")
+    row = _base_row(
+        item=item, event_type="draft_conclusion", target="draft_closeout", status="proposal"
+    ) | {
+        "moderator": moderator,
+        "draft_version": draft_version,
+        "content": draft,
+    }
+    revision_reason = payload.get("revision_reason")
+    if revision_reason is not None:
+        row["revision_reason"] = _required_string(
+            revision_reason, label="draft_conclusion.payload.revision_reason"
+        )
+    return row
+
+
+def _vote_request_row(
+    *, item: JsonObject, event: Mapping[str, object], payload: Mapping[str, object]
+) -> JsonObject:
+    draft_version = _turn_value(
+        payload.get("draft_version"), label="consensus_vote_requested.payload.draft_version"
+    )
+    moderator = _required_string(event.get("from"), label="consensus_vote_requested.from")
+    row = _base_row(
+        item=item,
+        event_type="consensus_vote_requested",
+        target="vote_request",
+        status="requested",
+    ) | {"moderator": moderator, "draft_version": draft_version}
+    timeout_sec = payload.get("timeout_sec")
+    if timeout_sec is not None:
+        if isinstance(timeout_sec, bool) or not isinstance(timeout_sec, int) or timeout_sec < 0:
+            raise ValueError(
+                "consensus_vote_requested.payload.timeout_sec must be a non-negative integer"
+            )
+        row["timeout_sec"] = timeout_sec
+    return row
+
+
+def _vote_row(
+    *, item: JsonObject, event: Mapping[str, object], payload: Mapping[str, object]
+) -> JsonObject:
+    draft_version = _turn_value(
+        payload.get("draft_version"), label="consensus_vote.payload.draft_version"
+    )
+    voter = _required_string(event.get("from"), label="consensus_vote.from")
+    vote = _required_string(payload.get("vote"), label="consensus_vote.payload.vote")
+    row = _base_row(item=item, event_type="consensus_vote", target="vote", status="recorded") | {
+        "member": voter,
+        "draft_version": draft_version,
+        "vote": vote,
+    }
+    reason = payload.get("reason")
+    if reason is not None:
+        row["reason"] = _required_string(reason, label="consensus_vote.payload.reason")
+    required_change = payload.get("required_change")
+    if required_change is not None:
+        row["required_change"] = _required_string(
+            required_change, label="consensus_vote.payload.required_change"
+        )
+    return row
+
+
+def _terminal_rows(
+    *, item: JsonObject, payload: Mapping[str, object], linked_authority_configured: bool
+) -> list[JsonObject]:
     event = cast(Mapping[str, object], item["event"])
     event_type = cast(str, event["type"])
     rows: list[JsonObject] = []
@@ -189,6 +317,8 @@ def _terminal_rows(*, item: JsonObject, payload: Mapping[str, object]) -> list[J
         _base_row(item=item, event_type=event_type, target="visible_surface", status=status)
         | {"evidence": evidence}
     )
+    if linked_authority_configured and "linked_authority_result" not in payload:
+        raise ValueError("linked_authority_result_required")
     if "linked_authority_result" in payload:
         linked_status, linked_evidence = _delivery_status(
             payload.get("linked_authority_result"), label="linked_authority_result"
@@ -203,6 +333,145 @@ def _terminal_rows(*, item: JsonObject, payload: Mapping[str, object]) -> list[J
             | {"evidence": linked_evidence}
         )
     return rows
+
+
+def _session_header_visible_row(
+    *, event: Mapping[str, object], payload: Mapping[str, object]
+) -> JsonObject:
+    moderator_value = event.get("from")
+    moderator = (
+        "moderator"
+        if moderator_value is None
+        else _required_string(moderator_value, label="session_created.from")
+    )
+    surface = _mapping_or_empty(payload.get("surface"), label="session_created.payload.surface")
+    surface_kind = surface.get("kind")
+    if surface_kind is not None:
+        surface_label = _required_string(surface_kind, label="session_created.payload.surface.kind")
+        text = f"Council session opened for {surface_label}."
+    else:
+        text = "Council session opened."
+    return {"kind": "header", "moderator": moderator, "text": text}
+
+
+def _speaker_grant_visible_row(row: Mapping[str, JsonValue]) -> JsonObject:
+    turn = row["turn"]
+    member = _required_string(row.get("member"), label="floor_grant.member")
+    return {
+        "kind": "floor_grant",
+        "turn": turn,
+        "member": member,
+        "text": f"Turn {turn}: {member} has the floor.",
+    }
+
+
+def _speech_visible_row(row: Mapping[str, JsonValue]) -> JsonObject:
+    turn = row["turn"]
+    member = _required_string(row.get("member"), label="speech.member")
+    content = _required_string(row.get("content"), label="speech.content")
+    return {"kind": "speech", "turn": turn, "speaker": member, "text": content}
+
+
+def _draft_conclusion_visible_row(row: Mapping[str, JsonValue]) -> JsonObject:
+    draft_version = row["draft_version"]
+    moderator = _required_string(row.get("moderator"), label="draft_closeout.moderator")
+    content = _required_string(row.get("content"), label="draft_closeout.content")
+    return {
+        "kind": "draft_closeout",
+        "moderator": moderator,
+        "draft_version": draft_version,
+        "text": f"Draft closeout v{draft_version}: {content}",
+        "final": False,
+    }
+
+
+def _vote_request_visible_row(row: Mapping[str, JsonValue]) -> JsonObject:
+    draft_version = row["draft_version"]
+    moderator = _required_string(row.get("moderator"), label="vote_request.moderator")
+    return {
+        "kind": "vote_request",
+        "moderator": moderator,
+        "draft_version": draft_version,
+        "text": f"Consensus vote requested for draft v{draft_version}.",
+    }
+
+
+def _vote_visible_row(row: Mapping[str, JsonValue]) -> JsonObject:
+    draft_version = row["draft_version"]
+    member = _required_string(row.get("member"), label="vote.member")
+    vote = _required_string(row.get("vote"), label="vote.vote")
+    text = f"{member} voted {vote} on draft v{draft_version}."
+    reason = row.get("reason")
+    if reason is not None:
+        text = f"{text} Reason: {_required_string(reason, label='vote.reason')}"
+    return {
+        "kind": "vote",
+        "member": member,
+        "draft_version": draft_version,
+        "vote": vote,
+        "text": text,
+    }
+
+
+def _terminal_visible_row(
+    *,
+    item: JsonObject,
+    event: Mapping[str, object],
+    payload: Mapping[str, object],
+    require_closeout: bool,
+) -> JsonObject | None:
+    status, evidence = _delivery_status(payload.get("surface_evidence"), label="surface_evidence")
+    if status != "posted" or evidence is None:
+        if require_closeout:
+            raise ValueError("visible_closeout_missing_or_unproven")
+        return None
+    _validate_terminal_evidence_reference(
+        evidence=evidence, terminal_event_id=cast(str, item["event_id"])
+    )
+    event_type = cast(str, event["type"])
+    moderator_value = event.get("from")
+    moderator = (
+        "moderator"
+        if moderator_value is None
+        else _required_string(moderator_value, label=f"{event_type}.from")
+    )
+    if event_type == "council_finalized":
+        summary = _required_string(
+            payload.get("final_summary"), label="council_finalized.payload.final_summary"
+        )
+        visible: JsonObject = {
+            "kind": "final_closeout",
+            "moderator": moderator,
+            "outcome": "finalized",
+            "text": f"Final closeout: {summary}",
+            "evidence_pointer": _compact_evidence_pointer(evidence),
+        }
+        consensus = payload.get("consensus")
+        if consensus is not None:
+            visible["consensus"] = _required_string(
+                consensus, label="council_finalized.payload.consensus"
+            )
+        return visible
+    if event_type == "council_unresolved":
+        reason = _required_string(
+            payload.get("reason") or payload.get("final_summary"),
+            label="council_unresolved.payload.reason",
+        )
+        return {
+            "kind": "final_closeout",
+            "moderator": moderator,
+            "outcome": "unresolved",
+            "text": f"Unresolved closeout: {reason}",
+            "evidence_pointer": _compact_evidence_pointer(evidence),
+        }
+    reason = _required_string(payload.get("reason"), label="session_cancelled.payload.reason")
+    return {
+        "kind": "final_closeout",
+        "moderator": moderator,
+        "outcome": "cancelled",
+        "text": f"Cancelled closeout: {reason}",
+        "evidence_pointer": _compact_evidence_pointer(evidence),
+    }
 
 
 def _delivery_status(value: object, *, label: str) -> tuple[str, JsonObject | None]:
@@ -324,6 +593,50 @@ def _required_string(value: object, *, label: str) -> str:
     if not isinstance(value, str) or not value:
         raise ValueError(f"{label} must be a non-empty string")
     return value
+
+
+def _optional_bool(value: object, *, label: str) -> bool:
+    if value is None:
+        return False
+    if not isinstance(value, bool):
+        raise ValueError(f"{label} must be a boolean when present")
+    return value
+
+
+def _validate_terminal_evidence_reference(
+    *, evidence: Mapping[str, JsonValue], terminal_event_id: str
+) -> None:
+    reference_seen = False
+    for key in ("references_event_id", "terminal_event_id", "event_id", "source_event_id"):
+        value = evidence.get(key)
+        if value is None:
+            continue
+        reference_seen = True
+        if not isinstance(value, str) or value != terminal_event_id:
+            raise ValueError("visible_closeout_evidence_mismatch")
+    if not reference_seen:
+        raise ValueError("visible_closeout_evidence_reference_missing")
+
+
+def _compact_evidence_pointer(evidence: Mapping[str, JsonValue]) -> str:
+    for key in (
+        "final_message_id",
+        "message_id",
+        "message_ref",
+        "kanban_comment_id",
+        "vault_decision_note",
+    ):
+        value = evidence.get(key)
+        if isinstance(value, str) and value.strip():
+            return value
+    value = evidence.get("evidence")
+    if isinstance(value, str) and value.strip():
+        return value
+    if isinstance(value, list) and value:
+        first = value[0]
+        if isinstance(first, str) and first.strip():
+            return first
+    raise ValueError("visible_closeout_evidence_pointer_missing")
 
 
 __all__ = ["SURFACE_PROJECTION_SCHEMA_VERSION", "render_surface_projection"]

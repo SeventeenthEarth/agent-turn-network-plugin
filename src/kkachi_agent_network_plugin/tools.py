@@ -331,7 +331,7 @@ def handle_selected_participant_response(
             "actor": selected_member,
             "command_id": command_id,
             "payload": {
-                "message": _required_string(
+                "speech": _required_string(
                     participant_response.get("message"), label="participant_response.message"
                 ),
                 "turn": selected_context["turn"],
@@ -468,37 +468,37 @@ def register_tools(
         except DaemonTransportError as exc:
             client_factory = _failing_client_factory(exc)
 
-    def daemon_status_handler(args: object | None = None) -> str:
+    def daemon_status_handler(args: object | None = None, **_kwargs: object) -> str:
         return handle_daemon_status(args, client_factory=client_factory)
 
-    def compatibility_diagnostics_handler(args: object | None = None) -> str:
+    def compatibility_diagnostics_handler(args: object | None = None, **_kwargs: object) -> str:
         return handle_compatibility_diagnostics(args, client_factory=client_factory)
 
-    def stream_tail_handler(args: object | None = None) -> str:
+    def stream_tail_handler(args: object | None = None, **_kwargs: object) -> str:
         return handle_stream_tail(args, client_factory=client_factory)
 
-    def stream_ack_handler(args: object | None = None) -> str:
+    def stream_ack_handler(args: object | None = None, **_kwargs: object) -> str:
         return handle_stream_ack(args, client_factory=client_factory)
 
-    def delegate_new_handler(args: object | None = None) -> str:
+    def delegate_new_handler(args: object | None = None, **_kwargs: object) -> str:
         return handle_delegate_new(args, client_factory=client_factory)
 
-    def delegate_action_handler(args: object | None = None) -> str:
+    def delegate_action_handler(args: object | None = None, **_kwargs: object) -> str:
         return handle_delegate_action(args, client_factory=client_factory)
 
-    def council_command_handler(args: object | None = None) -> str:
+    def council_command_handler(args: object | None = None, **_kwargs: object) -> str:
         return handle_council_command(args, client_factory=client_factory)
 
-    def selected_participant_response_handler(args: object | None = None) -> str:
+    def selected_participant_response_handler(args: object | None = None, **_kwargs: object) -> str:
         return handle_selected_participant_response(args, client_factory=client_factory)
 
-    def delivery_evidence_handler(args: object | None = None) -> str:
+    def delivery_evidence_handler(args: object | None = None, **_kwargs: object) -> str:
         return handle_delivery_evidence(args, client_factory=client_factory)
 
-    def surface_render_projection_handler(args: object | None = None) -> str:
+    def surface_render_projection_handler(args: object | None = None, **_kwargs: object) -> str:
         return handle_surface_render_projection(args)
 
-    def discord_send_message_handler(args: object | None = None) -> str:
+    def discord_send_message_handler(args: object | None = None, **_kwargs: object) -> str:
         return handle_discord_send_message(args, send_message=send_message)
 
     registrations: tuple[tuple[str, dict[str, object], Callable[[object | None], str]], ...]

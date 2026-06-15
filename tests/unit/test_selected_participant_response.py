@@ -161,7 +161,7 @@ def test_selected_participant_response_submits_speak_then_acks_selected_cursor()
         "actor": "kas",
         "command_id": "cmd-speak-1",
         "payload": {
-            "message": "KAS bounded participant response from wrapper evidence.",
+            "speech": "KAS bounded participant response from wrapper evidence.",
             "turn": 3,
             "evidence": {
                 "source": "control_membr_evidence",

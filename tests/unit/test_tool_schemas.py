@@ -15,6 +15,7 @@ def test_schemas_expose_only_authorized_fake_injected_tools() -> None:
         "kan_council_command",
         "kan_selected_participant_response",
         "kan_delivery_evidence",
+        "kan_surface_render_projection",
         "kan_discord_send_message",
     )
     assert [schema["name"] for schema in schemas.KAN_TOOL_SCHEMAS] == list(schemas.tool_names())
@@ -125,6 +126,47 @@ def test_stream_ack_schema_requires_cursor_and_command_id() -> None:
 
 def test_hplug2_does_not_expose_deferred_session_status_schema() -> None:
     assert "kan_session_status" not in schemas.tool_names()
+
+
+def test_surface_render_projection_schema_is_pure_local_projection_tool() -> None:
+    schema = schemas.KAN_SURFACE_RENDER_PROJECTION
+
+    assert schema["name"] == "kan_surface_render_projection"
+    description = str(schema["description"]).lower()
+    assert "pure" in description
+    assert "no daemon reads" in description
+    assert "cli fallback" in description
+    assert schema["parameters"] == {
+        "type": "object",
+        "properties": {
+            "projection": {
+                "type": "object",
+                "description": (
+                    "Explicit local daemon/control projection input with schema_version=1, "
+                    "session_id, and cursor/order-authoritative events."
+                ),
+                "properties": {
+                    "schema_version": {"type": "integer", "const": 1},
+                    "session_id": {"type": "string", "minLength": 1},
+                    "events": {
+                        "type": "array",
+                        "items": {"type": "object"},
+                        "description": (
+                            "Daemon/control events or stream frames. Each item must carry "
+                            "a daemon cursor and either event.order or a parseable cur_000... "
+                            "cursor; supported event types are session_created, "
+                            "speaker_selected, speech, council_finalized, "
+                            "council_unresolved, and session_cancelled."
+                        ),
+                    },
+                },
+                "required": ["schema_version", "session_id", "events"],
+                "additionalProperties": True,
+            }
+        },
+        "required": ["projection"],
+        "additionalProperties": False,
+    }
 
 
 def test_delegate_new_schema_requires_explicit_metadata_and_creation_fields() -> None:

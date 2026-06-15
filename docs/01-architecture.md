@@ -77,7 +77,7 @@ CNDIS-2 injected Discord helper
 
 ## Hermes plugin surface
 
-The plugin currently registers ten fake/injected Hermes tools and no hooks or KAN slash commands:
+The plugin currently registers the manifest-declared fake/injected Hermes tools and no hooks or KAN slash commands:
 
 - `kan_daemon_status` — fake/injected daemon status read;
 - `kan_compatibility_diagnostics` — fake/injected diagnostics read with redaction;
@@ -89,6 +89,7 @@ The plugin currently registers ten fake/injected Hermes tools and no hooks or KA
 - `kan_selected_participant_response` — fake/injected selected-member `council.speak`
   proof submission followed by selected-cursor ack only after submit succeeds;
 - `kan_delivery_evidence` — fake/injected closed-enum `delegate.escalation_delivered` / `delegate.escalation_delivery_failed` command-envelope submission with `delivery_evidence` pre-probe and no plugin-owned delivery-evidence transitions.
+- `kan_surface_render_projection` — pure/local visible-surface projection from daemon/control event data; cursor order is authority, speech requires matching `speaker_selected` floor-grant evidence, delivery pointers stay evidence-only, and `live_readiness` remains false.
 - `kan_discord_send_message` — fake/injected Discord helper that requires a dedicated
   test target and an injected `send_message` callable; it returns Discord IDs only as
   evidence pointers and fails closed without sender injection.

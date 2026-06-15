@@ -164,20 +164,21 @@ The CLI must be usable by the main agent through normal terminal execution and b
 
 The plugin owns the participant-agent Hermes tool surface. It provides typed access to daemon status, stream/tail frames, and write commands, but it does not own lifecycle state.
 
-Current registered plugin tool inventory is exactly ten fake/injected Hermes tools. One future non-tool placeholder is also listed separately for planning and must not be counted as a registered tool:
+Current registered plugin tool inventory is the manifest-declared fake/injected Hermes tool set. One future non-tool placeholder is also listed separately for planning and must not be counted as a registered tool:
 
 | Surface | Purpose | Plane | Notes |
 |---|---|---|---|
 | `kan_daemon_status` | read daemon status/readiness | agent/diagnostic | live only with explicit config; fail closed otherwise |
 | `kan_compatibility_diagnostics` | read compatibility and redacted checks | agent/diagnostic | no hidden live discovery |
 | `kan_stream_tail` | read retained frames | agent plane | minimum read path; implemented by `plugin/LTRAN-003`; preserve replay-before-live semantics |
-| future non-tool `kan_stream_follow` | long poll or follow frames | agent plane | optional planning placeholder; not registered and not counted in the ten-tool inventory; must preserve replay-before-live semantics if later scoped |
+| future non-tool `kan_stream_follow` | long poll or follow frames | agent plane | optional planning placeholder; not registered and not counted in the manifest-declared tool inventory; must preserve replay-before-live semantics if later scoped |
 | `kan_stream_ack` | acknowledge processed cursor | agent plane | PARTC-001 candidate implementation; local/candidate proof only, not production/runtime approval |
 | `kan_delegate_new` | submit `delegate.new` command envelope | agent plane | fake/injected command tool; no plugin-owned lifecycle state |
 | `kan_delegate_action` | submit supported `delegate.*` action command envelopes | agent plane | fake/injected command tool; no plugin-owned lifecycle state |
 | `kan_council_command` | typed participant writes | agent plane | participant commands such as `ready`, `hand_raise`, `speak`, `vote`; main-agent control use should prefer CLI |
 | `kan_selected_participant_response` | convert selected participant response evidence into `council.speak` plus cursor ack | agent plane | PARTC-002 candidate/local bounded no-live proof only; consumes fake/injected control `MEMBR` evidence and does not invoke real profiles or grant runtime activation |
 | `kan_delivery_evidence` | record evidence command where supported | delivery evidence | Discord IDs are evidence pointers only |
+| `kan_surface_render_projection` | render visible-surface projection from daemon/control event data | visible surface evidence | local/candidate proof only; cursor order is authority, speech requires matching `speaker_selected` evidence, delivery pointers stay evidence-only, `live_readiness` remains false |
 | `kan_discord_send_message` | injected-only visible send helper | delivery plane | no default/live sender; not daemon state |
 
 The plugin must:
@@ -761,12 +762,31 @@ Boundaries:
 
 ### SURFD-001: visible room helper/rendering boundary
 
+SURFD-001 candidate/local implementation proof is in place through
+`kan_surface_render_projection`. The tool renders explicit daemon/control
+projection event JSON into local visible-surface rows and evidence pointers
+without reading daemon state, reading or sending Discord messages, reading
+environment variables, starting or stopping daemons, shelling out to CLI
+fallbacks, mutating gateway/auth/token/provider/profile state, or claiming
+production/live readiness.
+
 Deliverables:
 
 - main-agent or helper rendering from daemon events;
 - speech/final result posting to visible surface where authorized;
 - delivery evidence pointer handling;
 - failure and pending-follow-up behavior.
+
+Local proof boundaries:
+
+- cursor/order authority stays with daemon/control projection input;
+- `speech` renders only after a prior matching `speaker_selected` floor grant
+  for the same turn/member;
+- terminal visible/linked-authority status preserves `posted`, `failed`,
+  `pending_followup`, and `missing/unproven`;
+- unsupported event types, unsupported schema versions, duplicate cursor
+  authority, floor-grant mismatches, and proofless delivery evidence fail closed;
+- `kan_discord_send_message` remains injected-only and non-default.
 
 ## Remaining decisions for post-LTRAN-003 slices
 

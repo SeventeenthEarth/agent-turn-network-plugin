@@ -598,6 +598,47 @@ KAN_DISCORD_SEND_MESSAGE: Final[dict[str, object]] = {
     },
 }
 
+KAN_SURFACE_RENDER_PROJECTION: Final[dict[str, object]] = {
+    "name": "kan_surface_render_projection",
+    "description": (
+        "Render explicit daemon/control projection event JSON into local visible-surface "
+        "rows and evidence pointers. This pure tool performs no daemon reads, Discord "
+        "reads or sends, environment reads, lifecycle transitions, provider/profile/auth "
+        "mutation, or CLI fallback; visible IDs remain display/evidence pointers only."
+    ),
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "projection": {
+                "type": "object",
+                "description": (
+                    "Explicit local daemon/control projection input with schema_version=1, "
+                    "session_id, and cursor/order-authoritative events."
+                ),
+                "properties": {
+                    "schema_version": {"type": "integer", "const": 1},
+                    "session_id": {"type": "string", "minLength": 1},
+                    "events": {
+                        "type": "array",
+                        "items": {"type": "object"},
+                        "description": (
+                            "Daemon/control events or stream frames. Each item must carry "
+                            "a daemon cursor and either event.order or a parseable cur_000... "
+                            "cursor; supported event types are session_created, "
+                            "speaker_selected, speech, council_finalized, "
+                            "council_unresolved, and session_cancelled."
+                        ),
+                    },
+                },
+                "required": ["schema_version", "session_id", "events"],
+                "additionalProperties": True,
+            }
+        },
+        "required": ["projection"],
+        "additionalProperties": False,
+    },
+}
+
 KAN_TOOL_SCHEMAS: Final[tuple[dict[str, object], ...]] = (
     KAN_DAEMON_STATUS,
     KAN_COMPATIBILITY_DIAGNOSTICS,
@@ -608,6 +649,7 @@ KAN_TOOL_SCHEMAS: Final[tuple[dict[str, object], ...]] = (
     KAN_COUNCIL_COMMAND,
     KAN_SELECTED_PARTICIPANT_RESPONSE,
     KAN_DELIVERY_EVIDENCE,
+    KAN_SURFACE_RENDER_PROJECTION,
     KAN_DISCORD_SEND_MESSAGE,
 )
 

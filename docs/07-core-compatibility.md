@@ -172,8 +172,8 @@ Hermes host slash-command support exists through `PluginContext.register_command
 SKILL-2 adds `make check-plugin-load-smoke` as a bounded local isolated
 plugin-load smoke gate. The gate creates a temporary plugin home from
 repository-local files, loads the root `__init__.py::register(ctx)` entrypoint
-with a fake Hermes context, asserts the exact ten tool registrations in
-manifest order, asserts no hooks and no commands, checks handler callability,
+with a fake Hermes context, asserts the exact manifest-declared tool registrations
+in manifest order, asserts no hooks and no commands, checks handler callability,
 and calls representative handlers without injected clients/senders to require
 JSON-string `ok:false` fail-closed responses. It also checks that live-looking
 environment variables do not change local behavior, rejects a fake

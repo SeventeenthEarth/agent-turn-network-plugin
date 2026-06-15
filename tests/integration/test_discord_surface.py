@@ -76,6 +76,40 @@ def test_fake_hermes_context_discord_tool_fails_closed_without_sender() -> None:
     assert "no live Discord fallback" in result["error"]["message"]
 
 
+def test_fake_hermes_context_surface_projection_tool_is_local_and_pure() -> None:
+    ctx = FakePluginContext()
+    register_tools(ctx)
+
+    result = json.loads(
+        ctx.handlers["kan_surface_render_projection"](
+            {
+                "projection": {
+                    "schema_version": 1,
+                    "session_id": "sess-surface",
+                    "events": [
+                        {
+                            "cursor": "cur_000000000001_evt_session",
+                            "event": {
+                                "event_id": "evt-session",
+                                "session_id": "sess-surface",
+                                "type": "session_created",
+                                "payload": {},
+                            },
+                        }
+                    ],
+                }
+            }
+        )
+    )
+
+    assert result["ok"] is True
+    assert result["tool"] == "kan_surface_render_projection"
+    assert result["live_readiness"] is False
+    assert result["data"]["local_projection"]["rows"][0]["status"] == "created"
+    assert ctx.registered_hooks == []
+    assert ctx.registered_commands == []
+
+
 def test_fake_hermes_context_keeps_hooks_and_commands_empty_for_discord_helper() -> None:
     ctx = FakePluginContext()
     register_tools(ctx)

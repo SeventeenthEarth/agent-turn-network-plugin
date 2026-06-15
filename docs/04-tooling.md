@@ -86,7 +86,7 @@ local isolated plugin-load smoke boundary are documented in `docs/09-skill-and-o
 SCAFF-5 delivers a scaffold smoke gate for the first plugin scaffold PR. It proves:
 
 - the plugin package imports through the `src/` layout and exposes stable metadata;
-- the plugin manifest is a YAML mapping with the expected name, version, standalone kind, exact `provides_tools: [kan_daemon_status, kan_compatibility_diagnostics, kan_stream_tail, kan_stream_ack, kan_delegate_new, kan_delegate_action, kan_council_command, kan_selected_participant_response, kan_delivery_evidence, kan_discord_send_message]`, and explicit empty `provides_hooks: []` / `provides_commands: []` declarations;
+- the plugin manifest is a YAML mapping with the expected name, version, standalone kind, exact `provides_tools: [kan_daemon_status, kan_compatibility_diagnostics, kan_stream_tail, kan_stream_ack, kan_delegate_new, kan_delegate_action, kan_council_command, kan_selected_participant_response, kan_delivery_evidence, kan_surface_render_projection, kan_discord_send_message]`, and explicit empty `provides_hooks: []` / `provides_commands: []` declarations;
 - the root directory-plugin entrypoint exposes `register(ctx)`;
 - the entrypoint registers callable fake/injected JSON-string handlers and does not register hooks or KAN slash commands;
 - `make test` succeeds without live Hermes, Discord, daemon, or network resources.

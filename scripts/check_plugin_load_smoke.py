@@ -30,6 +30,7 @@ EXPECTED_TOOLS = [
     "kan_council_command",
     "kan_selected_participant_response",
     "kan_delivery_evidence",
+    "kan_surface_render_projection",
     "kan_discord_send_message",
 ]
 LIVE_LOOKING_ENV = {
@@ -217,6 +218,14 @@ def require_handler_fail_closed(context: FakeHermesContext) -> dict[str, str]:
         if not isinstance(result, str):
             raise SystemExit(f"plugin-load smoke handler did not return JSON string: {name}")
         body = json.loads(result)
+        if name == "kan_surface_render_projection":
+            if body.get("ok") is not True or body.get("live_readiness") is not False:
+                raise SystemExit(
+                    "plugin-load smoke pure projection handler must succeed locally: "
+                    f"{body}"
+                )
+            outputs[str(name)] = result
+            continue
         if body.get("ok") is not False:
             raise SystemExit(
                 f"plugin-load smoke handler must fail closed without injection: {body}"
@@ -320,6 +329,24 @@ def representative_args(tool_name: str) -> dict[str, object]:
             "request_id": "req-smoke-delivery",
             "idempotency_key": "idem-smoke-delivery",
             "payload": {"command_id": "cmd-smoke", "escalation": "evt-smoke"},
+        }
+    if tool_name == "kan_surface_render_projection":
+        return {
+            "projection": {
+                "schema_version": 1,
+                "session_id": "sess-smoke",
+                "events": [
+                    {
+                        "cursor": "cur_000000000001_evt_smoke_session",
+                        "event": {
+                            "event_id": "evt-smoke-session",
+                            "session_id": "sess-smoke",
+                            "type": "session_created",
+                            "payload": {"surface": {"kind": "local_fixture"}},
+                        },
+                    }
+                ],
+            }
         }
     if tool_name == "kan_discord_send_message":
         return {

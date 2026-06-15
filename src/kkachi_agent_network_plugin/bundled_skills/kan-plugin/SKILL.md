@@ -33,14 +33,15 @@ Supported plugin surfaces in the current package are fake/injected Hermes tools:
 - `kan_council_command`
 - `kan_selected_participant_response`
 - `kan_delivery_evidence`
+- `kan_surface_render_projection`
 - `kan_discord_send_message`
 
 The plugin manifest must continue to declare `provides_commands: []`. KAN slash
 commands, native Discord slash commands, `kan_session_status`, live daemon
 discovery, localhost/socket/SSE/WebSocket transports, CLI fallback, gateway auth,
 token access, current-session lookup, production activation, KAB readiness, and
-live plugin readiness are unsupported in SKILL-2. The only plugin-load claim is
-local isolated plugin-load smoke.
+live plugin readiness are unsupported. The only plugin-load claim is local
+isolated plugin-load smoke.
 
 ## No-live defaults
 
@@ -55,6 +56,8 @@ Default work must stay local and fake/injected only:
    or Discord state. The control daemon remains the source of truth.
 4. Treat Discord IDs as evidence pointers only; delivery evidence still belongs
    to daemon-owned command envelopes.
+5. Treat `kan_surface_render_projection` output as a local display projection
+   over explicit daemon/control event JSON, never as lifecycle authority.
 
 ## Operator workflow
 

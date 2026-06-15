@@ -2,9 +2,9 @@
 
 ## Scope
 
-SKILL-2 keeps the packaged KAN operator skill and adds the local compatibility
-matrix plus local isolated plugin-load smoke gate for
-`kkachi-agent-network-plugin`. The bundled skill lives inside the Python package:
+The packaged KAN operator skill and local compatibility matrix remain the
+operator-facing guide for `kkachi-agent-network-plugin`. The bundled skill lives
+inside the Python package:
 
 ```text
 src/kkachi_agent_network_plugin/bundled_skills/kan-plugin/SKILL.md
@@ -14,7 +14,7 @@ The package also exposes an import-safe resource helper in
 `kkachi_agent_network_plugin.bundled_skills` so tests and installer checks can
 read the bundled skill without writing to a Hermes profile.
 
-SKILL-2 does not install the skill into the user's Hermes profile, enable a live
+This guide does not install the skill into the user's Hermes profile, enable a live
 plugin, contact a daemon, modify the sibling control repo, or prove production
 activation, KAB readiness, live plugin readiness, or live Discord readiness. The
 smoke claim is exactly local isolated plugin-load smoke.
@@ -26,10 +26,13 @@ The current plugin surface is fake/injected Hermes tools only:
 - `kan_daemon_status`
 - `kan_compatibility_diagnostics`
 - `kan_stream_tail`
+- `kan_stream_ack`
 - `kan_delegate_new`
 - `kan_delegate_action`
 - `kan_council_command`
+- `kan_selected_participant_response`
 - `kan_delivery_evidence`
+- `kan_surface_render_projection`
 - `kan_discord_send_message`
 
 `plugin.yaml` must continue to declare `provides_commands: []`. The root
@@ -60,6 +63,8 @@ Default verification and operator rehearsal are local only:
    logs, locks, cursors, or delivery-evidence transitions.
 4. Treat Discord IDs as evidence pointers only. Daemon-owned delivery evidence
    still goes through `kan_delivery_evidence`.
+5. Treat `kan_surface_render_projection` output as a local projection over
+   explicit daemon/control event JSON, not lifecycle authority.
 
 ## Install guidance
 
@@ -138,7 +143,7 @@ gateway config, sockets, or localhost services as part of SKILL-2 rollback.
 gate, strengthened by REL-PILOT-FIX-001. It creates a temporary plugin home from
 repository-local files, loads the root `register(ctx)` entrypoint with a fake
 Hermes context without adding external `PYTHONPATH=<plugin>/src` help, asserts
-the exact ten tools in order, asserts no hooks or commands, calls
+the exact manifest-declared tools in order, asserts no hooks or commands, calls
 representative handlers without injected clients/senders and requires JSON
 `ok:false`, verifies that live-looking environment variables do not change
 behavior, rejects command overclaims, and checks wheel package plus bundled skill

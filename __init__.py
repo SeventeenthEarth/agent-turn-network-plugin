@@ -2,8 +2,9 @@
 
 Registers read-only status/diagnostics/stream-tail tools, DELRV-1
 delegation/review command-envelope tools, CNDIS-1 council/delivery-evidence
-command tools, and the CNDIS-2 injected-only Discord helper. Handlers fail
-closed unless a fake, explicitly injected daemon client factory, or explicit
+command tools, a pure visible-surface projection renderer, and the CNDIS-2
+injected-only Discord helper. Daemon handlers fail closed unless a fake,
+explicitly injected daemon client factory, or explicit
 `live_transport.unix_socket_path` plugin config is supplied at registration;
 there is no live daemon discovery, Hermes, Discord, auth, token, gateway,
 localhost/TCP, or CLI fallback.

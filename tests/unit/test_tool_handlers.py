@@ -25,6 +25,7 @@ from kkachi_agent_network_plugin.tools import (
     handle_delivery_evidence,
     handle_stream_ack,
     handle_stream_tail,
+    handle_surface_render_projection,
 )
 
 BASE_STATUS: JsonObject = {
@@ -241,6 +242,93 @@ def test_handlers_fail_closed_without_client_factory() -> None:
     assert stream_tail["ok"] is False
     assert stream_tail["tool"] == "kan_stream_tail"
     assert stream_tail["error"]["category"] == "unavailable"
+
+
+def test_surface_render_projection_handler_returns_local_projection_success() -> None:
+    result = decode(
+        handle_surface_render_projection(
+            {
+                "projection": {
+                    "schema_version": 1,
+                    "session_id": "sess-surface",
+                    "events": [
+                        {
+                            "cursor": "cur_000000000001_evt_session",
+                            "event": {
+                                "event_id": "evt-session",
+                                "session_id": "sess-surface",
+                                "type": "session_created",
+                                "payload": {"surface": {"kind": "local_fixture"}},
+                            },
+                        }
+                    ],
+                }
+            }
+        )
+    )
+
+    assert result == {
+        "ok": True,
+        "tool": "kan_surface_render_projection",
+        "live_readiness": False,
+        "data": {
+            "local_projection": {
+                "schema_version": 1,
+                "session_id": "sess-surface",
+                "order_authority": "daemon_cursor",
+                "source_event_count": 1,
+                "live_readiness": False,
+                "rows": [
+                    {
+                        "cursor": "cur_000000000001_evt_session",
+                        "order": 1,
+                        "event_id": "evt-session",
+                        "type": "session_created",
+                        "target": "session",
+                        "status": "created",
+                        "evidence": {
+                            "surface": {"kind": "local_fixture"},
+                            "linked_authority": None,
+                        },
+                    }
+                ],
+            }
+        },
+    }
+
+
+def test_surface_render_projection_handler_fails_closed_for_bad_projection() -> None:
+    result = decode(
+        handle_surface_render_projection(
+            {
+                "projection": {
+                    "schema_version": 1,
+                    "session_id": "sess-surface",
+                    "events": [
+                        {
+                            "cursor": "cur_000000000001_evt_speech",
+                            "event": {
+                                "event_id": "evt-speech",
+                                "session_id": "sess-surface",
+                                "type": "speech",
+                                "from": "agent-1",
+                                "payload": {"turn": 1, "speech": "no grant"},
+                            },
+                        }
+                    ],
+                }
+            }
+        )
+    )
+
+    assert result["ok"] is False
+    assert result["tool"] == "kan_surface_render_projection"
+    assert result["live_readiness"] is False
+    assert result["error"] == {
+        "category": "validation",
+        "message": "floor_grant_missing_or_mismatched",
+        "retryable": False,
+    }
 
 
 def test_diagnostics_handler_rejects_invalid_session_id_before_transport() -> None:

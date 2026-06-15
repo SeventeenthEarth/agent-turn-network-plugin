@@ -40,6 +40,7 @@ from .protocol import (
     StreamTail,
     require_json_object,
 )
+from .surface_rendering import render_surface_projection
 
 ClientFactory = Callable[[], DaemonClient]
 TOOLSET: Final = "kkachi_agent_network"
@@ -436,6 +437,22 @@ def handle_discord_send_message(
         return _json_error(tool, exc)
 
 
+def handle_surface_render_projection(
+    args: object | None = None,
+    **_kwargs: object,
+) -> str:
+    """Render explicit daemon/control projection JSON without side effects."""
+
+    tool = "kan_surface_render_projection"
+    try:
+        payload = _coerce_args(args, allowed_keys=frozenset({"projection"}))
+        projection = _required_json_object(payload.get("projection"), label="projection")
+        data = render_surface_projection(projection)
+        return _json_surface_projection_success(tool, data)
+    except Exception as exc:  # noqa: BLE001 - Hermes handlers must never raise.
+        return _json_error(tool, exc)
+
+
 def register_tools(
     ctx: ToolRegistrationContext,
     *,
@@ -478,6 +495,9 @@ def register_tools(
     def delivery_evidence_handler(args: object | None = None) -> str:
         return handle_delivery_evidence(args, client_factory=client_factory)
 
+    def surface_render_projection_handler(args: object | None = None) -> str:
+        return handle_surface_render_projection(args)
+
     def discord_send_message_handler(args: object | None = None) -> str:
         return handle_discord_send_message(args, send_message=send_message)
 
@@ -500,6 +520,11 @@ def register_tools(
             selected_participant_response_handler,
         ),
         ("kan_delivery_evidence", schemas.KAN_DELIVERY_EVIDENCE, delivery_evidence_handler),
+        (
+            "kan_surface_render_projection",
+            schemas.KAN_SURFACE_RENDER_PROJECTION,
+            surface_render_projection_handler,
+        ),
         (
             "kan_discord_send_message",
             schemas.KAN_DISCORD_SEND_MESSAGE,
@@ -919,6 +944,17 @@ def _json_discord_success(tool: str, result: DiscordMessageResult) -> str:
     )
 
 
+def _json_surface_projection_success(tool: str, data: JsonObject) -> str:
+    return _dumps(
+        {
+            "ok": True,
+            "tool": tool,
+            "live_readiness": False,
+            "data": {"local_projection": data},
+        }
+    )
+
+
 def _json_error(tool: str, exc: Exception) -> str:
     live_readiness = False
     return _dumps(
@@ -966,6 +1002,7 @@ __all__ = [
     "handle_delivery_evidence",
     "handle_discord_send_message",
     "handle_selected_participant_response",
+    "handle_surface_render_projection",
     "handle_stream_ack",
     "handle_stream_tail",
     "register_tools",

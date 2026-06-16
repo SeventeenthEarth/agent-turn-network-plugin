@@ -67,6 +67,45 @@ Default work must stay local and fake/injected only:
    `responds_to_event_id` remains a legacy display hint and never overrides
    `stance_links[]`.
 
+## ARGUE relation-aware response guidance
+
+ARGUE relation evidence is the structured record that links a participant's
+visible speech to the council claim graph. In quality-required rehearsal or
+pilot evidence, a selected participant response should keep these parts
+separate:
+
+- `speech`: the human-visible answer only, with no runtime warnings, wrapper
+  logs, max-iteration notices, or tool diagnostics rewritten as participant
+  speech;
+- `claims[]`: one or more concise claims introduced or restated by the
+  participant;
+- `stance_links[]`: explicit links from each new claim to prior claim/event ids,
+  using relation types such as support, challenge, refine, or synthesize;
+- `contribution_type`: the primary contribution category, including support,
+  challenge, refine, synthesize, risk_addition, decision_frame, or new_axis;
+- `new_axis_reason`: required when `contribution_type` is `new_axis`, and only
+  appropriate when the participant is opening a necessary new line of argument;
+- `evidence[]`: source or observation pointers outside visible speech text when
+  the participant cites evidence.
+
+Operators should flag a non-opening speech as orphaned when it has neither a
+valid `stance_links[]` entry to the prior claim graph nor a valid `new_axis`
+reason. Repeated ungrounded `new_axis` contributions are a discussion-quality
+warning even if the mechanical daemon/CLI/plugin lifecycle completes.
+
+Mechanical lifecycle pass means the local daemon/CLI/plugin path completed with
+replayable events and evidence pointers. Discussion-quality pass additionally
+requires grounded relation evidence, visible relation summaries from
+`kan_surface_render_projection`, audit relation fields preserved in rows/logs,
+non-immediate prior-claim engagement, challenge/refine/synthesize coverage where
+relevant, and no runtime noise in visible speech.
+
+Control/daemon fixtures and validation remain authoritative. Plugin rendering is
+a local visible surface and evidence pointer, not lifecycle state. Live-local
+pilots still require explicit profile/plugin/daemon/gateway/Discord approval and
+evidence. KAS does not install, own, or activate KAN runtime/plugin/bundled-skill
+artifacts.
+
 ## Operator workflow
 
 1. Inspect `plugin.yaml` and confirm the tool list plus
@@ -97,9 +136,9 @@ Default work must stay local and fake/injected only:
   Tests must not fall back to the current Hermes/Discord/daemon environment.
 - Session status requests: keep `kan_session_status` deferred until the control
   contract publishes `session.status.read` fixture/protocol authority.
-- ARGUE overclaims: do not describe static argument-graph schema/tool coverage as
-  runtime scoring, visible relation rendering, live Discord, production
-  activation, or live pilot readiness.
+- ARGUE overclaims: do not describe local ARGUE schema/tool coverage or local
+  visible relation rendering as runtime scoring, live Discord, production
+  activation, live pilot readiness, or daemon/control validation authority.
 - Plugin-load smoke requests: run `make check-plugin-load-smoke` and describe
   the result only as local isolated plugin-load smoke.
 

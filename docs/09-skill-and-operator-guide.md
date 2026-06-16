@@ -73,6 +73,56 @@ Default verification and operator rehearsal are local only:
    preserved for daemon/control validation, while `responds_to_event_id` remains
    a legacy display hint that never overrides `stance_links[]`.
 
+## ARGUE relation-aware response guidance
+
+ARGUE relation evidence is the structured link between visible participant speech
+and the council claim graph. The plugin can preserve and locally render this
+evidence, but the daemon/control contract remains the authority for validation,
+append-time acceptance, event order, and lifecycle state.
+
+A selected participant response in quality-required rehearsal or pilot evidence
+should separate:
+
+- `speech`: human-visible answer text only; do not include runtime warnings,
+  wrapper logs, max-iteration summaries, tool diagnostics, or transport metadata;
+- `claims[]`: concise claims introduced or restated by the participant;
+- `stance_links[]`: explicit links from new claims to prior claim or event ids,
+  with relation types such as support, challenge, refine, or synthesize;
+- `contribution_type`: the main contribution category, such as support,
+  challenge, refine, synthesize, risk_addition, decision_frame, or new_axis;
+- `new_axis_reason`: required for `contribution_type: "new_axis"` and only valid
+  when the participant is opening a necessary new line of argument;
+- `evidence[]`: source or observation pointers outside the visible speech text.
+
+Operators should treat a non-opening speech as orphaned when it has neither a
+valid stance link to the prior claim graph nor a valid `new_axis_reason`. A
+series of ungrounded `new_axis` speeches is also a discussion-quality warning:
+the mechanical local lifecycle may pass while the deliberation-quality gate still
+requires changes.
+
+## Pilot harness notes
+
+Use two separate verdicts when rehearsing ARGUE discussion quality:
+
+1. Mechanical lifecycle pass: the local daemon/CLI/plugin flow completes, events
+   are replayable, delivery/evidence pointers are reconstructable, and no plugin
+   fallback or lifecycle-state ownership appears.
+2. Discussion-quality pass: relation evidence is grounded, visible relation
+   summaries from `kan_surface_render_projection` are readable, audit fields keep
+   `claims[]`, `stance_links[]`, `contribution_type`, `event_id`, `turn`,
+   `speaker`, and `speech`, participants engage non-immediate prior claims where
+   appropriate, challenge/refine/synthesize relations appear when the scenario
+   requires them, and runtime noise is absent from visible speech.
+
+A live-local pilot needs explicit approval and evidence for the real participant
+profiles, plugin enablement, daemon/CLI path, gateway/tool visibility, and any
+visible Discord surface. Do not treat this operator guide, local isolated
+plugin-load smoke, or fake/injected fixture harness as live readiness.
+
+KAS does not install, own, or activate KAN runtime/plugin/bundled-skill artifacts.
+The KAN plugin package owns the bundled guidance source; a later explicitly
+approved Hermes/plugin activation flow may copy or register it into a profile.
+
 ## Install guidance
 
 For SKILL-2, "install" means obtaining the packaged skill artifact from the
@@ -138,7 +188,7 @@ gateway config, sockets, or localhost services as part of SKILL-2 rollback.
 | Slash commands appear | Manifest or entrypoint drift | Restore `provides_commands: []` and verify the root entrypoint registers no commands. |
 | `kan_session_status` appears | Unsupported session-status drift | Remove the surface until `session.status.read` fixture/protocol authority exists. |
 | ARGUE fields are dropped or inferred from legacy pointers | Contract drift or hidden state inference | Preserve explicit argument-graph fields verbatim and treat `responds_to_event_id` as display-only; do not infer state from Discord/Hermes order. |
-| ARGUE support is described as runtime scoring or live pilot readiness | Scope overclaim | Keep the claim to static/fake/injected schema and tool contract coverage; runtime validation/scoring, visible relation rendering, and live pilot work remain later tasks. |
+| ARGUE support is described as runtime scoring or live pilot readiness | Scope overclaim | Keep local ARGUE schema/tool coverage and local visible relation rendering bounded to fake/injected fixtures and evidence display; runtime validation/scoring, live Discord, production activation, and live-local pilot readiness require separate explicit approval and evidence. |
 | A handler tries localhost, a socket, CLI, gateway, auth, token, Discord, or KAB | No-live boundary violation | Fail closed and remove the fallback; default checks must use explicit fake/injected dependencies only. |
 | Root plugin load fails with `No module named 'kkachi_agent_network_plugin'` | The directory entrypoint is not bootstrapping its bundled `src/` package path | Restore the root entrypoint path bootstrap and rerun `make check-plugin-load-smoke`; do not require operators to supply external `PYTHONPATH`. |
 | Hermes Python 3.11 reports `invalid syntax` in package modules | Python 3.12-only syntax drift | Keep package/tooling metadata at Python `>=3.11`, avoid PEP 695 `type` aliases, and rerun the Python 3.11 syntax compatibility unit test. |

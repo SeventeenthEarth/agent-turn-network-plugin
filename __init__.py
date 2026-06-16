@@ -22,6 +22,9 @@ if _SRC_PATH.is_dir():
     if _src not in sys.path:
         sys.path.insert(0, _src)
 
+from kkachi_agent_network_plugin.client.daemon import DaemonClient  # noqa: E402
+from kkachi_agent_network_plugin.client.live import load_plugin_local_live_config  # noqa: E402
+from kkachi_agent_network_plugin.errors import DaemonTransportError  # noqa: E402
 from kkachi_agent_network_plugin.tools import (  # noqa: E402
     ClientFactory,
     ToolRegistrationContext,
@@ -37,7 +40,21 @@ def register(
 ) -> None:
     """Register the plugin tool surface with explicit optional live config."""
 
-    register_tools(ctx, client_factory=client_factory, config=config)
+    effective_client_factory = client_factory
+    effective_config = config
+    if client_factory is None and config is None:
+        try:
+            effective_config = load_plugin_local_live_config(_PLUGIN_ROOT / "config.yaml")
+        except DaemonTransportError as exc:
+            effective_client_factory = _failing_client_factory(exc)
+    register_tools(ctx, client_factory=effective_client_factory, config=effective_config)
+
+
+def _failing_client_factory(exc: DaemonTransportError) -> ClientFactory:
+    def factory() -> DaemonClient:
+        raise exc
+
+    return factory
 
 
 __all__ = ["register"]

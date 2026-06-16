@@ -442,3 +442,354 @@ def test_surface_projection_closeout_mode_fails_closed_for_missing_terminal_refe
                 ],
             }
         )
+
+
+def test_surface_projection_renders_argument_graph_support_challenge_and_preserves_audit() -> None:
+    support_claim = {
+        "claim_id": "T02.C1",
+        "summary": "Control projections already carry relation evidence.",
+        "kind": "observation",
+    }
+    challenge_claim = {
+        "claim_id": "T02.C2",
+        "summary": "Visible output must stay compact enough for review.",
+        "kind": "risk",
+    }
+    support_link = {
+        "target_event_id": "evt-speech-1",
+        "target_claim_id": "T01.C1",
+        "target_speaker": "macho",
+        "stance": "support",
+        "rationale": "The renderer should preserve daemon-supplied audit fields.",
+    }
+    challenge_link = {
+        "target_event_id": "evt-speech-1",
+        "target_claim_id": "T01.C2",
+        "target_speaker": "seohwang",
+        "stance": "challenge",
+        "rationale": "Audit preservation alone is not enough for human review.",
+    }
+    projection = _argument_projection(
+        [
+            _speech_event(
+                order=3,
+                event_id="evt-speech-1",
+                turn=1,
+                speaker="macho",
+                speech="Renderer must preserve supplied relation fields.",
+            ),
+            _speech_event(
+                order=5,
+                event_id="evt-speech-2",
+                turn=2,
+                speaker="seohwang",
+                speech="Preserve the graph and show compact relation lines.",
+                extra_payload={
+                    "claims": [support_claim, challenge_claim],
+                    "stance_links": [support_link, challenge_link],
+                    "contribution_type": "challenge",
+                    "responds_to_event_id": "evt-speech-1",
+                },
+            ),
+        ]
+    )
+
+    result = render_surface_projection(projection)
+
+    speech_row = result["audit_log"][4]
+    assert speech_row["speech"] == "Preserve the graph and show compact relation lines."
+    assert speech_row["claims"] == [support_claim, challenge_claim]
+    assert speech_row["stance_links"] == [support_link, challenge_link]
+    assert speech_row["contribution_type"] == "challenge"
+    assert speech_row["responds_to_event_id"] == "evt-speech-1"
+    visible = result["visible_transcript"][4]
+    assert visible["speech"] == "Preserve the graph and show compact relation lines."
+    assert visible["relation_summary"] == [
+        "support T01.C1 macho: The renderer should preserve daemon-supplied audit fields.",
+        "challenge T01.C2 seohwang: Audit preservation alone is not enough for human review.",
+    ]
+    assert visible["claims_summary"] == [
+        "Claim T02.C1: Control projections already carry relation evidence.",
+        "Claim T02.C2: Visible output must stay compact enough for review.",
+    ]
+    assert "Preserve the graph and show compact relation lines." in visible["text"]
+    assert "support T01.C1 macho" in visible["text"]
+
+
+def test_surface_projection_renders_synthesis_with_multiple_claims_and_links() -> None:
+    claims = [
+        {
+            "claim_id": "T03.C1",
+            "summary": "Use daemon cursor order as the only rendering authority.",
+            "kind": "requirement",
+        },
+        {
+            "claim_id": "T03.C2",
+            "summary": "Keep live readiness false for this local projection.",
+            "kind": "requirement",
+        },
+    ]
+    stance_links = [
+        {
+            "target_event_id": "evt-speech-1",
+            "target_claim_id": "T01.C1",
+            "target_speaker": "macho",
+            "stance": "synthesize",
+            "rationale": "Cursor authority anchors the audit trail.",
+        },
+        {
+            "target_event_id": "evt-speech-2",
+            "target_claim_id": "T02.C1",
+            "target_speaker": "jonghoe",
+            "stance": "synthesize",
+            "rationale": "Local projection must not imply live Discord readiness.",
+        },
+    ]
+    projection = _argument_projection(
+        [
+            _speech_event(
+                order=3,
+                event_id="evt-speech-1",
+                turn=1,
+                speaker="macho",
+                speech="Cursor authority is the renderer boundary.",
+            ),
+            _speech_event(
+                order=5,
+                event_id="evt-speech-2",
+                turn=2,
+                speaker="jonghoe",
+                speech="Live readiness remains out of scope.",
+            ),
+            _speech_event(
+                order=7,
+                event_id="evt-speech-3",
+                turn=3,
+                speaker="manchong",
+                speech="Synthesize cursor authority with local-only projection.",
+                extra_payload={
+                    "claims": claims,
+                    "stance_links": stance_links,
+                    "contribution_type": "synthesize",
+                },
+            ),
+        ]
+    )
+
+    result = render_surface_projection(projection)
+
+    speech_row = result["audit_log"][6]
+    assert speech_row["claims"] == claims
+    assert speech_row["stance_links"] == stance_links
+    assert speech_row["contribution_type"] == "synthesize"
+    visible = result["visible_transcript"][6]
+    assert visible["relation_summary"] == [
+        "synthesize T01.C1 macho: Cursor authority anchors the audit trail.",
+        "synthesize T02.C1 jonghoe: Local projection must not imply live Discord readiness.",
+    ]
+    assert visible["claims_summary"] == [
+        "Claim T03.C1: Use daemon cursor order as the only rendering authority.",
+        "Claim T03.C2: Keep live readiness false for this local projection.",
+    ]
+
+
+def test_surface_projection_renders_quality_warning_without_rewriting_speech() -> None:
+    diagnostics = {
+        "severity": "warning",
+        "code": "orphan_speech",
+        "message": "Accepted in warn mode but missing relation links.",
+    }
+    projection = _argument_projection(
+        [
+            _speech_event(
+                order=3,
+                event_id="evt-speech-1",
+                turn=1,
+                speaker="macho",
+                speech="The original speech text must remain exact.",
+                extra_payload={
+                    "quality_diagnostics": diagnostics,
+                    "contribution_type": "support",
+                },
+            )
+        ]
+    )
+
+    result = render_surface_projection(projection)
+
+    speech_row = result["audit_log"][2]
+    visible = result["visible_transcript"][2]
+    assert speech_row["quality_diagnostics"] == diagnostics
+    assert speech_row["speech"] == "The original speech text must remain exact."
+    assert visible["speech"] == "The original speech text must remain exact."
+    assert visible["quality_warnings"] == [
+        "warning orphan_speech: Accepted in warn mode but missing relation links."
+    ]
+    assert visible["text"].startswith("The original speech text must remain exact.")
+
+
+def test_surface_projection_renders_quality_warning_with_code_and_no_severity() -> None:
+    diagnostics = {
+        "code": "orphan_speech",
+        "summary": "Accepted in warn mode but missing relation links.",
+    }
+    projection = _argument_projection(
+        [
+            _speech_event(
+                order=3,
+                event_id="evt-speech-1",
+                turn=1,
+                speaker="macho",
+                speech="The daemon supplied warning details without severity.",
+                extra_payload={"quality_diagnostics": diagnostics},
+            )
+        ]
+    )
+
+    result = render_surface_projection(projection)
+
+    speech_row = result["audit_log"][2]
+    visible = result["visible_transcript"][2]
+    assert speech_row["quality_diagnostics"] == diagnostics
+    assert visible["quality_warnings"] == [
+        "orphan_speech: Accepted in warn mode but missing relation links."
+    ]
+
+
+@pytest.mark.parametrize(
+    ("extra_payload", "message"),
+    [
+        ({"claims": {"claim_id": "T01.C1"}}, "speech.payload.claims must be a JSON array"),
+        ({"claims": ["T01.C1"]}, "speech.payload.claims\\[\\] must be a JSON object"),
+        (
+            {"stance_links": {"target_event_id": "evt-speech-1"}},
+            "speech.payload.stance_links must be a JSON array",
+        ),
+        (
+            {"quality_diagnostics": "orphan"},
+            "speech.payload.quality_diagnostics must be a JSON object or array",
+        ),
+        (
+            {"quality_diagnostics": ["orphan"]},
+            "speech.payload.quality_diagnostics\\[\\] must be a JSON object",
+        ),
+    ],
+)
+def test_surface_projection_fails_closed_for_malformed_relation_and_diagnostic_shapes(
+    extra_payload: dict[str, object], message: str
+) -> None:
+    projection = _argument_projection(
+        [
+            _speech_event(
+                order=3,
+                event_id="evt-speech-1",
+                turn=1,
+                speaker="macho",
+                speech="Malformed relation data must not render.",
+                extra_payload=extra_payload,
+            )
+        ]
+    )
+
+    with pytest.raises(ValueError, match=message):
+        render_surface_projection(projection)
+
+
+def test_surface_projection_argument_graph_respects_daemon_cursor_order() -> None:
+    projection = _argument_projection(
+        [
+            _speech_event(
+                order=5,
+                event_id="evt-speech-2",
+                turn=2,
+                speaker="seohwang",
+                speech="Second speech by cursor order.",
+                extra_payload={
+                    "claims": [{"claim_id": "T02.C1", "summary": "Second claim."}],
+                    "stance_links": [
+                        {
+                            "target_event_id": "evt-speech-1",
+                            "target_claim_id": "T01.C1",
+                            "stance": "support",
+                        }
+                    ],
+                    "contribution_type": "support",
+                },
+            ),
+            _speech_event(
+                order=3,
+                event_id="evt-speech-1",
+                turn=1,
+                speaker="macho",
+                speech="First speech by cursor order.",
+                extra_payload={"claims": [{"claim_id": "T01.C1", "summary": "First claim."}]},
+            ),
+        ]
+    )
+
+    result = render_surface_projection(projection)
+
+    speech_rows = [row for row in result["audit_log"] if row["type"] == "speech"]
+    assert [row["event_id"] for row in speech_rows] == ["evt-speech-1", "evt-speech-2"]
+    visible_speech = [row for row in result["visible_transcript"] if row["kind"] == "speech"]
+    assert [row["speaker"] for row in visible_speech] == ["macho", "seohwang"]
+
+
+def _argument_projection(speech_events: list[dict[str, object]]) -> dict[str, object]:
+    events: list[dict[str, object]] = [
+        {
+            "order": 1,
+            "cursor": "cur_000000000001_evt_session",
+            "event": {
+                "event_id": "evt-session",
+                "session_id": "sess-argue",
+                "type": "session_created",
+                "payload": {"surface": {"kind": "local_fixture"}},
+            },
+        }
+    ]
+    for speech_event in speech_events:
+        order = speech_event["order"]
+        assert isinstance(order, int)
+        turn = speech_event["event"]["payload"]["turn"]  # type: ignore[index]
+        speaker = speech_event["event"]["from"]  # type: ignore[index]
+        events.append(
+            {
+                "order": order - 1,
+                "cursor": f"cur_{order - 1:012d}_evt_grant_{turn}",
+                "event": {
+                    "event_id": f"evt-grant-{turn}",
+                    "session_id": "sess-argue",
+                    "type": "speaker_selected",
+                    "to": [speaker],
+                    "payload": {"turn": turn, "member": speaker},
+                },
+            }
+        )
+        events.append(speech_event)
+    return {"schema_version": 1, "session_id": "sess-argue", "events": events}
+
+
+def _speech_event(
+    *,
+    order: int,
+    event_id: str,
+    turn: int,
+    speaker: str,
+    speech: str,
+    extra_payload: dict[str, object] | None = None,
+) -> dict[str, object]:
+    payload: dict[str, object] = {"turn": turn, "speech": speech}
+    if extra_payload:
+        payload.update(extra_payload)
+    return {
+        "order": order,
+        "cursor": f"cur_{order:012d}_{event_id}",
+        "event": {
+            "event_id": event_id,
+            "session_id": "sess-argue",
+            "type": "speech",
+            "from": speaker,
+            "payload": payload,
+        },
+    }

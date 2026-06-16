@@ -15,6 +15,14 @@ from typing import Final, cast
 from .protocol import JsonObject, JsonValue, require_json_object
 
 SURFACE_PROJECTION_SCHEMA_VERSION: Final = 1
+ARGUE_SPEECH_FIELDS: Final[tuple[str, ...]] = (
+    "claims",
+    "stance_links",
+    "contribution_type",
+    "new_axis_reason",
+    "responds_to_event_id",
+    "quality_diagnostics",
+)
 SUPPORTED_EVENT_TYPES: Final[frozenset[str]] = frozenset(
     {
         "session_created",
@@ -222,10 +230,12 @@ def _speech_row(
     if speech is None:
         speech = payload.get("message")
     content = _required_string(speech, label="speech.payload.speech")
-    return _base_row(item=item, event_type="speech", target="speech", status="renderable") | {
+    row = _base_row(item=item, event_type="speech", target="speech", status="renderable") | {
         "turn": turn,
         "member": speaker,
+        "speaker": speaker,
         "content": content,
+        "speech": content,
         "evidence": {
             "turn": turn,
             "selected": speaker,
@@ -234,6 +244,10 @@ def _speech_row(
             "speaker_selected_cursor": grant["cursor"],
         },
     }
+    for key in ARGUE_SPEECH_FIELDS:
+        if key in payload:
+            row[key] = _speech_argument_field(payload.get(key), field_name=key)
+    return row
 
 
 def _draft_conclusion_row(
@@ -369,7 +383,34 @@ def _speech_visible_row(row: Mapping[str, JsonValue]) -> JsonObject:
     turn = row["turn"]
     member = _required_string(row.get("member"), label="speech.member")
     content = _required_string(row.get("content"), label="speech.content")
-    return {"kind": "speech", "turn": turn, "speaker": member, "text": content}
+    visible: JsonObject = {
+        "kind": "speech",
+        "turn": turn,
+        "speaker": member,
+        "speech": content,
+    }
+    contribution_type = row.get("contribution_type")
+    if contribution_type is not None:
+        visible["contribution_type"] = _required_string(
+            contribution_type, label="speech.contribution_type"
+        )
+    relation_summary = _relation_summary(row.get("stance_links"))
+    if relation_summary:
+        visible["relation_summary"] = cast(list[JsonValue], relation_summary)
+    claims_summary = _claims_summary(row.get("claims"))
+    if claims_summary:
+        visible["claims_summary"] = cast(list[JsonValue], claims_summary)
+    quality_warnings = _quality_warnings(row.get("quality_diagnostics"))
+    if quality_warnings:
+        visible["quality_warnings"] = cast(list[JsonValue], quality_warnings)
+    text_lines = [content]
+    if contribution_type is not None:
+        text_lines[0] = f"{text_lines[0]} [{visible['contribution_type']}]"
+    text_lines.extend(relation_summary)
+    text_lines.extend(claims_summary)
+    text_lines.extend(f"Quality warning: {warning}" for warning in quality_warnings)
+    visible["text"] = "\n".join(text_lines)
+    return visible
 
 
 def _draft_conclusion_visible_row(row: Mapping[str, JsonValue]) -> JsonObject:
@@ -472,6 +513,153 @@ def _terminal_visible_row(
         "text": f"Cancelled closeout: {reason}",
         "evidence_pointer": _compact_evidence_pointer(evidence),
     }
+
+
+def _speech_argument_field(value: object, *, field_name: str) -> JsonValue:
+    if field_name == "claims":
+        return _argument_object_array(
+            value,
+            label="speech.payload.claims",
+            required_strings=("claim_id", "summary"),
+            optional_strings=("kind",),
+        )
+    if field_name == "stance_links":
+        return _argument_object_array(
+            value,
+            label="speech.payload.stance_links",
+            required_strings=("target_event_id", "stance"),
+            optional_strings=("target_claim_id", "target_speaker", "speaker", "rationale"),
+        )
+    if field_name == "quality_diagnostics":
+        return _quality_diagnostics(value, label="speech.payload.quality_diagnostics")
+    if field_name in {"contribution_type", "responds_to_event_id"}:
+        return _required_string(value, label=f"speech.payload.{field_name}")
+    if field_name == "new_axis_reason":
+        if value is None:
+            return None
+        return _required_string(value, label="speech.payload.new_axis_reason")
+    return _json_value(value, label=f"speech.payload.{field_name}")
+
+
+def _argument_object_array(
+    value: object,
+    *,
+    label: str,
+    required_strings: tuple[str, ...],
+    optional_strings: tuple[str, ...],
+) -> list[JsonValue]:
+    if not isinstance(value, list):
+        raise ValueError(f"{label} must be a JSON array")
+    rows: list[JsonValue] = []
+    for item in value:
+        if not isinstance(item, Mapping):
+            raise ValueError(f"{label}[] must be a JSON object")
+        payload = require_json_object(item, label=f"{label}[]")
+        for key in required_strings:
+            _required_string(payload.get(key), label=f"{label}[].{key}")
+        for key in optional_strings:
+            if key in payload and payload.get(key) is not None:
+                _required_string(payload.get(key), label=f"{label}[].{key}")
+        rows.append(_json_value(payload, label=f"{label}[]"))
+    return rows
+
+
+def _quality_diagnostics(value: object, *, label: str) -> JsonValue:
+    if isinstance(value, Mapping):
+        return _json_value(require_json_object(value, label=label), label=label)
+    if not isinstance(value, list):
+        raise ValueError(f"{label} must be a JSON object or array")
+    diagnostics: list[JsonValue] = []
+    for item in value:
+        if not isinstance(item, Mapping):
+            raise ValueError(f"{label}[] must be a JSON object")
+        diagnostics.append(_json_value(require_json_object(item, label=f"{label}[]"), label=label))
+    return diagnostics
+
+
+def _relation_summary(value: JsonValue | None) -> list[str]:
+    if value is None:
+        return []
+    if not isinstance(value, list):
+        raise ValueError("speech.stance_links must be a JSON array")
+    summaries: list[str] = []
+    for item in value:
+        if not isinstance(item, Mapping):
+            raise ValueError("speech.stance_links[] must be a JSON object")
+        stance = _required_string(item.get("stance"), label="speech.stance_links[].stance")
+        target = item.get("target_claim_id")
+        if target is None:
+            target = _required_string(
+                item.get("target_event_id"), label="speech.stance_links[].target_event_id"
+            )
+        else:
+            target = _required_string(target, label="speech.stance_links[].target_claim_id")
+        speaker = item.get("target_speaker")
+        if speaker is None:
+            speaker = item.get("speaker")
+        line = f"{stance} {target}"
+        if speaker is not None:
+            line = (
+                f"{line} {_required_string(speaker, label='speech.stance_links[].target_speaker')}"
+            )
+        rationale = item.get("rationale")
+        if rationale is not None:
+            line = f"{line}: {_required_string(rationale, label='speech.stance_links[].rationale')}"
+        summaries.append(line)
+    return summaries
+
+
+def _claims_summary(value: JsonValue | None) -> list[str]:
+    if value is None:
+        return []
+    if not isinstance(value, list):
+        raise ValueError("speech.claims must be a JSON array")
+    summaries: list[str] = []
+    for item in value:
+        if not isinstance(item, Mapping):
+            raise ValueError("speech.claims[] must be a JSON object")
+        claim_id = _required_string(item.get("claim_id"), label="speech.claims[].claim_id")
+        summary = _required_string(item.get("summary"), label="speech.claims[].summary")
+        summaries.append(f"Claim {claim_id}: {summary}")
+    return summaries
+
+
+def _quality_warnings(value: JsonValue | None) -> list[str]:
+    if value is None:
+        return []
+    diagnostics: list[Mapping[str, JsonValue]]
+    if isinstance(value, Mapping):
+        diagnostics = [value]
+    elif isinstance(value, list):
+        diagnostics = []
+        for item in value:
+            if not isinstance(item, Mapping):
+                raise ValueError("speech.quality_diagnostics[] must be a JSON object")
+            diagnostics.append(item)
+    else:
+        raise ValueError("speech.quality_diagnostics must be a JSON object or array")
+    warnings: list[str] = []
+    for diagnostic in diagnostics:
+        severity = diagnostic.get("severity") or diagnostic.get("level")
+        if isinstance(severity, str) and severity.lower() not in {"warning", "warn"}:
+            continue
+        message = diagnostic.get("message") or diagnostic.get("summary")
+        if message is None:
+            continue
+        message_text = _required_string(message, label="speech.quality_diagnostics[].message")
+        code = diagnostic.get("code")
+        if code is None:
+            warnings.append(message_text)
+            continue
+        code_text = _required_string(code, label="speech.quality_diagnostics[].code")
+        if severity is None:
+            warnings.append(f"{code_text}: {message_text}")
+            continue
+        warnings.append(
+            f"{_required_string(severity, label='speech.quality_diagnostics[].severity')} "
+            f"{code_text}: {message_text}"
+        )
+    return warnings
 
 
 def _delivery_status(value: object, *, label: str) -> tuple[str, JsonObject | None]:
@@ -585,8 +773,18 @@ def _mapping_or_empty(value: object, *, label: str) -> JsonObject:
 def _json_or_none(value: object) -> JsonValue:
     if value is None:
         return None
-    encoded = json.dumps(value, ensure_ascii=False, sort_keys=True, allow_nan=False)
-    return cast(JsonValue, json.loads(encoded))
+    return _json_value(value, label="json")
+
+
+def _json_value(value: object, *, label: str) -> JsonValue:
+    try:
+        encoded = json.dumps(value, ensure_ascii=False, sort_keys=True, allow_nan=False)
+    except (TypeError, ValueError) as exc:
+        raise ValueError(f"{label} must be render-safe JSON") from exc
+    decoded = json.loads(encoded)
+    if not isinstance(decoded, str | int | float | bool | list | dict) and decoded is not None:
+        raise ValueError(f"{label} must be render-safe JSON")
+    return cast(JsonValue, decoded)
 
 
 def _required_string(value: object, *, label: str) -> str:

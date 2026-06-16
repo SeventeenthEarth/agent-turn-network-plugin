@@ -186,9 +186,8 @@ def test_council_command_schema_documents_argue_payload_preservation() -> None:
 
 
 def test_selected_participant_response_schema_accepts_explicit_argue_fields() -> None:
-    participant_response = schemas.KAN_SELECTED_PARTICIPANT_RESPONSE["parameters"]["properties"][
-        "participant_response"
-    ]
+    schema_properties = schemas.KAN_SELECTED_PARTICIPANT_RESPONSE["parameters"]["properties"]
+    participant_response = schema_properties["participant_response"]
     properties = participant_response["properties"]
 
     for field in (
@@ -202,6 +201,13 @@ def test_selected_participant_response_schema_accepts_explicit_argue_fields() ->
         assert field in properties
     assert properties["claims"] == schemas.ARGUE_SPEECH_PAYLOAD_PROPERTIES["claims"]
     assert properties["evidence"] == schemas.ARGUE_SPEECH_PAYLOAD_PROPERTIES["evidence"]
+    caller_context = schema_properties["caller_validation_context"]
+    assert "non-authoritative" in str(caller_context["description"])
+    assert caller_context["properties"]["quality_mode"]["enum"] == [
+        "default",
+        "quality_warn",
+        "quality_required",
+    ]
 
 
 def test_surface_render_projection_schema_is_pure_local_projection_tool() -> None:

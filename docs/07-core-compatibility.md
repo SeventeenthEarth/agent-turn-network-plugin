@@ -163,6 +163,30 @@ This guard does not implement `control/ARGUE-003` runtime validation/scoring,
 fallback, Hermes/Discord state inference, profile/gateway/auth/token/provider
 mutation, KAB readiness, production activation, or live pilot readiness.
 
+## ARGUE-002 selected participant response guard
+
+ARGUE-002 extends `kan_selected_participant_response` with local deterministic
+pre-transport validation for selected participant speech. The handler preserves
+caller-supplied IDs, selected participant provenance checks, ARGUE speech fields,
+and the existing `council.speak` submit-before-selected-cursor-ack sequence.
+
+Runtime/system noise is rejected before transport when visible speech begins
+with conservative wrapper/log markers such as `WARNING:`, traceback headers,
+runtime warning prefixes, max-iteration notices, or tool/runner diagnostics.
+Normal participant disagreement that merely discusses a warning is not rejected.
+
+Optional `caller_validation_context` is caller-provided and non-authoritative.
+It may check selected member/event/cursor consistency, prior claim references,
+and quality-required orphan speech only when the caller marks local context as
+sufficient. When the context is absent or ambiguous, the plugin does not infer
+state from Discord/Hermes order or plugin memory; daemon validation/scoring
+remains authoritative.
+
+This guard does not implement `plugin/ARGUE-003` visible relation rendering,
+`control/ARGUE-004/005`, live control compatibility, live daemon discovery,
+hidden CLI fallback, Discord/Hermes state inference, profile/gateway/auth/token
+provider mutation, KAB readiness, production activation, or live pilot readiness.
+
 ## DELRV-2 DELEG-002 conformance guard
 
 DELRV-2 consumes the sibling control repo's DELEG-002 conformance fixture matrix

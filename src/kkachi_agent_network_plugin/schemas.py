@@ -599,6 +599,38 @@ KAN_SELECTED_PARTICIPANT_RESPONSE: Final[dict[str, object]] = {
                 ],
                 "additionalProperties": True,
             },
+            "caller_validation_context": {
+                "type": "object",
+                "description": (
+                    "Optional caller-provided, non-authoritative selected/projection context "
+                    "used only for deterministic local fail-closed checks. The plugin does "
+                    "not infer lifecycle state from this field or store it."
+                ),
+                "properties": {
+                    "quality_mode": {
+                        "type": "string",
+                        "enum": ["default", "quality_warn", "quality_required"],
+                    },
+                    "local_context_sufficient": {"type": "boolean"},
+                    "is_opening_speech": {"type": "boolean"},
+                    "selected_member": {"type": "string", "minLength": 1},
+                    "selected_event_id": {"type": "string", "minLength": 1},
+                    "selected_cursor": {"type": "string", "minLength": 1},
+                    "prior_claims": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "event_id": {"type": "string", "minLength": 1},
+                                "claim_id": {"type": "string", "minLength": 1},
+                            },
+                            "required": ["event_id"],
+                            "additionalProperties": True,
+                        },
+                    },
+                },
+                "additionalProperties": False,
+            },
             "command_id": {
                 "type": "string",
                 "minLength": 1,

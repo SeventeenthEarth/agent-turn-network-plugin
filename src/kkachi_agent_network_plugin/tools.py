@@ -54,6 +54,38 @@ ARGUE_SPEECH_PASSTHROUGH_FIELDS: Final[frozenset[str]] = frozenset(
         "responds_to_event_id",
     }
 )
+CALLER_VALIDATION_CONTEXT_KEYS: Final[frozenset[str]] = frozenset(
+    {
+        "quality_mode",
+        "local_context_sufficient",
+        "is_opening_speech",
+        "selected_member",
+        "selected_event_id",
+        "selected_cursor",
+        "prior_claims",
+    }
+)
+CALLER_VALIDATION_QUALITY_MODES: Final[frozenset[str]] = frozenset(
+    {"default", "quality_warn", "quality_required"}
+)
+RUNTIME_NOISE_PREFIXES: Final[tuple[str, ...]] = (
+    "WARNING:",
+    "RuntimeWarning:",
+    "Traceback (most recent call last):",
+)
+RUNTIME_NOISE_PREFIXES_LOWER: Final[tuple[str, ...]] = (
+    "[warning]",
+    "[runtime warning]",
+    "system warning:",
+    "runtime warning:",
+    "max iterations reached",
+    "maximum iterations reached",
+    "tool run diagnostics:",
+    "tool-run diagnostics:",
+    "tool diagnostics:",
+    "wrapper metadata:",
+    "runner diagnostics:",
+)
 
 
 class ToolRegistrationContext(Protocol):
@@ -315,6 +347,7 @@ def handle_selected_participant_response(
                     "request_id",
                     "idempotency_key",
                     "ack_command_id",
+                    "caller_validation_context",
                 }
             ),
         )
@@ -337,18 +370,26 @@ def handle_selected_participant_response(
             selected_member=selected_member,
             participant_response=participant_response,
         )
+        caller_validation_context = _caller_validation_context(
+            payload.get("caller_validation_context"),
+            selected_context=selected_context,
+            selected_member=selected_member,
+        )
         participant_evidence = _participant_response_evidence(
             participant_response=participant_response,
             speaker_selected_event_id=cast(str, selected_context["event_id"]),
             speaker_selected_cursor=cast(str, selected_context["cursor"]),
         )
+        speech = _selected_participant_speech(participant_response)
         speech_payload: JsonObject = {
-            "speech": _required_string(
-                participant_response.get("message"), label="participant_response.message"
-            ),
+            "speech": speech,
             "turn": selected_context["turn"],
         }
         participant_argue_fields = _selected_participant_argue_fields(participant_response)
+        _validate_selected_participant_caller_context(
+            caller_validation_context,
+            participant_argue_fields=participant_argue_fields,
+        )
         if participant_argue_fields:
             speech_payload.update(participant_argue_fields)
             if "evidence" in participant_argue_fields:
@@ -660,6 +701,179 @@ def _selected_participant_argue_fields(participant_response: Mapping[str, object
         raise ValueError(str(exc)) from exc
     _validate_argue_speech_payload(validated, label="participant_response")
     return validated
+
+
+def _selected_participant_speech(participant_response: Mapping[str, object]) -> str:
+    speech = _required_string(
+        participant_response.get("message"), label="participant_response.message"
+    )
+    if not speech.strip():
+        raise ValueError("participant_response.message must be a non-empty string")
+    if _contains_runtime_noise(speech):
+        raise ValueError("participant_response.message contains runtime/system noise")
+    return speech
+
+
+def _contains_runtime_noise(speech: str) -> bool:
+    for line in speech.splitlines():
+        stripped = line.strip()
+        if not stripped:
+            continue
+        lowered = stripped.lower()
+        if stripped.startswith(RUNTIME_NOISE_PREFIXES):
+            return True
+        if lowered.startswith(RUNTIME_NOISE_PREFIXES_LOWER):
+            return True
+    return False
+
+
+def _caller_validation_context(
+    value: object,
+    *,
+    selected_context: Mapping[str, object],
+    selected_member: str,
+) -> JsonObject:
+    if value is None:
+        return {}
+    context = _required_json_object(value, label="caller_validation_context")
+    unknown_keys = sorted(str(key) for key in context if key not in CALLER_VALIDATION_CONTEXT_KEYS)
+    if unknown_keys:
+        raise ValueError(f"unsupported caller_validation_context fields: {', '.join(unknown_keys)}")
+
+    quality_mode = context.get("quality_mode")
+    if quality_mode is not None:
+        quality_mode_value = _required_string(
+            quality_mode, label="caller_validation_context.quality_mode"
+        )
+        if quality_mode_value not in CALLER_VALIDATION_QUALITY_MODES:
+            raise ValueError("caller_validation_context.quality_mode must be a supported mode")
+
+    _optional_context_bool(context, "local_context_sufficient")
+    _optional_context_bool(context, "is_opening_speech")
+    _optional_context_match(
+        context,
+        "selected_member",
+        selected_member,
+        "selected_member",
+    )
+    _optional_context_match(
+        context,
+        "selected_event_id",
+        cast(str, selected_context["event_id"]),
+        "speaker_selected_frame.event.event_id",
+    )
+    _optional_context_match(
+        context,
+        "selected_cursor",
+        cast(str, selected_context["cursor"]),
+        "speaker_selected_frame.cursor",
+    )
+    if "prior_claims" in context:
+        _caller_prior_claims(context["prior_claims"])
+    return context
+
+
+def _optional_context_bool(context: Mapping[str, object], key: str) -> None:
+    if key in context and not isinstance(context[key], bool):
+        raise ValueError(f"caller_validation_context.{key} must be a boolean when present")
+
+
+def _optional_context_match(
+    context: Mapping[str, object],
+    key: str,
+    expected: str,
+    expected_label: str,
+) -> None:
+    if key not in context:
+        return
+    actual = _required_string(context[key], label=f"caller_validation_context.{key}")
+    if actual != expected:
+        raise ValueError(f"caller_validation_context.{key} must match {expected_label}")
+
+
+def _validate_selected_participant_caller_context(
+    context: Mapping[str, object],
+    *,
+    participant_argue_fields: Mapping[str, object],
+) -> None:
+    if not context:
+        return
+
+    prior_claims = _caller_prior_claims(context.get("prior_claims", []))
+    local_context_sufficient = context.get("local_context_sufficient") is True
+    if local_context_sufficient and prior_claims:
+        _validate_stance_links_against_caller_context(
+            participant_argue_fields,
+            prior_claims=prior_claims,
+        )
+
+    if context.get("quality_mode") != "quality_required":
+        return
+    if not local_context_sufficient or context.get("is_opening_speech") is True:
+        return
+    if _has_relation_or_new_axis(participant_argue_fields):
+        return
+    raise ValueError(
+        "participant_response is orphan speech in quality_required caller_validation_context"
+    )
+
+
+def _has_relation_or_new_axis(participant_argue_fields: Mapping[str, object]) -> bool:
+    stance_links = participant_argue_fields.get("stance_links")
+    if isinstance(stance_links, list) and len(stance_links) > 0:
+        return True
+    return participant_argue_fields.get("contribution_type") == "new_axis"
+
+
+def _caller_prior_claims(value: object) -> dict[str, set[str]]:
+    prior_claim_items = _required_json_array(value, label="caller_validation_context.prior_claims")
+    prior_claims: dict[str, set[str]] = {}
+    for index, item in enumerate(prior_claim_items):
+        label = f"caller_validation_context.prior_claims[{index}]"
+        if not isinstance(item, Mapping):
+            raise ValueError(f"{label} must be a JSON object")
+        prior_claim = _required_json_object(item, label=label)
+        event_id = _required_string(prior_claim.get("event_id"), label=f"{label}.event_id")
+        claim_ids = prior_claims.setdefault(event_id, set())
+        claim_id = prior_claim.get("claim_id")
+        if claim_id is not None:
+            claim_ids.add(_required_string(claim_id, label=f"{label}.claim_id"))
+    return prior_claims
+
+
+def _validate_stance_links_against_caller_context(
+    participant_argue_fields: Mapping[str, object],
+    *,
+    prior_claims: Mapping[str, set[str]],
+) -> None:
+    stance_links = participant_argue_fields.get("stance_links")
+    if not isinstance(stance_links, list):
+        return
+    for index, item in enumerate(stance_links):
+        label = f"participant_response.stance_links[{index}]"
+        if not isinstance(item, Mapping):
+            raise ValueError(f"{label} must be a JSON object")
+        link = _required_json_object(item, label=label)
+        target_event_id = _required_string(
+            link.get("target_event_id"), label=f"{label}.target_event_id"
+        )
+        if target_event_id not in prior_claims:
+            raise ValueError(
+                f"{label}.target_event_id is not in caller_validation_context.prior_claims"
+            )
+        target_claim_ids = prior_claims[target_event_id]
+        if not target_claim_ids:
+            continue
+        target_claim_id = link.get("target_claim_id")
+        if target_claim_id is None:
+            raise ValueError(
+                f"{label}.target_claim_id is required by caller_validation_context.prior_claims"
+            )
+        target_claim_id_value = _required_string(target_claim_id, label=f"{label}.target_claim_id")
+        if target_claim_id_value not in target_claim_ids:
+            raise ValueError(
+                f"{label}.target_claim_id is not in caller_validation_context.prior_claims"
+            )
 
 
 def _validate_argue_speech_payload(payload: Mapping[str, object], *, label: str) -> None:

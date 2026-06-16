@@ -86,6 +86,10 @@ def decode(payload: str) -> dict[str, Any]:
     return decoded
 
 
+def never_client_factory() -> DaemonClient:
+    raise AssertionError("client factory must not be called")
+
+
 def _args() -> JsonObject:
     return {
         "session_id": "sess-partc",
@@ -246,6 +250,51 @@ def test_selected_participant_response_passes_explicit_argue_fields_only_when_su
     )
 
 
+@pytest.mark.parametrize(
+    "message",
+    [
+        "WARNING: max iterations reached before the participant produced a final answer.",
+        'Traceback (most recent call last):\n  File "runner.py", line 1',
+        "Tool run diagnostics: command exited before visible response.",
+    ],
+)
+def test_selected_participant_response_rejects_runtime_noise_before_transport(
+    message: str,
+) -> None:
+    args = _args()
+    cast(JsonObject, args["participant_response"])["message"] = message
+
+    result = decode(handle_selected_participant_response(args, client_factory=never_client_factory))
+
+    assert result["ok"] is False
+    assert result["tool"] == "kan_selected_participant_response"
+    assert result["error"] == {
+        "category": "validation",
+        "message": "participant_response.message contains runtime/system noise",
+        "retryable": False,
+    }
+
+
+def test_selected_participant_response_allows_normal_warning_word_in_speech() -> None:
+    transport = StaticDaemonTransport(
+        {
+            OP_VERSION_READ: BASE_VERSION_WITH_PARTC,
+            OP_COMMAND_SUBMIT: BASE_COMMAND_SUCCESS,
+            OP_STREAM_ACK: BASE_ACK_SUCCESS,
+        }
+    )
+    args = _args()
+    cast(JsonObject, args["participant_response"])["message"] = (
+        "I disagree with the warning that this rollout is too risky; the evidence is bounded."
+    )
+
+    result = decode(
+        handle_selected_participant_response(args, client_factory=factory_for_transport(transport))
+    )
+
+    assert result["ok"] is True
+
+
 def test_selected_participant_response_rejects_invalid_argue_fields_before_transport() -> None:
     client_factory_called = False
 
@@ -337,6 +386,23 @@ def test_selected_participant_response_rejects_member_mismatch_before_transport(
     assert client_factory_called is False
 
 
+def test_selected_participant_response_rejects_caller_context_selected_event_mismatch() -> None:
+    args = _args()
+    args["caller_validation_context"] = {"selected_event_id": "evt-other"}
+
+    result = decode(handle_selected_participant_response(args, client_factory=never_client_factory))
+
+    assert result["ok"] is False
+    assert result["error"] == {
+        "category": "validation",
+        "message": (
+            "caller_validation_context.selected_event_id must match "
+            "speaker_selected_frame.event.event_id"
+        ),
+        "retryable": False,
+    }
+
+
 @pytest.mark.parametrize(
     ("mutate_args", "message"),
     [
@@ -413,6 +479,87 @@ def test_selected_participant_response_rejects_invalid_membr_evidence_before_tra
         "retryable": False,
     }
     assert client_factory_called is False
+
+
+def test_selected_participant_response_rejects_quality_required_orphan() -> None:
+    args = _args()
+    args["caller_validation_context"] = {
+        "quality_mode": "quality_required",
+        "local_context_sufficient": True,
+        "is_opening_speech": False,
+        "prior_claims": [{"event_id": "evt-prior", "claim_id": "T02.C1"}],
+    }
+
+    result = decode(handle_selected_participant_response(args, client_factory=never_client_factory))
+
+    assert result["ok"] is False
+    assert result["error"] == {
+        "category": "validation",
+        "message": (
+            "participant_response is orphan speech in quality_required caller_validation_context"
+        ),
+        "retryable": False,
+    }
+
+
+def test_selected_participant_response_preserves_daemon_authority_when_context_ambiguous() -> None:
+    transport = StaticDaemonTransport(
+        {
+            OP_VERSION_READ: BASE_VERSION_WITH_PARTC,
+            OP_COMMAND_SUBMIT: BASE_COMMAND_SUCCESS,
+            OP_STREAM_ACK: BASE_ACK_SUCCESS,
+        }
+    )
+    args = _args()
+    args["caller_validation_context"] = {"quality_mode": "quality_required"}
+
+    result = decode(
+        handle_selected_participant_response(args, client_factory=factory_for_transport(transport))
+    )
+
+    assert result["ok"] is True
+    assert [operation for operation, _body in transport.requests] == [
+        OP_VERSION_READ,
+        OP_COMMAND_SUBMIT,
+        OP_VERSION_READ,
+        OP_STREAM_ACK,
+    ]
+
+
+def test_selected_participant_response_rejects_stance_target_contradicting_context() -> None:
+    args = _args()
+    cast(JsonObject, args["participant_response"]).update(
+        {
+            "claims": [{"claim_id": "T03.C1", "summary": "Relation evidence stays local."}],
+            "stance_links": [
+                {
+                    "target_event_id": "evt-prior",
+                    "target_claim_id": "T99.C1",
+                    "stance": "support",
+                    "rationale": "This should fail because the claim is not in local context.",
+                }
+            ],
+            "contribution_type": "support",
+        }
+    )
+    args["caller_validation_context"] = {
+        "quality_mode": "quality_required",
+        "local_context_sufficient": True,
+        "is_opening_speech": False,
+        "prior_claims": [{"event_id": "evt-prior", "claim_id": "T02.C1"}],
+    }
+
+    result = decode(handle_selected_participant_response(args, client_factory=never_client_factory))
+
+    assert result["ok"] is False
+    assert result["error"] == {
+        "category": "validation",
+        "message": (
+            "participant_response.stance_links[0].target_claim_id is not in "
+            "caller_validation_context.prior_claims"
+        ),
+        "retryable": False,
+    }
 
 
 def test_selected_participant_response_does_not_ack_when_speak_submit_fails() -> None:

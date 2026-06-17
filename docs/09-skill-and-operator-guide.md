@@ -123,7 +123,21 @@ KAS does not install, own, or activate KAN runtime/plugin/bundled-skill artifact
 The KAN plugin package owns the bundled guidance source; a later explicitly
 approved Hermes/plugin activation flow may copy or register it into a profile.
 
+## RUNFIX activation guidance
+
+`RUNFIX` distinguishes plugin installation from live-local KAN discussion activation.
+
+- Plugin install/load proves only that the packaged plugin surface can be discovered and its declared tools can be used in the approved Hermes profile.
+- Discussion activation requires an explicit dry-run plan before any apply step: control daemon/socket/config evidence, participant profile list, selected Discord parent channel, profile eligibility, planned allow-list/config changes, rollback, smoke commands, and approval boundary.
+- Profiles with effective bot-to-bot enabled Discord behavior are excluded from KAN discussion allow-lists by default. Report every excluded profile and reason; do not silently include it in a KAN discussion channel.
+- Parent-channel allow-listing is preferred for thread reuse. If inheritance cannot be proven, stop with a gateway limitation instead of claiming no-restart thread readiness.
+- Fallback/manual participant messages may be useful diagnostic evidence, but they must be labeled `fallback_profile_pass` and must not be reported as selected-speaker runner success or KAN live discussion readiness.
+
+Minimum live-local readiness evidence remains approval-gated and includes: `runner_invocation_started` or durable runner failure from `speaker_selected`, canonical `speech` linkage, visible-surface evidence, ARGUE relation counts/diagnostics, eligible-profile-only allow-list evidence, and explicit no-claim language for production activation.
+
 ## Install guidance
+
+
 
 For SKILL-2, "install" means obtaining the packaged skill artifact from the
 Python package or staging the repository plugin files in a disposable local

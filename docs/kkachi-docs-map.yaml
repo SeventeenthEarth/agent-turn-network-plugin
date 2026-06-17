@@ -58,3 +58,22 @@ argument_graph:
     - "control/ARGUE-004"
     - "control/ARGUE-005"
   boundary: "Plugin docs are independent and complete for the participant-agent tool surface, selected participant response framing, fail-closed handler behavior, visible relation rendering, and packaged guidance. Control remains protocol/event/state/validation authority. Sequential DAG development does not make plugin docs optional."
+
+runfix:
+  epic: "RUNFIX"
+  plugin_sot: "docs/10-live-transport-sot.md"
+  control_sot: "../kkachi-agent-network-control/docs/24-live-transport-control-sot.md"
+  operator_guide: "docs/09-skill-and-operator-guide.md"
+  bundled_skill: "src/kkachi_agent_network_plugin/bundled_skills/kan-plugin/SKILL.md"
+  cross_repo_dag:
+    - "control/RUNFIX-001"
+    - "plugin/RUNFIX-002"
+    - "control/RUNFIX-003"
+    - "control/RUNFIX-004"
+    - "control/RUNFIX-005"
+    - "plugin/RUNFIX-006"
+    - "plugin/RUNFIX-007"
+    - "plugin/RUNFIX-008"
+    - "control/RUNFIX-009"
+    - "plugin/RUNFIX-010"
+  boundary: "RUNFIX plugin docs distinguish plugin install/load from KAN discussion activation, require approval-gated dry-run/apply, exclude bot-to-bot enabled profiles from KAN discussion allow-lists by default, and forbid fallback/manual profile evidence from being reported as selected-speaker runner success or live readiness."

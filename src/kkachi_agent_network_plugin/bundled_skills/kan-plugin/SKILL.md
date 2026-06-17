@@ -106,7 +106,31 @@ pilots still require explicit profile/plugin/daemon/gateway/Discord approval and
 evidence. KAS does not install, own, or activate KAN runtime/plugin/bundled-skill
 artifacts.
 
+## RUNFIX discussion activation guidance
+
+`RUNFIX` work separates plugin install/load from KAN discussion activation. A plugin
+install does not prove live council readiness. Before any live-local discussion
+apply step, produce a dry-run activation plan with: explicit control daemon/socket
+or config evidence, participant profiles, selected Discord parent channel,
+eligible/excluded profile list, planned allow-list/config changes, rollback,
+smoke checks, and the exact approval boundary.
+
+KAN discussion channels are bot-to-bot-free by default. Profiles with effective
+bot-to-bot enabled Discord behavior are excluded from KAN discussion allow-lists
+unless a later explicit policy approves otherwise. If parent-channel allow-list
+inheritance cannot be proven for new threads, stop with a gateway limitation and
+do not claim no-restart thread readiness.
+
+Reports must label fallback/manual profile evidence as `fallback_profile_pass`.
+That evidence never equals selected-speaker runner success or KAN live discussion
+readiness. Minimum readiness evidence remains approval-gated: selected-runner
+invocation or durable failure from `speaker_selected`, canonical `speech` linkage,
+visible-surface evidence, ARGUE relation counts/diagnostics, and explicit
+production/non-scope disclaimers.
+
 ## Operator workflow
+
+
 
 1. Inspect `plugin.yaml` and confirm the tool list plus
    `provides_commands: []`.

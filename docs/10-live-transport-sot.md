@@ -10,6 +10,8 @@ The control-side companion SOT is `../../kkachi-agent-network-control/docs/24-li
 
 This document does **not** authorize production activation, live Discord delivery, gateway/auth/token changes, KAB bridge readiness, or active profile mutation by itself. It defines the architecture, component responsibilities, command/data-plane boundaries, plugin implementation slices, cross-repo dependency gates, and verification evidence required before any later activation decision.
 
+RUNFIX update: this SOT also records the plugin-owned side of `RUNFIX`, the cross-repo remediation epic created from the 2026-06-17 council dogfood issues report. `control/RUNFIX-001` and `plugin/RUNFIX-002` are accepted docs-only SOT locks after KAN Red/Orange/Gray review, focused re-check, and Blue final synthesis; they do not install or activate live KAN discussion by themselves.
+
 ## Scope
 
 LIVE-TRANSPORT covers the local KAN runtime path needed for a main agent to control a discussion session while participant agents observe and respond through the daemon event stream.
@@ -52,7 +54,7 @@ Out of scope for this SOT unless a later task explicitly opens it:
 
 ## Cross-repo epic ownership and active-task handoff
 
-LIVE-TRANSPORT work is split into repo-owned five-letter epics. A repo switch must happen only at an epic boundary: do not start a control task in the middle of a plugin epic, and do not start a plugin task in the middle of a control epic. If a missing sibling capability is discovered mid-epic, block the active epic with evidence, complete the required sibling epic, then resume.
+LIVE-TRANSPORT work is split into repo-owned five-letter epics. For legacy repo-owned epics, a repo switch must happen only at an epic boundary: do not start a control task in the middle of a plugin-owned legacy epic, and do not start a plugin task in the middle of a control-owned legacy epic. If a missing sibling capability is discovered mid-epic, block the active epic with evidence, complete the required sibling epic, then resume. For an accepted cross-repo feature/remediation epic with one global task stream, such as RUNFIX, transfer happens at the recorded repo-qualified global task boundary instead of the legacy epic boundary.
 
 Recommended execution order:
 
@@ -67,7 +69,53 @@ Recommended execution order:
 
 Plugin roadmap entries live in `docs/06-implementation-epics-tasks.md`. Control roadmap entries live in `../../kkachi-agent-network-control/docs/roadmap.md`. When a task ID is referenced outside its repo-local roadmap or SOT table, use repo-qualified notation such as `plugin/LTRAN-001` or `control/LTRAN-001` to avoid ambiguity.
 
+For a jointly developed remediation or feature epic, both repos use one epic ID and one globally sequential task stream. Repo-qualified notation is mandatory, and repo-local gaps are expected. RUNFIX follows this rule: `control/RUNFIX-001`, `plugin/RUNFIX-002`, `control/RUNFIX-003`, `control/RUNFIX-004`, `control/RUNFIX-005`, `plugin/RUNFIX-006`, `plugin/RUNFIX-007`, `plugin/RUNFIX-008`, `control/RUNFIX-009`, `plugin/RUNFIX-010`.
+
+## RUNFIX activation and evidence contract
+
+RUNFIX separates package installation from KAN discussion activation:
+
+1. **Plugin install/load** means the repository or package can be loaded by Hermes and its declared tools are visible in an approved profile. It does not prove daemon compatibility, participant runtime operation, visible Discord delivery, or live council readiness.
+2. **Discussion activation planning** means an operator has a dry-run plan that names the explicit control daemon/socket/config, participant profiles, selected Discord parent channel, eligible/excluded profiles, planned config or allow-list changes, rollback, verification commands, and approval gates.
+3. **Discussion activation apply** may occur only after explicit approval for the exact live-local scope. It must not mutate provider/gateway/auth/token/profile/Discord state outside the approved plan.
+4. **Live-local pilot acceptance** requires selected-speaker runner evidence, canonical `speech` linkage, visible-surface evidence, ARGUE quality diagnostics, and fallback disclosure. Lifecycle-only or manual profile fallback evidence is not enough.
+
+RUNFIX evidence labels are mandatory in operator reports:
+
+- `lifecycle_pass`: daemon event flow completed, but runner/visible/ARGUE quality may still be unproven;
+- `fallback_profile_pass`: manual or fallback profile text was obtained; this is never full KAN runner success;
+- `selected_runner_pass`: selected member runtime/runner was invoked from `speaker_selected` and produced canonical speech or durable failure evidence;
+- `visible_surface_pass`: approved visible surface rendering/delivery evidence points back to daemon events;
+- `discussion_quality_pass`: ARGUE relation evidence or justified `new_axis` is present and diagnostics do not fail the requested quality mode.
+
+### RUNFIX cross-repo DAG
+
+| Global Order | Repo | Task ID | Task Status | Purpose |
+|---:|---|---|---|---|
+| 1 | control | RUNFIX-001 | completed/docs-only | Control SOT/roadmap remediation contract, canonical readiness labels, and control-owned implementation boundaries accepted after RUNFIX-001/002 review and Blue synthesis. |
+| 2 | plugin | RUNFIX-002 | completed/docs-only | Plugin activation/operator SOT, roadmap companion, install-vs-activation split, and bundled guidance boundary accepted after Red `t_612b4d58`, Orange `t_c673aed4`, Gray `t_ce1b0c31`, focused Orange `t_131ea8c9`, focused Gray `t_7cec278f`, and Blue synthesis `t_1bb67569`. |
+| 3 | control | RUNFIX-003 | completed/local-control | Selected-speaker member runtime dispatch accepted in control repo commit `56a8991` with KAH run `run-20260617T064753Z-103e15ca05fa`, final gate pass, focused tests/docs guardrails/check-plugin-contract pass, and no plugin package mutation. |
+| 4 | control | RUNFIX-004 | completed/local-control | Hermes adapter command contract and runner diagnostics completed in control commit `0138b59` with KAH run `run-20260617T101645Z-1757e05ffbcf`; evidence remains local/control-only with no plugin package mutation, live Discord delivery, production daemon activation, profile/provider/gateway/auth/token mutation, or push claim. |
+| 5 | control | RUNFIX-005 | planned | ARGUE/moderator quality gates. |
+| 6 | plugin | RUNFIX-006 | planned | Discussion activation planner/doctor. |
+| 7 | plugin | RUNFIX-007 | planned | Discord profile eligibility, allow-list planning, and bot-to-bot exclusion. |
+| 8 | plugin | RUNFIX-008 | planned | Participant ARGUE response guidance and fallback reporting. |
+| 9 | control | RUNFIX-009 | planned | Integrated control smoke fixtures. |
+| 10 | plugin | RUNFIX-010 | planned | Approved live-local activation pilot and final operator package. |
+
+### Profile and Discord eligibility policy
+
+KAN discussion channels are bot-to-bot-free by default. A profile whose effective Discord configuration allows bot-to-bot replies is excluded from the KAN discussion allow-list unless a later explicitly approved policy changes that rule. Activation planning must list candidate profiles as `eligible`, `excluded`, or `blocked/unknown`, with the reason for every exclusion. Eligible profiles only may be included in parent-channel allow-list dry-runs or applies.
+
+A parent-channel allow-list is preferred so new discussion threads do not require per-thread reconfiguration or gateway restart. If the gateway cannot prove parent-channel inheritance, the planner must fail closed with an explicit Hermes/gateway dependency instead of silently falling back to current-thread messages or manual profile replies.
+
+### Fallback disclosure policy
+
+Fallback is allowed only as labeled diagnostic evidence. Reports must never collapse fallback/manual profile success into selected-speaker runner success or KAN discussion readiness. A fallback report must name the missing evidence, such as absent `runner_invocation_started`, adapter command failure, missing canonical `speech`, missing delivery evidence, zero ARGUE relation counts, or allow-list/gateway limitation.
+
 ## Architecture decision
+
+
 
 The durable relationship is:
 

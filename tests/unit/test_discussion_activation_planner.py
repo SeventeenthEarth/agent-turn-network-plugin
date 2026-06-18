@@ -313,6 +313,96 @@ def test_runfix_008_ambiguous_canonical_link_fails_closed() -> None:
     } in report["blockers"]
 
 
+def test_discord_origin_runfix_010_defaults_to_live_visible_blocks_without_surface() -> None:
+    plan = complete_runfix_008_plan()
+    plan["task_id"] = "plugin/RUNFIX-010"
+    plan["request_context"] = {"source": "discord_thread"}
+    plan.pop("visible_surface_readiness", None)
+
+    report = build_discussion_activation_plan(plan)
+
+    assert report["status"] == "blocked"
+    assert report["behavior_task_id"] == "plugin/RUNFIX-010"
+    assert report["requested_output_mode"] == "live_visible_thread"
+    assert report["visible_surface_readiness_report"] == {
+        "requested_output_mode": "live_visible_thread",
+        "request_source": "discord_thread",
+        "surface_bound": False,
+        "turn_delivery_proven": False,
+        "visible_closeout_proven": False,
+        "real_profile_gateway_replies": False,
+        "cli_actor_speech_only": False,
+        "visible_turns_expected": 0,
+        "visible_turns_posted": 0,
+        "ready": False,
+    }
+    assert {
+        "code": "visible_surface_readiness_missing",
+        "owner": "operator/Hermes-gateway",
+        "message": (
+            "Discord-origin KAN council requests default to live visible thread output; "
+            "provide surface binding, turn-posting, profile/gateway reply, and closeout evidence "
+            "or explicitly confirm artifact-only mode before creating the session."
+        ),
+    } in report["blockers"]
+
+
+def test_runfix_010_live_visible_ready_requires_real_profile_gateway_and_not_cli_actor_only() -> (
+    None
+):
+    plan = complete_runfix_008_plan()
+    plan["task_id"] = "plugin/RUNFIX-010"
+    plan["request_context"] = {"source": "discord_thread"}
+    plan["visible_surface_readiness"] = {
+        "surface_bound": True,
+        "parent_channel_id": "parent-123",
+        "thread_id": "thread-456",
+        "turn_posting_strategy": "selected_speaker_profile_send",
+        "turn_delivery_probe_ref": "discord/thread-turn-probe",
+        "visible_closeout_probe_ref": "discord/thread-closeout-probe",
+        "real_profile_gateway_replies": True,
+        "cli_actor_speech_only": False,
+        "visible_turns_expected": 15,
+        "visible_turns_posted": 15,
+    }
+
+    report = build_discussion_activation_plan(plan)
+
+    assert report["status"] == "ready_for_approval"
+    assert report["requested_output_mode"] == "live_visible_thread"
+    assert report["visible_surface_readiness_report"]["ready"] is True
+    assert report["visible_surface_readiness_report"]["surface_bound"] is True
+    assert report["visible_surface_readiness_report"]["turn_delivery_proven"] is True
+    assert report["final_report_contract"] == {
+        "kan_lifecycle_finalized": "true/false",
+        "discord_visible_turns_posted": "N/expected",
+        "real_profile_gateway_replies": "true/false",
+        "cli_actor_speech_only": "true/false",
+    }
+
+
+def test_runfix_010_artifact_only_from_discord_requires_explicit_confirmation() -> None:
+    plan = complete_runfix_008_plan()
+    plan["task_id"] = "plugin/RUNFIX-010"
+    plan["request_context"] = {
+        "source": "discord_thread",
+        "requested_output_mode": "artifact_only",
+    }
+
+    report = build_discussion_activation_plan(plan)
+
+    assert report["status"] == "blocked"
+    assert report["requested_output_mode"] == "artifact_only"
+    assert {
+        "code": "artifact_only_confirmation_missing",
+        "owner": "operator",
+        "message": (
+            "Artifact-only or daemon CLI actor speech mode for a Discord-origin request "
+            "requires explicit operator confirmation before session creation."
+        ),
+    } in report["blockers"]
+
+
 def test_missing_control_dependency_fails_closed() -> None:
     plan = complete_plan()
     plan.pop("control_dependency")

@@ -286,12 +286,21 @@ def test_discussion_activation_plan_schema_is_pure_local_doctor_tool() -> None:
     assert plan_schema["additionalProperties"] is False
     assert plan_schema["properties"]["task_id"] == {
         "type": "string",
-        "enum": ["plugin/RUNFIX-006", "plugin/RUNFIX-007", "plugin/RUNFIX-008"],
+        "enum": [
+            "plugin/RUNFIX-006",
+            "plugin/RUNFIX-007",
+            "plugin/RUNFIX-008",
+            "plugin/RUNFIX-010",
+        ],
     }
     operator_evidence = plan_schema["properties"]["operator_evidence"]
     assert "ARGUE counts" in operator_evidence["description"]
     assert "speaker_selected -> speech linkage" in operator_evidence["description"]
     assert "fallback disclosure" in operator_evidence["description"]
+    request_context = plan_schema["properties"]["request_context"]
+    assert "live_visible_thread" in request_context["description"]
+    visible_readiness = plan_schema["properties"]["visible_surface_readiness"]
+    assert "real profile/gateway replies" in visible_readiness["description"]
     evidence_labels = plan_schema["properties"]["evidence_labels"]
     assert set(evidence_labels["properties"]) == {
         "lifecycle_pass",

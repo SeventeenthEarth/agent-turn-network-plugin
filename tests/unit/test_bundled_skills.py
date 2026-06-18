@@ -30,6 +30,9 @@ def test_bundled_kan_skill_resource_is_import_safe_and_readable() -> None:
     assert "ARGUE argument-graph support as static/fake/injected" in text
     assert "Participant response template" in text
     assert "speaker_selected -> speech linkage" in text
+    assert "live_visible_thread" in text
+    assert "CLI actor speech only" in text
+    assert "Discord visible turns posted: N/expected" in text
     assert "SKILL-2" in text
 
 

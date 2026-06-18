@@ -786,7 +786,7 @@ KAN_SURFACE_RENDER_PROJECTION: Final[dict[str, object]] = {
 KAN_DISCUSSION_ACTIVATION_PLAN: Final[dict[str, object]] = {
     "name": "kan_discussion_activation_plan",
     "description": (
-        "Build a deterministic pure/local RUNFIX-008 KAN discussion activation "
+        "Build a deterministic pure/local RUNFIX-010 KAN discussion activation "
         "planner/doctor report from explicit caller-provided evidence only. The "
         "tool performs no environment reads, socket discovery, daemon startup, "
         "CLI fallback, Discord/Hermes/profile/gateway inspection, or provider/"
@@ -803,7 +803,7 @@ KAN_DISCUSSION_ACTIVATION_PLAN: Final[dict[str, object]] = {
                     "explicit daemon/socket/config evidence, participant profiles, "
                     "parent-channel allow-list inheritance proof, planned changes, "
                     "rollback, verification commands, approval gates, and separated "
-                    "RUNFIX evidence labels."
+                    "RUNFIX evidence labels, and optional live-visible surface readiness."
                 ),
                 "properties": {
                     "schema_version": {"type": "integer", "const": 1},
@@ -813,6 +813,7 @@ KAN_DISCUSSION_ACTIVATION_PLAN: Final[dict[str, object]] = {
                             "plugin/RUNFIX-006",
                             "plugin/RUNFIX-007",
                             "plugin/RUNFIX-008",
+                            "plugin/RUNFIX-010",
                         ],
                     },
                     "control_dependency": {
@@ -867,10 +868,30 @@ KAN_DISCUSSION_ACTIVATION_PLAN: Final[dict[str, object]] = {
                         "type": "object",
                         "additionalProperties": True,
                         "description": (
-                            "Explicit RUNFIX-008 operator evidence for participant ARGUE "
+                            "Explicit RUNFIX-008/RUNFIX-010 operator evidence for "
+                            "participant ARGUE "
                             "response fields, ARGUE counts, runner evidence, canonical "
                             "speaker_selected -> speech linkage, and fallback disclosure. "
                             "Missing or ambiguous evidence remains unproven/blocked."
+                        ),
+                    },
+                    "request_context": {
+                        "type": "object",
+                        "additionalProperties": True,
+                        "description": (
+                            "Operator request source and output mode. Discord-origin requests "
+                            "default to live_visible_thread unless artifact_only or "
+                            "daemon_cli_actor_speech is explicitly confirmed before "
+                            "session creation."
+                        ),
+                    },
+                    "visible_surface_readiness": {
+                        "type": "object",
+                        "additionalProperties": True,
+                        "description": (
+                            "RUNFIX-010 preflight evidence for live visible thread output: "
+                            "surface binding, turn-posting probe, visible closeout probe, "
+                            "real profile/gateway replies, and non-CLI-actor speech path."
                         ),
                     },
                     "evidence_labels": {

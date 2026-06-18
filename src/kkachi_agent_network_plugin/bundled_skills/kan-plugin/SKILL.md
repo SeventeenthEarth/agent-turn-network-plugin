@@ -64,6 +64,11 @@ Default work must stay local and fake/injected only:
 6. Treat `kan_discussion_activation_plan` output as a dry-run planner/doctor
    report only. It can prepare an approval-gated activation plan from explicit
    evidence, but it never proves live readiness.
+   For Discord-origin council requests, assume the operator expects
+   `live_visible_thread` output unless they explicitly confirm `artifact_only`,
+   `daemon_cli_actor_speech`, transcript-only, or export-only mode before
+   `council.new`. Do not quietly downgrade a Discord thread request to daemon
+   CLI actor speech or transcript/export artifacts.
 7. Treat ARGUE argument-graph support as static/fake/injected schema and tool
    contract coverage only. The plugin preserves explicit `claims[]`,
    `stance_links[]`, `contribution_type`, `new_axis_reason`, `evidence[]`, and
@@ -141,6 +146,36 @@ requires grounded relation evidence, visible relation summaries from
 non-immediate prior-claim engagement, challenge/refine/synthesize coverage where
 relevant, and no runtime noise in visible speech.
 
+## Live-visible council preflight
+
+When the request arrives in Discord and the user asks agents to "discuss" or run
+a council, default to live visible thread output. Before creating the session,
+distinguish the mode in the task brief:
+
+- `live_visible_thread`: selected-speaker/profile-send or approved fallback
+  poster path will post each turn to the Discord thread or disclosed
+  parent-channel fallback;
+- `daemon_cli_actor_speech`: lifecycle/evidence-only actor speech; Discord
+  turn-by-turn visibility is not guaranteed;
+- `artifact_only`: transcript/export artifacts only.
+
+If `live_visible_thread` cannot be proven, fail closed before session creation
+instead of silently running artifact-only. Required preflight evidence:
+
+- Discord thread id, or approved parent-channel fallback with `fallback_reason`;
+- turn-posting probe for selected-speaker/profile-send or the approved fallback
+  poster;
+- visible closeout probe;
+- `real_profile_gateway_replies: true`;
+- `cli_actor_speech_only: false`.
+
+Final reports must not equate transcript/export success with a visible Discord
+discussion. Report these fields separately: `KAN lifecycle finalized`,
+`Discord visible turns posted: N/expected`, `real profile/gateway replies`, and
+`CLI actor speech only`.
+
+## RUNFIX visible pilot guidance
+
 Control/daemon fixtures and validation remain authoritative. Plugin rendering is
 a local visible surface and evidence pointer, not lifecycle state. Live-local
 pilots still require explicit profile/plugin/daemon/gateway/Discord approval and
@@ -167,10 +202,13 @@ keeps RUNFIX labels separate, and always keeps `live_readiness: false`.
 
 KAN discussion channels are bot-to-bot-free by default. Profiles with effective
 bot-to-bot enabled Discord behavior are excluded from KAN discussion allow-lists
-unless a later explicit policy approves otherwise. If parent-channel allow-list
-inheritance cannot be proven for new threads by explicit Hermes/gateway proof,
-stop with a gateway limitation and do not accept thread-only/current-channel or
-manual profile evidence as no-restart thread readiness.
+unless a later explicit policy approves otherwise. Visible-pilot surface policy
+is thread-preferred and parent-channel fallback allowed: first create or use a
+dedicated thread under the approved parent channel, then fall back to the parent
+channel only when thread creation/posting is unsupported. If the fallback is
+used, record the fallback reason in the task brief, KAN surface metadata,
+visible closeout, and final report; do not silently normalize channel-only
+operation or treat it as no-restart thread readiness.
 
 Reports must label fallback/manual profile evidence as `fallback_profile_pass`.
 That evidence never equals selected-speaker runner success or KAN live discussion

@@ -16,10 +16,11 @@ ACTIVATION_PLAN_SCHEMA_VERSION: Final = 1
 RUNFIX_006_TASK_ID: Final = "plugin/RUNFIX-006"
 RUNFIX_007_TASK_ID: Final = "plugin/RUNFIX-007"
 RUNFIX_008_TASK_ID: Final = "plugin/RUNFIX-008"
+RUNFIX_010_TASK_ID: Final = "plugin/RUNFIX-010"
 SUPPORTED_TASK_IDS: Final[frozenset[str]] = frozenset(
-    {RUNFIX_006_TASK_ID, RUNFIX_007_TASK_ID, RUNFIX_008_TASK_ID}
+    {RUNFIX_006_TASK_ID, RUNFIX_007_TASK_ID, RUNFIX_008_TASK_ID, RUNFIX_010_TASK_ID}
 )
-TASK_ID: Final = RUNFIX_008_TASK_ID
+TASK_ID: Final = RUNFIX_010_TASK_ID
 CONTROL_DEPENDENCY_TASK_ID: Final = "control/RUNFIX-005"
 CONTROL_DEPENDENCY_STATUS: Final = "completed/local-control"
 TOOL_NAME: Final = "kan_discussion_activation_plan"
@@ -41,7 +42,8 @@ def build_discussion_activation_plan(plan: Mapping[str, object]) -> JsonObject:
     task_id = _required_string(source.get("task_id"), label="plan.task_id")
     if task_id not in SUPPORTED_TASK_IDS:
         raise ValueError(
-            "plan.task_id must be plugin/RUNFIX-006, plugin/RUNFIX-007, or plugin/RUNFIX-008"
+            "plan.task_id must be plugin/RUNFIX-006, plugin/RUNFIX-007, "
+            "plugin/RUNFIX-008, or plugin/RUNFIX-010"
         )
 
     blockers: list[JsonObject] = []
@@ -90,7 +92,13 @@ def build_discussion_activation_plan(plan: Mapping[str, object]) -> JsonObject:
     blockers.extend(operator_blockers)
     operator_evidence = _operator_evidence_report(
         source.get("operator_evidence"),
-        require_evidence=task_id == RUNFIX_008_TASK_ID,
+        require_evidence=task_id in {RUNFIX_008_TASK_ID, RUNFIX_010_TASK_ID},
+        blockers=blockers,
+    )
+    visible_surface_readiness = _visible_surface_readiness_report(
+        source.get("request_context"),
+        source.get("visible_surface_readiness"),
+        task_id=task_id,
         blockers=blockers,
     )
 
@@ -110,7 +118,11 @@ def build_discussion_activation_plan(plan: Mapping[str, object]) -> JsonObject:
         "schema_version": ACTIVATION_PLAN_SCHEMA_VERSION,
         "task_id": task_id,
         "behavior_task_id": (
-            RUNFIX_008_TASK_ID if task_id == RUNFIX_008_TASK_ID else RUNFIX_007_TASK_ID
+            RUNFIX_010_TASK_ID
+            if task_id == RUNFIX_010_TASK_ID
+            else RUNFIX_008_TASK_ID
+            if task_id == RUNFIX_008_TASK_ID
+            else RUNFIX_007_TASK_ID
         ),
         "status": status,
         "live_readiness": False,
@@ -124,6 +136,9 @@ def build_discussion_activation_plan(plan: Mapping[str, object]) -> JsonObject:
         "parent_channel_plan": parent_channel_plan,
         "participant_argue_response_template": _participant_argue_response_template(),
         "operator_evidence_report": operator_evidence,
+        "requested_output_mode": visible_surface_readiness["requested_output_mode"],
+        "visible_surface_readiness_report": visible_surface_readiness,
+        "final_report_contract": _final_report_contract(),
         "fallback_audit": cast(list[JsonValue], _fallback_audit()),
         "required_approvals": cast(list[JsonValue], required_approvals),
         "dry_run_actions": cast(list[JsonValue], dry_run_actions),
@@ -137,6 +152,7 @@ def build_discussion_activation_plan(plan: Mapping[str, object]) -> JsonObject:
             "profile/gateway/provider/auth/token/model mutation",
             "daemon startup or lifecycle ownership",
             "hidden CLI fallback",
+            "silent artifact-only substitution for a Discord-origin council request",
             "production activation or live readiness claim",
         ],
     }
@@ -448,6 +464,173 @@ def _profile_remediation(
         "excluded": cast(list[JsonValue], excluded_profiles),
         "blocked": cast(list[JsonValue], blocked_profiles),
     }
+
+
+def _visible_surface_readiness_report(
+    request_context_value: object,
+    readiness_value: object,
+    *,
+    task_id: str,
+    blockers: list[JsonObject],
+) -> JsonObject:
+    request_context = (
+        _json_object(request_context_value, label="plan.request_context")
+        if isinstance(request_context_value, Mapping)
+        else {}
+    )
+    request_source = _optional_string_value(request_context.get("source")) or "unspecified"
+    requested_output_mode = _optional_string_value(
+        request_context.get("requested_output_mode")
+        or request_context.get("requested_output")
+        or request_context.get("mode")
+    )
+    if requested_output_mode is None:
+        requested_output_mode = (
+            "live_visible_thread"
+            if request_source.startswith("discord")
+            else "activation_planning_only"
+        )
+    report: JsonObject = {
+        "requested_output_mode": requested_output_mode,
+        "request_source": request_source,
+        "surface_bound": False,
+        "turn_delivery_proven": False,
+        "visible_closeout_proven": False,
+        "real_profile_gateway_replies": False,
+        "cli_actor_speech_only": False,
+        "visible_turns_expected": 0,
+        "visible_turns_posted": 0,
+        "ready": False,
+    }
+    if task_id != RUNFIX_010_TASK_ID:
+        report["ready"] = requested_output_mode != "live_visible_thread"
+        return report
+
+    if requested_output_mode not in {
+        "live_visible_thread",
+        "artifact_only",
+        "daemon_cli_actor_speech",
+        "activation_planning_only",
+    }:
+        blockers.append(
+            _blocker(
+                code="requested_output_mode_unsupported",
+                owner="operator",
+                message=(
+                    "requested_output_mode must be live_visible_thread, artifact_only, "
+                    "daemon_cli_actor_speech, or activation_planning_only."
+                ),
+            )
+        )
+        return report
+
+    if requested_output_mode in {"artifact_only", "daemon_cli_actor_speech"}:
+        if (
+            request_source.startswith("discord")
+            and request_context.get("artifact_only_confirmed") is not True
+        ):
+            blockers.append(
+                _blocker(
+                    code="artifact_only_confirmation_missing",
+                    owner="operator",
+                    message=(
+                        "Artifact-only or daemon CLI actor speech mode for a "
+                        "Discord-origin request "
+                        "requires explicit operator confirmation before session creation."
+                    ),
+                )
+            )
+        report["ready"] = request_context.get("artifact_only_confirmed") is True
+        return report
+
+    if requested_output_mode != "live_visible_thread":
+        report["ready"] = True
+        return report
+
+    if not isinstance(readiness_value, Mapping):
+        blockers.append(
+            _blocker(
+                code="visible_surface_readiness_missing",
+                owner="operator/Hermes-gateway",
+                message=(
+                    "Discord-origin KAN council requests default to live visible thread output; "
+                    "provide surface binding, turn-posting, profile/gateway reply, "
+                    "and closeout evidence "
+                    "or explicitly confirm artifact-only mode before creating the session."
+                ),
+            )
+        )
+        return report
+
+    readiness = _json_object(readiness_value, label="plan.visible_surface_readiness")
+    surface_bound = readiness.get("surface_bound") is True and (
+        _non_empty_string(readiness.get("thread_id"))
+        or (
+            _optional_string_value(readiness.get("mode")) == "parent_channel_fallback"
+            and _non_empty_string(readiness.get("parent_channel_id"))
+            and _non_empty_string(readiness.get("fallback_reason"))
+        )
+    )
+    turn_delivery_proven = _optional_string_value(readiness.get("turn_posting_strategy")) in {
+        "selected_speaker_profile_send",
+        "fallback_poster",
+    } and _non_empty_string(readiness.get("turn_delivery_probe_ref"))
+    visible_closeout_proven = _non_empty_string(readiness.get("visible_closeout_probe_ref"))
+    real_profile_gateway_replies = readiness.get("real_profile_gateway_replies") is True
+    cli_actor_speech_only = readiness.get("cli_actor_speech_only") is True
+    expected = _non_negative_int(readiness.get("visible_turns_expected"))
+    posted = _non_negative_int(readiness.get("visible_turns_posted"))
+    report.update(
+        {
+            "surface_bound": surface_bound,
+            "turn_delivery_proven": turn_delivery_proven,
+            "visible_closeout_proven": visible_closeout_proven,
+            "real_profile_gateway_replies": real_profile_gateway_replies,
+            "cli_actor_speech_only": cli_actor_speech_only,
+            "visible_turns_expected": expected,
+            "visible_turns_posted": posted,
+        }
+    )
+    missing: list[str] = []
+    if not surface_bound:
+        missing.append("surface binding")
+    if not turn_delivery_proven:
+        missing.append("turn delivery probe")
+    if not visible_closeout_proven:
+        missing.append("visible closeout probe")
+    if not real_profile_gateway_replies:
+        missing.append("real profile/gateway replies")
+    if cli_actor_speech_only:
+        missing.append("non-CLI-actor speech path")
+    if missing:
+        blockers.append(
+            _blocker(
+                code="live_visible_surface_not_ready",
+                owner="operator/Hermes-gateway",
+                message="Live visible council preflight is missing: " + ", ".join(missing) + ".",
+            )
+        )
+    report["ready"] = not missing
+    return report
+
+
+def _final_report_contract() -> JsonObject:
+    return {
+        "kan_lifecycle_finalized": "true/false",
+        "discord_visible_turns_posted": "N/expected",
+        "real_profile_gateway_replies": "true/false",
+        "cli_actor_speech_only": "true/false",
+    }
+
+
+def _non_negative_int(value: object) -> int:
+    if isinstance(value, bool) or not isinstance(value, int) or value < 0:
+        return 0
+    return value
+
+
+def _optional_string_value(value: object) -> str | None:
+    return cast(str, value) if _non_empty_string(value) else None
 
 
 def _fallback_audit() -> list[JsonObject]:

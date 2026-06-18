@@ -115,6 +115,7 @@ def test_fake_hermes_context_keeps_hooks_and_commands_empty_for_discord_helper()
     register_tools(ctx)
 
     assert [tool["name"] for tool in ctx.registered_tools][-1] == "kan_discord_send_message"
+    assert [tool["name"] for tool in ctx.registered_tools][-2] == "kan_discussion_activation_plan"
     assert ctx.registered_hooks == []
     assert ctx.registered_commands == []
 

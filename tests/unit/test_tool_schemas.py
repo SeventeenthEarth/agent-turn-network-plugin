@@ -16,6 +16,7 @@ def test_schemas_expose_only_authorized_fake_injected_tools() -> None:
         "kan_selected_participant_response",
         "kan_delivery_evidence",
         "kan_surface_render_projection",
+        "kan_discussion_activation_plan",
         "kan_discord_send_message",
     )
     assert [schema["name"] for schema in schemas.KAN_TOOL_SCHEMAS] == list(schemas.tool_names())
@@ -256,6 +257,44 @@ def test_surface_render_projection_schema_is_pure_local_projection_tool() -> Non
         },
         "required": ["projection"],
         "additionalProperties": False,
+    }
+
+
+def test_discussion_activation_plan_schema_is_pure_local_doctor_tool() -> None:
+    schema = schemas.KAN_DISCUSSION_ACTIVATION_PLAN
+
+    assert schema["name"] == "kan_discussion_activation_plan"
+    description = str(schema["description"]).lower()
+    assert "pure/local" in description
+    assert "explicit caller-provided evidence only" in description
+    assert "live readiness false" in description
+    assert "cli fallback" in description
+    plan_schema = schema["parameters"]["properties"]["plan"]
+    assert plan_schema["required"] == [
+        "schema_version",
+        "task_id",
+        "control_dependency",
+        "plugin_install",
+        "control_daemon",
+        "participant_profiles",
+        "discord_parent_channel",
+        "planned_changes",
+        "rollback",
+        "verification_commands",
+        "approval_gates",
+    ]
+    assert plan_schema["additionalProperties"] is False
+    assert plan_schema["properties"]["task_id"] == {
+        "type": "string",
+        "const": "plugin/RUNFIX-006",
+    }
+    evidence_labels = plan_schema["properties"]["evidence_labels"]
+    assert set(evidence_labels["properties"]) == {
+        "lifecycle_pass",
+        "fallback_profile_pass",
+        "selected_runner_pass",
+        "visible_surface_pass",
+        "discussion_quality_pass",
     }
 
 

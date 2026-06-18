@@ -34,6 +34,7 @@ Supported plugin surfaces in the current package are fake/injected Hermes tools:
 - `kan_selected_participant_response`
 - `kan_delivery_evidence`
 - `kan_surface_render_projection`
+- `kan_discussion_activation_plan`
 - `kan_discord_send_message`
 
 The plugin manifest must continue to declare `provides_commands: []`. KAN slash
@@ -60,7 +61,10 @@ Default work must stay local and fake/injected only:
    over explicit daemon/control event JSON, never as lifecycle authority. Use
    `visible_transcript` for operator-facing discussion text and keep raw
    cursor/event details in `audit_log`/`rows` evidence.
-6. Treat ARGUE argument-graph support as static/fake/injected schema and tool
+6. Treat `kan_discussion_activation_plan` output as a dry-run planner/doctor
+   report only. It can prepare an approval-gated activation plan from explicit
+   evidence, but it never proves live readiness.
+7. Treat ARGUE argument-graph support as static/fake/injected schema and tool
    contract coverage only. The plugin preserves explicit `claims[]`,
    `stance_links[]`, `contribution_type`, `new_axis_reason`, `evidence[]`, and
    `hand_raise.target_links[]` fields for daemon/control validation.
@@ -114,6 +118,13 @@ apply step, produce a dry-run activation plan with: explicit control daemon/sock
 or config evidence, participant profiles, selected Discord parent channel,
 eligible/excluded profile list, planned allow-list/config changes, rollback,
 smoke checks, and the exact approval boundary.
+
+Use `kan_discussion_activation_plan` for that planning/doctor report when a
+structured tool surface is available. The tool consumes only explicit
+caller-provided evidence, excludes bot-to-bot-enabled profiles by default,
+blocks unknown tool visibility or eligibility, treats missing parent-channel
+allow-list inheritance proof as a Hermes/gateway dependency, keeps RUNFIX labels
+separate, and always keeps `live_readiness: false`.
 
 KAN discussion channels are bot-to-bot-free by default. Profiles with effective
 bot-to-bot enabled Discord behavior are excluded from KAN discussion allow-lists

@@ -95,6 +95,32 @@ Before `command.submit`, `kan_council_command` calls injected `version.read` and
 
 This is fake/injected CNDIS readiness only. It does not prove live daemon, installed Hermes plugin-load, slash-command, Discord helper/send_message, gateway, auth, token, socket, localhost, CLI, or KAB readiness.
 
+## RUNFIX-006 discussion activation planner/doctor
+
+RUNFIX-006 adds `kan_discussion_activation_plan` as a pure/local Hermes tool that
+builds a deterministic dry-run activation planner/doctor report from explicit
+caller-provided evidence only. The input names control/RUNFIX-005 dependency
+evidence, plugin install/enabled/tool visibility evidence, explicit daemon
+socket/config and compatibility evidence, participant profiles, selected Discord
+parent-channel proof, planned dry-run changes, rollback steps, verification
+commands, approval gates, optional operator blockers, and separated RUNFIX
+evidence labels.
+
+The tool classifies participant profiles into eligible, excluded, and
+blocked/unknown lists. Bot-to-bot-enabled profiles are excluded by default.
+Unknown or missing profile eligibility or tool visibility blocks that profile.
+Missing parent-channel allow-list inheritance proof is reported as a
+Hermes/gateway dependency blocker, not as a fallback to current-thread messages.
+The five RUNFIX labels (`lifecycle_pass`, `fallback_profile_pass`,
+`selected_runner_pass`, `visible_surface_pass`, and `discussion_quality_pass`)
+remain separate and default to `unproven` unless explicitly supplied.
+
+RUNFIX-006 never proves live readiness. `kan_discussion_activation_plan` always
+returns `live_readiness: false` and performs no environment reads, current
+Hermes/Discord/profile/gateway inspection, socket discovery, CLI fallback,
+daemon startup, Discord send/channel creation, profile/gateway/provider/auth/
+token/model mutation, activation apply, or production readiness claim.
+
 ## CNDIS-2 injected Discord helper
 
 CNDIS-2 adds `kan_discord_send_message` as a narrow injected-only Hermes tool wrapper over

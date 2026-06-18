@@ -31,6 +31,7 @@ EXPECTED_TOOLS = [
     "kan_selected_participant_response",
     "kan_delivery_evidence",
     "kan_surface_render_projection",
+    "kan_discussion_activation_plan",
     "kan_discord_send_message",
 ]
 LIVE_LOOKING_ENV = {
@@ -218,10 +219,10 @@ def require_handler_fail_closed(context: FakeHermesContext) -> dict[str, str]:
         if not isinstance(result, str):
             raise SystemExit(f"plugin-load smoke handler did not return JSON string: {name}")
         body = json.loads(result)
-        if name == "kan_surface_render_projection":
+        if name in {"kan_surface_render_projection", "kan_discussion_activation_plan"}:
             if body.get("ok") is not True or body.get("live_readiness") is not False:
                 raise SystemExit(
-                    "plugin-load smoke pure projection handler must succeed locally: "
+                    "plugin-load smoke pure local handler must succeed locally: "
                     f"{body}"
                 )
             outputs[str(name)] = result
@@ -346,6 +347,48 @@ def representative_args(tool_name: str) -> dict[str, object]:
                         },
                     }
                 ],
+            }
+        }
+    if tool_name == "kan_discussion_activation_plan":
+        return {
+            "plan": {
+                "schema_version": 1,
+                "task_id": "plugin/RUNFIX-006",
+                "control_dependency": {
+                    "task_id": "control/RUNFIX-005",
+                    "status": "completed/local-control",
+                    "evidence_ref": "local-smoke-control-runfix-005",
+                },
+                "plugin_install": {
+                    "installed": True,
+                    "enabled": True,
+                    "tool_names": [
+                        "kan_daemon_status",
+                        "kan_discussion_activation_plan",
+                    ],
+                },
+                "control_daemon": {
+                    "mode": "explicit",
+                    "socket_or_config_ref": "local-smoke-config",
+                    "compatibility_ref": "local-smoke-version-read",
+                },
+                "participant_profiles": [
+                    {
+                        "profile": "macho",
+                        "tools_visible": True,
+                        "bot_to_bot_enabled": False,
+                        "evidence_ref": "local-smoke-profile-tools",
+                    }
+                ],
+                "discord_parent_channel": {
+                    "channel_id": "chan-smoke-parent",
+                    "allow_list_inheritance_proven": True,
+                    "proof_ref": "local-smoke-parent-proof",
+                },
+                "planned_changes": ["dry-run allow-list only"],
+                "rollback": {"steps": ["remove dry-run allow-list"]},
+                "verification_commands": ["make test-prepare"],
+                "approval_gates": ["explicit live-local apply approval"],
             }
         }
     if tool_name == "kan_discord_send_message":

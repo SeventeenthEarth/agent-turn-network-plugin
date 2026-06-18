@@ -24,6 +24,7 @@ EXPECTED_TOOLS = [
     "kan_selected_participant_response",
     "kan_delivery_evidence",
     "kan_surface_render_projection",
+    "kan_discussion_activation_plan",
     "kan_discord_send_message",
 ]
 

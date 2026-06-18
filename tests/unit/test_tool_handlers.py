@@ -23,6 +23,7 @@ from kkachi_agent_network_plugin.tools import (
     handle_delegate_action,
     handle_delegate_new,
     handle_delivery_evidence,
+    handle_discussion_activation_plan,
     handle_stream_ack,
     handle_stream_tail,
     handle_surface_render_projection,
@@ -350,6 +351,56 @@ def test_surface_render_projection_handler_fails_closed_for_bad_projection() -> 
         "message": "floor_grant_missing_or_mismatched",
         "retryable": False,
     }
+
+
+def test_discussion_activation_plan_handler_returns_local_doctor_report() -> None:
+    result = decode(
+        handle_discussion_activation_plan(
+            {
+                "plan": {
+                    "schema_version": 1,
+                    "task_id": "plugin/RUNFIX-006",
+                    "control_dependency": {
+                        "task_id": "control/RUNFIX-005",
+                        "status": "completed/local-control",
+                        "evidence_ref": "control-runfix-005",
+                    },
+                    "plugin_install": {
+                        "installed": True,
+                        "enabled": True,
+                        "tool_names": ["kan_discussion_activation_plan"],
+                    },
+                    "control_daemon": {
+                        "mode": "explicit",
+                        "socket_or_config_ref": "socket-config",
+                        "compatibility_ref": "version-read",
+                    },
+                    "participant_profiles": [
+                        {
+                            "profile": "macho",
+                            "tools_visible": True,
+                            "bot_to_bot_enabled": False,
+                        }
+                    ],
+                    "discord_parent_channel": {
+                        "channel_id": "parent-123",
+                        "allow_list_inheritance_proven": True,
+                        "proof_ref": "parent-proof",
+                    },
+                    "planned_changes": ["dry-run only"],
+                    "rollback": {"steps": ["revert dry-run config"]},
+                    "verification_commands": ["make test-prepare"],
+                    "approval_gates": ["explicit apply approval"],
+                }
+            }
+        )
+    )
+
+    assert result["ok"] is True
+    assert result["tool"] == "kan_discussion_activation_plan"
+    assert result["live_readiness"] is False
+    assert result["data"]["status"] == "ready_for_approval"
+    assert result["data"]["evidence_labels"]["selected_runner_pass"] == "unproven"
 
 
 def test_diagnostics_handler_rejects_invalid_session_id_before_transport() -> None:

@@ -90,6 +90,7 @@ The plugin currently registers the manifest-declared fake/injected Hermes tools 
   proof submission followed by selected-cursor ack only after submit succeeds;
 - `kan_delivery_evidence` — fake/injected closed-enum `delegate.escalation_delivered` / `delegate.escalation_delivery_failed` command-envelope submission with `delivery_evidence` pre-probe and no plugin-owned delivery-evidence transitions.
 - `kan_surface_render_projection` — pure/local visible-surface projection from daemon/control event data; cursor order is authority, speech requires matching `speaker_selected` floor-grant evidence, draft/vote/final closeout entries render into a clean `visible_transcript`, raw cursors/event ids remain in `audit_log`/`rows`, delivery pointers stay evidence-only, and `live_readiness` remains false.
+- `kan_discussion_activation_plan` — pure/local RUNFIX dry-run planner/doctor from explicit caller-provided evidence; it classifies eligible, excluded, and blocked/unknown profiles, keeps RUNFIX evidence labels separate, reports unproven parent-channel inheritance as a gateway blocker, performs no discovery or mutation, and keeps `live_readiness` false.
 - `kan_discord_send_message` — fake/injected Discord helper that requires a dedicated
   test target and an injected `send_message` callable; it returns Discord IDs only as
   evidence pointers and fails closed without sender injection.

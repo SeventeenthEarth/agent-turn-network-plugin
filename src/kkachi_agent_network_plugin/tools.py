@@ -7,6 +7,7 @@ from collections.abc import Callable, Mapping
 from typing import Final, Protocol, cast
 
 from . import schemas
+from .activation_planner import build_discussion_activation_plan
 from .client import DaemonClient
 from .client.live import configured_live_client_factory
 from .discord_surface import (
@@ -515,6 +516,23 @@ def handle_surface_render_projection(
         return _json_error(tool, exc)
 
 
+def handle_discussion_activation_plan(
+    args: object | None = None,
+    **_kwargs: object,
+) -> str:
+    """Build a pure dry-run discussion activation planner/doctor report."""
+
+    tool = "kan_discussion_activation_plan"
+    try:
+        payload = _coerce_args(args, allowed_keys=frozenset({"plan"}))
+        plan = _required_json_object(payload.get("plan"), label="plan")
+        data = build_discussion_activation_plan(plan)
+        ok = data["status"] == "ready_for_approval"
+        return _json_activation_plan(tool=tool, ok=bool(ok), data=data)
+    except Exception as exc:  # noqa: BLE001 - Hermes handlers must never raise.
+        return _json_error(tool, exc)
+
+
 def register_tools(
     ctx: ToolRegistrationContext,
     *,
@@ -560,6 +578,9 @@ def register_tools(
     def surface_render_projection_handler(args: object | None = None, **_kwargs: object) -> str:
         return handle_surface_render_projection(args)
 
+    def discussion_activation_plan_handler(args: object | None = None, **_kwargs: object) -> str:
+        return handle_discussion_activation_plan(args)
+
     def discord_send_message_handler(args: object | None = None, **_kwargs: object) -> str:
         return handle_discord_send_message(args, send_message=send_message)
 
@@ -586,6 +607,11 @@ def register_tools(
             "kan_surface_render_projection",
             schemas.KAN_SURFACE_RENDER_PROJECTION,
             surface_render_projection_handler,
+        ),
+        (
+            "kan_discussion_activation_plan",
+            schemas.KAN_DISCUSSION_ACTIVATION_PLAN,
+            discussion_activation_plan_handler,
         ),
         (
             "kan_discord_send_message",
@@ -1305,6 +1331,17 @@ def _json_surface_projection_success(tool: str, data: JsonObject) -> str:
     )
 
 
+def _json_activation_plan(tool: str, *, ok: bool, data: JsonObject) -> str:
+    return _dumps(
+        {
+            "ok": ok,
+            "tool": tool,
+            "live_readiness": False,
+            "data": data,
+        }
+    )
+
+
 def _json_error(tool: str, exc: Exception) -> str:
     live_readiness = False
     return _dumps(
@@ -1350,6 +1387,7 @@ __all__ = [
     "handle_delegate_action",
     "handle_delegate_new",
     "handle_delivery_evidence",
+    "handle_discussion_activation_plan",
     "handle_discord_send_message",
     "handle_selected_participant_response",
     "handle_surface_render_projection",

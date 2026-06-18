@@ -33,6 +33,7 @@ The current plugin surface is fake/injected Hermes tools only:
 - `kan_selected_participant_response`
 - `kan_delivery_evidence`
 - `kan_surface_render_projection`
+- `kan_discussion_activation_plan`
 - `kan_discord_send_message`
 
 `plugin.yaml` must continue to declare `provides_commands: []`. The root
@@ -67,7 +68,10 @@ Default verification and operator rehearsal are local only:
    explicit daemon/control event JSON, not lifecycle authority. Use
    `visible_transcript` for operator-facing discussion text and keep raw
    cursor/event details in `audit_log`/`rows` evidence.
-6. Treat ARGUE argument-graph support as static/fake/injected schema and tool
+6. Treat `kan_discussion_activation_plan` output as a dry-run planner/doctor
+   report only. It may classify readiness for explicit approval, but it never
+   proves live readiness or authorizes apply/pilot scope.
+7. Treat ARGUE argument-graph support as static/fake/injected schema and tool
    contract coverage only. `claims[]`, `stance_links[]`, `contribution_type`,
    `new_axis_reason`, `evidence[]`, and `hand_raise.target_links[]` are
    preserved for daemon/control validation, while `responds_to_event_id` remains
@@ -128,10 +132,11 @@ approved Hermes/plugin activation flow may copy or register it into a profile.
 `RUNFIX` distinguishes plugin installation from live-local KAN discussion activation.
 
 - Plugin install/load proves only that the packaged plugin surface can be discovered and its declared tools can be used in the approved Hermes profile.
-- Discussion activation requires an explicit dry-run plan before any apply step: control daemon/socket/config evidence, participant profile list, selected Discord parent channel, profile eligibility, planned allow-list/config changes, rollback, smoke commands, and approval boundary.
+- Discussion activation requires an explicit dry-run plan before any apply step. The `kan_discussion_activation_plan` tool can build the planner/doctor report from caller-provided evidence: control daemon/socket/config evidence, participant profile list, selected Discord parent channel, profile eligibility, planned allow-list/config changes, rollback, smoke commands, and approval boundary.
 - Profiles with effective bot-to-bot enabled Discord behavior are excluded from KAN discussion allow-lists by default. Report every excluded profile and reason; do not silently include it in a KAN discussion channel.
 - Parent-channel allow-listing is preferred for thread reuse. If inheritance cannot be proven, stop with a gateway limitation instead of claiming no-restart thread readiness.
 - Fallback/manual participant messages may be useful diagnostic evidence, but they must be labeled `fallback_profile_pass` and must not be reported as selected-speaker runner success or KAN live discussion readiness.
+- `kan_discussion_activation_plan` always keeps `live_readiness: false`; it must not read env vars, inspect current Hermes/Discord/profile/gateway state, open sockets, shell out, start daemons, mutate profiles/gateway/Discord/auth/token/provider/model settings, or infer readiness from missing evidence.
 
 Minimum live-local readiness evidence remains approval-gated and includes: `runner_invocation_started` or durable runner failure from `speaker_selected`, canonical `speech` linkage, visible-surface evidence, ARGUE relation counts/diagnostics, eligible-profile-only allow-list evidence, and explicit no-claim language for production activation.
 

@@ -783,6 +783,114 @@ KAN_SURFACE_RENDER_PROJECTION: Final[dict[str, object]] = {
     },
 }
 
+KAN_DISCUSSION_ACTIVATION_PLAN: Final[dict[str, object]] = {
+    "name": "kan_discussion_activation_plan",
+    "description": (
+        "Build a deterministic pure/local RUNFIX-006 KAN discussion activation "
+        "planner/doctor report from explicit caller-provided evidence only. The "
+        "tool performs no environment reads, socket discovery, daemon startup, "
+        "CLI fallback, Discord/Hermes/profile/gateway inspection, or provider/"
+        "auth/token/model mutation, and always keeps live readiness false."
+    ),
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "plan": {
+                "type": "object",
+                "description": (
+                    "Explicit activation planning evidence with schema_version=1, "
+                    "control/RUNFIX-005 dependency evidence, plugin tool visibility, "
+                    "explicit daemon/socket/config evidence, participant profiles, "
+                    "parent-channel allow-list inheritance proof, planned changes, "
+                    "rollback, verification commands, approval gates, and separated "
+                    "RUNFIX evidence labels."
+                ),
+                "properties": {
+                    "schema_version": {"type": "integer", "const": 1},
+                    "task_id": {"type": "string", "const": "plugin/RUNFIX-006"},
+                    "control_dependency": {
+                        "type": "object",
+                        "additionalProperties": True,
+                        "description": "Explicit control/RUNFIX-005 completion evidence.",
+                    },
+                    "plugin_install": {
+                        "type": "object",
+                        "additionalProperties": True,
+                        "description": (
+                            "Explicit installed/enabled/plugin tool visibility evidence."
+                        ),
+                    },
+                    "control_daemon": {
+                        "type": "object",
+                        "additionalProperties": True,
+                        "description": (
+                            "Explicit daemon socket/config and compatibility evidence; "
+                            "discovery is unsupported."
+                        ),
+                    },
+                    "participant_profiles": {
+                        "type": "array",
+                        "items": {"type": "object", "additionalProperties": True},
+                        "description": (
+                            "Candidate profile rows with explicit tools_visible and "
+                            "bot_to_bot_enabled evidence. Unknowns block; bot-to-bot "
+                            "enabled profiles are excluded by default."
+                        ),
+                    },
+                    "discord_parent_channel": {
+                        "type": "object",
+                        "additionalProperties": True,
+                        "description": (
+                            "Selected parent-channel plan with explicit allow-list "
+                            "inheritance proof or a gateway blocker."
+                        ),
+                    },
+                    "planned_changes": {"type": "array", "items": {"type": "string"}},
+                    "rollback": {
+                        "type": "object",
+                        "additionalProperties": True,
+                        "description": "Rollback plan containing steps.",
+                    },
+                    "verification_commands": {"type": "array", "items": {"type": "string"}},
+                    "approval_gates": {"type": "array", "items": {"type": "string"}},
+                    "operator_blockers": {"type": "array", "items": {"type": "object"}},
+                    "evidence_labels": {
+                        "type": "object",
+                        "additionalProperties": False,
+                        "properties": {
+                            "lifecycle_pass": {},
+                            "fallback_profile_pass": {},
+                            "selected_runner_pass": {},
+                            "visible_surface_pass": {},
+                            "discussion_quality_pass": {},
+                        },
+                        "description": (
+                            "RUNFIX labels remain separate and default to unproven "
+                            "unless explicit evidence is supplied."
+                        ),
+                    },
+                },
+                "required": [
+                    "schema_version",
+                    "task_id",
+                    "control_dependency",
+                    "plugin_install",
+                    "control_daemon",
+                    "participant_profiles",
+                    "discord_parent_channel",
+                    "planned_changes",
+                    "rollback",
+                    "verification_commands",
+                    "approval_gates",
+                ],
+                "additionalProperties": False,
+            }
+        },
+        "required": ["plan"],
+        "additionalProperties": False,
+    },
+}
+
 KAN_TOOL_SCHEMAS: Final[tuple[dict[str, object], ...]] = (
     KAN_DAEMON_STATUS,
     KAN_COMPATIBILITY_DIAGNOSTICS,
@@ -794,6 +902,7 @@ KAN_TOOL_SCHEMAS: Final[tuple[dict[str, object], ...]] = (
     KAN_SELECTED_PARTICIPANT_RESPONSE,
     KAN_DELIVERY_EVIDENCE,
     KAN_SURFACE_RENDER_PROJECTION,
+    KAN_DISCUSSION_ACTIVATION_PLAN,
     KAN_DISCORD_SEND_MESSAGE,
 )
 
@@ -824,6 +933,7 @@ __all__ = [
     "KAN_DELEGATE_ACTION",
     "KAN_DELEGATE_NEW",
     "KAN_DELIVERY_EVIDENCE",
+    "KAN_DISCUSSION_ACTIVATION_PLAN",
     "KAN_DISCORD_SEND_MESSAGE",
     "KAN_SELECTED_PARTICIPANT_RESPONSE",
     "KAN_STREAM_ACK",

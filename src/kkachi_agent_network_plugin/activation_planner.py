@@ -15,8 +15,11 @@ from .protocol import JsonObject, JsonValue, ProtocolValidationError, require_js
 ACTIVATION_PLAN_SCHEMA_VERSION: Final = 1
 RUNFIX_006_TASK_ID: Final = "plugin/RUNFIX-006"
 RUNFIX_007_TASK_ID: Final = "plugin/RUNFIX-007"
-SUPPORTED_TASK_IDS: Final[frozenset[str]] = frozenset({RUNFIX_006_TASK_ID, RUNFIX_007_TASK_ID})
-TASK_ID: Final = RUNFIX_007_TASK_ID
+RUNFIX_008_TASK_ID: Final = "plugin/RUNFIX-008"
+SUPPORTED_TASK_IDS: Final[frozenset[str]] = frozenset(
+    {RUNFIX_006_TASK_ID, RUNFIX_007_TASK_ID, RUNFIX_008_TASK_ID}
+)
+TASK_ID: Final = RUNFIX_008_TASK_ID
 CONTROL_DEPENDENCY_TASK_ID: Final = "control/RUNFIX-005"
 CONTROL_DEPENDENCY_STATUS: Final = "completed/local-control"
 TOOL_NAME: Final = "kan_discussion_activation_plan"
@@ -37,7 +40,9 @@ def build_discussion_activation_plan(plan: Mapping[str, object]) -> JsonObject:
         raise ValueError("plan.schema_version must be 1")
     task_id = _required_string(source.get("task_id"), label="plan.task_id")
     if task_id not in SUPPORTED_TASK_IDS:
-        raise ValueError("plan.task_id must be plugin/RUNFIX-006 or plugin/RUNFIX-007")
+        raise ValueError(
+            "plan.task_id must be plugin/RUNFIX-006, plugin/RUNFIX-007, or plugin/RUNFIX-008"
+        )
 
     blockers: list[JsonObject] = []
     excluded_profiles: list[JsonObject] = []
@@ -83,6 +88,11 @@ def build_discussion_activation_plan(plan: Mapping[str, object]) -> JsonObject:
     )
     operator_blockers = _optional_operator_blockers(source.get("operator_blockers"))
     blockers.extend(operator_blockers)
+    operator_evidence = _operator_evidence_report(
+        source.get("operator_evidence"),
+        require_evidence=task_id == RUNFIX_008_TASK_ID,
+        blockers=blockers,
+    )
 
     if not eligible_profiles:
         blockers.append(
@@ -99,7 +109,9 @@ def build_discussion_activation_plan(plan: Mapping[str, object]) -> JsonObject:
     return {
         "schema_version": ACTIVATION_PLAN_SCHEMA_VERSION,
         "task_id": task_id,
-        "behavior_task_id": RUNFIX_007_TASK_ID,
+        "behavior_task_id": (
+            RUNFIX_008_TASK_ID if task_id == RUNFIX_008_TASK_ID else RUNFIX_007_TASK_ID
+        ),
         "status": status,
         "live_readiness": False,
         "eligible_profiles": cast(list[JsonValue], eligible_profiles),
@@ -110,6 +122,8 @@ def build_discussion_activation_plan(plan: Mapping[str, object]) -> JsonObject:
             excluded_profiles=excluded_profiles, blocked_profiles=blocked_profiles
         ),
         "parent_channel_plan": parent_channel_plan,
+        "participant_argue_response_template": _participant_argue_response_template(),
+        "operator_evidence_report": operator_evidence,
         "fallback_audit": cast(list[JsonValue], _fallback_audit()),
         "required_approvals": cast(list[JsonValue], required_approvals),
         "dry_run_actions": cast(list[JsonValue], dry_run_actions),
@@ -467,6 +481,396 @@ def _fallback_audit() -> list[JsonObject]:
     ]
 
 
+def _participant_argue_response_template() -> JsonObject:
+    return {
+        "required_fields": [
+            "speech",
+            "claims[]",
+            "stance_links[]",
+            "contribution_type",
+            "new_axis_reason",
+        ],
+        "optional_fields": ["evidence[]"],
+        "speech_rule": (
+            "Visible speech only; runtime warnings, wrapper logs, transport metadata, "
+            "and role-substitution text are not participant speech."
+        ),
+        "role_substitution_prohibited": True,
+        "relation_rule": (
+            "Use stance_links[] for prior-claim engagement, or contribution_type=new_axis "
+            "with a non-empty new_axis_reason when opening a necessary new axis."
+        ),
+    }
+
+
+def _operator_evidence_report(
+    value: object,
+    *,
+    require_evidence: bool,
+    blockers: list[JsonObject],
+) -> JsonObject:
+    if not isinstance(value, Mapping):
+        if require_evidence:
+            blockers.append(
+                _blocker(
+                    code="operator_evidence_missing",
+                    owner="operator",
+                    message=(
+                        "plugin/RUNFIX-008 requires explicit runner, ARGUE, and "
+                        "canonical speech-link evidence."
+                    ),
+                )
+            )
+        return _empty_operator_evidence_report()
+
+    evidence = _json_object(value, label="plan.operator_evidence")
+    runner = _runner_evidence_report(
+        evidence.get("runner"), require_evidence=require_evidence, blockers=blockers
+    )
+    participant = _participant_response_report(
+        evidence.get("participant_response"),
+        require_evidence=require_evidence,
+        blockers=blockers,
+    )
+    canonical_link = _canonical_speech_linkage_report(
+        evidence.get("canonical_speech"),
+        runner=runner,
+        participant=cast(JsonObject, participant["participant_response"]),
+        require_evidence=require_evidence,
+        blockers=blockers,
+    )
+    fallback_disclosure = _fallback_disclosure_report(
+        evidence.get("fallback_disclosure"),
+        require_evidence=require_evidence,
+        blockers=blockers,
+    )
+    return {
+        "runfix_task_id": RUNFIX_008_TASK_ID,
+        "runner_evidence": runner,
+        "canonical_speaker_selected_to_speech": canonical_link,
+        "participant_response": participant["participant_response"],
+        "argue_counts": participant["argue_counts"],
+        "fallback_disclosure": fallback_disclosure,
+    }
+
+
+def _empty_operator_evidence_report() -> JsonObject:
+    return {
+        "runfix_task_id": RUNFIX_008_TASK_ID,
+        "runner_evidence": {
+            "status": "unproven",
+            "speaker_selected_event_id": None,
+            "selected_member": None,
+            "runner_invocation_started_ref": None,
+            "durable_runner_failure_ref": None,
+        },
+        "canonical_speaker_selected_to_speech": {
+            "status": "unproven",
+            "linked": False,
+            "speaker_selected_event_id": None,
+            "speech_event_id": None,
+            "speaker": None,
+        },
+        "participant_response": {
+            "status": "unproven",
+            "speech": None,
+            "claims": [],
+            "stance_links": [],
+            "contribution_type": None,
+            "new_axis_reason": None,
+            "evidence": [],
+        },
+        "argue_counts": {
+            "status": "unproven",
+            "speech_present": False,
+            "claims": 0,
+            "stance_links": 0,
+            "new_axis": 0,
+            "evidence": 0,
+            "contribution_types": {},
+        },
+        "fallback_disclosure": {
+            "status": "not_supplied",
+            "label": "fallback_profile_pass",
+            "full_kan_success": False,
+            "evidence_ref": None,
+            "missing_evidence": [],
+        },
+    }
+
+
+def _runner_evidence_report(
+    value: object,
+    *,
+    require_evidence: bool,
+    blockers: list[JsonObject],
+) -> JsonObject:
+    output: JsonObject = {
+        "status": "unproven",
+        "speaker_selected_event_id": None,
+        "selected_member": None,
+        "runner_invocation_started_ref": None,
+        "durable_runner_failure_ref": None,
+    }
+    if not isinstance(value, Mapping):
+        if require_evidence:
+            blockers.append(
+                _blocker(
+                    code="runner_evidence_missing",
+                    owner="member-runtime",
+                    message=(
+                        "Selected runner evidence from speaker_selected is required "
+                        "or must fail closed as durable failure evidence."
+                    ),
+                )
+            )
+        return output
+
+    runner = _json_object(value, label="plan.operator_evidence.runner")
+    speaker_selected_event_id = runner.get("speaker_selected_event_id")
+    selected_member = runner.get("selected_member")
+    invocation_ref = runner.get("runner_invocation_started_ref")
+    failure_ref = runner.get("durable_runner_failure_ref")
+    for key, item in (
+        ("speaker_selected_event_id", speaker_selected_event_id),
+        ("selected_member", selected_member),
+        ("runner_invocation_started_ref", invocation_ref),
+        ("durable_runner_failure_ref", failure_ref),
+    ):
+        if _non_empty_string(item):
+            output[key] = cast(str, item)
+
+    has_identity = _non_empty_string(speaker_selected_event_id) and _non_empty_string(
+        selected_member
+    )
+    has_invocation = _non_empty_string(invocation_ref)
+    has_failure = _non_empty_string(failure_ref)
+    if has_identity and has_invocation:
+        output["status"] = "proven"
+        return output
+    if has_identity and has_failure:
+        output["status"] = "blocked"
+        if require_evidence:
+            blockers.append(
+                _blocker(
+                    code="runner_durable_failure_reported",
+                    owner="member-runtime",
+                    message=(
+                        "Selected runner reported durable failure instead of successful speech."
+                    ),
+                )
+            )
+        return output
+
+    if require_evidence:
+        blockers.append(
+            _blocker(
+                code="runner_evidence_unproven",
+                owner="member-runtime",
+                message=(
+                    "runner.speaker_selected_event_id, runner.selected_member, and "
+                    "runner_invocation_started_ref are required for selected_runner_pass."
+                ),
+            )
+        )
+    return output
+
+
+def _participant_response_report(
+    value: object,
+    *,
+    require_evidence: bool,
+    blockers: list[JsonObject],
+) -> JsonObject:
+    response_output: JsonObject = {
+        "status": "unproven",
+        "speech": None,
+        "claims": [],
+        "stance_links": [],
+        "contribution_type": None,
+        "new_axis_reason": None,
+        "evidence": [],
+    }
+    counts: JsonObject = {
+        "status": "unproven",
+        "speech_present": False,
+        "claims": 0,
+        "stance_links": 0,
+        "new_axis": 0,
+        "evidence": 0,
+        "contribution_types": {},
+    }
+    if not isinstance(value, Mapping):
+        if require_evidence:
+            blockers.append(
+                _blocker(
+                    code="argue_evidence_missing",
+                    owner="participant",
+                    message=(
+                        "Participant ARGUE evidence requires speech, claims[], "
+                        "stance_links[], contribution_type, and optional evidence[]."
+                    ),
+                )
+            )
+        return {"participant_response": response_output, "argue_counts": counts}
+
+    response = _json_object(value, label="plan.operator_evidence.participant_response")
+    speech = response.get("speech")
+    claims = _optional_json_object_list(response.get("claims"), label="claims")
+    stance_links = _optional_json_object_list(response.get("stance_links"), label="stance_links")
+    evidence_items = _optional_json_object_list(response.get("evidence"), label="evidence")
+    contribution_type = response.get("contribution_type")
+    new_axis_reason = response.get("new_axis_reason")
+
+    if _non_empty_string(speech):
+        response_output["speech"] = cast(str, speech)
+        counts["speech_present"] = True
+    response_output["claims"] = cast(list[JsonValue], claims)
+    response_output["stance_links"] = cast(list[JsonValue], stance_links)
+    response_output["evidence"] = cast(list[JsonValue], evidence_items)
+    if _non_empty_string(contribution_type):
+        contribution = cast(str, contribution_type)
+        response_output["contribution_type"] = contribution
+        counts["contribution_types"] = {contribution: 1}
+    if _non_empty_string(new_axis_reason):
+        response_output["new_axis_reason"] = cast(str, new_axis_reason)
+
+    counts["claims"] = len(claims)
+    counts["stance_links"] = len(stance_links)
+    counts["evidence"] = len(evidence_items)
+    is_new_axis = contribution_type == "new_axis"
+    counts["new_axis"] = 1 if is_new_axis else 0
+
+    has_argue_linkage = bool(stance_links) or (is_new_axis and _non_empty_string(new_axis_reason))
+    if (
+        _non_empty_string(speech)
+        and claims
+        and _non_empty_string(contribution_type)
+        and has_argue_linkage
+    ):
+        response_output["status"] = "proven"
+        counts["status"] = "proven"
+        return {"participant_response": response_output, "argue_counts": counts}
+
+    if require_evidence:
+        blockers.append(
+            _blocker(
+                code="argue_evidence_unproven",
+                owner="participant",
+                message=(
+                    "Participant response must include visible speech, claims[], "
+                    "a contribution_type, and either stance_links[] or a justified new_axis_reason."
+                ),
+            )
+        )
+    return {"participant_response": response_output, "argue_counts": counts}
+
+
+def _canonical_speech_linkage_report(
+    value: object,
+    *,
+    runner: JsonObject,
+    participant: JsonObject,
+    require_evidence: bool,
+    blockers: list[JsonObject],
+) -> JsonObject:
+    output: JsonObject = {
+        "status": "unproven",
+        "linked": False,
+        "speaker_selected_event_id": None,
+        "speech_event_id": None,
+        "speaker": None,
+    }
+    if not isinstance(value, Mapping):
+        if require_evidence:
+            blockers.append(
+                _blocker(
+                    code="canonical_speech_link_missing",
+                    owner="control/plugin",
+                    message="Canonical speaker_selected -> speech linkage evidence is required.",
+                )
+            )
+        return output
+
+    link = _json_object(value, label="plan.operator_evidence.canonical_speech")
+    speaker_selected_event_id = link.get("speaker_selected_event_id")
+    speech_event_id = link.get("speech_event_id")
+    speaker = link.get("speaker")
+    for key, item in (
+        ("speaker_selected_event_id", speaker_selected_event_id),
+        ("speech_event_id", speech_event_id),
+        ("speaker", speaker),
+    ):
+        if _non_empty_string(item):
+            output[key] = cast(str, item)
+
+    runner_selected = runner.get("speaker_selected_event_id")
+    selected_member = runner.get("selected_member")
+    linked = (
+        _non_empty_string(speaker_selected_event_id)
+        and _non_empty_string(speech_event_id)
+        and participant.get("status") == "proven"
+        and (not _non_empty_string(runner_selected) or speaker_selected_event_id == runner_selected)
+        and (not _non_empty_string(selected_member) or speaker == selected_member)
+    )
+    if linked:
+        output["status"] = "proven"
+        output["linked"] = True
+        return output
+
+    if require_evidence:
+        blockers.append(
+            _blocker(
+                code="canonical_speech_link_unproven",
+                owner="control/plugin",
+                message=(
+                    "speaker_selected_event_id must link to a speech_event_id for the "
+                    "selected member and participant speech evidence."
+                ),
+            )
+        )
+    return output
+
+
+def _fallback_disclosure_report(
+    value: object,
+    *,
+    require_evidence: bool,
+    blockers: list[JsonObject],
+) -> JsonObject:
+    output: JsonObject = {
+        "status": "not_supplied",
+        "label": "fallback_profile_pass",
+        "full_kan_success": False,
+        "evidence_ref": None,
+        "missing_evidence": [],
+    }
+    if not isinstance(value, Mapping):
+        return output
+
+    disclosure = _json_object(value, label="plan.operator_evidence.fallback_disclosure")
+    evidence_ref = disclosure.get("evidence_ref")
+    missing_evidence = _optional_string_list(disclosure.get("missing_evidence"))
+    fallback_obtained = disclosure.get("fallback_profile_pass") is True
+    if _non_empty_string(evidence_ref):
+        output["evidence_ref"] = cast(str, evidence_ref)
+    output["missing_evidence"] = cast(list[JsonValue], missing_evidence)
+    if fallback_obtained or _non_empty_string(evidence_ref) or missing_evidence:
+        output["status"] = "diagnostic_only"
+    if require_evidence and fallback_obtained and not missing_evidence:
+        blockers.append(
+            _blocker(
+                code="fallback_disclosure_missing_missing_evidence",
+                owner="operator",
+                message=(
+                    "Fallback profile evidence must name the missing runner, ARGUE, "
+                    "canonical-link, delivery, or gateway evidence."
+                ),
+            )
+        )
+    return output
+
+
 def _rollback_steps(value: object, *, blockers: list[JsonObject]) -> list[str]:
     if not isinstance(value, Mapping):
         blockers.append(
@@ -535,6 +939,30 @@ def _required_string_list(
         blockers.append(_blocker(code=blocker_code, owner=blocker_owner, message=blocker_message))
         return []
     return items
+
+
+def _optional_string_list(value: object) -> list[str]:
+    if value is None:
+        return []
+    if not isinstance(value, list):
+        return []
+    return [item for item in value if isinstance(item, str) and item]
+
+
+def _optional_json_object_list(value: object, *, label: str) -> list[JsonObject]:
+    if value is None:
+        return []
+    if not isinstance(value, list):
+        raise ValueError(f"plan.operator_evidence.participant_response.{label} must be an array")
+    output: list[JsonObject] = []
+    for index, item in enumerate(value):
+        output.append(
+            _json_object(
+                item,
+                label=f"plan.operator_evidence.participant_response.{label}[{index}]",
+            )
+        )
+    return output
 
 
 def _status(

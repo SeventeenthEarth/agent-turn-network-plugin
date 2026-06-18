@@ -786,7 +786,7 @@ KAN_SURFACE_RENDER_PROJECTION: Final[dict[str, object]] = {
 KAN_DISCUSSION_ACTIVATION_PLAN: Final[dict[str, object]] = {
     "name": "kan_discussion_activation_plan",
     "description": (
-        "Build a deterministic pure/local RUNFIX-007 KAN discussion activation "
+        "Build a deterministic pure/local RUNFIX-008 KAN discussion activation "
         "planner/doctor report from explicit caller-provided evidence only. The "
         "tool performs no environment reads, socket discovery, daemon startup, "
         "CLI fallback, Discord/Hermes/profile/gateway inspection, or provider/"
@@ -809,7 +809,11 @@ KAN_DISCUSSION_ACTIVATION_PLAN: Final[dict[str, object]] = {
                     "schema_version": {"type": "integer", "const": 1},
                     "task_id": {
                         "type": "string",
-                        "enum": ["plugin/RUNFIX-006", "plugin/RUNFIX-007"],
+                        "enum": [
+                            "plugin/RUNFIX-006",
+                            "plugin/RUNFIX-007",
+                            "plugin/RUNFIX-008",
+                        ],
                     },
                     "control_dependency": {
                         "type": "object",
@@ -859,6 +863,16 @@ KAN_DISCUSSION_ACTIVATION_PLAN: Final[dict[str, object]] = {
                     "verification_commands": {"type": "array", "items": {"type": "string"}},
                     "approval_gates": {"type": "array", "items": {"type": "string"}},
                     "operator_blockers": {"type": "array", "items": {"type": "object"}},
+                    "operator_evidence": {
+                        "type": "object",
+                        "additionalProperties": True,
+                        "description": (
+                            "Explicit RUNFIX-008 operator evidence for participant ARGUE "
+                            "response fields, ARGUE counts, runner evidence, canonical "
+                            "speaker_selected -> speech linkage, and fallback disclosure. "
+                            "Missing or ambiguous evidence remains unproven/blocked."
+                        ),
+                    },
                     "evidence_labels": {
                         "type": "object",
                         "additionalProperties": False,

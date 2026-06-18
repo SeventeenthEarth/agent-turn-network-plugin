@@ -104,6 +104,43 @@ series of ungrounded `new_axis` speeches is also a discussion-quality warning:
 the mechanical local lifecycle may pass while the deliberation-quality gate still
 requires changes.
 
+Participant response template:
+
+```json
+{
+  "speech": "Visible participant answer only; no wrapper logs or role-substitution text.",
+  "claims": [
+    {
+      "claim_id": "T03.C1",
+      "summary": "Canonical speech linkage is required before pilot acceptance.",
+      "kind": "requirement"
+    }
+  ],
+  "stance_links": [
+    {
+      "target_event_id": "evt_speech_T01",
+      "target_claim_id": "T01.C1",
+      "stance": "support",
+      "rationale": "This preserves the prior traceability requirement."
+    }
+  ],
+  "contribution_type": "support",
+  "new_axis_reason": null,
+  "evidence": [
+    {
+      "kind": "runner_log",
+      "ref": "runner evidence pointer"
+    }
+  ]
+}
+```
+
+`speech` is the only human-visible answer text. `claims[]`,
+`stance_links[]`, `contribution_type`, `new_axis_reason`, and optional
+`evidence[]` are structured evidence fields. Do not substitute a simulated role
+prompt, fallback/manual reply, wrapper summary, or current Discord/Hermes
+message for a selected participant response.
+
 ## Pilot harness notes
 
 Use two separate verdicts when rehearsing ARGUE discussion quality:
@@ -139,6 +176,25 @@ approved Hermes/plugin activation flow may copy or register it into a profile.
 - `kan_discussion_activation_plan` always keeps `live_readiness: false`; it must not read env vars, inspect current Hermes/Discord/profile/gateway state, open sockets, shell out, start daemons, mutate profiles/gateway/Discord/auth/token/provider/model settings, or infer readiness from missing evidence.
 
 Minimum live-local readiness evidence remains approval-gated and includes: `runner_invocation_started` or durable runner failure from `speaker_selected`, canonical `speech` linkage, visible-surface evidence, ARGUE relation counts/diagnostics, eligible-profile-only allow-list evidence, and explicit no-claim language for production activation.
+
+For `plugin/RUNFIX-008`, `kan_discussion_activation_plan` also exposes an
+`operator_evidence_report` from explicit caller-provided `operator_evidence`
+only:
+
+- `runner_evidence`: selected member, `speaker_selected` event id,
+  `runner_invocation_started_ref`, and any durable runner failure evidence;
+- `canonical_speaker_selected_to_speech`: canonical
+  `speaker_selected -> speech` linkage with matching selected member;
+- `participant_response`: `speech`, `claims[]`, `stance_links[]`,
+  `contribution_type`, `new_axis_reason`, and optional `evidence[]`;
+- `argue_counts`: speech presence plus counts for `claims[]`,
+  `stance_links[]`, `new_axis`, optional `evidence[]`, and contribution types;
+- `fallback_disclosure`: `fallback_profile_pass` is diagnostic-only,
+  `full_kan_success` remains false, and missing evidence must be named.
+
+Missing or ambiguous runner, ARGUE, or canonical-link evidence remains
+`unproven`/`blocked`. Manual/fallback profile text can explain a blocker, but it
+is never selected-runner success, discussion-quality success, or live readiness.
 
 ## Install guidance
 

@@ -97,6 +97,43 @@ valid `stance_links[]` entry to the prior claim graph nor a valid `new_axis`
 reason. Repeated ungrounded `new_axis` contributions are a discussion-quality
 warning even if the mechanical daemon/CLI/plugin lifecycle completes.
 
+Participant response template:
+
+```json
+{
+  "speech": "Visible participant answer only; no wrapper logs or role-substitution text.",
+  "claims": [
+    {
+      "claim_id": "T03.C1",
+      "summary": "Canonical speech linkage is required before pilot acceptance.",
+      "kind": "requirement"
+    }
+  ],
+  "stance_links": [
+    {
+      "target_event_id": "evt_speech_T01",
+      "target_claim_id": "T01.C1",
+      "stance": "support",
+      "rationale": "This preserves the prior traceability requirement."
+    }
+  ],
+  "contribution_type": "support",
+  "new_axis_reason": null,
+  "evidence": [
+    {
+      "kind": "runner_log",
+      "ref": "runner evidence pointer"
+    }
+  ]
+}
+```
+
+`speech` is the only human-visible answer text. `claims[]`,
+`stance_links[]`, `contribution_type`, `new_axis_reason`, and optional
+`evidence[]` are structured evidence fields. Do not substitute a simulated role
+prompt, fallback/manual reply, wrapper summary, or current Discord/Hermes
+message for a selected participant response.
+
 Mechanical lifecycle pass means the local daemon/CLI/plugin path completed with
 replayable events and evidence pointers. Discussion-quality pass additionally
 requires grounded relation evidence, visible relation summaries from
@@ -141,6 +178,14 @@ readiness. Minimum readiness evidence remains approval-gated: selected-runner
 invocation or durable failure from `speaker_selected`, canonical `speech` linkage,
 visible-surface evidence, ARGUE relation counts/diagnostics, and explicit
 production/non-scope disclaimers.
+
+For `plugin/RUNFIX-008`, `kan_discussion_activation_plan` exposes an
+`operator_evidence_report` from explicit caller-provided `operator_evidence`
+only. The report includes runner evidence, canonical
+`speaker_selected -> speech linkage`, participant response fields, ARGUE counts,
+RUNFIX labels, and fallback disclosure. Missing or ambiguous runner, ARGUE, or
+canonical-link evidence remains `unproven`/`blocked`; fallback/manual profile
+text is diagnostic-only and never full KAN success.
 
 ## Operator workflow
 

@@ -67,6 +67,57 @@ def complete_plan() -> dict[str, object]:
     }
 
 
+def complete_runfix_008_plan() -> dict[str, object]:
+    plan = complete_plan()
+    plan["task_id"] = "plugin/RUNFIX-008"
+    plan["operator_evidence"] = {
+        "runner": {
+            "speaker_selected_event_id": "evt_select_1",
+            "selected_member": "macho",
+            "runner_invocation_started_ref": "runner/run-1/invocation-started",
+        },
+        "canonical_speech": {
+            "speaker_selected_event_id": "evt_select_1",
+            "speech_event_id": "evt_speech_1",
+            "speaker": "macho",
+        },
+        "participant_response": {
+            "speech": "We should keep the pilot blocked until canonical speech linkage is proven.",
+            "claims": [
+                {
+                    "claim_id": "T03.C1",
+                    "summary": "Canonical speech linkage gates pilot acceptance.",
+                    "kind": "requirement",
+                }
+            ],
+            "stance_links": [
+                {
+                    "target_event_id": "evt_speech_0",
+                    "target_claim_id": "T01.C1",
+                    "stance": "support",
+                    "rationale": "The prior traceability requirement remains the acceptance axis.",
+                }
+            ],
+            "contribution_type": "support",
+            "new_axis_reason": None,
+            "evidence": [{"kind": "runner_log", "ref": "runner/run-1/speech-link"}],
+        },
+        "fallback_disclosure": {
+            "fallback_profile_pass": True,
+            "evidence_ref": "manual/profile-diagnostic-reply",
+            "missing_evidence": ["visible delivery evidence"],
+        },
+    }
+    plan["evidence_labels"] = {
+        "lifecycle_pass": "runfix-005 status projection",
+        "fallback_profile_pass": "manual/profile-diagnostic-reply",
+        "selected_runner_pass": "runner/run-1/invocation-started",
+        "visible_surface_pass": "unproven",
+        "discussion_quality_pass": "argue counts present",
+    }
+    return plan
+
+
 def test_complete_dry_run_is_ready_for_approval_without_live_readiness() -> None:
     report = build_discussion_activation_plan(complete_plan())
 
@@ -133,6 +184,14 @@ def test_complete_dry_run_is_ready_for_approval_without_live_readiness() -> None
         "kab_native_codex",
     }
     assert all(item["allowed"] is False for item in report["fallback_audit"])
+    assert report["participant_argue_response_template"]["required_fields"] == [
+        "speech",
+        "claims[]",
+        "stance_links[]",
+        "contribution_type",
+        "new_axis_reason",
+    ]
+    assert report["operator_evidence_report"]["runner_evidence"]["status"] == "unproven"
 
 
 def test_runfix_006_task_id_remains_accepted_with_runfix_007_behavior_label() -> None:
@@ -144,6 +203,114 @@ def test_runfix_006_task_id_remains_accepted_with_runfix_007_behavior_label() ->
     assert report["task_id"] == "plugin/RUNFIX-006"
     assert report["behavior_task_id"] == "plugin/RUNFIX-007"
     assert report["status"] == "ready_for_approval"
+
+
+def test_runfix_008_exposes_operator_argue_and_fallback_evidence() -> None:
+    report = build_discussion_activation_plan(complete_runfix_008_plan())
+
+    assert report["status"] == "ready_for_approval"
+    assert report["task_id"] == "plugin/RUNFIX-008"
+    assert report["behavior_task_id"] == "plugin/RUNFIX-008"
+    assert report["live_readiness"] is False
+    operator_evidence = report["operator_evidence_report"]
+    assert operator_evidence["runner_evidence"] == {
+        "status": "proven",
+        "speaker_selected_event_id": "evt_select_1",
+        "selected_member": "macho",
+        "runner_invocation_started_ref": "runner/run-1/invocation-started",
+        "durable_runner_failure_ref": None,
+    }
+    assert operator_evidence["canonical_speaker_selected_to_speech"] == {
+        "status": "proven",
+        "linked": True,
+        "speaker_selected_event_id": "evt_select_1",
+        "speech_event_id": "evt_speech_1",
+        "speaker": "macho",
+    }
+    assert operator_evidence["participant_response"] == {
+        "status": "proven",
+        "speech": "We should keep the pilot blocked until canonical speech linkage is proven.",
+        "claims": [
+            {
+                "claim_id": "T03.C1",
+                "summary": "Canonical speech linkage gates pilot acceptance.",
+                "kind": "requirement",
+            }
+        ],
+        "stance_links": [
+            {
+                "target_event_id": "evt_speech_0",
+                "target_claim_id": "T01.C1",
+                "stance": "support",
+                "rationale": "The prior traceability requirement remains the acceptance axis.",
+            }
+        ],
+        "contribution_type": "support",
+        "new_axis_reason": None,
+        "evidence": [{"kind": "runner_log", "ref": "runner/run-1/speech-link"}],
+    }
+    assert operator_evidence["argue_counts"] == {
+        "status": "proven",
+        "speech_present": True,
+        "claims": 1,
+        "stance_links": 1,
+        "new_axis": 0,
+        "evidence": 1,
+        "contribution_types": {"support": 1},
+    }
+    assert operator_evidence["fallback_disclosure"] == {
+        "status": "diagnostic_only",
+        "label": "fallback_profile_pass",
+        "full_kan_success": False,
+        "evidence_ref": "manual/profile-diagnostic-reply",
+        "missing_evidence": ["visible delivery evidence"],
+    }
+    assert report["evidence_labels"]["selected_runner_pass"] == "runner/run-1/invocation-started"
+    assert report["evidence_labels"]["fallback_profile_pass"] == "manual/profile-diagnostic-reply"
+
+
+def test_runfix_008_missing_operator_evidence_fails_closed() -> None:
+    plan = complete_plan()
+    plan["task_id"] = "plugin/RUNFIX-008"
+
+    report = build_discussion_activation_plan(plan)
+
+    assert report["status"] == "blocked"
+    assert report["live_readiness"] is False
+    assert report["operator_evidence_report"]["runner_evidence"]["status"] == "unproven"
+    assert report["operator_evidence_report"]["argue_counts"]["status"] == "unproven"
+    assert (
+        report["operator_evidence_report"]["canonical_speaker_selected_to_speech"]["status"]
+        == "unproven"
+    )
+    assert {
+        "code": "operator_evidence_missing",
+        "owner": "operator",
+        "message": (
+            "plugin/RUNFIX-008 requires explicit runner, ARGUE, and canonical speech-link evidence."
+        ),
+    } in report["blockers"]
+
+
+def test_runfix_008_ambiguous_canonical_link_fails_closed() -> None:
+    plan = complete_runfix_008_plan()
+    plan["operator_evidence"]["canonical_speech"]["speaker_selected_event_id"] = "evt_other"
+
+    report = build_discussion_activation_plan(plan)
+
+    assert report["status"] == "blocked"
+    assert (
+        report["operator_evidence_report"]["canonical_speaker_selected_to_speech"]["linked"]
+        is False
+    )
+    assert {
+        "code": "canonical_speech_link_unproven",
+        "owner": "control/plugin",
+        "message": (
+            "speaker_selected_event_id must link to a speech_event_id for the "
+            "selected member and participant speech evidence."
+        ),
+    } in report["blockers"]
 
 
 def test_missing_control_dependency_fails_closed() -> None:

@@ -385,6 +385,7 @@ def test_discussion_activation_plan_handler_returns_local_doctor_report() -> Non
                     "discord_parent_channel": {
                         "channel_id": "parent-123",
                         "allow_list_inheritance_proven": True,
+                        "proof_source": "gateway_parent_allow_list_inheritance",
                         "proof_ref": "parent-proof",
                     },
                     "planned_changes": ["dry-run only"],
@@ -400,6 +401,8 @@ def test_discussion_activation_plan_handler_returns_local_doctor_report() -> Non
     assert result["tool"] == "kan_discussion_activation_plan"
     assert result["live_readiness"] is False
     assert result["data"]["status"] == "ready_for_approval"
+    assert result["data"]["behavior_task_id"] == "plugin/RUNFIX-007"
+    assert result["data"]["allow_list_targets"] == ["macho"]
     assert result["data"]["evidence_labels"]["selected_runner_pass"] == "unproven"
 
 

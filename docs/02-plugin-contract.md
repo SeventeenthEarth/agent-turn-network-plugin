@@ -95,27 +95,42 @@ Before `command.submit`, `kan_council_command` calls injected `version.read` and
 
 This is fake/injected CNDIS readiness only. It does not prove live daemon, installed Hermes plugin-load, slash-command, Discord helper/send_message, gateway, auth, token, socket, localhost, CLI, or KAB readiness.
 
-## RUNFIX-006 discussion activation planner/doctor
+## RUNFIX-006/RUNFIX-007 discussion activation planner/doctor
 
-RUNFIX-006 adds `kan_discussion_activation_plan` as a pure/local Hermes tool that
-builds a deterministic dry-run activation planner/doctor report from explicit
-caller-provided evidence only. The input names control/RUNFIX-005 dependency
-evidence, plugin install/enabled/tool visibility evidence, explicit daemon
-socket/config and compatibility evidence, participant profiles, selected Discord
-parent-channel proof, planned dry-run changes, rollback steps, verification
-commands, approval gates, optional operator blockers, and separated RUNFIX
-evidence labels.
+RUNFIX-006 added `kan_discussion_activation_plan` as a pure/local Hermes tool.
+RUNFIX-007 keeps the same tool surface and extends the dry-run report for
+Discord eligibility and bot-to-bot exclusion. The tool builds a deterministic
+activation planner/doctor report from explicit caller-provided evidence only.
+The input names control/RUNFIX-005 dependency evidence, plugin install/enabled/
+tool visibility evidence, explicit daemon socket/config and compatibility
+evidence, participant profiles, selected Discord parent-channel proof, planned
+dry-run changes, rollback steps, verification commands, approval gates,
+optional operator blockers, and separated RUNFIX evidence labels. Inputs may use
+`plugin/RUNFIX-006` for compatibility or `plugin/RUNFIX-007` for the current
+behavior; output includes `behavior_task_id: plugin/RUNFIX-007`.
 
 The tool classifies participant profiles into eligible, excluded, and
-blocked/unknown lists. Bot-to-bot-enabled profiles are excluded by default.
-Unknown or missing profile eligibility or tool visibility blocks that profile.
+blocked/unknown lists from `effective_discord` evidence, with legacy
+`tools_visible` and `bot_to_bot_enabled` fields still accepted for compatibility.
+Bot-to-bot-enabled profiles are excluded by default. Unknown or missing profile
+eligibility or tool visibility blocks that profile. The report includes
+eligible-only `allow_list_targets`, profile remediation, parent-channel proof
+state, and a fallback audit rejecting hidden plugin-to-CLI subprocess fallback,
+current Hermes/Discord inference, manual profile replies as full KAN success,
+daemon startup/discovery, profile/gateway/provider/auth/token/model mutation,
+`codex exec`, generic OpenAI SDK, raw app-server transport, and KAB
+`native_codex`.
+
 Missing parent-channel allow-list inheritance proof is reported as a
 Hermes/gateway dependency blocker, not as a fallback to current-thread messages.
+Thread-only, current-channel, or manual profile evidence is not accepted as
+parent-channel inheritance proof unless explicit gateway evidence says it covers
+parent inheritance.
 The five RUNFIX labels (`lifecycle_pass`, `fallback_profile_pass`,
 `selected_runner_pass`, `visible_surface_pass`, and `discussion_quality_pass`)
 remain separate and default to `unproven` unless explicitly supplied.
 
-RUNFIX-006 never proves live readiness. `kan_discussion_activation_plan` always
+This planner never proves live readiness. `kan_discussion_activation_plan` always
 returns `live_readiness: false` and performs no environment reads, current
 Hermes/Discord/profile/gateway inspection, socket discovery, CLI fallback,
 daemon startup, Discord send/channel creation, profile/gateway/provider/auth/

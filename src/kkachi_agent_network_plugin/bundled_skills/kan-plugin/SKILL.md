@@ -121,16 +121,19 @@ smoke checks, and the exact approval boundary.
 
 Use `kan_discussion_activation_plan` for that planning/doctor report when a
 structured tool surface is available. The tool consumes only explicit
-caller-provided evidence, excludes bot-to-bot-enabled profiles by default,
-blocks unknown tool visibility or eligibility, treats missing parent-channel
-allow-list inheritance proof as a Hermes/gateway dependency, keeps RUNFIX labels
-separate, and always keeps `live_readiness: false`.
+caller-provided evidence, classifies profiles from effective Discord evidence,
+excludes bot-to-bot-enabled profiles by default, blocks unknown tool visibility
+or eligibility, emits eligible-only `allow_list_targets`, profile remediation,
+parent-channel proof state, and fallback-audit rejection rows, treats missing
+parent-channel allow-list inheritance proof as a Hermes/gateway dependency,
+keeps RUNFIX labels separate, and always keeps `live_readiness: false`.
 
 KAN discussion channels are bot-to-bot-free by default. Profiles with effective
 bot-to-bot enabled Discord behavior are excluded from KAN discussion allow-lists
 unless a later explicit policy approves otherwise. If parent-channel allow-list
-inheritance cannot be proven for new threads, stop with a gateway limitation and
-do not claim no-restart thread readiness.
+inheritance cannot be proven for new threads by explicit Hermes/gateway proof,
+stop with a gateway limitation and do not accept thread-only/current-channel or
+manual profile evidence as no-restart thread readiness.
 
 Reports must label fallback/manual profile evidence as `fallback_profile_pass`.
 That evidence never equals selected-speaker runner success or KAN live discussion

@@ -383,6 +383,7 @@ def representative_args(tool_name: str) -> dict[str, object]:
                 "discord_parent_channel": {
                     "channel_id": "chan-smoke-parent",
                     "allow_list_inheritance_proven": True,
+                    "proof_source": "gateway_parent_allow_list_inheritance",
                     "proof_ref": "local-smoke-parent-proof",
                 },
                 "planned_changes": ["dry-run allow-list only"],

@@ -786,7 +786,7 @@ KAN_SURFACE_RENDER_PROJECTION: Final[dict[str, object]] = {
 KAN_DISCUSSION_ACTIVATION_PLAN: Final[dict[str, object]] = {
     "name": "kan_discussion_activation_plan",
     "description": (
-        "Build a deterministic pure/local RUNFIX-006 KAN discussion activation "
+        "Build a deterministic pure/local RUNFIX-007 KAN discussion activation "
         "planner/doctor report from explicit caller-provided evidence only. The "
         "tool performs no environment reads, socket discovery, daemon startup, "
         "CLI fallback, Discord/Hermes/profile/gateway inspection, or provider/"
@@ -807,7 +807,10 @@ KAN_DISCUSSION_ACTIVATION_PLAN: Final[dict[str, object]] = {
                 ),
                 "properties": {
                     "schema_version": {"type": "integer", "const": 1},
-                    "task_id": {"type": "string", "const": "plugin/RUNFIX-006"},
+                    "task_id": {
+                        "type": "string",
+                        "enum": ["plugin/RUNFIX-006", "plugin/RUNFIX-007"],
+                    },
                     "control_dependency": {
                         "type": "object",
                         "additionalProperties": True,
@@ -832,8 +835,9 @@ KAN_DISCUSSION_ACTIVATION_PLAN: Final[dict[str, object]] = {
                         "type": "array",
                         "items": {"type": "object", "additionalProperties": True},
                         "description": (
-                            "Candidate profile rows with explicit tools_visible and "
-                            "bot_to_bot_enabled evidence. Unknowns block; bot-to-bot "
+                            "Candidate profile rows with explicit effective_discord "
+                            "evidence, or legacy tools_visible/bot_to_bot_enabled "
+                            "fields for compatibility. Unknowns block; bot-to-bot "
                             "enabled profiles are excluded by default."
                         ),
                     },
@@ -842,7 +846,8 @@ KAN_DISCUSSION_ACTIVATION_PLAN: Final[dict[str, object]] = {
                         "additionalProperties": True,
                         "description": (
                             "Selected parent-channel plan with explicit allow-list "
-                            "inheritance proof or a gateway blocker."
+                            "inheritance proof from the Hermes/gateway, not thread-only, "
+                            "current-channel, or manual profile evidence."
                         ),
                     },
                     "planned_changes": {"type": "array", "items": {"type": "string"}},

@@ -64,7 +64,9 @@ fallback.
 `kan_discussion_activation_plan` is pure/local: it accepts explicit operator
 activation-planning evidence only and returns a deterministic dry-run
 planner/doctor report. It classifies profiles as eligible, excluded, or
-blocked/unknown; excludes bot-to-bot-enabled profiles by default; reports
+blocked/unknown from explicit effective Discord evidence; excludes
+bot-to-bot-enabled profiles by default; emits eligible-only `allow_list_targets`,
+profile remediation, parent-channel proof state, and a fallback audit; reports
 unproven parent-channel allow-list inheritance as a Hermes/gateway blocker; keeps
 `lifecycle_pass`, `fallback_profile_pass`, `selected_runner_pass`,
 `visible_surface_pass`, and `discussion_quality_pass` separate; and always

@@ -132,9 +132,9 @@ approved Hermes/plugin activation flow may copy or register it into a profile.
 `RUNFIX` distinguishes plugin installation from live-local KAN discussion activation.
 
 - Plugin install/load proves only that the packaged plugin surface can be discovered and its declared tools can be used in the approved Hermes profile.
-- Discussion activation requires an explicit dry-run plan before any apply step. The `kan_discussion_activation_plan` tool can build the planner/doctor report from caller-provided evidence: control daemon/socket/config evidence, participant profile list, selected Discord parent channel, profile eligibility, planned allow-list/config changes, rollback, smoke commands, and approval boundary.
-- Profiles with effective bot-to-bot enabled Discord behavior are excluded from KAN discussion allow-lists by default. Report every excluded profile and reason; do not silently include it in a KAN discussion channel.
-- Parent-channel allow-listing is preferred for thread reuse. If inheritance cannot be proven, stop with a gateway limitation instead of claiming no-restart thread readiness.
+- Discussion activation requires an explicit dry-run plan before any apply step. The `kan_discussion_activation_plan` tool can build the planner/doctor report from caller-provided evidence: control daemon/socket/config evidence, participant profile list, selected Discord parent channel, effective Discord profile eligibility, planned allow-list/config changes, rollback, smoke commands, and approval boundary.
+- Profiles with effective bot-to-bot enabled Discord behavior are excluded from KAN discussion allow-lists by default. Report every excluded profile and reason/remediation; `allow_list_targets` must include eligible profiles only.
+- Parent-channel allow-listing is preferred for thread reuse. If explicit Hermes/gateway parent-channel inheritance proof cannot be proven, stop with a gateway limitation instead of accepting thread-only/current-channel/manual profile evidence or claiming no-restart thread readiness.
 - Fallback/manual participant messages may be useful diagnostic evidence, but they must be labeled `fallback_profile_pass` and must not be reported as selected-speaker runner success or KAN live discussion readiness.
 - `kan_discussion_activation_plan` always keeps `live_readiness: false`; it must not read env vars, inspect current Hermes/Discord/profile/gateway state, open sockets, shell out, start daemons, mutate profiles/gateway/Discord/auth/token/provider/model settings, or infer readiness from missing evidence.
 

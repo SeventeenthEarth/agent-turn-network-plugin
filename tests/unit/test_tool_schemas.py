@@ -286,7 +286,7 @@ def test_discussion_activation_plan_schema_is_pure_local_doctor_tool() -> None:
     assert plan_schema["additionalProperties"] is False
     assert plan_schema["properties"]["task_id"] == {
         "type": "string",
-        "const": "plugin/RUNFIX-006",
+        "enum": ["plugin/RUNFIX-006", "plugin/RUNFIX-007"],
     }
     evidence_labels = plan_schema["properties"]["evidence_labels"]
     assert set(evidence_labels["properties"]) == {

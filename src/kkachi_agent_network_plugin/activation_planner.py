@@ -13,7 +13,10 @@ from typing import Final, cast
 from .protocol import JsonObject, JsonValue, ProtocolValidationError, require_json_object
 
 ACTIVATION_PLAN_SCHEMA_VERSION: Final = 1
-TASK_ID: Final = "plugin/RUNFIX-006"
+RUNFIX_006_TASK_ID: Final = "plugin/RUNFIX-006"
+RUNFIX_007_TASK_ID: Final = "plugin/RUNFIX-007"
+SUPPORTED_TASK_IDS: Final[frozenset[str]] = frozenset({RUNFIX_006_TASK_ID, RUNFIX_007_TASK_ID})
+TASK_ID: Final = RUNFIX_007_TASK_ID
 CONTROL_DEPENDENCY_TASK_ID: Final = "control/RUNFIX-005"
 CONTROL_DEPENDENCY_STATUS: Final = "completed/local-control"
 TOOL_NAME: Final = "kan_discussion_activation_plan"
@@ -33,8 +36,8 @@ def build_discussion_activation_plan(plan: Mapping[str, object]) -> JsonObject:
     if source.get("schema_version") != ACTIVATION_PLAN_SCHEMA_VERSION:
         raise ValueError("plan.schema_version must be 1")
     task_id = _required_string(source.get("task_id"), label="plan.task_id")
-    if task_id != TASK_ID:
-        raise ValueError(f"plan.task_id must be {TASK_ID}")
+    if task_id not in SUPPORTED_TASK_IDS:
+        raise ValueError("plan.task_id must be plugin/RUNFIX-006 or plugin/RUNFIX-007")
 
     blockers: list[JsonObject] = []
     excluded_profiles: list[JsonObject] = []
@@ -43,7 +46,9 @@ def build_discussion_activation_plan(plan: Mapping[str, object]) -> JsonObject:
     _validate_control_dependency(source.get("control_dependency"), blockers=blockers)
     _validate_plugin_install(source.get("plugin_install"), blockers=blockers)
     _validate_control_daemon(source.get("control_daemon"), blockers=blockers)
-    _validate_parent_channel(source.get("discord_parent_channel"), blockers=blockers)
+    parent_channel_plan = _parent_channel_plan(
+        source.get("discord_parent_channel"), blockers=blockers
+    )
 
     eligible_profiles = _profile_classification(
         source.get("participant_profiles"),
@@ -93,12 +98,19 @@ def build_discussion_activation_plan(plan: Mapping[str, object]) -> JsonObject:
     )
     return {
         "schema_version": ACTIVATION_PLAN_SCHEMA_VERSION,
-        "task_id": TASK_ID,
+        "task_id": task_id,
+        "behavior_task_id": RUNFIX_007_TASK_ID,
         "status": status,
         "live_readiness": False,
         "eligible_profiles": cast(list[JsonValue], eligible_profiles),
         "excluded_profiles": cast(list[JsonValue], excluded_profiles),
         "blocked_profiles": cast(list[JsonValue], blocked_profiles),
+        "allow_list_targets": [profile["profile"] for profile in eligible_profiles],
+        "profile_remediation": _profile_remediation(
+            excluded_profiles=excluded_profiles, blocked_profiles=blocked_profiles
+        ),
+        "parent_channel_plan": parent_channel_plan,
+        "fallback_audit": cast(list[JsonValue], _fallback_audit()),
         "required_approvals": cast(list[JsonValue], required_approvals),
         "dry_run_actions": cast(list[JsonValue], dry_run_actions),
         "rollback": cast(list[JsonValue], rollback),
@@ -242,7 +254,18 @@ def _validate_control_daemon(value: object, *, blockers: list[JsonObject]) -> No
         )
 
 
-def _validate_parent_channel(value: object, *, blockers: list[JsonObject]) -> None:
+def _parent_channel_plan(value: object, *, blockers: list[JsonObject]) -> JsonObject:
+    output: JsonObject = {
+        "channel_id": None,
+        "allow_list_inheritance_proven": False,
+        "proof_ref": None,
+        "proof_source": None,
+        "thread_allow_list_behavior_proven": False,
+        "remediation": (
+            "Provide explicit Hermes/gateway proof that parent-channel allow-list "
+            "inheritance covers newly created discussion threads."
+        ),
+    }
     if not isinstance(value, Mapping):
         blockers.append(
             _blocker(
@@ -251,9 +274,10 @@ def _validate_parent_channel(value: object, *, blockers: list[JsonObject]) -> No
                 message="Selected Discord parent-channel plan is required.",
             )
         )
-        return
+        return output
     parent = _json_object(value, label="plan.discord_parent_channel")
-    if not _non_empty_string(parent.get("channel_id")):
+    channel_id = parent.get("channel_id")
+    if not _non_empty_string(channel_id):
         blockers.append(
             _blocker(
                 code="parent_channel_id_missing",
@@ -261,9 +285,25 @@ def _validate_parent_channel(value: object, *, blockers: list[JsonObject]) -> No
                 message="discord_parent_channel.channel_id is required.",
             )
         )
-    if parent.get("allow_list_inheritance_proven") is not True or not _non_empty_string(
-        parent.get("proof_ref")
-    ):
+    else:
+        output["channel_id"] = cast(str, channel_id)
+    proof_ref = parent.get("proof_ref")
+    proof_source = parent.get("proof_source")
+    explicit_gateway_parent_proof = parent.get("proof_covers_parent_inheritance") is True or (
+        proof_source == "gateway_parent_allow_list_inheritance"
+    )
+    proven = (
+        parent.get("allow_list_inheritance_proven") is True
+        and _non_empty_string(proof_ref)
+        and explicit_gateway_parent_proof
+    )
+    output["allow_list_inheritance_proven"] = proven
+    output["thread_allow_list_behavior_proven"] = proven
+    if _non_empty_string(proof_ref):
+        output["proof_ref"] = cast(str, proof_ref)
+    if _non_empty_string(proof_source):
+        output["proof_source"] = cast(str, proof_source)
+    if not proven:
         blockers.append(
             _blocker(
                 code="parent_channel_allow_list_inheritance_unproven",
@@ -274,6 +314,7 @@ def _validate_parent_channel(value: object, *, blockers: list[JsonObject]) -> No
                 ),
             )
         )
+    return output
 
 
 def _profile_classification(
@@ -303,29 +344,127 @@ def _profile_classification(
         profile_name = _required_string(
             profile.get("profile"), label=f"plan.participant_profiles[{index}].profile"
         )
-        evidence_ref = profile.get("evidence_ref")
+        effective_discord = _effective_discord(profile, index=index)
+        evidence_ref = effective_discord.get("evidence_ref") or profile.get("evidence_ref")
         row = {"profile": profile_name}
         if _non_empty_string(evidence_ref):
             row["evidence_ref"] = cast(str, evidence_ref)
-        tools_visible = profile.get("tools_visible")
-        bot_to_bot_enabled = profile.get("bot_to_bot_enabled")
+        tools_visible = effective_discord.get("tools_visible")
+        bot_to_bot_enabled = effective_discord.get("bot_to_bot_enabled")
         if tools_visible is None:
-            blocked_profiles.append({**row, "reason": "tools_visibility_unknown"})
+            blocked_profiles.append(
+                {
+                    **row,
+                    "reason": "tools_visibility_unknown",
+                    "remediation": "Provide explicit effective Discord tool visibility evidence.",
+                }
+            )
             continue
         if tools_visible is not True:
-            blocked_profiles.append({**row, "reason": "tools_visibility_missing_or_false"})
+            blocked_profiles.append(
+                {
+                    **row,
+                    "reason": "tools_visibility_missing_or_false",
+                    "remediation": (
+                        "Enable/verify the profile-visible KAN plugin tools before allow-listing."
+                    ),
+                }
+            )
             continue
         if bot_to_bot_enabled is None:
-            blocked_profiles.append({**row, "reason": "bot_to_bot_eligibility_unknown"})
+            blocked_profiles.append(
+                {
+                    **row,
+                    "reason": "bot_to_bot_eligibility_unknown",
+                    "remediation": "Provide explicit effective Discord bot-to-bot policy evidence.",
+                }
+            )
             continue
         if bot_to_bot_enabled is True:
-            excluded_profiles.append({**row, "reason": "bot_to_bot_enabled"})
+            excluded_profiles.append(
+                {
+                    **row,
+                    "reason": "bot_to_bot_enabled",
+                    "remediation": (
+                        "Disable bot-to-bot replies for this profile or omit it from the "
+                        "KAN discussion allow-list."
+                    ),
+                }
+            )
             continue
         if bot_to_bot_enabled is not False:
-            blocked_profiles.append({**row, "reason": "bot_to_bot_eligibility_unknown"})
+            blocked_profiles.append(
+                {
+                    **row,
+                    "reason": "bot_to_bot_eligibility_unknown",
+                    "remediation": "Provide explicit effective Discord bot-to-bot policy evidence.",
+                }
+            )
             continue
-        eligible.append({**row, "reason": "tools_visible_and_bot_to_bot_disabled"})
+        eligible.append(
+            {
+                **row,
+                "reason": "effective_discord_tools_visible_and_bot_to_bot_disabled",
+            }
+        )
     return eligible
+
+
+def _effective_discord(profile: JsonObject, *, index: int) -> JsonObject:
+    value = profile.get("effective_discord")
+    if value is None:
+        return {
+            "tools_visible": profile.get("tools_visible"),
+            "bot_to_bot_enabled": profile.get("bot_to_bot_enabled"),
+            "evidence_ref": profile.get("evidence_ref"),
+        }
+    if not isinstance(value, Mapping):
+        raise ValueError(
+            f"plan.participant_profiles[{index}].effective_discord must be an object when present"
+        )
+    return _json_object(value, label=f"plan.participant_profiles[{index}].effective_discord")
+
+
+def _profile_remediation(
+    *,
+    excluded_profiles: list[JsonObject],
+    blocked_profiles: list[JsonObject],
+) -> JsonObject:
+    return {
+        "excluded": cast(list[JsonValue], excluded_profiles),
+        "blocked": cast(list[JsonValue], blocked_profiles),
+    }
+
+
+def _fallback_audit() -> list[JsonObject]:
+    forbidden = (
+        ("hidden_plugin_to_cli_subprocess_fallback", "Plugin must not shell out to CLI."),
+        ("current_hermes_or_discord_inference", "Planner uses explicit caller evidence only."),
+        (
+            "manual_profile_replies_as_full_kan_success",
+            "Manual replies are fallback evidence only.",
+        ),
+        ("daemon_startup_or_discovery", "Daemon lifecycle/discovery remains outside the plugin."),
+        (
+            "profile_gateway_provider_auth_token_model_mutation",
+            (
+                "Activation planning cannot mutate profile, gateway, provider, auth, "
+                "token, or model state."
+            ),
+        ),
+        ("codex_exec", "Stage 1 direct Codex SDK/app-server work must not use codex exec."),
+        ("generic_openai_sdk", "Generic OpenAI SDK is not a plugin participant-tool fallback."),
+        ("raw_app_server_transport", "Raw app-server transport is not exposed by this planner."),
+        ("kab_native_codex", "KAB native_codex is outside the plugin participant-agent surface."),
+    )
+    return [
+        {
+            "fallback": name,
+            "allowed": False,
+            "reason": reason,
+        }
+        for name, reason in forbidden
+    ]
 
 
 def _rollback_steps(value: object, *, blockers: list[JsonObject]) -> list[str]:

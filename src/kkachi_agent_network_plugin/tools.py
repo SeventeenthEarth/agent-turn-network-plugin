@@ -393,10 +393,7 @@ def handle_selected_participant_response(
         )
         if participant_argue_fields:
             speech_payload.update(participant_argue_fields)
-            if "evidence" in participant_argue_fields:
-                speech_payload["plugin_evidence"] = participant_evidence
-            else:
-                speech_payload["evidence"] = participant_evidence
+            speech_payload["plugin_evidence"] = participant_evidence
         else:
             speech_payload["evidence"] = participant_evidence
 
@@ -653,6 +650,10 @@ def _optional_string(value: object, *, label: str) -> str | None:
     return value
 
 
+def _non_empty_string(value: object) -> bool:
+    return isinstance(value, str) and bool(value.strip())
+
+
 def _required_json_object(value: object, *, label: str) -> JsonObject:
     if not isinstance(value, Mapping):
         raise ValueError(f"{label} must be a JSON object")
@@ -827,28 +828,29 @@ def _validate_selected_participant_caller_context(
 
     prior_claims = _caller_prior_claims(context.get("prior_claims", []))
     local_context_sufficient = context.get("local_context_sufficient") is True
-    if local_context_sufficient and prior_claims:
-        _validate_stance_links_against_caller_context(
+    quality_mode = context.get("quality_mode")
+    valid_stance_links = 0
+    if local_context_sufficient and quality_mode == "quality_required":
+        valid_stance_links = _validate_stance_links_against_caller_context(
             participant_argue_fields,
             prior_claims=prior_claims,
         )
 
-    if context.get("quality_mode") != "quality_required":
+    if quality_mode != "quality_required":
         return
     if not local_context_sufficient or context.get("is_opening_speech") is True:
         return
-    if _has_relation_or_new_axis(participant_argue_fields):
+    if valid_stance_links > 0 or _has_justified_new_axis(participant_argue_fields):
         return
     raise ValueError(
         "participant_response is orphan speech in quality_required caller_validation_context"
     )
 
 
-def _has_relation_or_new_axis(participant_argue_fields: Mapping[str, object]) -> bool:
-    stance_links = participant_argue_fields.get("stance_links")
-    if isinstance(stance_links, list) and len(stance_links) > 0:
-        return True
-    return participant_argue_fields.get("contribution_type") == "new_axis"
+def _has_justified_new_axis(participant_argue_fields: Mapping[str, object]) -> bool:
+    return participant_argue_fields.get("contribution_type") == "new_axis" and _non_empty_string(
+        participant_argue_fields.get("new_axis_reason")
+    )
 
 
 def _caller_prior_claims(value: object) -> dict[str, set[str]]:
@@ -871,10 +873,11 @@ def _validate_stance_links_against_caller_context(
     participant_argue_fields: Mapping[str, object],
     *,
     prior_claims: Mapping[str, set[str]],
-) -> None:
+) -> int:
     stance_links = participant_argue_fields.get("stance_links")
     if not isinstance(stance_links, list):
-        return
+        return 0
+    valid_links = 0
     for index, item in enumerate(stance_links):
         label = f"participant_response.stance_links[{index}]"
         if not isinstance(item, Mapping):
@@ -889,6 +892,7 @@ def _validate_stance_links_against_caller_context(
             )
         target_claim_ids = prior_claims[target_event_id]
         if not target_claim_ids:
+            valid_links += 1
             continue
         target_claim_id = link.get("target_claim_id")
         if target_claim_id is None:
@@ -900,6 +904,8 @@ def _validate_stance_links_against_caller_context(
             raise ValueError(
                 f"{label}.target_claim_id is not in caller_validation_context.prior_claims"
             )
+        valid_links += 1
+    return valid_links
 
 
 def _validate_argue_speech_payload(payload: Mapping[str, object], *, label: str) -> None:

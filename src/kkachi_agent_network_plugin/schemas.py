@@ -604,7 +604,13 @@ KAN_SELECTED_PARTICIPANT_RESPONSE: Final[dict[str, object]] = {
                 "description": (
                     "Optional caller-provided, non-authoritative selected/projection context "
                     "used only for deterministic local fail-closed checks. The plugin does "
-                    "not infer lifecycle state from this field or store it."
+                    "not infer lifecycle state from this field or store it. In "
+                    "quality_required mode, non-opening speeches with sufficient local "
+                    "context must include a stance_links[] entry that validates against "
+                    "caller_validation_context.prior_claims by event_id and, when present, "
+                    "claim_id, or contribution_type=new_axis with a non-empty "
+                    "new_axis_reason. responds_to_event_id, prose, keywords, Discord "
+                    "order, Hermes messages, and display hints are not relation authority."
                 ),
                 "properties": {
                     "quality_mode": {
@@ -618,11 +624,52 @@ KAN_SELECTED_PARTICIPANT_RESPONSE: Final[dict[str, object]] = {
                     "selected_cursor": {"type": "string", "minLength": 1},
                     "prior_claims": {
                         "type": "array",
+                        "description": (
+                            "Compact prior claim graph targets supplied by the caller. "
+                            "Only event_id and claim_id are local validation authority; "
+                            "speaker, summary, and available_stances are prompt guidance "
+                            "only and never satisfy relation validity by themselves."
+                        ),
                         "items": {
                             "type": "object",
                             "properties": {
-                                "event_id": {"type": "string", "minLength": 1},
-                                "claim_id": {"type": "string", "minLength": 1},
+                                "event_id": {
+                                    "type": "string",
+                                    "minLength": 1,
+                                    "description": (
+                                        "Prior speech/event id accepted as local relation "
+                                        "target authority."
+                                    ),
+                                },
+                                "claim_id": {
+                                    "type": "string",
+                                    "minLength": 1,
+                                    "description": (
+                                        "Optional prior claim id; stance_links[] must match "
+                                        "it when supplied."
+                                    ),
+                                },
+                                "speaker": {
+                                    "type": "string",
+                                    "minLength": 1,
+                                    "description": (
+                                        "Prompt guidance only; not local validation authority."
+                                    ),
+                                },
+                                "summary": {
+                                    "type": "string",
+                                    "minLength": 1,
+                                    "description": (
+                                        "Prompt guidance only; not local validation authority."
+                                    ),
+                                },
+                                "available_stances": {
+                                    "type": "array",
+                                    "items": {"type": "string"},
+                                    "description": (
+                                        "Prompt guidance only; not local validation authority."
+                                    ),
+                                },
                             },
                             "required": ["event_id"],
                             "additionalProperties": True,
@@ -786,7 +833,7 @@ KAN_SURFACE_RENDER_PROJECTION: Final[dict[str, object]] = {
 KAN_DISCUSSION_ACTIVATION_PLAN: Final[dict[str, object]] = {
     "name": "kan_discussion_activation_plan",
     "description": (
-        "Build a deterministic pure/local RUNFIX-015 KAN discussion activation "
+        "Build a deterministic pure/local RUNFIX-017 KAN discussion activation "
         "planner/doctor report from explicit caller-provided evidence only. The "
         "tool performs no environment reads, socket discovery, daemon startup, "
         "CLI fallback, Discord/Hermes/profile/gateway inspection, or provider/"
@@ -817,6 +864,7 @@ KAN_DISCUSSION_ACTIVATION_PLAN: Final[dict[str, object]] = {
                             "plugin/RUNFIX-010",
                             "plugin/RUNFIX-012",
                             "plugin/RUNFIX-015",
+                            "plugin/RUNFIX-017",
                         ],
                     },
                     "control_dependency": {
@@ -824,7 +872,7 @@ KAN_DISCUSSION_ACTIVATION_PLAN: Final[dict[str, object]] = {
                         "additionalProperties": True,
                         "description": (
                             "Explicit control dependency completion evidence. "
-                            "RUNFIX-006/007/008/010/015 require control/RUNFIX-005; "
+                            "RUNFIX-006/007/008/010/015/017 require control/RUNFIX-005; "
                             "RUNFIX-012 requires control/RUNFIX-011 local "
                             "participant-runtime readiness proof."
                         ),
@@ -879,8 +927,12 @@ KAN_DISCUSSION_ACTIVATION_PLAN: Final[dict[str, object]] = {
                             "Explicit RUNFIX-008/RUNFIX-010 operator evidence for "
                             "participant ARGUE "
                             "response fields, ARGUE counts, runner evidence, canonical "
-                            "speaker_selected -> speech linkage, and fallback disclosure. "
-                            "Missing or ambiguous evidence remains unproven/blocked."
+                            "speaker_selected -> speech linkage, fallback disclosure, and "
+                            "RUNFIX-017 discussion-quality evidence. In quality_required, "
+                            "the first non-opening orphan speech blocks "
+                            "discussion_quality_pass; repeated orphan counts are diagnostics "
+                            "only and do not synthesize stance_links[]. Missing or ambiguous "
+                            "evidence remains unproven/blocked."
                         ),
                     },
                     "request_context": {

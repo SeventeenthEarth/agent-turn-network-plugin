@@ -168,6 +168,41 @@ def complete_runfix_012_plan() -> dict[str, object]:
     return plan
 
 
+def complete_runfix_017_plan() -> dict[str, object]:
+    plan = complete_runfix_008_plan()
+    plan["task_id"] = "plugin/RUNFIX-017"
+    operator_evidence = plan["operator_evidence"]
+    assert isinstance(operator_evidence, dict)
+    operator_evidence["discussion_quality"] = {
+        "quality_mode": "quality_required",
+        "local_context_sufficient": True,
+        "prior_claims": [
+            {
+                "event_id": "evt_speech_0",
+                "claim_id": "T01.C1",
+                "speaker": "seohwang",
+                "summary": "Prior traceability remains the acceptance axis.",
+                "available_stances": ["support", "challenge", "refine", "synthesize"],
+            }
+        ],
+        "turns": [
+            {
+                "speech_event_id": "evt_speech_1",
+                "is_opening_speech": False,
+                "participant_response": operator_evidence["participant_response"],
+            }
+        ],
+    }
+    plan["evidence_labels"] = {
+        "lifecycle_pass": "runfix-005 status projection",
+        "fallback_profile_pass": "manual/profile-diagnostic-reply",
+        "selected_runner_pass": "runner/run-1/invocation-started",
+        "visible_surface_pass": "unproven",
+        "discussion_quality_pass": "argue quality evidence",
+    }
+    return plan
+
+
 def complete_runfix_015_plan() -> dict[str, object]:
     plan = complete_runfix_008_plan()
     plan["task_id"] = "plugin/RUNFIX-015"
@@ -315,11 +350,19 @@ def test_runfix_006_task_id_remains_accepted_with_runfix_007_behavior_label() ->
 
 @pytest.mark.parametrize(
     "task_id",
-    ["plugin/RUNFIX-006", "plugin/RUNFIX-007", "plugin/RUNFIX-008", "plugin/RUNFIX-010"],
+    [
+        "plugin/RUNFIX-006",
+        "plugin/RUNFIX-007",
+        "plugin/RUNFIX-008",
+        "plugin/RUNFIX-010",
+        "plugin/RUNFIX-017",
+    ],
 )
 def test_prior_runfix_task_ids_remain_accepted(task_id: str) -> None:
     plan = (
-        complete_runfix_008_plan()
+        complete_runfix_017_plan()
+        if task_id == "plugin/RUNFIX-017"
+        else complete_runfix_008_plan()
         if task_id in {"plugin/RUNFIX-008", "plugin/RUNFIX-010"}
         else complete_plan()
     )
@@ -335,6 +378,220 @@ def test_prior_runfix_task_ids_remain_accepted(task_id: str) -> None:
     assert report["task_id"] == task_id
     assert report["status"] == "ready_for_approval"
     assert report["live_readiness"] is False
+
+
+def test_runfix_017_exposes_prior_claim_targets_and_quality_report() -> None:
+    report = build_discussion_activation_plan(complete_runfix_017_plan())
+
+    assert report["status"] == "ready_for_approval"
+    assert report["task_id"] == "plugin/RUNFIX-017"
+    assert report["behavior_task_id"] == "plugin/RUNFIX-017"
+    assert report["live_readiness"] is False
+    targets = report["participant_argue_response_template"]["prior_claim_graph_targets"]
+    assert targets["required_authority_fields"] == ["event_id"]
+    assert targets["optional_authority_fields"] == ["claim_id"]
+    assert targets["prompt_guidance_fields"] == ["speaker", "summary", "available_stances"]
+    assert "responds_to_event_id" in targets["validation_rule"]
+    assert report["operator_evidence_report"]["runfix_task_id"] == "plugin/RUNFIX-017"
+    discussion_quality = report["operator_evidence_report"]["discussion_quality"]
+    assert discussion_quality["status"] == "proven"
+    assert discussion_quality["discussion_quality_pass"] is True
+    assert discussion_quality["valid_stance_link_count"] == 1
+    assert discussion_quality["orphan_speech_count"] == 0
+    assert report["evidence_labels"]["lifecycle_pass"] == "runfix-005 status projection"
+    assert report["evidence_labels"]["discussion_quality_pass"] == "argue quality evidence"
+
+
+def test_runfix_017_missing_operator_evidence_reports_runfix_017_blocker() -> None:
+    plan = complete_plan()
+    plan["task_id"] = "plugin/RUNFIX-017"
+
+    report = build_discussion_activation_plan(plan)
+
+    assert report["status"] == "blocked"
+    assert report["operator_evidence_report"]["runfix_task_id"] == "plugin/RUNFIX-017"
+    assert {
+        "code": "operator_evidence_missing",
+        "owner": "operator",
+        "message": (
+            "plugin/RUNFIX-017 requires explicit runner, ARGUE, canonical "
+            "speech-link, and discussion_quality evidence."
+        ),
+    } in report["blockers"]
+
+
+def test_runfix_017_requires_explicit_discussion_quality_evidence() -> None:
+    plan = complete_runfix_017_plan()
+    operator_evidence = plan["operator_evidence"]
+    assert isinstance(operator_evidence, dict)
+    operator_evidence.pop("discussion_quality")
+
+    report = build_discussion_activation_plan(plan)
+
+    assert report["status"] == "blocked"
+    discussion_quality = report["operator_evidence_report"]["discussion_quality"]
+    assert discussion_quality["status"] == "blocked"
+    assert discussion_quality["discussion_quality_pass"] is False
+    assert {
+        "code": "discussion_quality_evidence_missing",
+        "owner": "participant",
+        "message": "plugin/RUNFIX-017 requires explicit discussion_quality evidence.",
+    } in report["blockers"]
+
+
+def test_runfix_017_quality_required_orphan_blocks_discussion_quality() -> None:
+    plan = complete_runfix_017_plan()
+    operator_evidence = plan["operator_evidence"]
+    assert isinstance(operator_evidence, dict)
+    discussion_quality = operator_evidence["discussion_quality"]
+    assert isinstance(discussion_quality, dict)
+    discussion_quality["turns"] = [
+        {
+            "speech_event_id": "evt_speech_orphan",
+            "is_opening_speech": False,
+            "participant_response": {
+                "speech": "This speaks near the topic but does not link to prior claims.",
+                "claims": [{"claim_id": "T04.C1", "summary": "The response is orphaned."}],
+                "stance_links": [],
+                "contribution_type": "support",
+                "new_axis_reason": None,
+                "evidence": [],
+            },
+        }
+    ]
+
+    report = build_discussion_activation_plan(plan)
+
+    assert report["status"] == "blocked"
+    discussion_report = report["operator_evidence_report"]["discussion_quality"]
+    assert discussion_report["status"] == "blocked"
+    assert discussion_report["discussion_quality_pass"] is False
+    assert discussion_report["first_orphan_speech_event_id"] == "evt_speech_orphan"
+    assert discussion_report["orphan_speech_count"] == 1
+    assert {
+        "code": "discussion_quality_orphan_speech",
+        "owner": "participant",
+        "message": (
+            "quality_required evidence has a non-opening speech without a valid "
+            "prior-target stance_links[] entry or justified new_axis."
+        ),
+    } in report["blockers"]
+
+
+def test_runfix_017_quality_required_ignores_guidance_and_legacy_hints() -> None:
+    plan = complete_runfix_017_plan()
+    operator_evidence = plan["operator_evidence"]
+    assert isinstance(operator_evidence, dict)
+    discussion_quality = operator_evidence["discussion_quality"]
+    assert isinstance(discussion_quality, dict)
+    discussion_quality["turns"] = [
+        {
+            "speech_event_id": "evt_speech_guidance_only",
+            "is_opening_speech": False,
+            "participant_response": {
+                "speech": (
+                    "I support seohwang's prior traceability summary and keyword "
+                    "references, but no machine relation is supplied."
+                ),
+                "claims": [{"claim_id": "T04.C1", "summary": "Guidance is not relation."}],
+                "stance_links": [],
+                "contribution_type": "support",
+                "responds_to_event_id": "evt_speech_0",
+                "speaker": "seohwang",
+                "summary": "Prior traceability remains the acceptance axis.",
+                "available_stances": ["support"],
+                "keywords": ["support", "traceability"],
+            },
+        }
+    ]
+
+    report = build_discussion_activation_plan(plan)
+
+    assert report["status"] == "blocked"
+    discussion_report = report["operator_evidence_report"]["discussion_quality"]
+    assert discussion_report["status"] == "blocked"
+    assert discussion_report["valid_stance_link_count"] == 0
+    assert discussion_report["orphan_speech_count"] == 1
+    assert discussion_report["synthetic_links_created"] is False
+
+
+def test_runfix_017_repeated_orphans_are_diagnostics_not_synthesized_links() -> None:
+    plan = complete_runfix_017_plan()
+    operator_evidence = plan["operator_evidence"]
+    assert isinstance(operator_evidence, dict)
+    discussion_quality = operator_evidence["discussion_quality"]
+    assert isinstance(discussion_quality, dict)
+    discussion_quality["turns"] = [
+        {
+            "speech_event_id": "evt_speech_orphan_1",
+            "is_opening_speech": False,
+            "participant_response": {
+                "speech": "First orphan.",
+                "claims": [{"claim_id": "T04.C1", "summary": "First orphan."}],
+                "stance_links": [],
+                "contribution_type": "support",
+            },
+        },
+        {
+            "speech_event_id": "evt_speech_orphan_2",
+            "is_opening_speech": False,
+            "participant_response": {
+                "speech": "Second orphan.",
+                "claims": [{"claim_id": "T05.C1", "summary": "Second orphan."}],
+                "stance_links": [
+                    {
+                        "target_event_id": "evt_unknown",
+                        "target_claim_id": "T99.C1",
+                        "stance": "support",
+                    }
+                ],
+                "contribution_type": "support",
+            },
+        },
+    ]
+
+    report = build_discussion_activation_plan(plan)
+
+    discussion_report = report["operator_evidence_report"]["discussion_quality"]
+    assert discussion_report["orphan_speech_count"] == 2
+    assert discussion_report["repeated_orphan_count"] == 1
+    assert discussion_report["valid_stance_link_count"] == 0
+    assert discussion_report["synthetic_links_created"] is False
+    assert {
+        "code": "stance_links_not_validated_against_prior_claims",
+        "speech_event_id": "evt_speech_orphan_2",
+        "turn_index": 1,
+        "synthetic_link_created": False,
+    } in discussion_report["diagnostics"]
+
+
+def test_runfix_017_quality_warn_orphan_is_warning_only() -> None:
+    plan = complete_runfix_017_plan()
+    operator_evidence = plan["operator_evidence"]
+    assert isinstance(operator_evidence, dict)
+    discussion_quality = operator_evidence["discussion_quality"]
+    assert isinstance(discussion_quality, dict)
+    discussion_quality["quality_mode"] = "quality_warn"
+    discussion_quality["turns"] = [
+        {
+            "speech_event_id": "evt_speech_warn",
+            "is_opening_speech": False,
+            "participant_response": {
+                "speech": "Warning-only orphan.",
+                "claims": [{"claim_id": "T04.C1", "summary": "Warning-only orphan."}],
+                "stance_links": [],
+                "contribution_type": "support",
+            },
+        }
+    ]
+
+    report = build_discussion_activation_plan(plan)
+
+    assert report["status"] == "ready_for_approval"
+    discussion_report = report["operator_evidence_report"]["discussion_quality"]
+    assert discussion_report["status"] == "warning"
+    assert discussion_report["discussion_quality_pass"] is True
+    assert discussion_report["orphan_speech_count"] == 1
 
 
 def test_runfix_008_exposes_operator_argue_and_fallback_evidence() -> None:
@@ -507,6 +764,10 @@ def test_runfix_010_live_visible_ready_requires_real_profile_gateway_and_not_cli
     assert report["visible_surface_readiness_report"]["turn_delivery_proven"] is True
     assert report["final_report_contract"] == {
         "lifecycle": "kan_lifecycle_finalized true/false from daemon/control evidence",
+        "discussion_quality": (
+            "discussion_quality_pass true/false from explicit ARGUE relation evidence, "
+            "separate from lifecycle_pass"
+        ),
         "visible_turns_posted": "discord visible turns posted N/expected",
         "real_profile_gateway_replies": "true/false from explicit profile/gateway evidence",
         "selected_runner_labels": "selected-runner evidence labels separate from lifecycle",

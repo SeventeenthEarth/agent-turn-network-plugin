@@ -526,6 +526,85 @@ def test_selected_participant_response_preserves_daemon_authority_when_context_a
     ]
 
 
+def test_selected_participant_response_quality_required_valid_prior_target_link_passes() -> None:
+    transport = StaticDaemonTransport(
+        {
+            OP_VERSION_READ: BASE_VERSION_WITH_PARTC,
+            OP_COMMAND_SUBMIT: BASE_COMMAND_SUCCESS,
+            OP_STREAM_ACK: BASE_ACK_SUCCESS,
+        }
+    )
+    args = _args()
+    cast(JsonObject, args["participant_response"]).update(
+        {
+            "claims": [{"claim_id": "T03.C1", "summary": "Relation evidence stays local."}],
+            "stance_links": [
+                {
+                    "target_event_id": "evt-prior",
+                    "target_claim_id": "T02.C1",
+                    "stance": "support",
+                    "rationale": "The prior claim is the accepted target.",
+                }
+            ],
+            "contribution_type": "support",
+        }
+    )
+    args["caller_validation_context"] = {
+        "quality_mode": "quality_required",
+        "local_context_sufficient": True,
+        "is_opening_speech": False,
+        "prior_claims": [{"event_id": "evt-prior", "claim_id": "T02.C1"}],
+    }
+
+    result = decode(
+        handle_selected_participant_response(args, client_factory=factory_for_transport(transport))
+    )
+
+    assert result["ok"] is True
+    assert [operation for operation, _body in transport.requests] == [
+        OP_VERSION_READ,
+        OP_COMMAND_SUBMIT,
+        OP_VERSION_READ,
+        OP_STREAM_ACK,
+    ]
+
+
+def test_selected_participant_response_quality_required_unknown_target_event_fails() -> None:
+    args = _args()
+    cast(JsonObject, args["participant_response"]).update(
+        {
+            "claims": [{"claim_id": "T03.C1", "summary": "Relation evidence stays local."}],
+            "stance_links": [
+                {
+                    "target_event_id": "evt-unknown",
+                    "target_claim_id": "T02.C1",
+                    "stance": "support",
+                    "rationale": "The event is not caller-provided.",
+                }
+            ],
+            "contribution_type": "support",
+        }
+    )
+    args["caller_validation_context"] = {
+        "quality_mode": "quality_required",
+        "local_context_sufficient": True,
+        "is_opening_speech": False,
+        "prior_claims": [{"event_id": "evt-prior", "claim_id": "T02.C1"}],
+    }
+
+    result = decode(handle_selected_participant_response(args, client_factory=never_client_factory))
+
+    assert result["ok"] is False
+    assert result["error"] == {
+        "category": "validation",
+        "message": (
+            "participant_response.stance_links[0].target_event_id is not in "
+            "caller_validation_context.prior_claims"
+        ),
+        "retryable": False,
+    }
+
+
 def test_selected_participant_response_rejects_stance_target_contradicting_context() -> None:
     args = _args()
     cast(JsonObject, args["participant_response"]).update(
@@ -557,6 +636,149 @@ def test_selected_participant_response_rejects_stance_target_contradicting_conte
         "message": (
             "participant_response.stance_links[0].target_claim_id is not in "
             "caller_validation_context.prior_claims"
+        ),
+        "retryable": False,
+    }
+
+
+def test_selected_participant_response_quality_required_new_axis_with_reason_passes() -> None:
+    transport = StaticDaemonTransport(
+        {
+            OP_VERSION_READ: BASE_VERSION_WITH_PARTC,
+            OP_COMMAND_SUBMIT: BASE_COMMAND_SUCCESS,
+            OP_STREAM_ACK: BASE_ACK_SUCCESS,
+        }
+    )
+    args = _args()
+    cast(JsonObject, args["participant_response"]).update(
+        {
+            "claims": [{"claim_id": "T03.C1", "summary": "A new acceptance axis is needed."}],
+            "contribution_type": "new_axis",
+            "new_axis_reason": "The prior graph has no claim about prompt target guidance.",
+        }
+    )
+    args["caller_validation_context"] = {
+        "quality_mode": "quality_required",
+        "local_context_sufficient": True,
+        "is_opening_speech": False,
+        "prior_claims": [{"event_id": "evt-prior", "claim_id": "T02.C1"}],
+    }
+
+    result = decode(
+        handle_selected_participant_response(args, client_factory=factory_for_transport(transport))
+    )
+
+    assert result["ok"] is True
+
+
+def test_selected_participant_response_quality_required_new_axis_without_reason_fails() -> None:
+    args = _args()
+    cast(JsonObject, args["participant_response"]).update(
+        {
+            "claims": [{"claim_id": "T03.C1", "summary": "A new acceptance axis is needed."}],
+            "contribution_type": "new_axis",
+        }
+    )
+    args["caller_validation_context"] = {
+        "quality_mode": "quality_required",
+        "local_context_sufficient": True,
+        "is_opening_speech": False,
+        "prior_claims": [{"event_id": "evt-prior", "claim_id": "T02.C1"}],
+    }
+
+    result = decode(handle_selected_participant_response(args, client_factory=never_client_factory))
+
+    assert result["ok"] is False
+    assert result["error"] == {
+        "category": "validation",
+        "message": "participant_response.new_axis_reason must be a non-empty string",
+        "retryable": False,
+    }
+
+
+def test_selected_participant_response_quality_warn_orphan_passes() -> None:
+    transport = StaticDaemonTransport(
+        {
+            OP_VERSION_READ: BASE_VERSION_WITH_PARTC,
+            OP_COMMAND_SUBMIT: BASE_COMMAND_SUCCESS,
+            OP_STREAM_ACK: BASE_ACK_SUCCESS,
+        }
+    )
+    args = _args()
+    args["caller_validation_context"] = {
+        "quality_mode": "quality_warn",
+        "local_context_sufficient": True,
+        "is_opening_speech": False,
+        "prior_claims": [{"event_id": "evt-prior", "claim_id": "T02.C1"}],
+    }
+
+    result = decode(
+        handle_selected_participant_response(args, client_factory=factory_for_transport(transport))
+    )
+
+    assert result["ok"] is True
+
+
+def test_selected_participant_response_quality_warn_unknown_target_is_warning_only() -> None:
+    transport = StaticDaemonTransport(
+        {
+            OP_VERSION_READ: BASE_VERSION_WITH_PARTC,
+            OP_COMMAND_SUBMIT: BASE_COMMAND_SUCCESS,
+            OP_STREAM_ACK: BASE_ACK_SUCCESS,
+        }
+    )
+    args = _args()
+    cast(JsonObject, args["participant_response"]).update(
+        {
+            "claims": [{"claim_id": "T03.C1", "summary": "Warning-only invalid target."}],
+            "stance_links": [
+                {
+                    "target_event_id": "evt-unknown",
+                    "target_claim_id": "T99.C1",
+                    "stance": "support",
+                    "rationale": "Quality warn must not block transport.",
+                }
+            ],
+            "contribution_type": "support",
+        }
+    )
+    args["caller_validation_context"] = {
+        "quality_mode": "quality_warn",
+        "local_context_sufficient": True,
+        "is_opening_speech": False,
+        "prior_claims": [{"event_id": "evt-prior", "claim_id": "T02.C1"}],
+    }
+
+    result = decode(
+        handle_selected_participant_response(args, client_factory=factory_for_transport(transport))
+    )
+
+    assert result["ok"] is True
+
+
+def test_selected_participant_response_responds_to_event_id_does_not_satisfy_relation() -> None:
+    args = _args()
+    cast(JsonObject, args["participant_response"]).update(
+        {
+            "claims": [{"claim_id": "T03.C1", "summary": "Legacy hints are display-only."}],
+            "contribution_type": "support",
+            "responds_to_event_id": "evt-prior",
+        }
+    )
+    args["caller_validation_context"] = {
+        "quality_mode": "quality_required",
+        "local_context_sufficient": True,
+        "is_opening_speech": False,
+        "prior_claims": [{"event_id": "evt-prior", "claim_id": "T02.C1"}],
+    }
+
+    result = decode(handle_selected_participant_response(args, client_factory=never_client_factory))
+
+    assert result["ok"] is False
+    assert result["error"] == {
+        "category": "validation",
+        "message": (
+            "participant_response is orphan speech in quality_required caller_validation_context"
         ),
         "retryable": False,
     }

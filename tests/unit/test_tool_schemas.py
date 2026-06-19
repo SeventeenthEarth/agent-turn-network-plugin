@@ -204,11 +204,29 @@ def test_selected_participant_response_schema_accepts_explicit_argue_fields() ->
     assert properties["evidence"] == schemas.ARGUE_SPEECH_PAYLOAD_PROPERTIES["evidence"]
     caller_context = schema_properties["caller_validation_context"]
     assert "non-authoritative" in str(caller_context["description"])
+    assert "event_id and, when present, claim_id" in str(caller_context["description"])
+    assert "responds_to_event_id" in str(caller_context["description"])
     assert caller_context["properties"]["quality_mode"]["enum"] == [
         "default",
         "quality_warn",
         "quality_required",
     ]
+    prior_claims = caller_context["properties"]["prior_claims"]
+    assert "Compact prior claim graph targets" in prior_claims["description"]
+    assert (
+        "Only event_id and claim_id are local validation authority" in prior_claims["description"]
+    )
+    prior_claim_properties = prior_claims["items"]["properties"]
+    assert set(prior_claim_properties) == {
+        "event_id",
+        "claim_id",
+        "speaker",
+        "summary",
+        "available_stances",
+    }
+    assert "Prompt guidance only" in prior_claim_properties["speaker"]["description"]
+    assert "Prompt guidance only" in prior_claim_properties["summary"]["description"]
+    assert "Prompt guidance only" in prior_claim_properties["available_stances"]["description"]
 
 
 def test_surface_render_projection_schema_is_pure_local_projection_tool() -> None:
@@ -293,12 +311,16 @@ def test_discussion_activation_plan_schema_is_pure_local_doctor_tool() -> None:
             "plugin/RUNFIX-010",
             "plugin/RUNFIX-012",
             "plugin/RUNFIX-015",
+            "plugin/RUNFIX-017",
         ],
     }
     operator_evidence = plan_schema["properties"]["operator_evidence"]
     assert "ARGUE counts" in operator_evidence["description"]
     assert "speaker_selected -> speech linkage" in operator_evidence["description"]
     assert "fallback disclosure" in operator_evidence["description"]
+    assert "RUNFIX-017 discussion-quality evidence" in operator_evidence["description"]
+    assert "discussion_quality_pass" in operator_evidence["description"]
+    assert "do not synthesize stance_links[]" in operator_evidence["description"]
     request_context = plan_schema["properties"]["request_context"]
     assert "live_visible_thread" in request_context["description"]
     visible_readiness = plan_schema["properties"]["visible_surface_readiness"]

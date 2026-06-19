@@ -124,10 +124,36 @@ separate:
 - `evidence[]`: source or observation pointers outside visible speech text when
   the participant cites evidence.
 
-Operators should flag a non-opening speech as orphaned when it has neither a
-valid `stance_links[]` entry to the prior claim graph nor a valid `new_axis`
-reason. Repeated ungrounded `new_axis` contributions are a discussion-quality
-warning even if the mechanical daemon/CLI/plugin lifecycle completes.
+Operators should flag a non-opening speech as orphaned when sufficient local
+context exists and it has neither a valid `stance_links[]` entry to the prior
+claim graph nor `contribution_type: "new_axis"` with a non-empty
+`new_axis_reason`. In `quality_required`, the first orphan non-opening speech
+fails closed and blocks `discussion_quality_pass`. In `quality_warn`, the same
+condition is warning-only diagnostic evidence even if the mechanical
+daemon/CLI/plugin lifecycle completes.
+
+Compact prior-claim graph targets should include `event_id`, optional
+`claim_id`, and guidance-only fields such as `speaker`, `summary`, and
+`available_stances`. Only caller-provided `event_id` and `claim_id` are local
+validation authority. `responds_to_event_id`, prose, keywords, Discord order,
+Hermes messages, `speaker`, `summary`, and `available_stances` never satisfy
+relation validity by themselves.
+
+Prompt target example:
+
+```json
+{
+  "prior_claim_graph_targets": [
+    {
+      "event_id": "evt_speech_T01",
+      "claim_id": "T01.C1",
+      "speaker": "macho",
+      "summary": "Canonical speech linkage is required before pilot acceptance.",
+      "available_stances": ["support", "challenge", "refine", "synthesize"]
+    }
+  ]
+}
+```
 
 Participant response template:
 
@@ -174,14 +200,14 @@ non-immediate prior-claim engagement, challenge/refine/synthesize coverage where
 relevant, and no runtime noise in visible speech.
 
 
-## RUNFIX post-pilot guardrails (RUNFIX-014/RUNFIX-015 proof, RUNFIX-016 proof candidate, RUNFIX-017 registered)
+## RUNFIX post-pilot guardrails (RUNFIX-014/RUNFIX-015/RUNFIX-016 proof, RUNFIX-017 candidate)
 
-주유's 2026-06-19 rename-council handoff is registered as `RUNFIX-014` through `RUNFIX-017`. `control/RUNFIX-014` and `plugin/RUNFIX-015` have local implementation proof. `control/RUNFIX-016` has local implementation proof candidate under KAH run `run-20260619T083649Z-d10e1f5cc20b`, pending official color/final gate. `plugin/RUNFIX-017` remains separately registered for later implementation. Operators must treat the following as local proof, proof-candidate, or required planning/acceptance boundaries, not completed runtime capability:
+주유's 2026-06-19 rename-council handoff is registered as `RUNFIX-014` through `RUNFIX-017`. `control/RUNFIX-014` and `plugin/RUNFIX-015` have local implementation proof. `control/RUNFIX-016` has local implementation proof under KAH run `run-20260619T083649Z-d10e1f5cc20b` and local commit `9c15d22`. `plugin/RUNFIX-017` has local implementation proof under KAH run `run-20260619T101255Z-189d01ba8b8f` after official color review, Blue synthesis, and final KAH gate. Operators must treat the following as local proof, implementation-candidate evidence, or required planning/acceptance boundaries, not completed runtime capability:
 
 1. `control/RUNFIX-014` selected-runner accounting: a run with `runner_invocation_failed` followed by later canonical `speech` is lifecycle/fallback evidence, not `selected_runner_pass`. Reports must expose runner started/succeeded/failed counts and fallback/manual harness flags.
 2. `plugin/RUNFIX-015` visible author guard: plugin KAH run `run-20260619T071526Z-7d2ba33b07d5` adds local `kan_discussion_activation_plan` proof for pre-`council.new` visible-author validation. Explicit caller-provided same-path probes must prove each selected participant posts as the expected profile author. Evidence includes `profile`, expected author source (`registry_snapshot` or approved profile-author map), observed bot/user, `source_env`, `posting_path`, shared/default negative proof, shared-default-then-profile-local env precedence, per-turn Discord message id, selected member, profile author id, and `speech_event_id`. Shared/default or unexpected authors fail closed; the planner does not perform live Discord delivery or runtime/profile/provider/gateway/auth/token/model mutation.
-3. `control/RUNFIX-016` summary robustness: KAH run `run-20260619T083649Z-d10e1f5cc20b` is a local implementation proof candidate, pending official color/final gate, that closeout/summary tooling tolerates `payload.plugin_evidence`, dict/list `payload.evidence`, and missing optional evidence. A finalized lifecycle must not look failed because optional evidence has an alternate shape; this remains fail-closed proof-candidate evidence only, not runtime readiness.
-4. `plugin/RUNFIX-017` ARGUE quality-required prompts: non-opening quality-required speeches must link to prior claims through `stance_links[]` or justify `new_axis`; prompts should provide compact prior claim graph targets; in `quality_required`, the first orphan non-opening speech blocks `discussion_quality_pass`; warning-only behavior is reserved for `quality_warn`, and repeated-orphan counts remain diagnostic evidence.
+3. `control/RUNFIX-016` summary robustness: KAH run `run-20260619T083649Z-d10e1f5cc20b` has local implementation proof that closeout/summary tooling tolerates `payload.plugin_evidence`, dict/list `payload.evidence`, and missing optional evidence. A finalized lifecycle must not look failed because optional evidence has an alternate shape; this remains fail-closed local proof evidence only, not runtime readiness.
+4. `plugin/RUNFIX-017` ARGUE quality-required prompts: non-opening quality-required speeches with sufficient local context must link to caller-provided prior targets through valid `stance_links[]` or justify `contribution_type: "new_axis"` with `new_axis_reason`; prompts should provide compact prior claim graph targets; explicit `discussion_quality` evidence is required for the quality gate; in `quality_required`, the first orphan non-opening speech blocks `discussion_quality_pass`; warning-only behavior is reserved for `quality_warn`, and repeated-orphan counts remain diagnostic evidence.
 
 Final reports must keep these fields separate: `lifecycle_pass`, `selected_runner_pass`, `visible_surface_pass`, `fallback_profile_pass`, `discussion_quality_pass`, `orphan_speech_count`, `linked_speech_count`, `stance_link_count`, `new_axis_count`, Discord visible turns posted, real profile/gateway replies, and shared/default author fallback status.
 

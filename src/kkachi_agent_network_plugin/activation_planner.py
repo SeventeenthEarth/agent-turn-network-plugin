@@ -19,6 +19,7 @@ RUNFIX_008_TASK_ID: Final = "plugin/RUNFIX-008"
 RUNFIX_010_TASK_ID: Final = "plugin/RUNFIX-010"
 RUNFIX_012_TASK_ID: Final = "plugin/RUNFIX-012"
 RUNFIX_015_TASK_ID: Final = "plugin/RUNFIX-015"
+RUNFIX_017_TASK_ID: Final = "plugin/RUNFIX-017"
 SUPPORTED_TASK_IDS: Final[frozenset[str]] = frozenset(
     {
         RUNFIX_006_TASK_ID,
@@ -27,6 +28,7 @@ SUPPORTED_TASK_IDS: Final[frozenset[str]] = frozenset(
         RUNFIX_010_TASK_ID,
         RUNFIX_012_TASK_ID,
         RUNFIX_015_TASK_ID,
+        RUNFIX_017_TASK_ID,
     }
 )
 TASK_ID: Final = RUNFIX_010_TASK_ID
@@ -57,7 +59,7 @@ def build_discussion_activation_plan(plan: Mapping[str, object]) -> JsonObject:
         raise ValueError(
             "plan.task_id must be plugin/RUNFIX-006, plugin/RUNFIX-007, "
             "plugin/RUNFIX-008, plugin/RUNFIX-010, plugin/RUNFIX-012, "
-            "or plugin/RUNFIX-015"
+            "plugin/RUNFIX-015, or plugin/RUNFIX-017"
         )
 
     blockers: list[JsonObject] = []
@@ -108,7 +110,9 @@ def build_discussion_activation_plan(plan: Mapping[str, object]) -> JsonObject:
     blockers.extend(operator_blockers)
     operator_evidence = _operator_evidence_report(
         source.get("operator_evidence"),
-        require_evidence=task_id in {RUNFIX_008_TASK_ID, RUNFIX_010_TASK_ID},
+        runfix_task_id=RUNFIX_017_TASK_ID if task_id == RUNFIX_017_TASK_ID else RUNFIX_008_TASK_ID,
+        require_evidence=task_id in {RUNFIX_008_TASK_ID, RUNFIX_010_TASK_ID, RUNFIX_017_TASK_ID},
+        require_quality=task_id == RUNFIX_017_TASK_ID,
         blockers=blockers,
     )
     visible_surface_readiness = _visible_surface_readiness_report(
@@ -188,6 +192,7 @@ def _behavior_task_id(task_id: str) -> str:
         RUNFIX_010_TASK_ID,
         RUNFIX_012_TASK_ID,
         RUNFIX_015_TASK_ID,
+        RUNFIX_017_TASK_ID,
     }:
         return task_id
     return RUNFIX_007_TASK_ID
@@ -1683,6 +1688,10 @@ def _append_turn_blocker(
 def _final_report_contract() -> JsonObject:
     return {
         "lifecycle": "kan_lifecycle_finalized true/false from daemon/control evidence",
+        "discussion_quality": (
+            "discussion_quality_pass true/false from explicit ARGUE relation evidence, "
+            "separate from lifecycle_pass"
+        ),
         "visible_turns_posted": "discord visible turns posted N/expected",
         "real_profile_gateway_replies": "true/false from explicit profile/gateway evidence",
         "selected_runner_labels": "selected-runner evidence labels separate from lifecycle",
@@ -1752,28 +1761,53 @@ def _participant_argue_response_template() -> JsonObject:
             "Use stance_links[] for prior-claim engagement, or contribution_type=new_axis "
             "with a non-empty new_axis_reason when opening a necessary new axis."
         ),
+        "prior_claim_graph_targets": {
+            "required_authority_fields": ["event_id"],
+            "optional_authority_fields": ["claim_id"],
+            "prompt_guidance_fields": ["speaker", "summary", "available_stances"],
+            "validation_rule": (
+                "Only caller-provided event_id and claim_id values are local validation "
+                "authority. Speaker, summary, available_stances, prose, Discord order, "
+                "Hermes messages, and responds_to_event_id are prompt guidance only."
+            ),
+            "example": {
+                "event_id": "evt_speech_0",
+                "claim_id": "T01.C1",
+                "speaker": "macho",
+                "summary": "Canonical speech linkage gates pilot acceptance.",
+                "available_stances": ["support", "challenge", "refine", "synthesize"],
+            },
+        },
     }
 
 
 def _operator_evidence_report(
     value: object,
     *,
+    runfix_task_id: str,
     require_evidence: bool,
+    require_quality: bool,
     blockers: list[JsonObject],
 ) -> JsonObject:
     if not isinstance(value, Mapping):
         if require_evidence:
+            message = (
+                "plugin/RUNFIX-017 requires explicit runner, ARGUE, canonical "
+                "speech-link, and discussion_quality evidence."
+                if require_quality
+                else (
+                    "plugin/RUNFIX-008 requires explicit runner, ARGUE, and "
+                    "canonical speech-link evidence."
+                )
+            )
             blockers.append(
                 _blocker(
                     code="operator_evidence_missing",
                     owner="operator",
-                    message=(
-                        "plugin/RUNFIX-008 requires explicit runner, ARGUE, and "
-                        "canonical speech-link evidence."
-                    ),
+                    message=message,
                 )
             )
-        return _empty_operator_evidence_report()
+        return _empty_operator_evidence_report(runfix_task_id=runfix_task_id)
 
     evidence = _json_object(value, label="plan.operator_evidence")
     runner = _runner_evidence_report(
@@ -1782,6 +1816,11 @@ def _operator_evidence_report(
     participant = _participant_response_report(
         evidence.get("participant_response"),
         require_evidence=require_evidence,
+        blockers=blockers,
+    )
+    discussion_quality = _discussion_quality_report(
+        evidence.get("discussion_quality"),
+        require_quality=require_quality,
         blockers=blockers,
     )
     canonical_link = _canonical_speech_linkage_report(
@@ -1797,18 +1836,19 @@ def _operator_evidence_report(
         blockers=blockers,
     )
     return {
-        "runfix_task_id": RUNFIX_008_TASK_ID,
+        "runfix_task_id": runfix_task_id,
         "runner_evidence": runner,
         "canonical_speaker_selected_to_speech": canonical_link,
         "participant_response": participant["participant_response"],
         "argue_counts": participant["argue_counts"],
+        "discussion_quality": discussion_quality,
         "fallback_disclosure": fallback_disclosure,
     }
 
 
-def _empty_operator_evidence_report() -> JsonObject:
+def _empty_operator_evidence_report(*, runfix_task_id: str = RUNFIX_008_TASK_ID) -> JsonObject:
     return {
-        "runfix_task_id": RUNFIX_008_TASK_ID,
+        "runfix_task_id": runfix_task_id,
         "runner_evidence": {
             "status": "unproven",
             "speaker_selected_event_id": None,
@@ -1841,6 +1881,7 @@ def _empty_operator_evidence_report() -> JsonObject:
             "evidence": 0,
             "contribution_types": {},
         },
+        "discussion_quality": _empty_discussion_quality_report(),
         "fallback_disclosure": {
             "status": "not_supplied",
             "label": "fallback_profile_pass",
@@ -2016,6 +2057,233 @@ def _participant_response_report(
             )
         )
     return {"participant_response": response_output, "argue_counts": counts}
+
+
+def _empty_discussion_quality_report() -> JsonObject:
+    return {
+        "status": "unproven",
+        "label": "discussion_quality_pass",
+        "quality_mode": "not_supplied",
+        "discussion_quality_pass": False,
+        "first_orphan_speech_event_id": None,
+        "orphan_speech_count": 0,
+        "repeated_orphan_count": 0,
+        "linked_speech_count": 0,
+        "stance_link_count": 0,
+        "valid_stance_link_count": 0,
+        "new_axis_count": 0,
+        "diagnostics": [],
+        "synthetic_links_created": False,
+    }
+
+
+def _discussion_quality_report(
+    value: object,
+    *,
+    require_quality: bool,
+    blockers: list[JsonObject],
+) -> JsonObject:
+    report = _empty_discussion_quality_report()
+    quality_mode = "quality_required" if require_quality else "default"
+    local_context_sufficient = True
+    prior_claims: dict[str, set[str]] = {}
+    turn_sources: list[JsonObject] = []
+
+    if isinstance(value, Mapping):
+        quality = _json_object(value, label="plan.operator_evidence.discussion_quality")
+        if "quality_mode" in quality:
+            quality_mode = _required_string(
+                quality.get("quality_mode"),
+                label="plan.operator_evidence.discussion_quality.quality_mode",
+            )
+            if quality_mode not in {"default", "quality_warn", "quality_required"}:
+                raise ValueError(
+                    "plan.operator_evidence.discussion_quality.quality_mode must be supported"
+                )
+        local_context_sufficient = quality.get("local_context_sufficient") is not False
+        prior_claims = _discussion_prior_claims(quality.get("prior_claims", []))
+        turns = quality.get("turns")
+        if isinstance(turns, list):
+            for index, item in enumerate(turns):
+                turn_sources.append(
+                    _json_object(
+                        item,
+                        label=f"plan.operator_evidence.discussion_quality.turns[{index}]",
+                    )
+                )
+
+    report["quality_mode"] = quality_mode
+    if not turn_sources:
+        if require_quality:
+            blockers.append(
+                _blocker(
+                    code="discussion_quality_evidence_missing",
+                    owner="participant",
+                    message=("plugin/RUNFIX-017 requires explicit discussion_quality evidence."),
+                )
+            )
+            report["status"] = "blocked"
+        return report
+
+    orphan_count = 0
+    linked_count = 0
+    stance_link_count = 0
+    valid_stance_link_count = 0
+    new_axis_count = 0
+    diagnostics: list[JsonObject] = []
+    first_orphan_event_id: str | None = None
+
+    for index, turn in enumerate(turn_sources):
+        response = _discussion_turn_response(turn, index=index)
+        is_opening = response.get("is_opening_speech") is True
+        turn_local_context_sufficient = (
+            local_context_sufficient and response.get("local_context_sufficient") is not False
+        )
+        speech_event_id = _optional_string_value(response.get("speech_event_id"))
+        stance_links = response.get("stance_links")
+        turn_stance_count = len(stance_links) if isinstance(stance_links, list) else 0
+        turn_valid_links = _valid_discussion_stance_link_count(stance_links, prior_claims)
+        has_new_axis = _has_justified_new_axis(response)
+        stance_link_count += turn_stance_count
+        valid_stance_link_count += turn_valid_links
+        if turn_valid_links > 0:
+            linked_count += 1
+        if has_new_axis:
+            new_axis_count += 1
+
+        orphan = (
+            not is_opening
+            and turn_local_context_sufficient
+            and turn_valid_links == 0
+            and not has_new_axis
+        )
+        if orphan:
+            orphan_count += 1
+            if first_orphan_event_id is None:
+                first_orphan_event_id = speech_event_id or f"turn[{index}]"
+            diagnostics.append(
+                {
+                    "code": "orphan_non_opening_speech",
+                    "speech_event_id": speech_event_id,
+                    "turn_index": index,
+                    "synthetic_link_created": False,
+                }
+            )
+        if turn_stance_count and turn_valid_links == 0:
+            diagnostics.append(
+                {
+                    "code": "stance_links_not_validated_against_prior_claims",
+                    "speech_event_id": speech_event_id,
+                    "turn_index": index,
+                    "synthetic_link_created": False,
+                }
+            )
+
+    report.update(
+        {
+            "first_orphan_speech_event_id": first_orphan_event_id,
+            "orphan_speech_count": orphan_count,
+            "repeated_orphan_count": max(0, orphan_count - 1),
+            "linked_speech_count": linked_count,
+            "stance_link_count": stance_link_count,
+            "valid_stance_link_count": valid_stance_link_count,
+            "new_axis_count": new_axis_count,
+            "diagnostics": cast(list[JsonValue], diagnostics),
+        }
+    )
+
+    if quality_mode == "quality_required" and orphan_count:
+        report["status"] = "blocked"
+        report["discussion_quality_pass"] = False
+        if require_quality:
+            blockers.append(
+                _blocker(
+                    code="discussion_quality_orphan_speech",
+                    owner="participant",
+                    message=(
+                        "quality_required evidence has a non-opening speech without a "
+                        "valid prior-target stance_links[] entry or justified new_axis."
+                    ),
+                )
+            )
+        return report
+
+    report["discussion_quality_pass"] = True
+    report["status"] = "warning" if orphan_count else "proven"
+    return report
+
+
+def _discussion_turn_response(turn: Mapping[str, object], *, index: int) -> JsonObject:
+    response_value = turn.get("participant_response")
+    if isinstance(response_value, Mapping):
+        response = _json_object(
+            response_value,
+            label=f"plan.operator_evidence.discussion_quality.turns[{index}].participant_response",
+        )
+        for key in (
+            "speech_event_id",
+            "is_opening_speech",
+            "local_context_sufficient",
+        ):
+            if key in turn and key not in response:
+                response[key] = cast(JsonValue, turn[key])
+        return response
+    return cast(JsonObject, turn)
+
+
+def _has_justified_new_axis(response: Mapping[str, object]) -> bool:
+    return response.get("contribution_type") == "new_axis" and _non_empty_string(
+        response.get("new_axis_reason")
+    )
+
+
+def _discussion_prior_claims(value: object) -> dict[str, set[str]]:
+    if value is None:
+        return {}
+    if not isinstance(value, list):
+        raise ValueError("plan.operator_evidence.discussion_quality.prior_claims must be an array")
+    prior_claims: dict[str, set[str]] = {}
+    for index, item in enumerate(value):
+        claim = _json_object(
+            item,
+            label=f"plan.operator_evidence.discussion_quality.prior_claims[{index}]",
+        )
+        event_id = _required_string(
+            claim.get("event_id"),
+            label=f"plan.operator_evidence.discussion_quality.prior_claims[{index}].event_id",
+        )
+        claim_ids = prior_claims.setdefault(event_id, set())
+        claim_id = claim.get("claim_id")
+        if claim_id is not None:
+            claim_ids.add(
+                _required_string(
+                    claim_id,
+                    label=(
+                        f"plan.operator_evidence.discussion_quality.prior_claims[{index}].claim_id"
+                    ),
+                )
+            )
+    return prior_claims
+
+
+def _valid_discussion_stance_link_count(value: object, prior_claims: Mapping[str, set[str]]) -> int:
+    if not isinstance(value, list) or not prior_claims:
+        return 0
+    valid = 0
+    for item in value:
+        if not isinstance(item, Mapping):
+            continue
+        target_event_id = item.get("target_event_id")
+        if not _non_empty_string(target_event_id) or target_event_id not in prior_claims:
+            continue
+        target_claim_ids = prior_claims[cast(str, target_event_id)]
+        if not target_claim_ids:
+            valid += 1
+            continue
+        target_claim_id = item.get("target_claim_id")
+        if _non_empty_string(target_claim_id) and cast(str, target_claim_id) in target_claim_ids:
+            valid += 1
+    return valid
 
 
 def _canonical_speech_linkage_report(

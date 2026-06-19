@@ -5,10 +5,11 @@
 
 These repo-local instructions preserve the useful baseline guardrails from the
 `andrej-karpathy-skills` `CLAUDE.md` lineage and adapt them for KAN plugin.
-KAS-managed instruction content is policy guidance only. It does not authorize
-profile mutation, auth/token changes, provider/model/gateway changes, KAH state
-writes beyond the approved project workflow, KAB runtime mutation, commits,
-pushes, live activation, Discord delivery, or deployment.
+These repo-local instructions are optional development guardrails only. They do
+not make KAS, KAH, KAB, or any profile-local skill suite a prerequisite for
+working on this repository, and they do not authorize profile mutation,
+auth/token changes, provider/model/gateway changes, commits, pushes, live
+activation, Discord delivery, or deployment.
 
 Operating principles:
 
@@ -20,22 +21,21 @@ Operating principles:
 - Surgical changes: touch only files required by the task, preserve unrelated
   project-local text, and do not reformat or refactor adjacent work.
 - Goal-driven execution: turn the task into verifiable checks, run focused tests
-  or KAH/KAS gates, read the results, and report exact evidence honestly.
+  or explicitly approved project gates, read the results, and report exact
+  evidence honestly.
 - Artifact-first detail: keep chat/console output compact and point to durable
   artifacts when long plans, logs, diffs, reviews, or evidence are needed.
 
 Layer boundaries:
 
-- KAS owns task classification, workflow guidance, prompt policy, templates, and
-  evidence expectations. It must not become a second KAH state system or a KAB
-  runtime controller.
-- KAH owns deterministic project state, schemas, artifacts, events, locks,
-  diagnostics, and pass/fail/not_applicable gates. It must not judge prose
-  quality, summarize policy, or rewrite instructions.
-- KAB owns backend bridge/session/control behavior and retained backend
-  execution evidence. It must not decide KAS task policy, silently substitute
-  lanes, or mutate auth/token/provider/model/gateway settings without explicit
-  authority.
+- KAN plugin repository source, tests, and docs are sufficient for ordinary
+  development. Optional Kkachi workflow helpers may record evidence or reviews
+  when explicitly selected, but absence of those helpers or profile-local phase
+  skills must not block normal code/docs work.
+- The plugin remains a Hermes participant-agent tool surface; the control daemon
+  remains lifecycle/event/state authority.
+- Backend or workflow helpers must not silently substitute lanes or mutate
+  auth/token/provider/model/gateway settings without explicit authority.
 <!-- KAS:MANAGED:END core-behavior -->
 
 <!-- PROJECT:LOCAL:BEGIN -->
@@ -48,45 +48,22 @@ This repository is `kkachi-agent-network-plugin`, the Hermes plugin / participan
 - Red reviewer: 서황 / `seohwang`
 - Orange reviewer: 종회 / `jonghoe`
 - Gray reviewer: 만총 / `manchong`
-- Project ID for KAS/KAH: `kan-plugin`
 - Repo path: `/Users/draccoon/Workspace/SeventeenthEarth/kkachi/kkachi-agent-network-plugin`
 - Sibling control repo: `/Users/draccoon/Workspace/SeventeenthEarth/kkachi/kkachi-agent-network-control`
 
 마초 owns KAN plugin technical direction, decomposition, sequencing, plan gates, implementation authorization, evidence synthesis, and Blue final reporting. This does not grant KAB/KAH/KAS-wide command authority and does not replace other Kkachi project commanders.
 
-## Installed profile-local KAS suite
+## Optional development helpers
 
-KAN plugin KAS skills are installed under the active Hermes profiles, not inside this repository:
+Profile-local Kkachi/KAS phase skills are development conveniences, not project
+requirements and not KAN runtime/operator skills. Do not mention or require profile-local phase-skill names in this repository's product docs or install path.
+Ordinary direct edits, tests, docs updates, and reviews may proceed from the repo
+SOT and the commands documented here.
 
-```text
-~/.hermes/profiles/macho/skills/kan-plugin/       # blue_commander, 18 skills
-~/.hermes/profiles/seohwang/skills/kan-plugin/    # red_reviewer, review + verify
-~/.hermes/profiles/jonghoe/skills/kan-plugin/     # orange_pm_reviewer, review
-~/.hermes/profiles/manchong/skills/kan-plugin/    # gray_scribe, review + final-verify
-```
-
-The installed skills are profile-local semantic tailorings of KAS v0.1.3 for this repo. They are not KAS source promotion.
-
-## KAH baseline
-
-KAH v0.1.9 is the current local helper baseline for this repo. KAH project state is repo-local under `.kkachi/` and uses:
-
-```text
-commander: macho
-redteam: seohwang
-stack: python-plugin
-backend_policy: stage=stage1_direct_codex_app_server_baseline; allowed=codex_app_server; project=kan-plugin; no_cli_fallback=true
-execution_mode: kan-plugin-kas-development
-sot_policy: plugin_sot_with_control_dependency_gates; repo_qualified_task_ids_required
-```
-
-Do not edit `.kkachi-workflow.yaml` directly when KAH graph proposal/apply is available. Use:
-
-```bash
-kkachi-agent-helper graph propose --candidate-file <repo-relative-candidate-graph> --reason <text> --json
-kkachi-agent-helper graph apply --proposal <proposal-id> --approval <evidence-ref> --json
-kkachi-agent-helper graph validate --json
-```
+When an explicitly selected workflow helper is available, `.kkachi/` and
+`.kkachi-workflow.yaml` may be used as evidence/state helpers. If those helpers
+are unavailable, record the direct-development evidence instead of blocking the
+work solely because KAS/KAH is absent.
 
 ## Authority order
 
@@ -106,10 +83,7 @@ Use this order when claims conflict:
    - `../kkachi-agent-network-control/docs/25-council-argument-graph-sot.md`
    - `../kkachi-agent-network-control/docs/24-live-transport-control-sot.md`
    - `../kkachi-agent-network-control/docs/roadmap.md`
-5. Active KAH graph: `.kkachi-workflow.yaml`, validated with `kkachi-agent-helper graph validate --json`.
-6. Candidate KAS policy note: `/Users/draccoon/Workspace/Hermes/17thHermes/40_outputs/projects/kkachi/2026-06-14-kas-policy-promotion-candidates.md`.
-
-The candidate policy note is guidance only. Do not claim it is already promoted to KAS source.
+5. Optional workflow helper state under `.kkachi/` only when that helper is explicitly selected and available.
 
 ## Plugin/control boundary
 
@@ -139,7 +113,7 @@ Rules:
 
 ## Current workflow spine
 
-Development-class work uses the active KAH graph:
+Development-class work may use the optional workflow graph when explicitly selected:
 
 ```text
 intake -> sot -> roadmap -> task-classification -> plan -> vet -> ask -> implement -> enhance-test -> ai-slop-cleaner -> optimize -> docs-update -> verify -> color-review -> color-adjust -> octo-review -> octo-adjudication -> post-octo-adjust -> final
@@ -166,7 +140,7 @@ Color review rules:
 
 Use full development spine for implementation or durable behavior changes.
 
-Use explicit skipped-phase reasons for:
+If an optional workflow graph is used, record explicit skipped-phase reasons for:
 
 - `docs_only`
 - `research_evidence`

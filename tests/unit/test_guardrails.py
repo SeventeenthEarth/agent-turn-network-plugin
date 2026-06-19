@@ -64,7 +64,7 @@ def write_docs(root: Path, *, include_fail_closed: bool = True) -> None:
                 "No-live defaults",
                 "Rollback",
                 "Troubleshooting",
-                "does not install the skill into the user's Hermes profile",
+                "registers these read-only plugin-provided skills",
                 "provides_commands: []",
                 "kan_session_status",
                 "SKILL-2",

@@ -211,6 +211,31 @@ relevant, and no runtime noise in visible speech.
 
 Final reports must keep these fields separate: `lifecycle_pass`, `selected_runner_pass`, `visible_surface_pass`, `fallback_profile_pass`, `discussion_quality_pass`, `orphan_speech_count`, `linked_speech_count`, `stance_link_count`, `new_axis_count`, Discord visible turns posted, real profile/gateway replies, and shared/default author fallback status.
 
+## Required KAN companion skills
+
+`kkachi-agent-network-plugin` must ship the operator guidance needed to use its
+tool surface. Do not leave KAN runtime/operator guidance as ops-only,
+profile-local, or external-directory-only skills. The plugin package owns and
+registers these bundled companion skills together:
+
+- `kan-plugin`: plugin/operator surface and hard boundaries;
+- `kan-moderator`: council preflight, activation planning, lifecycle, visible-surface, and closeout duties;
+- `kan-participant`: selected-speaker and participant response duties.
+
+Treat a profile where plugin tools are enabled but these companion skills are
+absent, stale, or available only from an unrelated external skill directory as
+incomplete KAN plugin activation. Fix the plugin bundled-skill set or install
+flow instead of asking 주군 to provide extra manual field-mapping instructions.
+
+For `kan_discussion_activation_plan`, role skills must explicitly tell
+moderators to materialize collected evidence into planner fields such as
+`participant_profiles[].effective_discord.tools_visible`,
+`participant_profiles[].effective_discord.bot_to_bot_enabled`,
+`discord_parent_channel.allow_list_inheritance_proven`, and
+`visible_surface_readiness`. If those mappings are missing from a bundled role
+skill, patch the plugin package; do not blame the moderator profile for a
+correct fail-closed `unknown` result.
+
 ## Live-visible council preflight
 
 When the request arrives in Discord and the user asks agents to "discuss" or run

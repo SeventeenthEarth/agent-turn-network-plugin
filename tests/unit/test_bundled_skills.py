@@ -7,6 +7,7 @@ import yaml
 
 from kkachi_agent_network_plugin.bundled_skills import (
     BUNDLED_SKILL_NAME,
+    BUNDLED_SKILL_NAMES,
     bundled_skill_names,
     bundled_skill_resource,
     read_bundled_skill_text,
@@ -16,13 +17,17 @@ ROOT = Path(__file__).resolve().parents[2]
 
 
 def test_bundled_kan_skill_resource_is_import_safe_and_readable() -> None:
-    assert bundled_skill_names() == ("kan-plugin",)
+    assert bundled_skill_names() == ("kan-plugin", "kan-moderator", "kan-participant")
     assert BUNDLED_SKILL_NAME == "kan-plugin"
+    assert bundled_skill_names() == BUNDLED_SKILL_NAMES
 
-    resource = bundled_skill_resource("kan-plugin")
+    for name in bundled_skill_names():
+        resource = bundled_skill_resource(name)
+        text = read_bundled_skill_text(name)
+        assert resource.name == "SKILL.md"
+        assert f"name: {name}" in text
+
     text = read_bundled_skill_text("kan-plugin")
-
-    assert resource.name == "SKILL.md"
     assert "# KAN Plugin Operator Skill" in text
     assert "does not install itself into a Hermes profile" in text
     assert "provides_commands: []" in text
@@ -65,18 +70,18 @@ def test_bundled_kan_skill_ships_council_moderation_hard_rules() -> None:
 
 
 def test_bundled_kan_skill_has_valid_hermes_frontmatter() -> None:
-    text = read_bundled_skill_text("kan-plugin")
+    for name in bundled_skill_names():
+        text = read_bundled_skill_text(name)
+        assert text.startswith("---\n")
+        closing = text.find("\n---\n", 4)
+        assert closing != -1
+        frontmatter = yaml.safe_load(text[4:closing])
 
-    assert text.startswith("---\n")
-    closing = text.find("\n---\n", 4)
-    assert closing != -1
-    frontmatter = yaml.safe_load(text[4:closing])
-
-    assert frontmatter["name"] == "kan-plugin"
-    assert frontmatter["description"].startswith("Use when operating")
-    assert len(frontmatter["description"]) <= 1024
-    assert frontmatter["version"] == "0.1.0"
-    assert frontmatter["metadata"]["hermes"]["tags"]
+        assert frontmatter["name"] == name
+        assert isinstance(frontmatter["description"], str)
+        assert len(frontmatter["description"]) <= 1024
+        assert frontmatter["version"] == "0.1.0"
+        assert frontmatter["metadata"]["hermes"]["tags"]
 
 
 def test_bundled_skill_reader_rejects_unknown_names() -> None:

@@ -11,12 +11,13 @@ from importlib import resources
 from importlib.resources.abc import Traversable
 
 BUNDLED_SKILL_NAME = "kan-plugin"
+BUNDLED_SKILL_NAMES = ("kan-plugin", "kan-moderator", "kan-participant")
 
 
 def bundled_skill_names() -> tuple[str, ...]:
     """Return the bundled skill names shipped with this package."""
 
-    return (BUNDLED_SKILL_NAME,)
+    return BUNDLED_SKILL_NAMES
 
 
 def bundled_skill_resource(name: str = BUNDLED_SKILL_NAME) -> Traversable:
@@ -39,6 +40,7 @@ def read_bundled_skill_text(name: str = BUNDLED_SKILL_NAME) -> str:
 
 __all__ = [
     "BUNDLED_SKILL_NAME",
+    "BUNDLED_SKILL_NAMES",
     "bundled_skill_names",
     "bundled_skill_resource",
     "read_bundled_skill_text",

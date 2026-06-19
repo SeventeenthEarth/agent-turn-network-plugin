@@ -22,6 +22,10 @@ if _SRC_PATH.is_dir():
     if _src not in sys.path:
         sys.path.insert(0, _src)
 
+from kkachi_agent_network_plugin.bundled_skills import (  # noqa: E402
+    bundled_skill_names,
+    bundled_skill_resource,
+)
 from kkachi_agent_network_plugin.client.daemon import DaemonClient  # noqa: E402
 from kkachi_agent_network_plugin.client.live import load_plugin_local_live_config  # noqa: E402
 from kkachi_agent_network_plugin.errors import DaemonTransportError  # noqa: E402
@@ -48,6 +52,31 @@ def register(
         except DaemonTransportError as exc:
             effective_client_factory = _failing_client_factory(exc)
     register_tools(ctx, client_factory=effective_client_factory, config=effective_config)
+    _register_bundled_skills(ctx)
+
+
+def _register_bundled_skills(ctx: object) -> None:
+    """Register required KAN operator/role skills bundled with this plugin.
+
+    Hermes exposes plugin skills as read-only, plugin-qualified skills.  This
+    does not mutate profile skill directories and keeps the plugin package as
+    the canonical source for KAN operator guidance.
+    """
+
+    register_skill = getattr(ctx, "register_skill", None)
+    if not callable(register_skill):
+        return
+    descriptions = {
+        "kan-plugin": "KAN plugin operator surface and boundaries.",
+        "kan-moderator": "KAN council moderator preflight, lifecycle, and closeout guidance.",
+        "kan-participant": "KAN selected-speaker participant response guidance.",
+    }
+    for name in bundled_skill_names():
+        register_skill(
+            name=name,
+            path=Path(str(bundled_skill_resource(name))),
+            description=descriptions.get(name, "KAN bundled operator guidance."),
+        )
 
 
 def _failing_client_factory(exc: DaemonTransportError) -> ClientFactory:

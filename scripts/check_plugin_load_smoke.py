@@ -104,11 +104,22 @@ def require_package_and_bundled_skill(plugin_home: Path) -> None:
     if wheel.get("packages") != ["src/kkachi_agent_network_plugin"]:
         raise SystemExit("plugin-load smoke wheel package inclusion mismatch")
 
-    skill = plugin_home / "src" / PACKAGE_MODULE / "bundled_skills" / "kan-plugin" / "SKILL.md"
-    text = skill.read_text(encoding="utf-8")
-    for phrase in ("name: kan-plugin", "provides_commands: []", "kan_session_status"):
-        if phrase not in text:
-            raise SystemExit(f"plugin-load smoke bundled skill missing phrase: {phrase}")
+    bundled_root = plugin_home / "src" / PACKAGE_MODULE / "bundled_skills"
+    expected_skills = {
+        "kan-plugin": ("name: kan-plugin", "provides_commands: []", "kan_session_status"),
+        "kan-moderator": ("name: kan-moderator", "kan_discussion_activation_plan", "tools_visible"),
+        "kan-participant": ("name: kan-participant", "selected-speaker", "stance_links"),
+    }
+    for skill_name, phrases in expected_skills.items():
+        skill = bundled_root / skill_name / "SKILL.md"
+        if not skill.exists():
+            raise SystemExit(f"plugin-load smoke missing bundled skill: {skill_name}")
+        text = skill.read_text(encoding="utf-8")
+        for phrase in phrases:
+            if phrase not in text:
+                raise SystemExit(
+                    f"plugin-load smoke bundled skill {skill_name} missing phrase: {phrase}"
+                )
 
     package = load_module(
         plugin_home / "src" / PACKAGE_MODULE / "__init__.py",
@@ -200,6 +211,15 @@ def require_entrypoint_load(plugin_home: Path) -> FakeHermesContext:
         raise SystemExit("plugin-load smoke registered unsupported hooks")
     if context.registered_commands:
         raise SystemExit("plugin-load smoke registered unsupported commands")
+    registered_skill_names = [skill.get("name") for skill in context.registered_skills]
+    if registered_skill_names != ["kan-plugin", "kan-moderator", "kan-participant"]:
+        raise SystemExit(
+            "plugin-load smoke bundled skill registration mismatch: "
+            f"{registered_skill_names!r}"
+        )
+    for skill in context.registered_skills:
+        if not Path(str(skill.get("path"))).exists():
+            raise SystemExit(f"plugin-load smoke registered skill path missing: {skill!r}")
     for tool in context.registered_tools:
         if tool.get("toolset") != TOOLSET:
             raise SystemExit(f"plugin-load smoke toolset mismatch: {tool!r}")
@@ -472,6 +492,7 @@ class FakeHermesContext:
         self.registered_tools: list[dict[str, Any]] = []
         self.registered_hooks: list[tuple[str, Any]] = []
         self.registered_commands: list[dict[str, Any]] = []
+        self.registered_skills: list[dict[str, Any]] = []
 
     def register_tool(self, **kwargs: Any) -> None:
         self.registered_tools.append(kwargs)
@@ -481,6 +502,9 @@ class FakeHermesContext:
 
     def register_command(self, *args: Any, **kwargs: Any) -> None:
         self.registered_commands.append({"args": args, "kwargs": kwargs})
+
+    def register_skill(self, **kwargs: Any) -> None:
+        self.registered_skills.append(kwargs)
 
 
 def main(*, root: Path = ROOT) -> None:

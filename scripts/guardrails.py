@@ -33,7 +33,7 @@ REQUIRED_OPERATOR_PHRASES = [
     "Rollback",
     "Troubleshooting",
     "No-live defaults",
-    "does not install the skill into the user's Hermes profile",
+    "registers these read-only plugin-provided skills",
     "provides_commands: []",
     "kan_session_status",
     "SKILL-2",

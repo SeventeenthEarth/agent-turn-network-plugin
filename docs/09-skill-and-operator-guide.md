@@ -2,21 +2,21 @@
 
 ## Scope
 
-The packaged KAN operator skill and local compatibility matrix remain the
-operator-facing guide for `kkachi-agent-network-plugin`. The bundled skill lives
+The packaged KAN operator skills and local compatibility matrix remain the
+operator-facing guide for `kkachi-agent-network-plugin`. The bundled skills live
 inside the Python package:
 
 ```text
 src/kkachi_agent_network_plugin/bundled_skills/kan-plugin/SKILL.md
+src/kkachi_agent_network_plugin/bundled_skills/kan-moderator/SKILL.md
+src/kkachi_agent_network_plugin/bundled_skills/kan-participant/SKILL.md
 ```
 
-The package also exposes an import-safe resource helper in
-`kkachi_agent_network_plugin.bundled_skills` so tests and installer checks can
-read the bundled skill without writing to a Hermes profile.
+The package exposes import-safe resource helpers and registers these read-only plugin-provided skills when Hermes loads the plugin. A profile activation flow may also copy them from this bundled source into a flat profile skill directory when plain skill names are required. The bundled source remains canonical; ops external skill directories are not required for KAN plugin use.
 
-This guide does not install the skill into the user's Hermes profile, enable a live
-plugin, contact a daemon, modify the sibling control repo, or prove production
-activation, KAB readiness, live plugin readiness, or live Discord readiness. The
+This guide does not enable a live plugin, contact a daemon, modify the sibling
+control repo, or prove production activation, live plugin readiness, or live
+Discord readiness. The
 smoke claim is exactly local isolated plugin-load smoke.
 
 ## Current plugin capability
@@ -213,9 +213,11 @@ profiles, plugin enablement, daemon/CLI path, gateway/tool visibility, and any
 visible Discord surface. Do not treat this operator guide, local isolated
 plugin-load smoke, or fake/injected fixture harness as live readiness.
 
-KAS does not install, own, or activate KAN runtime/plugin/bundled-skill artifacts.
-The KAN plugin package owns the bundled guidance source; a later explicitly
-approved Hermes/plugin activation flow may copy or register it into a profile.
+KAS does not install, own, activate, or gate KAN runtime/plugin/bundled-skill artifacts.
+The KAN plugin package owns the bundled guidance source; an explicitly approved
+Hermes/plugin activation flow may copy or register it into a profile, but KAN
+development and KAN use must not depend on profile-local KAS development phase
+skills being present.
 
 
 ## RUNFIX post-pilot guardrails (RUNFIX-014/RUNFIX-015/RUNFIX-016 proof, RUNFIX-017 candidate)

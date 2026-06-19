@@ -204,6 +204,16 @@ def require_entrypoint(root: Path) -> None:
         raise SystemExit("entrypoint registered HPLUG/DELRV-1-forbidden hooks")
     if context.registered_commands:
         raise SystemExit("entrypoint registered HPLUG/DELRV-1-forbidden commands")
+    registered_skill_names = [skill.get("name") for skill in context.registered_skills]
+    if registered_skill_names and registered_skill_names != [
+        "kan-plugin",
+        "kan-moderator",
+        "kan-participant",
+    ]:
+        raise SystemExit(
+            "entrypoint bundled skill registration mismatch: "
+            f"{registered_skill_names!r}"
+        )
 
 
 class FakePluginContext:
@@ -211,6 +221,7 @@ class FakePluginContext:
         self.registered_tools: list[dict[str, Any]] = []
         self.registered_hooks: list[tuple[str, Any]] = []
         self.registered_commands: list[dict[str, Any]] = []
+        self.registered_skills: list[dict[str, Any]] = []
 
     def register_tool(self, **kwargs: Any) -> None:
         self.registered_tools.append(kwargs)
@@ -220,6 +231,9 @@ class FakePluginContext:
 
     def register_command(self, *args: Any, **kwargs: Any) -> None:
         self.registered_commands.append({"args": args, "kwargs": kwargs})
+
+    def register_skill(self, **kwargs: Any) -> None:
+        self.registered_skills.append(kwargs)
 
 
 def main(*, root: Path = ROOT) -> None:

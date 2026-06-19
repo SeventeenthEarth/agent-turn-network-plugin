@@ -292,6 +292,7 @@ def test_discussion_activation_plan_schema_is_pure_local_doctor_tool() -> None:
             "plugin/RUNFIX-008",
             "plugin/RUNFIX-010",
             "plugin/RUNFIX-012",
+            "plugin/RUNFIX-015",
         ],
     }
     operator_evidence = plan_schema["properties"]["operator_evidence"]
@@ -307,6 +308,12 @@ def test_discussion_activation_plan_schema_is_pure_local_doctor_tool() -> None:
     assert "subscriber presence" in runtime_readiness["description"]
     assert "cursor ack freshness" in runtime_readiness["description"]
     assert "manual/fallback-profile-only" in runtime_readiness["description"]
+    visible_author_guard = plan_schema["properties"]["visible_author_guard"]
+    assert "pre-council.new visible author guard" in visible_author_guard["description"]
+    assert "expected_author_source" in visible_author_guard["description"]
+    assert "env_precedence_proof order" in visible_author_guard["description"]
+    assert "speech_event_id" in visible_author_guard["description"]
+    assert "does not claim runtime enforcement" in visible_author_guard["description"]
     evidence_labels = plan_schema["properties"]["evidence_labels"]
     assert set(evidence_labels["properties"]) == {
         "lifecycle_pass",

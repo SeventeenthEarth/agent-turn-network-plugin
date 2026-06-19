@@ -168,6 +168,64 @@ def complete_runfix_012_plan() -> dict[str, object]:
     return plan
 
 
+def complete_runfix_015_plan() -> dict[str, object]:
+    plan = complete_runfix_008_plan()
+    plan["task_id"] = "plugin/RUNFIX-015"
+    plan["visible_author_guard"] = {
+        "guard_surface": "pre_council_new_activation_plan",
+        "runtime_enforcement": False,
+        "profile_author_probes": [
+            {
+                "profile": "macho",
+                "expected_author_source": "registry_snapshot",
+                "expected_author_id": "bot-macho",
+                "observed_bot_id": "bot-macho",
+                "observed_username": "Macho",
+                "source_env": "profile:macho/.env",
+                "posting_path": "discord.gateway.profile_send",
+                "same_path_probe": {
+                    "evidence_ref": "probe/macho/same-path",
+                    "message_id": "msg-probe-macho",
+                    "surface": "discord_thread",
+                    "posting_path": "discord.gateway.profile_send",
+                },
+                "shared_default_author": False,
+                "shared_default_negative_proof_ref": "env/macho/no-shared-default",
+                "profile_local_override_present": True,
+            }
+        ],
+        "env_precedence_proof": {
+            "order": ["shared_default", "default", "profile_local"],
+            "per_key_source": [
+                {
+                    "profile": "macho",
+                    "key": "DISCORD_BOT_ID",
+                    "source": "profile_local",
+                    "value_ref": "profile:macho/.env#DISCORD_BOT_ID",
+                }
+            ],
+            "final_author_source": "profile_local",
+        },
+        "per_turn_visible_evidence": [
+            {
+                "discord_message_id": "msg-turn-1",
+                "selected_member": "macho",
+                "profile_author_id": "bot-macho",
+                "posting_path": "discord.gateway.profile_send",
+                "speech_event_id": "evt_speech_1",
+            }
+        ],
+        "final_result": {
+            "lifecycle": "pre_session_blocker_check_only",
+            "visible_turns_posted": 1,
+            "real_profile_gateway_replies": True,
+            "selected_runner_labels": ["selected_runner_pass"],
+            "shared_default_author_fallback_status": "none",
+        },
+    }
+    return plan
+
+
 def test_complete_dry_run_is_ready_for_approval_without_live_readiness() -> None:
     report = build_discussion_activation_plan(complete_plan())
 
@@ -448,11 +506,239 @@ def test_runfix_010_live_visible_ready_requires_real_profile_gateway_and_not_cli
     assert report["visible_surface_readiness_report"]["surface_bound"] is True
     assert report["visible_surface_readiness_report"]["turn_delivery_proven"] is True
     assert report["final_report_contract"] == {
-        "kan_lifecycle_finalized": "true/false",
-        "discord_visible_turns_posted": "N/expected",
-        "real_profile_gateway_replies": "true/false",
-        "cli_actor_speech_only": "true/false",
+        "lifecycle": "kan_lifecycle_finalized true/false from daemon/control evidence",
+        "visible_turns_posted": "discord visible turns posted N/expected",
+        "real_profile_gateway_replies": "true/false from explicit profile/gateway evidence",
+        "selected_runner_labels": "selected-runner evidence labels separate from lifecycle",
+        "shared_default_author_fallback_status": (
+            "none/shared_default_detected/unproven from visible_author_guard"
+        ),
     }
+
+
+def test_runfix_015_visible_author_guard_is_ready_without_runtime_enforcement_claim() -> None:
+    report = build_discussion_activation_plan(complete_runfix_015_plan())
+
+    assert report["status"] == "ready_for_approval"
+    assert report["task_id"] == "plugin/RUNFIX-015"
+    assert report["behavior_task_id"] == "plugin/RUNFIX-015"
+    assert report["live_readiness"] is False
+    guard = report["visible_author_guard_report"]
+    assert guard["guard_surface"] == "pre_council_new_activation_plan"
+    assert guard["runtime_enforcement"] is False
+    assert guard["operator_must_consume_before_session_creation"] is True
+    assert guard["status"] == "proven"
+    assert guard["ready"] is True
+    assert guard["profile_author_probes"][0]["status"] == "proven"
+    assert guard["env_precedence_proof"]["status"] == "proven"
+    assert guard["per_turn_visible_evidence"][0] == {
+        "status": "proven",
+        "discord_message_id": "msg-turn-1",
+        "selected_member": "macho",
+        "profile_author_id": "bot-macho",
+        "posting_path": "discord.gateway.profile_send",
+        "speech_event_id": "evt_speech_1",
+    }
+    assert guard["final_result_report"] == {
+        "status": "proven",
+        "lifecycle": "pre_session_blocker_check_only",
+        "visible_turns_posted": 1,
+        "real_profile_gateway_replies": True,
+        "selected_runner_labels": ["selected_runner_pass"],
+        "shared_default_author_fallback_status": "none",
+    }
+
+
+def test_runfix_015_missing_visible_author_guard_fails_closed_before_session() -> None:
+    plan = complete_runfix_015_plan()
+    plan.pop("visible_author_guard")
+
+    report = build_discussion_activation_plan(plan)
+
+    assert report["status"] == "blocked"
+    assert report["visible_author_guard_report"]["ready"] is False
+    assert any(blocker["code"] == "visible_author_guard_missing" for blocker in report["blockers"])
+
+
+def test_runfix_015_missing_final_lifecycle_fails_closed() -> None:
+    plan = complete_runfix_015_plan()
+    guard = plan["visible_author_guard"]
+    assert isinstance(guard, dict)
+    final_result = guard["final_result"]
+    assert isinstance(final_result, dict)
+    final_result.pop("lifecycle")
+
+    report = build_discussion_activation_plan(plan)
+
+    assert report["status"] == "blocked"
+    guard_report = report["visible_author_guard_report"]
+    assert isinstance(guard_report, dict)
+    final_report = guard_report["final_result_report"]
+    assert isinstance(final_report, dict)
+    assert final_report["status"] == "blocked"
+    assert final_report["lifecycle"] == "unproven"
+    assert any(
+        blocker["code"] == "visible_author_final_lifecycle_missing"
+        for blocker in report["blockers"]
+    )
+
+
+def test_runfix_015_missing_same_path_probe_fails_closed() -> None:
+    plan = complete_runfix_015_plan()
+    guard = plan["visible_author_guard"]
+    assert isinstance(guard, dict)
+    profiles = guard["profile_author_probes"]
+    assert isinstance(profiles, list)
+    profile = profiles[0]
+    assert isinstance(profile, dict)
+    profile["same_path_probe"] = {"message_id": "msg-probe-macho"}
+
+    report = build_discussion_activation_plan(plan)
+
+    assert report["status"] == "blocked"
+    assert any(
+        blocker["code"] == "visible_author_same_path_probe_missing"
+        for blocker in report["blockers"]
+    )
+
+
+def test_runfix_015_shared_default_author_fails_closed() -> None:
+    plan = complete_runfix_015_plan()
+    guard = plan["visible_author_guard"]
+    assert isinstance(guard, dict)
+    profiles = guard["profile_author_probes"]
+    assert isinstance(profiles, list)
+    profile = profiles[0]
+    assert isinstance(profile, dict)
+    profile["shared_default_author"] = True
+    final_result = guard["final_result"]
+    assert isinstance(final_result, dict)
+    final_result["shared_default_author_fallback_status"] = "shared_default_detected"
+
+    report = build_discussion_activation_plan(plan)
+
+    assert report["status"] == "blocked"
+    assert any(
+        blocker["code"] == "visible_author_shared_default_detected"
+        for blocker in report["blockers"]
+    )
+    assert any(
+        blocker["code"] == "visible_author_final_shared_default_status_not_clear"
+        for blocker in report["blockers"]
+    )
+
+
+def test_runfix_015_unexpected_observed_bot_id_fails_closed() -> None:
+    plan = complete_runfix_015_plan()
+    guard = plan["visible_author_guard"]
+    assert isinstance(guard, dict)
+    profiles = guard["profile_author_probes"]
+    assert isinstance(profiles, list)
+    profile = profiles[0]
+    assert isinstance(profile, dict)
+    profile["observed_bot_id"] = "bot-shared"
+
+    report = build_discussion_activation_plan(plan)
+
+    assert report["status"] == "blocked"
+    assert any(
+        blocker["code"] == "visible_author_observed_bot_mismatch" for blocker in report["blockers"]
+    )
+
+
+def test_runfix_015_unexpected_per_turn_profile_author_id_fails_closed() -> None:
+    plan = complete_runfix_015_plan()
+    guard = plan["visible_author_guard"]
+    assert isinstance(guard, dict)
+    turns = guard["per_turn_visible_evidence"]
+    assert isinstance(turns, list)
+    turn = turns[0]
+    assert isinstance(turn, dict)
+    turn["profile_author_id"] = "bot-shared"
+
+    report = build_discussion_activation_plan(plan)
+
+    assert report["status"] == "blocked"
+    assert any(
+        blocker["code"] == "visible_author_per_turn_author_mismatch"
+        for blocker in report["blockers"]
+    )
+
+
+def test_runfix_015_posting_path_mismatch_fails_closed() -> None:
+    plan = complete_runfix_015_plan()
+    guard = plan["visible_author_guard"]
+    assert isinstance(guard, dict)
+    profiles = guard["profile_author_probes"]
+    assert isinstance(profiles, list)
+    profile = profiles[0]
+    assert isinstance(profile, dict)
+    same_path_probe = profile["same_path_probe"]
+    assert isinstance(same_path_probe, dict)
+    same_path_probe["posting_path"] = "discord.gateway.generic_send"
+
+    report = build_discussion_activation_plan(plan)
+
+    assert report["status"] == "blocked"
+    assert any(
+        blocker["code"] == "visible_author_posting_path_mismatch" for blocker in report["blockers"]
+    )
+
+
+def test_runfix_015_ambiguous_expected_author_source_fails_closed() -> None:
+    plan = complete_runfix_015_plan()
+    guard = plan["visible_author_guard"]
+    assert isinstance(guard, dict)
+    profiles = guard["profile_author_probes"]
+    assert isinstance(profiles, list)
+    profile = profiles[0]
+    assert isinstance(profile, dict)
+    profile["expected_author_source"] = "manual_guess"
+
+    report = build_discussion_activation_plan(plan)
+
+    assert report["status"] == "blocked"
+    assert any(
+        blocker["code"] == "visible_author_expected_source_ambiguous"
+        for blocker in report["blockers"]
+    )
+
+
+def test_runfix_015_reversed_env_precedence_fails_closed() -> None:
+    plan = complete_runfix_015_plan()
+    guard = plan["visible_author_guard"]
+    assert isinstance(guard, dict)
+    env = guard["env_precedence_proof"]
+    assert isinstance(env, dict)
+    env["order"] = ["profile_local", "shared_default"]
+
+    report = build_discussion_activation_plan(plan)
+
+    assert report["status"] == "blocked"
+    assert report["visible_author_guard_report"]["env_precedence_proof"]["status"] == "blocked"
+    assert any(
+        blocker["code"] == "visible_author_env_precedence_reversed"
+        for blocker in report["blockers"]
+    )
+
+
+def test_runfix_015_per_turn_evidence_without_speech_event_id_fails_closed() -> None:
+    plan = complete_runfix_015_plan()
+    guard = plan["visible_author_guard"]
+    assert isinstance(guard, dict)
+    turns = guard["per_turn_visible_evidence"]
+    assert isinstance(turns, list)
+    turn = turns[0]
+    assert isinstance(turn, dict)
+    turn.pop("speech_event_id")
+
+    report = build_discussion_activation_plan(plan)
+
+    assert report["status"] == "blocked"
+    assert any(
+        blocker["code"] == "visible_author_per_turn_speech_link_missing"
+        for blocker in report["blockers"]
+    )
 
 
 def test_runfix_010_artifact_only_from_discord_requires_explicit_confirmation() -> None:

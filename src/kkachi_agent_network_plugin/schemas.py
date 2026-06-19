@@ -786,7 +786,7 @@ KAN_SURFACE_RENDER_PROJECTION: Final[dict[str, object]] = {
 KAN_DISCUSSION_ACTIVATION_PLAN: Final[dict[str, object]] = {
     "name": "kan_discussion_activation_plan",
     "description": (
-        "Build a deterministic pure/local RUNFIX-012 KAN discussion activation "
+        "Build a deterministic pure/local RUNFIX-015 KAN discussion activation "
         "planner/doctor report from explicit caller-provided evidence only. The "
         "tool performs no environment reads, socket discovery, daemon startup, "
         "CLI fallback, Discord/Hermes/profile/gateway inspection, or provider/"
@@ -816,6 +816,7 @@ KAN_DISCUSSION_ACTIVATION_PLAN: Final[dict[str, object]] = {
                             "plugin/RUNFIX-008",
                             "plugin/RUNFIX-010",
                             "plugin/RUNFIX-012",
+                            "plugin/RUNFIX-015",
                         ],
                     },
                     "control_dependency": {
@@ -823,7 +824,7 @@ KAN_DISCUSSION_ACTIVATION_PLAN: Final[dict[str, object]] = {
                         "additionalProperties": True,
                         "description": (
                             "Explicit control dependency completion evidence. "
-                            "RUNFIX-006/007/008/010 require control/RUNFIX-005; "
+                            "RUNFIX-006/007/008/010/015 require control/RUNFIX-005; "
                             "RUNFIX-012 requires control/RUNFIX-011 local "
                             "participant-runtime readiness proof."
                         ),
@@ -914,6 +915,30 @@ KAN_DISCUSSION_ACTIVATION_PLAN: Final[dict[str, object]] = {
                             "transcript/export-only, parent-channel-fallback-only, and "
                             "manual/fallback-profile-only evidence is diagnostic and "
                             "must not imply live_readiness or production readiness."
+                        ),
+                    },
+                    "visible_author_guard": {
+                        "type": "object",
+                        "additionalProperties": True,
+                        "description": (
+                            "Explicit-only RUNFIX-015 pre-council.new visible author guard "
+                            "input/report evidence. Required for plugin/RUNFIX-015. It must "
+                            "include guard_surface=pre_council_new_activation_plan, "
+                            "profile_author_probes with profile, expected_author_source "
+                            "(registry_snapshot or approved_profile_author_map), "
+                            "expected_author_id or approved absence reason, observed bot id, "
+                            "observed username, source_env, posting_path, same-path probe "
+                            "evidence ref/message id/surface/posting_path, explicit "
+                            "shared/default author negative proof, env_precedence_proof order "
+                            "and per-key source, per-turn Discord message id/member/profile "
+                            "author/posting_path/speech_event_id linkage, and final result "
+                            "fields separating lifecycle, visible turns posted, real "
+                            "profile/gateway replies, selected-runner labels, and "
+                            "shared/default author fallback status. Generic Discord send, "
+                            "transcript/export, daemon CLI actor speech, manual profile reply, "
+                            "parent-channel fallback, or raw message id alone must not satisfy "
+                            "the guard. The planner reports blockers only and does not claim "
+                            "runtime enforcement or live readiness."
                         ),
                     },
                     "evidence_labels": {

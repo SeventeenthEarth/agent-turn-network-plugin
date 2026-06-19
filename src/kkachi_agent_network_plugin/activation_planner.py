@@ -18,6 +18,7 @@ RUNFIX_007_TASK_ID: Final = "plugin/RUNFIX-007"
 RUNFIX_008_TASK_ID: Final = "plugin/RUNFIX-008"
 RUNFIX_010_TASK_ID: Final = "plugin/RUNFIX-010"
 RUNFIX_012_TASK_ID: Final = "plugin/RUNFIX-012"
+RUNFIX_015_TASK_ID: Final = "plugin/RUNFIX-015"
 SUPPORTED_TASK_IDS: Final[frozenset[str]] = frozenset(
     {
         RUNFIX_006_TASK_ID,
@@ -25,6 +26,7 @@ SUPPORTED_TASK_IDS: Final[frozenset[str]] = frozenset(
         RUNFIX_008_TASK_ID,
         RUNFIX_010_TASK_ID,
         RUNFIX_012_TASK_ID,
+        RUNFIX_015_TASK_ID,
     }
 )
 TASK_ID: Final = RUNFIX_010_TASK_ID
@@ -54,7 +56,8 @@ def build_discussion_activation_plan(plan: Mapping[str, object]) -> JsonObject:
     if task_id not in SUPPORTED_TASK_IDS:
         raise ValueError(
             "plan.task_id must be plugin/RUNFIX-006, plugin/RUNFIX-007, "
-            "plugin/RUNFIX-008, plugin/RUNFIX-010, or plugin/RUNFIX-012"
+            "plugin/RUNFIX-008, plugin/RUNFIX-010, plugin/RUNFIX-012, "
+            "or plugin/RUNFIX-015"
         )
 
     blockers: list[JsonObject] = []
@@ -120,6 +123,12 @@ def build_discussion_activation_plan(plan: Mapping[str, object]) -> JsonObject:
         task_id=task_id,
         blockers=blockers,
     )
+    visible_author_guard = _visible_author_guard_report(
+        source.get("visible_author_guard"),
+        eligible_profiles=eligible_profiles,
+        task_id=task_id,
+        blockers=blockers,
+    )
 
     if not eligible_profiles:
         blockers.append(
@@ -136,15 +145,7 @@ def build_discussion_activation_plan(plan: Mapping[str, object]) -> JsonObject:
     return {
         "schema_version": ACTIVATION_PLAN_SCHEMA_VERSION,
         "task_id": task_id,
-        "behavior_task_id": (
-            RUNFIX_012_TASK_ID
-            if task_id == RUNFIX_012_TASK_ID
-            else RUNFIX_010_TASK_ID
-            if task_id == RUNFIX_010_TASK_ID
-            else RUNFIX_008_TASK_ID
-            if task_id == RUNFIX_008_TASK_ID
-            else RUNFIX_007_TASK_ID
-        ),
+        "behavior_task_id": _behavior_task_id(task_id),
         "status": status,
         "live_readiness": False,
         "eligible_profiles": cast(list[JsonValue], eligible_profiles),
@@ -160,6 +161,7 @@ def build_discussion_activation_plan(plan: Mapping[str, object]) -> JsonObject:
         "requested_output_mode": visible_surface_readiness["requested_output_mode"],
         "visible_surface_readiness_report": visible_surface_readiness,
         "participant_runtime_readiness_report": participant_runtime_readiness,
+        "visible_author_guard_report": visible_author_guard,
         "final_report_contract": _final_report_contract(),
         "fallback_audit": cast(list[JsonValue], _fallback_audit()),
         "required_approvals": cast(list[JsonValue], required_approvals),
@@ -178,6 +180,17 @@ def build_discussion_activation_plan(plan: Mapping[str, object]) -> JsonObject:
             "production activation or live readiness claim",
         ],
     }
+
+
+def _behavior_task_id(task_id: str) -> str:
+    if task_id in {
+        RUNFIX_008_TASK_ID,
+        RUNFIX_010_TASK_ID,
+        RUNFIX_012_TASK_ID,
+        RUNFIX_015_TASK_ID,
+    }:
+        return task_id
+    return RUNFIX_007_TASK_ID
 
 
 def _validate_control_dependency(
@@ -957,12 +970,725 @@ def _append_runtime_blocker(
     diagnostics.append(blocker)
 
 
+def _visible_author_guard_report(
+    value: object,
+    *,
+    eligible_profiles: list[JsonObject],
+    task_id: str,
+    blockers: list[JsonObject],
+) -> JsonObject:
+    report: JsonObject = {
+        "runfix_task_id": RUNFIX_015_TASK_ID,
+        "guard_surface": "pre_council_new_activation_plan",
+        "runtime_enforcement": False,
+        "operator_must_consume_before_session_creation": True,
+        "status": "not_required",
+        "ready": task_id != RUNFIX_015_TASK_ID,
+        "profile_author_probes": [],
+        "env_precedence_proof": _empty_env_precedence_report(),
+        "per_turn_visible_evidence": [],
+        "final_result_report": {
+            "status": "unproven",
+            "lifecycle": "not_evaluated",
+            "visible_turns_posted": 0,
+            "real_profile_gateway_replies": False,
+            "selected_runner_labels": [],
+            "shared_default_author_fallback_status": "unproven",
+        },
+        "rejected_substitutions": [],
+    }
+    if task_id != RUNFIX_015_TASK_ID:
+        return report
+
+    report["status"] = "blocked"
+    report["ready"] = False
+    if not isinstance(value, Mapping):
+        blockers.append(
+            _blocker(
+                code="visible_author_guard_missing",
+                owner="operator/Hermes-gateway",
+                message=(
+                    "plugin/RUNFIX-015 requires explicit visible_author_guard evidence "
+                    "before council.new/session creation."
+                ),
+            )
+        )
+        return report
+
+    guard = _json_object(value, label="plan.visible_author_guard")
+    if guard.get("guard_surface") != "pre_council_new_activation_plan":
+        blockers.append(
+            _blocker(
+                code="visible_author_guard_surface_invalid",
+                owner="operator",
+                message=(
+                    "visible_author_guard.guard_surface must be pre_council_new_activation_plan."
+                ),
+            )
+        )
+    if guard.get("runtime_enforcement") is True:
+        blockers.append(
+            _blocker(
+                code="visible_author_guard_runtime_claim_unsupported",
+                owner="operator",
+                message=(
+                    "kan_discussion_activation_plan is planner-only and must not claim "
+                    "runtime visible-author enforcement."
+                ),
+            )
+        )
+
+    profile_reports, profile_by_name = _visible_author_profile_reports(
+        guard.get("profile_author_probes"),
+        eligible_profiles=eligible_profiles,
+        blockers=blockers,
+    )
+    env_report = _env_precedence_report(
+        guard.get("env_precedence_proof"),
+        profiles=profile_reports,
+        blockers=blockers,
+    )
+    turn_reports = _per_turn_visible_evidence_reports(
+        guard.get("per_turn_visible_evidence"),
+        profile_by_name=profile_by_name,
+        blockers=blockers,
+    )
+    final_result = _visible_author_final_result_report(
+        guard.get("final_result"),
+        turn_reports=turn_reports,
+        profile_reports=profile_reports,
+        blockers=blockers,
+    )
+    rejected_substitutions = [
+        item for item in profile_reports if item.get("same_path_probe_status") == "rejected"
+    ]
+
+    report["profile_author_probes"] = cast(list[JsonValue], profile_reports)
+    report["env_precedence_proof"] = env_report
+    report["per_turn_visible_evidence"] = cast(list[JsonValue], turn_reports)
+    report["final_result_report"] = final_result
+    report["rejected_substitutions"] = cast(list[JsonValue], rejected_substitutions)
+    ready = (
+        all(item["status"] == "proven" for item in profile_reports)
+        and env_report["status"] == "proven"
+        and bool(turn_reports)
+        and all(item["status"] == "proven" for item in turn_reports)
+        and final_result["status"] == "proven"
+        and final_result["shared_default_author_fallback_status"] == "none"
+    )
+    report["ready"] = ready
+    report["status"] = "proven" if ready else "blocked"
+    return report
+
+
+def _visible_author_profile_reports(
+    value: object,
+    *,
+    eligible_profiles: list[JsonObject],
+    blockers: list[JsonObject],
+) -> tuple[list[JsonObject], dict[str, JsonObject]]:
+    if not isinstance(value, list):
+        blockers.append(
+            _blocker(
+                code="visible_author_profile_probes_missing",
+                owner="operator/Hermes-gateway",
+                message="visible_author_guard.profile_author_probes must be an explicit list.",
+            )
+        )
+        return [], {}
+
+    reports: list[JsonObject] = []
+    by_name: dict[str, JsonObject] = {}
+    eligible_names = {
+        cast(str, item["profile"])
+        for item in eligible_profiles
+        if _non_empty_string(item.get("profile"))
+    }
+    supplied_names: set[str] = set()
+    for index, item in enumerate(value):
+        if not isinstance(item, Mapping):
+            blockers.append(
+                _blocker(
+                    code="visible_author_profile_probe_invalid",
+                    owner="operator/Hermes-gateway",
+                    message=(
+                        f"visible_author_guard.profile_author_probes[{index}] must be an object."
+                    ),
+                )
+            )
+            continue
+        probe = _json_object(
+            item, label=f"plan.visible_author_guard.profile_author_probes[{index}]"
+        )
+        profile = _optional_string_value(probe.get("profile"))
+        report = _visible_author_profile_report(probe, index=index, blockers=blockers)
+        reports.append(report)
+        if profile is not None:
+            supplied_names.add(profile)
+            by_name[profile] = report
+
+    missing_profiles = sorted(eligible_names - supplied_names)
+    for profile in missing_profiles:
+        blockers.append(
+            _blocker(
+                code="visible_author_profile_probe_missing",
+                owner="operator/Hermes-gateway",
+                message=(
+                    "visible_author_guard.profile_author_probes is missing same-path "
+                    f"author evidence for eligible profile {profile}."
+                ),
+            )
+        )
+    return reports, by_name
+
+
+def _visible_author_profile_report(
+    probe: JsonObject,
+    *,
+    index: int,
+    blockers: list[JsonObject],
+) -> JsonObject:
+    profile = _optional_string_value(probe.get("profile"))
+    expected_source = _optional_string_value(probe.get("expected_author_source"))
+    expected_author_id = _optional_string_value(probe.get("expected_author_id"))
+    absence_reason = _optional_string_value(probe.get("expected_author_absence_approved_reason"))
+    observed_bot_id = _optional_string_value(probe.get("observed_bot_id"))
+    observed_username = _optional_string_value(probe.get("observed_username"))
+    source_env = _optional_string_value(probe.get("source_env"))
+    posting_path = _optional_string_value(probe.get("posting_path"))
+    shared_default_author = probe.get("shared_default_author") is True
+    negative_proof_ref = _optional_string_value(probe.get("shared_default_negative_proof_ref"))
+    profile_local_override_present = probe.get("profile_local_override_present") is True
+    same_path_probe = (
+        _json_object(probe.get("same_path_probe"), label="same_path_probe")
+        if isinstance(probe.get("same_path_probe"), Mapping)
+        else {}
+    )
+    same_path_probe_status = _same_path_probe_status(
+        same_path_probe,
+        profile=profile,
+        posting_path=posting_path,
+        blockers=blockers,
+    )
+    output: JsonObject = {
+        "status": "proven",
+        "profile": profile,
+        "expected_author_source": expected_source,
+        "expected_author_id": expected_author_id,
+        "expected_author_absence_approved_reason": absence_reason,
+        "observed_bot_id": observed_bot_id,
+        "observed_username": observed_username,
+        "source_env": source_env,
+        "posting_path": posting_path,
+        "same_path_probe": {
+            "status": same_path_probe_status,
+            "evidence_ref": _optional_string_value(same_path_probe.get("evidence_ref")),
+            "message_id": _optional_string_value(same_path_probe.get("message_id")),
+            "surface": _optional_string_value(same_path_probe.get("surface")),
+            "posting_path": _optional_string_value(same_path_probe.get("posting_path")),
+        },
+        "same_path_probe_status": same_path_probe_status,
+        "shared_default_author": shared_default_author,
+        "shared_default_negative_proof_ref": negative_proof_ref,
+        "profile_local_override_present": profile_local_override_present,
+    }
+    missing_fields = [
+        name
+        for name, item in (
+            ("profile", profile),
+            ("observed_bot_id", observed_bot_id),
+            ("observed_username", observed_username),
+            ("source_env", source_env),
+            ("posting_path", posting_path),
+        )
+        if item is None
+    ]
+    if missing_fields:
+        _append_visible_author_blocker(
+            blockers,
+            output,
+            code="visible_author_profile_probe_fields_missing",
+            message=(
+                f"visible_author_guard.profile_author_probes[{index}] is missing: "
+                + ", ".join(missing_fields)
+                + "."
+            ),
+        )
+    if expected_source not in {"registry_snapshot", "approved_profile_author_map"}:
+        _append_visible_author_blocker(
+            blockers,
+            output,
+            code="visible_author_expected_source_ambiguous",
+            message=(
+                "expected_author_source must be registry_snapshot or approved_profile_author_map."
+            ),
+        )
+    if expected_author_id is None and absence_reason is None:
+        _append_visible_author_blocker(
+            blockers,
+            output,
+            code="visible_author_expected_author_missing",
+            message=("expected_author_id or expected_author_absence_approved_reason is required."),
+        )
+    if expected_author_id is not None and observed_bot_id != expected_author_id:
+        _append_visible_author_blocker(
+            blockers,
+            output,
+            code="visible_author_observed_bot_mismatch",
+            message=(
+                f"Observed bot id for {profile or 'unknown profile'} does not match "
+                "expected_author_id."
+            ),
+        )
+    if expected_author_id is not None and not profile_local_override_present:
+        _append_visible_author_blocker(
+            blockers,
+            output,
+            code="visible_author_profile_local_override_missing",
+            message=(
+                f"Profile-local author override is required for {profile or 'unknown profile'}."
+            ),
+        )
+    if shared_default_author:
+        _append_visible_author_blocker(
+            blockers,
+            output,
+            code="visible_author_shared_default_detected",
+            message=(
+                f"Shared/default author fallback is detected for {profile or 'unknown profile'}."
+            ),
+        )
+    if not negative_proof_ref:
+        _append_visible_author_blocker(
+            blockers,
+            output,
+            code="visible_author_shared_default_negative_proof_missing",
+            message=(
+                "shared_default_negative_proof_ref is required to prove no shared/default "
+                "author fallback."
+            ),
+        )
+    if same_path_probe_status != "proven":
+        output["status"] = "blocked"
+    return output
+
+
+def _same_path_probe_status(
+    probe: JsonObject,
+    *,
+    profile: str | None,
+    posting_path: str | None,
+    blockers: list[JsonObject],
+) -> str:
+    evidence_ref = _optional_string_value(probe.get("evidence_ref"))
+    message_id = _optional_string_value(probe.get("message_id"))
+    surface = _optional_string_value(probe.get("surface"))
+    probe_posting_path = _optional_string_value(probe.get("posting_path"))
+    forbidden_surfaces = {
+        "generic_discord_send",
+        "transcript_export",
+        "daemon_cli_actor_speech",
+        "manual_profile_reply",
+        "parent_channel_fallback",
+        "raw_message_id",
+    }
+    if surface in forbidden_surfaces:
+        blockers.append(
+            _blocker(
+                code="visible_author_same_path_probe_substituted",
+                owner="operator/Hermes-gateway",
+                message=(
+                    "Same-path author probe cannot be satisfied by generic Discord send, "
+                    "transcript/export, daemon CLI actor speech, manual profile reply, "
+                    "parent-channel fallback, or raw message id alone."
+                ),
+            )
+        )
+        return "rejected"
+    if not evidence_ref or not message_id or not surface or not probe_posting_path:
+        blockers.append(
+            _blocker(
+                code="visible_author_same_path_probe_missing",
+                owner="operator/Hermes-gateway",
+                message=(
+                    f"Same-path probe for {profile or 'unknown profile'} requires "
+                    "evidence_ref, message_id, surface, and posting_path."
+                ),
+            )
+        )
+        return "unproven"
+    if posting_path is not None and probe_posting_path != posting_path:
+        blockers.append(
+            _blocker(
+                code="visible_author_posting_path_mismatch",
+                owner="operator/Hermes-gateway",
+                message=(
+                    f"Same-path probe posting_path for {profile or 'unknown profile'} "
+                    "must match the profile posting_path."
+                ),
+            )
+        )
+        return "mismatch"
+    return "proven"
+
+
+def _empty_env_precedence_report() -> JsonObject:
+    return {
+        "status": "unproven",
+        "order": [],
+        "per_key_source": [],
+        "final_author_source": None,
+    }
+
+
+def _env_precedence_report(
+    value: object,
+    *,
+    profiles: list[JsonObject],
+    blockers: list[JsonObject],
+) -> JsonObject:
+    report = _empty_env_precedence_report()
+    if not isinstance(value, Mapping):
+        blockers.append(
+            _blocker(
+                code="visible_author_env_precedence_missing",
+                owner="operator/Hermes-gateway",
+                message="visible_author_guard.env_precedence_proof is required.",
+            )
+        )
+        return report
+
+    proof = _json_object(value, label="plan.visible_author_guard.env_precedence_proof")
+    order = _optional_string_list(proof.get("order"))
+    per_key_source = _env_per_key_source(proof.get("per_key_source"))
+    final_author_source = _optional_string_value(proof.get("final_author_source"))
+    report["order"] = cast(list[JsonValue], order)
+    report["per_key_source"] = cast(list[JsonValue], per_key_source)
+    report["final_author_source"] = final_author_source
+    report["status"] = "proven"
+
+    if not order:
+        _append_env_blocker(
+            blockers,
+            report,
+            code="visible_author_env_precedence_order_missing",
+            message="env_precedence_proof.order is required.",
+        )
+    if proof.get("ambiguous_order") is True or len(order) != len(set(order)):
+        _append_env_blocker(
+            blockers,
+            report,
+            code="visible_author_env_precedence_ambiguous",
+            message="env_precedence_proof.order must be unambiguous.",
+        )
+    if _env_order_reversed(order):
+        _append_env_blocker(
+            blockers,
+            report,
+            code="visible_author_env_precedence_reversed",
+            message="shared/default sources must precede profile_local in env precedence order.",
+        )
+    if final_author_source in {"shared_default", "default"}:
+        _append_env_blocker(
+            blockers,
+            report,
+            code="visible_author_env_final_author_shared_default",
+            message="Final visible author must not be sourced from shared/default env.",
+        )
+    if final_author_source != "profile_local":
+        _append_env_blocker(
+            blockers,
+            report,
+            code="visible_author_env_final_author_not_profile_local",
+            message="env_precedence_proof.final_author_source must be profile_local.",
+        )
+
+    expected_author_profiles = {
+        cast(str, item["profile"])
+        for item in profiles
+        if _non_empty_string(item.get("profile"))
+        and _non_empty_string(item.get("expected_author_id"))
+    }
+    profile_local_sources = {
+        cast(str, item["profile"])
+        for item in per_key_source
+        if item.get("source") == "profile_local" and _non_empty_string(item.get("profile"))
+    }
+    for profile in sorted(expected_author_profiles - profile_local_sources):
+        _append_env_blocker(
+            blockers,
+            report,
+            code="visible_author_env_profile_local_override_absent",
+            message=(
+                f"env_precedence_proof.per_key_source lacks profile_local source for {profile}."
+            ),
+        )
+    return report
+
+
+def _env_per_key_source(value: object) -> list[JsonObject]:
+    if not isinstance(value, list):
+        return []
+    output: list[JsonObject] = []
+    for index, item in enumerate(value):
+        source = _json_object(item, label=f"env_precedence_proof.per_key_source[{index}]")
+        output.append(
+            {
+                "profile": _optional_string_value(source.get("profile")),
+                "key": _optional_string_value(source.get("key")),
+                "source": _optional_string_value(source.get("source")),
+                "value_ref": _optional_string_value(source.get("value_ref")),
+            }
+        )
+    return output
+
+
+def _env_order_reversed(order: list[str]) -> bool:
+    if "profile_local" not in order:
+        return True
+    profile_index = order.index("profile_local")
+    default_indexes = [
+        index for index, source in enumerate(order) if source in {"shared_default", "default"}
+    ]
+    if not default_indexes:
+        return True
+    return any(index > profile_index for index in default_indexes)
+
+
+def _per_turn_visible_evidence_reports(
+    value: object,
+    *,
+    profile_by_name: dict[str, JsonObject],
+    blockers: list[JsonObject],
+) -> list[JsonObject]:
+    if not isinstance(value, list):
+        blockers.append(
+            _blocker(
+                code="visible_author_per_turn_evidence_missing",
+                owner="operator/Hermes-gateway",
+                message="visible_author_guard.per_turn_visible_evidence must be an explicit list.",
+            )
+        )
+        return []
+    reports: list[JsonObject] = []
+    for index, item in enumerate(value):
+        if not isinstance(item, Mapping):
+            blockers.append(
+                _blocker(
+                    code="visible_author_per_turn_evidence_invalid",
+                    owner="operator/Hermes-gateway",
+                    message=(
+                        "visible_author_guard.per_turn_visible_evidence"
+                        f"[{index}] must be an object."
+                    ),
+                )
+            )
+            continue
+        turn = _json_object(
+            item, label=f"plan.visible_author_guard.per_turn_visible_evidence[{index}]"
+        )
+        reports.append(
+            _per_turn_visible_evidence_report(
+                turn,
+                index=index,
+                profile_by_name=profile_by_name,
+                blockers=blockers,
+            )
+        )
+    return reports
+
+
+def _per_turn_visible_evidence_report(
+    turn: JsonObject,
+    *,
+    index: int,
+    profile_by_name: dict[str, JsonObject],
+    blockers: list[JsonObject],
+) -> JsonObject:
+    discord_message_id = _optional_string_value(turn.get("discord_message_id"))
+    selected_member = _optional_string_value(turn.get("selected_member"))
+    profile_author_id = _optional_string_value(turn.get("profile_author_id"))
+    posting_path = _optional_string_value(turn.get("posting_path"))
+    speech_event_id = _optional_string_value(turn.get("speech_event_id"))
+    output: JsonObject = {
+        "status": "proven",
+        "discord_message_id": discord_message_id,
+        "selected_member": selected_member,
+        "profile_author_id": profile_author_id,
+        "posting_path": posting_path,
+        "speech_event_id": speech_event_id,
+    }
+    missing = [
+        name
+        for name, item in (
+            ("discord_message_id", discord_message_id),
+            ("selected_member", selected_member),
+            ("profile_author_id", profile_author_id),
+            ("posting_path", posting_path),
+            ("speech_event_id", speech_event_id),
+        )
+        if item is None
+    ]
+    if missing:
+        _append_turn_blocker(
+            blockers,
+            output,
+            code="visible_author_per_turn_fields_missing",
+            message=(
+                f"visible_author_guard.per_turn_visible_evidence[{index}] is missing: "
+                + ", ".join(missing)
+                + "."
+            ),
+        )
+    if speech_event_id is None:
+        _append_turn_blocker(
+            blockers,
+            output,
+            code="visible_author_per_turn_speech_link_missing",
+            message="Per-turn visible evidence must link to a speech_event_id.",
+        )
+    profile_report = profile_by_name.get(selected_member or "")
+    if profile_report is None:
+        _append_turn_blocker(
+            blockers,
+            output,
+            code="visible_author_per_turn_selected_member_unproven",
+            message="selected_member must have proven profile author evidence.",
+        )
+        return output
+    if profile_author_id != profile_report.get("expected_author_id"):
+        _append_turn_blocker(
+            blockers,
+            output,
+            code="visible_author_per_turn_author_mismatch",
+            message="Per-turn profile_author_id must match the selected member profile author id.",
+        )
+    if posting_path != profile_report.get("posting_path"):
+        _append_turn_blocker(
+            blockers,
+            output,
+            code="visible_author_per_turn_posting_path_mismatch",
+            message="Per-turn posting_path must match the selected member posting path.",
+        )
+    return output
+
+
+def _visible_author_final_result_report(
+    value: object,
+    *,
+    turn_reports: list[JsonObject],
+    profile_reports: list[JsonObject],
+    blockers: list[JsonObject],
+) -> JsonObject:
+    result = (
+        _json_object(value, label="plan.visible_author_guard.final_result")
+        if isinstance(value, Mapping)
+        else {}
+    )
+    selected_runner_labels = _optional_string_list(result.get("selected_runner_labels"))
+    shared_default_status = (
+        _optional_string_value(result.get("shared_default_author_fallback_status")) or "unproven"
+    )
+    output: JsonObject = {
+        "status": "proven",
+        "lifecycle": _optional_string_value(result.get("lifecycle")) or "unproven",
+        "visible_turns_posted": _non_negative_int(result.get("visible_turns_posted")),
+        "real_profile_gateway_replies": result.get("real_profile_gateway_replies") is True,
+        "selected_runner_labels": cast(list[JsonValue], selected_runner_labels),
+        "shared_default_author_fallback_status": shared_default_status,
+    }
+    if output["lifecycle"] == "unproven":
+        output["status"] = "blocked"
+        blockers.append(
+            _blocker(
+                code="visible_author_final_lifecycle_missing",
+                owner="operator/KAN-control",
+                message="final_result.lifecycle must be explicit.",
+            )
+        )
+    if output["visible_turns_posted"] != len(turn_reports):
+        output["status"] = "blocked"
+        blockers.append(
+            _blocker(
+                code="visible_author_final_visible_turn_count_mismatch",
+                owner="operator/Hermes-gateway",
+                message="final_result.visible_turns_posted must equal per-turn evidence count.",
+            )
+        )
+    if output["real_profile_gateway_replies"] is not True:
+        output["status"] = "blocked"
+        blockers.append(
+            _blocker(
+                code="visible_author_final_real_profile_gateway_replies_missing",
+                owner="operator/Hermes-gateway",
+                message="final_result.real_profile_gateway_replies must be true.",
+            )
+        )
+    if not selected_runner_labels:
+        output["status"] = "blocked"
+        blockers.append(
+            _blocker(
+                code="visible_author_final_selected_runner_labels_missing",
+                owner="operator",
+                message="final_result.selected_runner_labels must separate selected-runner proof.",
+            )
+        )
+    if shared_default_status != "none" or any(
+        item.get("shared_default_author") is True for item in profile_reports
+    ):
+        output["status"] = "blocked"
+        blockers.append(
+            _blocker(
+                code="visible_author_final_shared_default_status_not_clear",
+                owner="operator/Hermes-gateway",
+                message="final_result.shared_default_author_fallback_status must be none.",
+            )
+        )
+    return output
+
+
+def _append_visible_author_blocker(
+    blockers: list[JsonObject],
+    report: JsonObject,
+    *,
+    code: str,
+    message: str,
+) -> None:
+    blockers.append(_blocker(code=code, owner="operator/Hermes-gateway", message=message))
+    report["status"] = "blocked"
+
+
+def _append_env_blocker(
+    blockers: list[JsonObject],
+    report: JsonObject,
+    *,
+    code: str,
+    message: str,
+) -> None:
+    blockers.append(_blocker(code=code, owner="operator/Hermes-gateway", message=message))
+    report["status"] = "blocked"
+
+
+def _append_turn_blocker(
+    blockers: list[JsonObject],
+    report: JsonObject,
+    *,
+    code: str,
+    message: str,
+) -> None:
+    blockers.append(_blocker(code=code, owner="operator/Hermes-gateway", message=message))
+    report["status"] = "blocked"
+
+
 def _final_report_contract() -> JsonObject:
     return {
-        "kan_lifecycle_finalized": "true/false",
-        "discord_visible_turns_posted": "N/expected",
-        "real_profile_gateway_replies": "true/false",
-        "cli_actor_speech_only": "true/false",
+        "lifecycle": "kan_lifecycle_finalized true/false from daemon/control evidence",
+        "visible_turns_posted": "discord visible turns posted N/expected",
+        "real_profile_gateway_replies": "true/false from explicit profile/gateway evidence",
+        "selected_runner_labels": "selected-runner evidence labels separate from lifecycle",
+        "shared_default_author_fallback_status": (
+            "none/shared_default_detected/unproven from visible_author_guard"
+        ),
     }
 
 

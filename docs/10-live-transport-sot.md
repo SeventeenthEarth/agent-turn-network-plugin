@@ -69,7 +69,7 @@ Recommended execution order:
 
 Plugin roadmap entries live in `docs/06-implementation-epics-tasks.md`. Control roadmap entries live in `../../kkachi-agent-network-control/docs/roadmap.md`. When a task ID is referenced outside its repo-local roadmap or SOT table, use repo-qualified notation such as `plugin/LTRAN-001` or `control/LTRAN-001` to avoid ambiguity.
 
-For a jointly developed remediation or feature epic, both repos use one epic ID and one globally sequential task stream. Repo-qualified notation is mandatory, and repo-local gaps are expected. RUNFIX follows this rule: `control/RUNFIX-001`, `plugin/RUNFIX-002`, `control/RUNFIX-003`, `control/RUNFIX-004`, `control/RUNFIX-005`, `plugin/RUNFIX-006`, `plugin/RUNFIX-007`, `plugin/RUNFIX-008`, `control/RUNFIX-009`, `plugin/RUNFIX-010`, `control/RUNFIX-011`, `plugin/RUNFIX-012`, `plugin/RUNFIX-013`.
+For a jointly developed remediation or feature epic, both repos use one epic ID and one globally sequential task stream. Repo-qualified notation is mandatory, and repo-local gaps are expected. RUNFIX follows this rule: `control/RUNFIX-001`, `plugin/RUNFIX-002`, `control/RUNFIX-003`, `control/RUNFIX-004`, `control/RUNFIX-005`, `plugin/RUNFIX-006`, `plugin/RUNFIX-007`, `plugin/RUNFIX-008`, `control/RUNFIX-009`, `plugin/RUNFIX-010`, `control/RUNFIX-011`, `plugin/RUNFIX-012`, `plugin/RUNFIX-013`, `control/RUNFIX-014`, `plugin/RUNFIX-015`, `control/RUNFIX-016`, `plugin/RUNFIX-017`.
 
 ## RUNFIX activation and evidence contract
 
@@ -84,7 +84,7 @@ RUNFIX evidence labels are mandatory in operator reports:
 
 - `lifecycle_pass`: daemon event flow completed, but runner/visible/ARGUE quality may still be unproven;
 - `fallback_profile_pass`: manual or fallback profile text was obtained; this is never full KAN runner success;
-- `selected_runner_pass`: selected member runtime/runner was invoked from `speaker_selected` and produced canonical speech or durable failure evidence;
+- `selected_runner_pass`: selected member runtime/runner was invoked from `speaker_selected` and submitted linked canonical speech. Durable runner failure is separate terminal-failure diagnostic evidence and blocks `selected_runner_pass`;
 - `visible_surface_pass`: approved visible surface rendering/delivery evidence points back to daemon events;
 - `discussion_quality_pass`: ARGUE relation evidence or justified `new_axis` is present and diagnostics do not fail the requested quality mode.
 
@@ -102,9 +102,13 @@ RUNFIX evidence labels are mandatory in operator reports:
 | 8 | plugin | RUNFIX-008 | local implementation proof | Existing pure/local activation planner now accepts `plugin/RUNFIX-008` and exposes participant ARGUE response template fields, explicit operator evidence reporting, ARGUE counts, selected-runner evidence, canonical `speaker_selected -> speech` linkage, RUNFIX labels, and diagnostic-only fallback disclosure from caller-provided evidence only. Missing or ambiguous runner/ARGUE/canonical-link evidence remains `unproven`/`blocked`, `live_readiness` remains false, and this row makes no live Discord delivery, daemon startup/discovery, profile/provider/gateway/auth/token/model mutation, production activation, KAB readiness, commit, push, or broad rollout claim. |
 | 9 | control | RUNFIX-009 | local implementation proof | Control KAH run `run-20260618T102752Z-7d8ccfa584e4` adds deterministic local smoke proof for runner invocation, canonical `speaker_selected -> speech` linkage, ARGUE diagnostics/hard warnings, and transcript/export/projection closeout evidence. This row is dependency evidence for the later plugin/RUNFIX-010 pilot only; it does not authorize live Discord delivery, daemon startup/discovery, profile/provider/gateway/auth/token/model mutation, production activation, KAB readiness, commit, push, or broad rollout. |
 | 10 | plugin | RUNFIX-010 | completed/PASS_WITH_RISK | Approved live-local activation pilot and final operator package, now including Discord-origin live-visible default and artifact-only fail-closed guardrails. Bounded visible-local pilot evidence exists with parent-channel fallback disclosure and remaining risks; KAH run `run-20260618T112843Z-40b023a5d9c8` final gate passed. This is not production/live readiness, no-restart thread readiness, full KAN roster readiness, selected-speaker live runner readiness, or always-on participant runtime readiness. |
-| 11 | control | RUNFIX-011 | local implementation proof | Control KAH run `run-20260618T162156Z-419f3769f2cc` implements derived participant runtime readiness from durable subscriber presence, cursor ack freshness, heartbeat freshness, attendance/preparation success or timeout/failure evidence, and selected-runner prerequisites. Control status/stream diagnostics now fail closed when those proofs are missing. This remains control-local evidence only and does not authorize live Discord delivery, production/live readiness, profile/provider/gateway/auth/token/model mutation, plugin/RUNFIX-012 consumption, commit, or push. |
-| 12 | plugin | RUNFIX-012 | local implementation proof | Plugin activation planner/operator guardrails now consume explicit `control/RUNFIX-011` participant-runtime readiness evidence from caller input only. The planner reports control task/status/evidence ref, subscriber presence, cursor ack freshness, heartbeat freshness, attendance/preparation terminal evidence, selected-runner readiness/prerequisites, and visible-surface proof as separate evidence classes. Missing, stale, ambiguous, gateway-only, transcript/export-only, parent-channel-fallback-only, or manual/fallback-profile-only evidence blocks or diagnoses readiness and keeps `live_readiness=false`. This is local plugin proof only and does not claim live Discord delivery, production/live readiness, profile/provider/gateway/auth/token/model mutation, commit, push, or broad rollout. |
-| 13 | plugin | RUNFIX-013 | local implementation proof | Packaged skill/operator guidance now records KAN council moderation hard rules for lifecycle-first discussion, no predeclared complete live speaker order, per-turn poll/hand-raise evaluation, justified daemon `speaker_selected`, `relevance` as default with per-turn justified `targeted`, `random`, `moderator_direct`, and `role_order`, daemon `speech` event authority, moderator-opinion handling, and cancel/restart versus repair-forward guidance. This is docs/bundled-skill/package proof only and does not claim live daemon/runtime activation, Discord delivery, production/live readiness, profile/provider/gateway/auth/token/model mutation, commit, push, or broad rollout. |
+| 11 | control | RUNFIX-011 | local implementation proof | Control KAH run `run-20260618T162156Z-419f3769f2cc` implements derived participant runtime readiness from durable subscriber presence, cursor ack freshness, heartbeat freshness, attendance/preparation success or timeout/failure evidence, and selected-runner prerequisites. Control status/stream diagnostics now fail closed when those proofs are missing. This remains control-local evidence only and does not authorize live Discord delivery, production daemon activation, profile/gateway/provider/auth/token/model mutation, plugin/RUNFIX-012 consumption, or live readiness. |
+| 12 | plugin | RUNFIX-012 | local implementation proof | Plugin activation planner/operator guardrails now consume explicit `control/RUNFIX-011` participant-runtime readiness evidence from caller input only. The planner reports control task/status/evidence ref, subscriber presence, cursor ack freshness, heartbeat freshness, attendance/preparation terminal evidence, selected-runner readiness/prerequisites, and visible-surface proof as separate evidence classes. Missing, stale, ambiguous, gateway-only, transcript/export-only, parent-channel-fallback-only, or manual/fallback-profile-only evidence blocks or diagnoses readiness and keeps `live_readiness=false`. This remains local plugin proof only and does not claim live Discord delivery, production/live readiness, profile/provider/gateway/auth/token/model mutation, commit, push, or broad rollout. |
+| 13 | plugin | RUNFIX-013 | local implementation proof | Packaged skill/operator guidance now records KAN council moderation hard rules for lifecycle-first discussion, no predeclared complete live speaker order, per-turn poll/hand-raise evaluation, justified daemon `speaker_selected`, `relevance` as default with per-turn justified `targeted`, `random`, `moderator_direct`, and `role_order`, daemon `speech` event authority, moderator-opinion handling, and cancel/restart versus repair-forward guidance. This remains docs/bundled-skill/package proof only and does not claim live daemon/runtime activation, Discord delivery, production/live readiness, profile/provider/gateway/auth/token/model mutation, commit, push, or broad rollout. |
+| 14 | control | RUNFIX-014 | planned control dependency | Selected-runner terminal accounting and live-report guard. Plugin reports must consume control accounting labels and must not promote a run with `runner_invocation_failed` followed by fallback/manual canonical `speech` into `selected_runner_pass` or live readiness. |
+| 15 | plugin | RUNFIX-015 | planned | Visible author guard for live-visible councils. The operator harness/plugin guidance must require same-path per-profile Discord identity probes, expected author source (`registry_snapshot` or explicit approved profile-author map), source-env/posting-path evidence, env precedence proof, per-turn Discord message id/member/author/speech linkage, and fail closed before `council.new` on shared/default or unexpected authors. |
+| 16 | control | RUNFIX-016 | planned control dependency | Canonical summary/turn-accounting helper for `channel.jsonl` and export bundles. Plugin visible runners should call or conform to the helper and must tolerate dict/list/missing evidence shapes instead of crashing after `council_finalized`. |
+| 17 | plugin | RUNFIX-017 | planned | ARGUE quality-required prompt and runner contract hardening. Plugin/operator prompts must provide compact prior claim graph targets, preserve ARGUE fields, require non-opening quality-required speeches to include `stance_links[]` or justified `new_axis`, fail `discussion_quality_pass` on the first orphan non-opening speech in `quality_required` pilots, and expose repeated-orphan counts without synthetic relation inference. |
 
 ### Profile and Discord eligibility policy
 
@@ -853,6 +857,36 @@ Local proof boundaries:
 - unsupported event types, unsupported schema versions, duplicate cursor
   authority, floor-grant mismatches, and proofless delivery evidence fail closed;
 - `kan_discord_send_message` remains injected-only and non-default.
+
+
+### RUNFIX-015: visible author guard (planned)
+
+`plugin/RUNFIX-015` will harden the live-visible runner/operator harness so Discord-visible turns cannot be attributed to a shared/default bot while daemon `speech` events appear correct.
+
+Planned acceptance:
+
+- probe each selected participant's outbound Discord identity through the same posting path used for turns before `council.new`;
+- record `profile`, expected author source (`registry_snapshot` or explicit approved profile-author map), `bot_id`, `username`, `source_env`, and `posting_path` as evidence;
+- test env merge precedence as shared defaults first and profile-local env second;
+- fail closed before session creation if any selected participant resolves to a shared/default or unexpected author;
+- attach per-turn Discord message id, selected member, profile author id, posting path, and `speech_event_id` to visible evidence;
+- final reports separate lifecycle, visible turns, real profile/gateway replies, and shared/default author fallback status.
+
+This is a plugin/operator-harness planning entry only; it does not authorize live Discord delivery, profile/gateway/auth/token/provider mutation, production activation, or live readiness.
+
+### RUNFIX-017: ARGUE quality-required prompt contract (planned)
+
+`plugin/RUNFIX-017` will harden quality-required council prompts and selected participant response guidance so machine-auditable ARGUE graphs do not depend on human-readable prose alone.
+
+Planned acceptance:
+
+- selected-participant prompts include a compact prior claim graph with claim id, event id, speaker, summary, and available stance targets;
+- non-opening quality-required turns include at least one valid `stance_links[]` target or declare `contribution_type: "new_axis"` with non-empty `new_axis_reason`;
+- `kan_selected_participant_response` and operator guidance preserve `claims[]`, `stance_links[]`, `contribution_type`, `new_axis_reason`, and optional `evidence[]` without synthetic inference;
+- in `quality_required`, the first orphan non-opening speech blocks `discussion_quality_pass`; repeated orphan counts remain diagnostic evidence, and warning-only behavior is reserved for `quality_warn`;
+- final reports split `lifecycle_pass`, `discussion_quality_pass`, `orphan_speech_count`, `linked_speech_count`, `stance_link_count`, and `new_axis_count`.
+
+This is plugin/operator prompt-contract planning only. Control/RUNFIX-005 remains the quality diagnostics authority, and no production/live readiness or profile/provider/gateway/auth/token mutation is authorized.
 
 ## Remaining decisions for post-LTRAN-003 slices
 

@@ -173,6 +173,18 @@ requires grounded relation evidence, visible relation summaries from
 non-immediate prior-claim engagement, challenge/refine/synthesize coverage where
 relevant, and no runtime noise in visible speech.
 
+
+## RUNFIX post-pilot guardrails (planned RUNFIX-014..017)
+
+주유's 2026-06-19 rename-council handoff is registered as `RUNFIX-014` through `RUNFIX-017`. Until those tasks are implemented and reviewed, operators must treat the following as required planning/acceptance boundaries, not completed runtime capability:
+
+1. `control/RUNFIX-014` selected-runner accounting: a run with `runner_invocation_failed` followed by later canonical `speech` is lifecycle/fallback evidence, not `selected_runner_pass`. Reports must expose runner started/succeeded/failed counts and fallback/manual harness flags.
+2. `plugin/RUNFIX-015` visible author guard: before `council.new`, same-path Discord author probes must prove each selected participant posts as the expected profile author. Evidence includes `profile`, expected author source (`registry_snapshot` or explicit approved profile-author map), `bot_id`, `username`, `source_env`, `posting_path`, per-turn Discord message id, selected member, profile author id, and `speech_event_id`. Shared/default or unexpected authors fail closed.
+3. `control/RUNFIX-016` summary robustness: closeout/summary tooling must tolerate `payload.plugin_evidence`, dict/list `payload.evidence`, and missing optional evidence. A finalized lifecycle must not look failed because optional evidence has an alternate shape.
+4. `plugin/RUNFIX-017` ARGUE quality-required prompts: non-opening quality-required speeches must link to prior claims through `stance_links[]` or justify `new_axis`; prompts should provide compact prior claim graph targets; in `quality_required`, the first orphan non-opening speech blocks `discussion_quality_pass`; warning-only behavior is reserved for `quality_warn`, and repeated-orphan counts remain diagnostic evidence.
+
+Final reports must keep these fields separate: `lifecycle_pass`, `selected_runner_pass`, `visible_surface_pass`, `fallback_profile_pass`, `discussion_quality_pass`, `orphan_speech_count`, `linked_speech_count`, `stance_link_count`, `new_axis_count`, Discord visible turns posted, real profile/gateway replies, and shared/default author fallback status.
+
 ## Live-visible council preflight
 
 When the request arrives in Discord and the user asks agents to "discuss" or run
@@ -250,9 +262,11 @@ operation or treat it as no-restart thread readiness.
 Reports must label fallback/manual profile evidence as `fallback_profile_pass`.
 That evidence never equals selected-speaker runner success or KAN live discussion
 readiness. Minimum readiness evidence remains approval-gated: selected-runner
-invocation or durable failure from `speaker_selected`, canonical `speech` linkage,
-visible-surface evidence, ARGUE relation counts/diagnostics, and explicit
-production/non-scope disclaimers.
+invocation from `speaker_selected`, selected-runner submitted canonical `speech`
+linkage, visible-surface evidence, ARGUE relation counts/diagnostics, and explicit
+production/non-scope disclaimers. Durable runner failure is a terminal-failure
+diagnostic and blocks `selected_runner_pass` / live-readiness claims unless a
+later task explicitly proves a new selected-runner success path.
 
 For `plugin/RUNFIX-008`, `kan_discussion_activation_plan` exposes an
 `operator_evidence_report` from explicit caller-provided `operator_evidence`

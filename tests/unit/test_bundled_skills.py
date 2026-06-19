@@ -36,6 +36,34 @@ def test_bundled_kan_skill_resource_is_import_safe_and_readable() -> None:
     assert "SKILL-2" in text
 
 
+def test_bundled_kan_skill_ships_council_moderation_hard_rules() -> None:
+    skill_text = read_bundled_skill_text("kan-plugin")
+    guide_text = (ROOT / "docs" / "09-skill-and-operator-guide.md").read_text(encoding="utf-8")
+
+    for text in [skill_text, guide_text]:
+        normalized = " ".join(text.split())
+        assert "KAN council moderation hard rules" in normalized
+        assert "Do not predeclare or hard-code a complete live speaker order" in normalized
+        assert "`council.new`" in normalized
+        assert "`request_attendance`" in normalized
+        assert "terminal attendance records" in normalized
+        assert "`lock_agenda`" in normalized
+        assert "`prepare`" in normalized
+        assert "`ready` or `prepared_partial`" in normalized
+        assert "poll" in normalized
+        assert "hand-raise evaluation" in normalized
+        assert "justified daemon `speaker_selected` event" in normalized
+        assert "`relevance` as the default selection mode" in normalized
+        for selection_mode in ["`targeted`", "`random`", "`moderator_direct`", "`role_order`"]:
+            assert selection_mode in normalized
+        assert "Do not ban `role_order`" in normalized
+        assert "Discord/Hermes replies are not council state" in normalized
+        assert "typed daemon `speech` events" in normalized
+        assert "participant-style turn" in normalized
+        assert "cancel and restart" in normalized
+        assert "repair forward with a moderator intervention" in normalized
+
+
 def test_bundled_kan_skill_has_valid_hermes_frontmatter() -> None:
     text = read_bundled_skill_text("kan-plugin")
 

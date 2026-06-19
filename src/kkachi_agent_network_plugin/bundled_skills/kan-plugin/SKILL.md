@@ -76,6 +76,33 @@ Default work must stay local and fake/injected only:
    `responds_to_event_id` remains a legacy display hint and never overrides
    `stance_links[]`.
 
+## KAN council moderation hard rules
+
+For any live KAN council, the moderator must preserve the daemon-governed
+council loop. These rules are hard guardrails for operator guidance; they do not
+authorize live daemon/runtime activation by themselves.
+
+1. Do not predeclare or hard-code a complete live speaker order. A visible
+   discussion must not become a fixed-order Discord/Hermes debate transcript.
+2. Complete lifecycle prerequisites before turn discussion: `council.new`,
+   `request_attendance`, terminal attendance records for required participants,
+   `lock_agenda`, `prepare`, then `ready` or `prepared_partial` evidence.
+3. For each turn, open a `poll` or hand-raise evaluation, evaluate the current
+   hand raises, and record a justified daemon `speaker_selected` event before
+   any participant speech.
+4. Use `relevance` as the default selection mode. `targeted`, `random`,
+   `moderator_direct`, and `role_order` remain valid only as per-turn
+   `speaker_selected` selection modes with a reason; `role_order` also needs
+   bounded round evidence. Do not ban `role_order`, but never use it as a
+   predeclared full live debate order.
+5. Discord/Hermes replies are not council state. They become council speech only
+   when backed by typed daemon `speech` events.
+6. If the moderator has a substantive opinion, record it as a participant-style
+   turn rather than hiding it inside moderation text.
+7. If a fixed-order flow starts by mistake before any `speech` event exists,
+   cancel and restart. If `speech` already exists, repair forward with a
+   moderator intervention and do not rewrite history.
+
 ## ARGUE relation-aware response guidance
 
 ARGUE relation evidence is the structured record that links a participant's

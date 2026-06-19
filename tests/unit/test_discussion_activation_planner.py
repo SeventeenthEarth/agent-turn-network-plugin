@@ -118,6 +118,56 @@ def complete_runfix_008_plan() -> dict[str, object]:
     return plan
 
 
+def complete_runfix_012_plan() -> dict[str, object]:
+    plan = complete_runfix_008_plan()
+    plan["task_id"] = "plugin/RUNFIX-012"
+    plan["control_dependency"] = {
+        "task_id": "control/RUNFIX-011",
+        "status": "local implementation proof",
+        "evidence_ref": "control/docs/roadmap.md#runfix-011",
+    }
+    plan["participant_runtime_readiness"] = {
+        "source_mode": "explicit",
+        "subscriber": {
+            "subscriber": True,
+            "fresh": True,
+            "evidence_ref": "control/runtime/subscriber-presence",
+        },
+        "cursor_ack": {
+            "fresh": True,
+            "evidence_ref": "control/runtime/cursor-ack-fresh",
+        },
+        "heartbeat": {
+            "fresh": True,
+            "evidence_ref": "control/runtime/heartbeat-fresh",
+        },
+        "attendance": {
+            "terminal_success": True,
+            "terminal_status": "success",
+            "fresh": True,
+            "evidence_ref": "control/runtime/attendance-success",
+        },
+        "preparation": {
+            "terminal_success": True,
+            "terminal_status": "success",
+            "fresh": True,
+            "evidence_ref": "control/runtime/preparation-success",
+        },
+        "selected_runner": {
+            "ready": True,
+            "prerequisites_met": True,
+            "fresh": True,
+            "evidence_ref": "control/runtime/selected-runner-ready",
+        },
+        "visible_surface": {
+            "proven": True,
+            "fresh": True,
+            "evidence_ref": "plugin/runtime/visible-surface-proof",
+        },
+    }
+    return plan
+
+
 def test_complete_dry_run_is_ready_for_approval_without_live_readiness() -> None:
     report = build_discussion_activation_plan(complete_plan())
 
@@ -203,6 +253,30 @@ def test_runfix_006_task_id_remains_accepted_with_runfix_007_behavior_label() ->
     assert report["task_id"] == "plugin/RUNFIX-006"
     assert report["behavior_task_id"] == "plugin/RUNFIX-007"
     assert report["status"] == "ready_for_approval"
+
+
+@pytest.mark.parametrize(
+    "task_id",
+    ["plugin/RUNFIX-006", "plugin/RUNFIX-007", "plugin/RUNFIX-008", "plugin/RUNFIX-010"],
+)
+def test_prior_runfix_task_ids_remain_accepted(task_id: str) -> None:
+    plan = (
+        complete_runfix_008_plan()
+        if task_id in {"plugin/RUNFIX-008", "plugin/RUNFIX-010"}
+        else complete_plan()
+    )
+    plan["task_id"] = task_id
+    if task_id == "plugin/RUNFIX-010":
+        plan["request_context"] = {
+            "source": "operator",
+            "requested_output_mode": "activation_planning_only",
+        }
+
+    report = build_discussion_activation_plan(plan)
+
+    assert report["task_id"] == task_id
+    assert report["status"] == "ready_for_approval"
+    assert report["live_readiness"] is False
 
 
 def test_runfix_008_exposes_operator_argue_and_fallback_evidence() -> None:
@@ -401,6 +475,198 @@ def test_runfix_010_artifact_only_from_discord_requires_explicit_confirmation() 
             "requires explicit operator confirmation before session creation."
         ),
     } in report["blockers"]
+
+
+def test_runfix_012_complete_runtime_readiness_is_ready_for_approval_not_live() -> None:
+    report = build_discussion_activation_plan(complete_runfix_012_plan())
+
+    assert report["status"] == "ready_for_approval"
+    assert report["task_id"] == "plugin/RUNFIX-012"
+    assert report["behavior_task_id"] == "plugin/RUNFIX-012"
+    assert report["live_readiness"] is False
+    readiness = report["participant_runtime_readiness_report"]
+    assert readiness["ready"] is True
+    assert readiness["control_dependency"] == {
+        "status": "proven",
+        "task_id": "control/RUNFIX-011",
+        "dependency_status": "local implementation proof",
+        "evidence_ref": "control/docs/roadmap.md#runfix-011",
+    }
+    assert readiness["subscriber_presence"]["status"] == "proven"
+    assert readiness["cursor_ack_freshness"]["status"] == "proven"
+    assert readiness["heartbeat_freshness"]["status"] == "proven"
+    assert readiness["attendance_terminal"]["status"] == "proven"
+    assert readiness["preparation_terminal"]["status"] == "proven"
+    assert readiness["selected_runner_readiness"]["status"] == "proven"
+    assert readiness["visible_surface_proof"]["status"] == "proven"
+    assert readiness["diagnostics"] == []
+    assert readiness["rejected_substitutions"] == []
+
+
+def test_runfix_012_requires_control_runfix_011_dependency() -> None:
+    plan = complete_runfix_012_plan()
+    plan["control_dependency"] = {
+        "task_id": "control/RUNFIX-005",
+        "status": "completed/local-control",
+        "evidence_ref": "control/runfix-005",
+    }
+
+    report = build_discussion_activation_plan(plan)
+
+    assert report["status"] == "blocked"
+    assert (
+        report["participant_runtime_readiness_report"]["control_dependency"]["status"] == "unproven"
+    )
+    assert {
+        "code": "control_dependency_task_mismatch",
+        "owner": "control",
+        "message": "control_dependency.task_id must be control/RUNFIX-011.",
+    } in report["blockers"]
+
+
+def test_runfix_012_missing_runtime_readiness_fails_closed() -> None:
+    plan = complete_runfix_012_plan()
+    plan.pop("participant_runtime_readiness")
+
+    report = build_discussion_activation_plan(plan)
+
+    assert report["status"] == "blocked"
+    assert report["participant_runtime_readiness_report"]["ready"] is False
+    assert {
+        "code": "participant_runtime_readiness_missing",
+        "owner": "control/operator",
+        "message": (
+            "plugin/RUNFIX-012 requires explicit participant_runtime_readiness evidence "
+            "from control/RUNFIX-011 diagnostics."
+        ),
+    } in report["blockers"]
+
+
+@pytest.mark.parametrize(
+    ("evidence_key", "report_key"),
+    [
+        ("subscriber", "subscriber_presence"),
+        ("cursor_ack", "cursor_ack_freshness"),
+        ("heartbeat", "heartbeat_freshness"),
+        ("attendance", "attendance_terminal"),
+        ("preparation", "preparation_terminal"),
+        ("selected_runner", "selected_runner_readiness"),
+        ("visible_surface", "visible_surface_proof"),
+    ],
+)
+def test_runfix_012_missing_evidence_class_fails_closed(evidence_key: str, report_key: str) -> None:
+    plan = complete_runfix_012_plan()
+    readiness = plan["participant_runtime_readiness"]
+    assert isinstance(readiness, dict)
+    readiness.pop(evidence_key)
+
+    report = build_discussion_activation_plan(plan)
+
+    assert report["status"] == "blocked"
+    assert report["participant_runtime_readiness_report"]["ready"] is False
+    assert report["participant_runtime_readiness_report"][report_key]["status"] == "unproven"
+    assert any(
+        blocker["code"] == f"{evidence_key}_evidence_missing" for blocker in report["blockers"]
+    )
+
+
+@pytest.mark.parametrize(
+    ("evidence_key", "report_key"),
+    [
+        ("cursor_ack", "cursor_ack_freshness"),
+        ("heartbeat", "heartbeat_freshness"),
+    ],
+)
+def test_runfix_012_stale_runtime_evidence_fails_closed(evidence_key: str, report_key: str) -> None:
+    plan = complete_runfix_012_plan()
+    readiness = plan["participant_runtime_readiness"]
+    assert isinstance(readiness, dict)
+    evidence = readiness[evidence_key]
+    assert isinstance(evidence, dict)
+    evidence["fresh"] = False
+
+    report = build_discussion_activation_plan(plan)
+
+    assert report["status"] == "blocked"
+    assert report["participant_runtime_readiness_report"][report_key]["status"] == "stale"
+    assert any(
+        blocker["code"] == f"{evidence_key}_evidence_stale" for blocker in report["blockers"]
+    )
+
+
+def test_runfix_012_ambiguous_selected_runner_fails_closed() -> None:
+    plan = complete_runfix_012_plan()
+    readiness = plan["participant_runtime_readiness"]
+    assert isinstance(readiness, dict)
+    selected_runner = readiness["selected_runner"]
+    assert isinstance(selected_runner, dict)
+    selected_runner["ambiguous"] = True
+
+    report = build_discussion_activation_plan(plan)
+
+    assert report["status"] == "blocked"
+    assert (
+        report["participant_runtime_readiness_report"]["selected_runner_readiness"]["status"]
+        == "ambiguous"
+    )
+    assert any(
+        blocker["code"] == "selected_runner_evidence_ambiguous" for blocker in report["blockers"]
+    )
+
+
+@pytest.mark.parametrize(
+    ("evidence_key", "flag", "kind"),
+    [
+        ("heartbeat", "gateway_only", "gateway-only"),
+        ("visible_surface", "transcript_export_only", "transcript/export-only"),
+        ("visible_surface", "parent_channel_fallback_only", "parent-channel-fallback-only"),
+        ("selected_runner", "manual_profile_only", "manual/fallback-profile-only"),
+    ],
+)
+def test_runfix_012_rejects_substituted_runtime_evidence(
+    evidence_key: str, flag: str, kind: str
+) -> None:
+    plan = complete_runfix_012_plan()
+    readiness = plan["participant_runtime_readiness"]
+    assert isinstance(readiness, dict)
+    evidence = readiness[evidence_key]
+    assert isinstance(evidence, dict)
+    evidence[flag] = True
+
+    report = build_discussion_activation_plan(plan)
+
+    assert report["status"] == "blocked"
+    assert report["participant_runtime_readiness_report"]["ready"] is False
+    assert {"kind": kind, "reason": flag} in report["participant_runtime_readiness_report"][
+        "rejected_substitutions"
+    ]
+    assert any(
+        blocker["code"] == f"{evidence_key}_substituted_evidence" for blocker in report["blockers"]
+    )
+
+
+@pytest.mark.parametrize("evidence_key", ["attendance", "preparation"])
+def test_runfix_012_terminal_timeout_or_failure_is_diagnostic_not_ready(
+    evidence_key: str,
+) -> None:
+    plan = complete_runfix_012_plan()
+    readiness = plan["participant_runtime_readiness"]
+    assert isinstance(readiness, dict)
+    evidence = readiness[evidence_key]
+    assert isinstance(evidence, dict)
+    evidence["terminal_success"] = False
+    evidence["terminal_status"] = "timeout"
+
+    report = build_discussion_activation_plan(plan)
+
+    assert report["status"] == "blocked"
+    report_key = f"{evidence_key}_terminal"
+    assert report["participant_runtime_readiness_report"][report_key]["status"] == (
+        "terminal_failure"
+    )
+    assert any(
+        blocker["code"] == f"{evidence_key}_terminal_timeout" for blocker in report["blockers"]
+    )
 
 
 def test_missing_control_dependency_fails_closed() -> None:

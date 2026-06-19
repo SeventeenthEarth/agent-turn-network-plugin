@@ -200,6 +200,16 @@ parent-channel proof state, and fallback-audit rejection rows, treats missing
 parent-channel allow-list inheritance proof as a Hermes/gateway dependency,
 keeps RUNFIX labels separate, and always keeps `live_readiness: false`.
 
+For `plugin/RUNFIX-012`, the planner also consumes explicit
+`participant_runtime_readiness` from `control/RUNFIX-011` diagnostics. Required
+classes are control task/status/evidence ref, subscriber presence, cursor ack
+freshness, heartbeat freshness, attendance and preparation terminal evidence,
+selected-runner readiness/prerequisites, and visible-surface proof as a separate
+class. Gateway liveness, transcript/export artifacts, parent-channel fallback
+alone, and manual/fallback profile text are diagnostic only; they are not
+participant runtime readiness, selected-runner success, live readiness, or
+production readiness.
+
 KAN discussion channels are bot-to-bot-free by default. Profiles with effective
 bot-to-bot enabled Discord behavior are excluded from KAN discussion allow-lists
 unless a later explicit policy approves otherwise. Visible-pilot surface policy

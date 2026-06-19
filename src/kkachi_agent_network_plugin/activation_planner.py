@@ -17,12 +17,23 @@ RUNFIX_006_TASK_ID: Final = "plugin/RUNFIX-006"
 RUNFIX_007_TASK_ID: Final = "plugin/RUNFIX-007"
 RUNFIX_008_TASK_ID: Final = "plugin/RUNFIX-008"
 RUNFIX_010_TASK_ID: Final = "plugin/RUNFIX-010"
+RUNFIX_012_TASK_ID: Final = "plugin/RUNFIX-012"
 SUPPORTED_TASK_IDS: Final[frozenset[str]] = frozenset(
-    {RUNFIX_006_TASK_ID, RUNFIX_007_TASK_ID, RUNFIX_008_TASK_ID, RUNFIX_010_TASK_ID}
+    {
+        RUNFIX_006_TASK_ID,
+        RUNFIX_007_TASK_ID,
+        RUNFIX_008_TASK_ID,
+        RUNFIX_010_TASK_ID,
+        RUNFIX_012_TASK_ID,
+    }
 )
 TASK_ID: Final = RUNFIX_010_TASK_ID
 CONTROL_DEPENDENCY_TASK_ID: Final = "control/RUNFIX-005"
 CONTROL_DEPENDENCY_STATUS: Final = "completed/local-control"
+RUNFIX_012_CONTROL_DEPENDENCY_TASK_ID: Final = "control/RUNFIX-011"
+RUNFIX_012_CONTROL_DEPENDENCY_STATUSES: Final[frozenset[str]] = frozenset(
+    {"local implementation proof", "completed/local-control", "local-control"}
+)
 TOOL_NAME: Final = "kan_discussion_activation_plan"
 EVIDENCE_LABELS: Final[tuple[str, ...]] = (
     "lifecycle_pass",
@@ -43,14 +54,16 @@ def build_discussion_activation_plan(plan: Mapping[str, object]) -> JsonObject:
     if task_id not in SUPPORTED_TASK_IDS:
         raise ValueError(
             "plan.task_id must be plugin/RUNFIX-006, plugin/RUNFIX-007, "
-            "plugin/RUNFIX-008, or plugin/RUNFIX-010"
+            "plugin/RUNFIX-008, plugin/RUNFIX-010, or plugin/RUNFIX-012"
         )
 
     blockers: list[JsonObject] = []
     excluded_profiles: list[JsonObject] = []
     blocked_profiles: list[JsonObject] = []
 
-    _validate_control_dependency(source.get("control_dependency"), blockers=blockers)
+    _validate_control_dependency(
+        source.get("control_dependency"), task_id=task_id, blockers=blockers
+    )
     _validate_plugin_install(source.get("plugin_install"), blockers=blockers)
     _validate_control_daemon(source.get("control_daemon"), blockers=blockers)
     parent_channel_plan = _parent_channel_plan(
@@ -101,6 +114,12 @@ def build_discussion_activation_plan(plan: Mapping[str, object]) -> JsonObject:
         task_id=task_id,
         blockers=blockers,
     )
+    participant_runtime_readiness = _participant_runtime_readiness_report(
+        source.get("participant_runtime_readiness"),
+        control_dependency_value=source.get("control_dependency"),
+        task_id=task_id,
+        blockers=blockers,
+    )
 
     if not eligible_profiles:
         blockers.append(
@@ -118,7 +137,9 @@ def build_discussion_activation_plan(plan: Mapping[str, object]) -> JsonObject:
         "schema_version": ACTIVATION_PLAN_SCHEMA_VERSION,
         "task_id": task_id,
         "behavior_task_id": (
-            RUNFIX_010_TASK_ID
+            RUNFIX_012_TASK_ID
+            if task_id == RUNFIX_012_TASK_ID
+            else RUNFIX_010_TASK_ID
             if task_id == RUNFIX_010_TASK_ID
             else RUNFIX_008_TASK_ID
             if task_id == RUNFIX_008_TASK_ID
@@ -138,6 +159,7 @@ def build_discussion_activation_plan(plan: Mapping[str, object]) -> JsonObject:
         "operator_evidence_report": operator_evidence,
         "requested_output_mode": visible_surface_readiness["requested_output_mode"],
         "visible_surface_readiness_report": visible_surface_readiness,
+        "participant_runtime_readiness_report": participant_runtime_readiness,
         "final_report_contract": _final_report_contract(),
         "fallback_audit": cast(list[JsonValue], _fallback_audit()),
         "required_approvals": cast(list[JsonValue], required_approvals),
@@ -158,7 +180,13 @@ def build_discussion_activation_plan(plan: Mapping[str, object]) -> JsonObject:
     }
 
 
-def _validate_control_dependency(value: object, *, blockers: list[JsonObject]) -> None:
+def _validate_control_dependency(
+    value: object, *, task_id: str, blockers: list[JsonObject]
+) -> None:
+    if task_id == RUNFIX_012_TASK_ID:
+        _validate_runfix_012_control_dependency(value, blockers=blockers)
+        return
+
     if not isinstance(value, Mapping):
         blockers.append(
             _blocker(
@@ -191,6 +219,48 @@ def _validate_control_dependency(value: object, *, blockers: list[JsonObject]) -
                 code="control_dependency_evidence_missing",
                 owner="control",
                 message="control/RUNFIX-005 evidence_ref is required.",
+            )
+        )
+
+
+def _validate_runfix_012_control_dependency(value: object, *, blockers: list[JsonObject]) -> None:
+    if not isinstance(value, Mapping):
+        blockers.append(
+            _blocker(
+                code="control_dependency_missing",
+                owner="control",
+                message=(
+                    "control/RUNFIX-011 local participant-runtime readiness evidence is required."
+                ),
+            )
+        )
+        return
+    dependency = _json_object(value, label="plan.control_dependency")
+    if dependency.get("task_id") != RUNFIX_012_CONTROL_DEPENDENCY_TASK_ID:
+        blockers.append(
+            _blocker(
+                code="control_dependency_task_mismatch",
+                owner="control",
+                message="control_dependency.task_id must be control/RUNFIX-011.",
+            )
+        )
+    if dependency.get("status") not in RUNFIX_012_CONTROL_DEPENDENCY_STATUSES:
+        blockers.append(
+            _blocker(
+                code="control_dependency_not_completed",
+                owner="control",
+                message=(
+                    "control/RUNFIX-011 must have local implementation proof, "
+                    "completed/local-control, or local-control status."
+                ),
+            )
+        )
+    if not _non_empty_string(dependency.get("evidence_ref")):
+        blockers.append(
+            _blocker(
+                code="control_dependency_evidence_missing",
+                owner="control",
+                message="control/RUNFIX-011 evidence_ref is required.",
             )
         )
 
@@ -612,6 +682,279 @@ def _visible_surface_readiness_report(
         )
     report["ready"] = not missing
     return report
+
+
+def _participant_runtime_readiness_report(
+    value: object,
+    *,
+    control_dependency_value: object,
+    task_id: str,
+    blockers: list[JsonObject],
+) -> JsonObject:
+    require_evidence = task_id == RUNFIX_012_TASK_ID
+    report: JsonObject = {
+        "runfix_task_id": RUNFIX_012_TASK_ID,
+        "ready": False,
+        "control_dependency": _runtime_control_dependency_report(control_dependency_value),
+        "subscriber_presence": _empty_runtime_class_report("subscriber_presence"),
+        "cursor_ack_freshness": _empty_runtime_class_report("cursor_ack_freshness"),
+        "heartbeat_freshness": _empty_runtime_class_report("heartbeat_freshness"),
+        "attendance_terminal": _empty_runtime_class_report("attendance_terminal"),
+        "preparation_terminal": _empty_runtime_class_report("preparation_terminal"),
+        "selected_runner_readiness": _empty_runtime_class_report("selected_runner_readiness"),
+        "visible_surface_proof": _empty_runtime_class_report("visible_surface_proof"),
+        "diagnostics": [],
+        "rejected_substitutions": [],
+    }
+    if not isinstance(value, Mapping):
+        if require_evidence:
+            blockers.append(
+                _blocker(
+                    code="participant_runtime_readiness_missing",
+                    owner="control/operator",
+                    message=(
+                        "plugin/RUNFIX-012 requires explicit participant_runtime_readiness "
+                        "evidence from control/RUNFIX-011 diagnostics."
+                    ),
+                )
+            )
+        return report
+
+    readiness = _json_object(value, label="plan.participant_runtime_readiness")
+    diagnostics: list[JsonObject] = []
+    rejected: list[JsonObject] = []
+    source_mode = readiness.get("source_mode")
+    if source_mode != "explicit":
+        _append_runtime_blocker(
+            blockers,
+            diagnostics,
+            code="participant_runtime_source_not_explicit",
+            message=(
+                "participant_runtime_readiness.source_mode must be explicit; gateway, "
+                "transcript, export, profile, socket, or environment inference is unsupported."
+            ),
+        )
+
+    class_specs: tuple[tuple[str, str, str], ...] = (
+        ("subscriber_presence", "subscriber", "subscriber"),
+        ("cursor_ack_freshness", "cursor_ack", "fresh"),
+        ("heartbeat_freshness", "heartbeat", "fresh"),
+        ("attendance_terminal", "attendance", "terminal_success"),
+        ("preparation_terminal", "preparation", "terminal_success"),
+        ("selected_runner_readiness", "selected_runner", "ready"),
+        ("visible_surface_proof", "visible_surface", "proven"),
+    )
+    all_ready = source_mode == "explicit"
+    for output_key, input_key, success_key in class_specs:
+        class_report = _runtime_class_report(
+            readiness.get(input_key),
+            input_key=input_key,
+            success_key=success_key,
+            blockers=blockers,
+            diagnostics=diagnostics,
+            rejected_substitutions=rejected,
+            require_evidence=require_evidence,
+        )
+        report[output_key] = class_report
+        if class_report["status"] != "proven":
+            all_ready = False
+
+    control_dependency = cast(JsonObject, report["control_dependency"])
+    if control_dependency["status"] != "proven":
+        all_ready = False
+    report["ready"] = bool(all_ready)
+    report["diagnostics"] = cast(list[JsonValue], diagnostics)
+    report["rejected_substitutions"] = cast(list[JsonValue], rejected)
+    return report
+
+
+def _runtime_control_dependency_report(value: object) -> JsonObject:
+    output: JsonObject = {
+        "status": "unproven",
+        "task_id": None,
+        "dependency_status": None,
+        "evidence_ref": None,
+    }
+    if not isinstance(value, Mapping):
+        return output
+    dependency = _json_object(value, label="plan.control_dependency")
+    task_id = dependency.get("task_id")
+    status = dependency.get("status")
+    evidence_ref = dependency.get("evidence_ref")
+    if _non_empty_string(task_id):
+        output["task_id"] = cast(str, task_id)
+    if _non_empty_string(status):
+        output["dependency_status"] = cast(str, status)
+    if _non_empty_string(evidence_ref):
+        output["evidence_ref"] = cast(str, evidence_ref)
+    if (
+        task_id == RUNFIX_012_CONTROL_DEPENDENCY_TASK_ID
+        and status in RUNFIX_012_CONTROL_DEPENDENCY_STATUSES
+        and _non_empty_string(evidence_ref)
+    ):
+        output["status"] = "proven"
+    return output
+
+
+def _empty_runtime_class_report(evidence_class: str) -> JsonObject:
+    return {
+        "status": "unproven",
+        "evidence_class": evidence_class,
+        "evidence_ref": None,
+        "diagnostic": "not_supplied",
+    }
+
+
+def _runtime_class_report(
+    value: object,
+    *,
+    input_key: str,
+    success_key: str,
+    blockers: list[JsonObject],
+    diagnostics: list[JsonObject],
+    rejected_substitutions: list[JsonObject],
+    require_evidence: bool,
+) -> JsonObject:
+    report = _empty_runtime_class_report(input_key)
+    if not isinstance(value, Mapping):
+        if require_evidence:
+            _append_runtime_blocker(
+                blockers,
+                diagnostics,
+                code=f"{input_key}_evidence_missing",
+                message=f"participant_runtime_readiness.{input_key} evidence is required.",
+            )
+        return report
+
+    evidence = _json_object(value, label=f"plan.participant_runtime_readiness.{input_key}")
+    evidence_ref = evidence.get("evidence_ref")
+    if _non_empty_string(evidence_ref):
+        report["evidence_ref"] = cast(str, evidence_ref)
+
+    substitution = _runtime_substitution(evidence)
+    if substitution is not None:
+        report["status"] = "rejected"
+        report["diagnostic"] = substitution["reason"]
+        rejected_substitutions.append(substitution)
+        if require_evidence:
+            _append_runtime_blocker(
+                blockers,
+                diagnostics,
+                code=f"{input_key}_substituted_evidence",
+                message=(
+                    f"participant_runtime_readiness.{input_key} uses substituted "
+                    f"{substitution['kind']} evidence, not participant runtime readiness proof."
+                ),
+            )
+        return report
+
+    if evidence.get("ambiguous") is True:
+        report["status"] = "ambiguous"
+        report["diagnostic"] = "ambiguous"
+        if require_evidence:
+            _append_runtime_blocker(
+                blockers,
+                diagnostics,
+                code=f"{input_key}_evidence_ambiguous",
+                message=f"participant_runtime_readiness.{input_key} evidence is ambiguous.",
+            )
+        return report
+
+    if evidence.get("stale") is True or evidence.get("fresh") is False:
+        report["status"] = "stale"
+        report["diagnostic"] = "stale"
+        if require_evidence:
+            _append_runtime_blocker(
+                blockers,
+                diagnostics,
+                code=f"{input_key}_evidence_stale",
+                message=f"participant_runtime_readiness.{input_key} evidence is stale.",
+            )
+        return report
+
+    if input_key in {"attendance", "preparation"}:
+        terminal_status = _optional_string_value(evidence.get("terminal_status"))
+        report["terminal_status"] = terminal_status
+        if terminal_status in {"timeout", "failure"} and _non_empty_string(evidence_ref):
+            report["status"] = "terminal_failure"
+            report["diagnostic"] = terminal_status
+            if require_evidence:
+                _append_runtime_blocker(
+                    blockers,
+                    diagnostics,
+                    code=f"{input_key}_terminal_{terminal_status}",
+                    message=(
+                        f"participant_runtime_readiness.{input_key} reached terminal "
+                        f"{terminal_status}; evidence is diagnostic, not readiness proof."
+                    ),
+                )
+            return report
+
+    if evidence.get(success_key) is True and _non_empty_string(evidence_ref):
+        if input_key == "selected_runner" and evidence.get("prerequisites_met") is not True:
+            report["status"] = "unproven"
+            report["diagnostic"] = "selected_runner_prerequisites_missing"
+            if require_evidence:
+                _append_runtime_blocker(
+                    blockers,
+                    diagnostics,
+                    code="selected_runner_prerequisites_missing",
+                    message=(
+                        "participant_runtime_readiness.selected_runner requires "
+                        "prerequisites_met=true."
+                    ),
+                )
+            return report
+        report["status"] = "proven"
+        report["diagnostic"] = "explicit"
+        return report
+
+    if require_evidence:
+        _append_runtime_blocker(
+            blockers,
+            diagnostics,
+            code=f"{input_key}_evidence_unproven",
+            message=(
+                f"participant_runtime_readiness.{input_key} must provide {success_key}=true "
+                "and a non-empty evidence_ref."
+            ),
+        )
+    return report
+
+
+def _runtime_substitution(evidence: JsonObject) -> JsonObject | None:
+    substitution_flags: tuple[tuple[str, str], ...] = (
+        ("gateway_only", "gateway-only"),
+        ("transcript_export_only", "transcript/export-only"),
+        ("parent_channel_fallback_only", "parent-channel-fallback-only"),
+        ("manual_profile_only", "manual/fallback-profile-only"),
+    )
+    for key, kind in substitution_flags:
+        if evidence.get(key) is True:
+            return {"kind": kind, "reason": key}
+    evidence_kind = _optional_string_value(evidence.get("evidence_kind")) or _optional_string_value(
+        evidence.get("source_kind")
+    )
+    if evidence_kind in {
+        "gateway_only",
+        "transcript_export_only",
+        "parent_channel_fallback_only",
+        "manual_profile_only",
+    }:
+        return {"kind": evidence_kind.replace("_", "-"), "reason": evidence_kind}
+    return None
+
+
+def _append_runtime_blocker(
+    blockers: list[JsonObject],
+    diagnostics: list[JsonObject],
+    *,
+    code: str,
+    message: str,
+) -> None:
+    blocker = _blocker(code=code, owner="control/operator", message=message)
+    blockers.append(blocker)
+    diagnostics.append(blocker)
 
 
 def _final_report_contract() -> JsonObject:

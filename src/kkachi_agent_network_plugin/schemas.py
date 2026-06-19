@@ -786,7 +786,7 @@ KAN_SURFACE_RENDER_PROJECTION: Final[dict[str, object]] = {
 KAN_DISCUSSION_ACTIVATION_PLAN: Final[dict[str, object]] = {
     "name": "kan_discussion_activation_plan",
     "description": (
-        "Build a deterministic pure/local RUNFIX-010 KAN discussion activation "
+        "Build a deterministic pure/local RUNFIX-012 KAN discussion activation "
         "planner/doctor report from explicit caller-provided evidence only. The "
         "tool performs no environment reads, socket discovery, daemon startup, "
         "CLI fallback, Discord/Hermes/profile/gateway inspection, or provider/"
@@ -799,7 +799,8 @@ KAN_DISCUSSION_ACTIVATION_PLAN: Final[dict[str, object]] = {
                 "type": "object",
                 "description": (
                     "Explicit activation planning evidence with schema_version=1, "
-                    "control/RUNFIX-005 dependency evidence, plugin tool visibility, "
+                    "control/RUNFIX-005 or control/RUNFIX-011 dependency evidence, "
+                    "plugin tool visibility, "
                     "explicit daemon/socket/config evidence, participant profiles, "
                     "parent-channel allow-list inheritance proof, planned changes, "
                     "rollback, verification commands, approval gates, and separated "
@@ -814,12 +815,18 @@ KAN_DISCUSSION_ACTIVATION_PLAN: Final[dict[str, object]] = {
                             "plugin/RUNFIX-007",
                             "plugin/RUNFIX-008",
                             "plugin/RUNFIX-010",
+                            "plugin/RUNFIX-012",
                         ],
                     },
                     "control_dependency": {
                         "type": "object",
                         "additionalProperties": True,
-                        "description": "Explicit control/RUNFIX-005 completion evidence.",
+                        "description": (
+                            "Explicit control dependency completion evidence. "
+                            "RUNFIX-006/007/008/010 require control/RUNFIX-005; "
+                            "RUNFIX-012 requires control/RUNFIX-011 local "
+                            "participant-runtime readiness proof."
+                        ),
                     },
                     "plugin_install": {
                         "type": "object",
@@ -892,6 +899,21 @@ KAN_DISCUSSION_ACTIVATION_PLAN: Final[dict[str, object]] = {
                             "RUNFIX-010 preflight evidence for live visible thread output: "
                             "surface binding, turn-posting probe, visible closeout probe, "
                             "real profile/gateway replies, and non-CLI-actor speech path."
+                        ),
+                    },
+                    "participant_runtime_readiness": {
+                        "type": "object",
+                        "additionalProperties": True,
+                        "description": (
+                            "Explicit-only RUNFIX-012 participant runtime readiness input "
+                            "from control/RUNFIX-011 diagnostics. It must report "
+                            "subscriber presence, cursor ack freshness, heartbeat "
+                            "freshness, attendance/preparation terminal evidence, "
+                            "selected-runner readiness/prerequisites, and visible-surface "
+                            "proof as a separate evidence class. Gateway-only, "
+                            "transcript/export-only, parent-channel-fallback-only, and "
+                            "manual/fallback-profile-only evidence is diagnostic and "
+                            "must not imply live_readiness or production readiness."
                         ),
                     },
                     "evidence_labels": {

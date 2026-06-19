@@ -291,6 +291,7 @@ def test_discussion_activation_plan_schema_is_pure_local_doctor_tool() -> None:
             "plugin/RUNFIX-007",
             "plugin/RUNFIX-008",
             "plugin/RUNFIX-010",
+            "plugin/RUNFIX-012",
         ],
     }
     operator_evidence = plan_schema["properties"]["operator_evidence"]
@@ -301,6 +302,11 @@ def test_discussion_activation_plan_schema_is_pure_local_doctor_tool() -> None:
     assert "live_visible_thread" in request_context["description"]
     visible_readiness = plan_schema["properties"]["visible_surface_readiness"]
     assert "real profile/gateway replies" in visible_readiness["description"]
+    runtime_readiness = plan_schema["properties"]["participant_runtime_readiness"]
+    assert "control/RUNFIX-011" in runtime_readiness["description"]
+    assert "subscriber presence" in runtime_readiness["description"]
+    assert "cursor ack freshness" in runtime_readiness["description"]
+    assert "manual/fallback-profile-only" in runtime_readiness["description"]
     evidence_labels = plan_schema["properties"]["evidence_labels"]
     assert set(evidence_labels["properties"]) == {
         "lifecycle_pass",

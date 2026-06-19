@@ -174,6 +174,8 @@ approved Hermes/plugin activation flow may copy or register it into a profile.
 - Visible-pilot surface policy is thread-preferred and parent-channel fallback allowed. Create or use a dedicated thread under the approved parent channel first. If thread creation/posting is unsupported, use the approved parent channel directly as a fallback, but record `fallback_reason` in the task brief, KAN surface metadata, visible closeout, and final report. Parent-channel fallback is not no-restart thread readiness, and manual participant messages remain diagnostic-only unless canonical KAN event linkage is also proven.
 - Discord-origin council requests default to `live_visible_thread` output. Do not silently satisfy a Discord thread request with artifact-only daemon CLI actor speech. If the operator explicitly asks for `artifact_only`, `daemon_cli_actor_speech`, or transcript/export-only output, record that confirmation before `council.new`; otherwise fail closed before session creation when live visible output cannot be proven.
 - Before starting a live visible council, record `visible_surface_readiness`: bound thread or approved parent-channel fallback with `fallback_reason`, turn-posting probe for the selected-speaker/profile-send path or approved fallback poster, visible closeout probe, `real_profile_gateway_replies: true`, and `cli_actor_speech_only: false`. Missing runner/profile-send, Discord target, profile allow-list, or gateway posting proof blocks the live visible council rather than downgrading to artifact-only.
+- For `plugin/RUNFIX-012`, also provide explicit `participant_runtime_readiness` from `control/RUNFIX-011` diagnostics. Required classes are control task/status/evidence ref, subscriber presence, cursor ack freshness, heartbeat freshness, attendance and preparation terminal evidence, selected-runner readiness/prerequisites, and visible-surface proof as a separate evidence class.
+- Gateway liveness, transcript/export artifacts, parent-channel fallback alone, and manual/fallback profile text are diagnostics only. They must not be substituted for participant runtime readiness, selected-runner proof, visible-surface proof, `live_readiness`, or production readiness.
 - Fallback/manual participant messages may be useful diagnostic evidence, but they must be labeled `fallback_profile_pass` and must not be reported as selected-speaker runner success or KAN live discussion readiness.
 - `kan_discussion_activation_plan` always keeps `live_readiness: false`; it must not read env vars, inspect current Hermes/Discord/profile/gateway state, open sockets, shell out, start daemons, mutate profiles/gateway/Discord/auth/token/provider/model settings, or infer readiness from missing evidence.
 
@@ -210,6 +212,24 @@ evidence:
 Missing or ambiguous runner, ARGUE, or canonical-link evidence remains
 `unproven`/`blocked`. Manual/fallback profile text can explain a blocker, but it
 is never selected-runner success, discussion-quality success, or live readiness.
+
+For `plugin/RUNFIX-012`, the report adds
+`participant_runtime_readiness_report` from explicit caller-provided
+`participant_runtime_readiness` only:
+
+- `control_dependency`: must identify `control/RUNFIX-011` with local proof
+  status and evidence ref;
+- `subscriber_presence`, `cursor_ack_freshness`, and `heartbeat_freshness`:
+  prove a runtime is subscribed and current from control diagnostics;
+- `attendance_terminal` and `preparation_terminal`: expose terminal success or
+  timeout/failure evidence; timeout/failure remains diagnostic and blocks
+  readiness;
+- `selected_runner_readiness`: requires selected-runner readiness and
+  prerequisites;
+- `visible_surface_proof`: remains separate from participant runtime evidence.
+
+`ready_for_approval` is only a bounded planner/operator status. It never means
+`live_readiness`, live Discord delivery, production activation, or broad rollout.
 
 ## Install guidance
 

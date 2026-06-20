@@ -313,6 +313,7 @@ def test_discussion_activation_plan_schema_is_pure_local_doctor_tool() -> None:
             "plugin/RUNFIX-015",
             "plugin/RUNFIX-017",
             "plugin/RUNFIX-019",
+            "plugin/RUNFIX2-005",
         ],
     }
     operator_evidence = plan_schema["properties"]["operator_evidence"]
@@ -337,6 +338,12 @@ def test_discussion_activation_plan_schema_is_pure_local_doctor_tool() -> None:
     assert "env_precedence_proof order" in visible_author_guard["description"]
     assert "speech_event_id" in visible_author_guard["description"]
     assert "does not claim runtime enforcement" in visible_author_guard["description"]
+    integrated_proof = plan_schema["properties"]["integrated_discussion_proof"]
+    assert "plugin/RUNFIX2-005" in integrated_proof["description"]
+    assert "participant_runtime_ready_at_turns" in integrated_proof["description"]
+    assert "max_discussion_turns + participant_count + 2" in integrated_proof["description"]
+    assert "Manual/fallback/profile" in integrated_proof["description"]
+    assert "final_labels" in integrated_proof["description"]
     evidence_labels = plan_schema["properties"]["evidence_labels"]
     assert set(evidence_labels["properties"]) == {
         "lifecycle_pass",

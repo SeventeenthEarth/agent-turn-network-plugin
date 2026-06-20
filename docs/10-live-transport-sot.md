@@ -123,7 +123,7 @@ RUNFIX2 records the 2026-06-20 KLM/주유 live discussion feedback as a new five
 - `selected_runner_pass` requires daemon-selected runner success and linked canonical `speech`. A runner terminal failure such as `malformed_or_missing_response` remains a blocker until a later selected-runner invocation succeeds through the fixed adapter path.
 - Visible Discord messages should be short and audience-facing. Session ids, role/color labels, `speaker_selected_event_id`, `speech_event_id`, runner ids, and delivery/evidence details remain in audit/export/status surfaces.
 
-Planned RUNFIX2 cross-repo sequence:
+RUNFIX2 cross-repo sequence and current local-proof status:
 
 | Global Order | Repo | Task ID | Task Status | Purpose |
 |---:|---|---|---|---|
@@ -131,7 +131,7 @@ Planned RUNFIX2 cross-repo sequence:
 | 2 | control | RUNFIX2-002 | completed/control-local | Selected-runner Hermes adapter fix: control local implementation changes default runner invocation from delivery-only `send <prompt>` to response-generation `chat -Q -q <prompt>`, requires `runner_invocation_succeeded` plus linked canonical `speech`, and keeps delivery/fallback output as terminal diagnostic evidence. Plugin consumption remains scoped to later RUNFIX2 rows. |
 | 3 | control | RUNFIX2-003 | completed/control-local | Discussion lifecycle closeout: control local implementation exposes `discussion_lifecycle`, keeps `limits.max_discussion_turns` as participant discussion turns only, blocks `council.propose` until T0 moderator opening + T1..Tmax selected participant discussion + one selected closeout speech per participant, and leaves `council.unresolved` as the fail-closed terminal path. Expected visible turns are `max_discussion_turns + participant_count + 2`; plugin consumption remains scoped to RUNFIX2-004/005. |
 | 4 | plugin | RUNFIX2-004 | local implementation proof | Clean visible transcript rendering is implemented locally in the pure renderer: visible rows use concise KAN labels, e.g. `[KAN | T15/15]`, while audit/export rows keep machine identifiers. This does not claim live Discord delivery or RUNFIX2-005 pilot proof. |
-| 5 | plugin | RUNFIX2-005 | planned | Integrated live-local proof: approved bounded pilot proves selected-runner success, grant-time runtime readiness, expected visible turn count, clean transcript, visible closeout, and separated final evidence labels. |
+| 5 | plugin | RUNFIX2-005 | local implementation proof | Local plugin implementation now supports explicit-only `integrated_discussion_proof` for RUNFIX2-005, with separated lifecycle, selected-runner, runtime-at-turns, visible-surface, clean-transcript, visible-closeout, fallback, discussion-quality, and final-label axes. Selected-runner proof requires runner success plus canonical linked speech for the selected member; per-turn runtime readiness must be grant/turn-time evidence; visible count validates the RUNFIX2 formula. Manual/profile fallback remains diagnostic-only and cannot repair selected-runner failure. `live_readiness` remains false; actual live pilot, Discord/daemon/profile/provider/gateway/auth/token mutation, production readiness, push, and broad rollout remain separately approval-bound. |
 
 
 ### Profile and Discord eligibility policy

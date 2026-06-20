@@ -231,6 +231,108 @@ def complete_runfix_017_plan() -> dict[str, object]:
     return plan
 
 
+def complete_runfix2_005_plan() -> dict[str, object]:
+    plan = complete_runfix_017_plan()
+    plan["task_id"] = "plugin/RUNFIX2-005"
+    plan["integrated_discussion_proof"] = {
+        "lifecycle": {
+            "lifecycle_pass": True,
+            "evidence_ref": "control/export/session-finalized.json",
+        },
+        "selected_runner": {
+            "selected_member": "macho",
+            "speaker_selected_event_id": "evt_select_1",
+            "runner_invocation_started_ref": "control/events/runner-started",
+            "runner_invocation_succeeded": True,
+            "runner_invocation_succeeded_ref": "control/events/runner-succeeded",
+        },
+        "canonical_speech": {
+            "speaker_selected_event_id": "evt_select_1",
+            "speech_event_id": "evt_speech_1",
+            "speaker": "macho",
+            "evidence_ref": "control/events/speech-linkage",
+        },
+        "grant_turn_runtime_readiness": [
+            {
+                "turn": 1,
+                "speaker_selected_event_id": "evt_select_1",
+                "subscriber_present": True,
+                "cursor_ack_fresh": True,
+                "heartbeat_fresh": True,
+                "attendance_terminal_success": True,
+                "preparation_terminal_success": True,
+                "selected_runner_prerequisites_met": True,
+                "fresh": True,
+                "evidence_ref": "control/runtime/grant-turn-1",
+            }
+        ],
+        "visible_turns": {
+            "max_discussion_turns": 3,
+            "participant_count": 2,
+            "expected_visible_turns": 7,
+            "visible_turns_posted": 7,
+            "evidence_ref": "control/export/summary_turn_accounting",
+        },
+        "visible_surface": {
+            "visible_surface_pass": True,
+            "evidence_ref": "plugin/surface/posted-turns",
+        },
+        "clean_transcript": {
+            "clean_transcript_pass": True,
+            "evidence_ref": "plugin/surface/clean-transcript",
+            "audit_ids_in_visible_text": False,
+        },
+        "visible_closeout": {
+            "visible_closeout_pass": True,
+            "evidence_ref": "plugin/surface/visible-closeout",
+        },
+        "fallback_profile": {
+            "fallback_profile_pass": True,
+            "evidence_ref": "manual/profile-diagnostic",
+            "missing_evidence": ["none; diagnostic sample only"],
+        },
+        "discussion_quality": {
+            "discussion_quality_pass": True,
+            "evidence_ref": "control/status/discussion-quality",
+        },
+        "final_labels": {
+            "lifecycle_pass": {
+                "pass": True,
+                "evidence_ref": "control/export/session-finalized.json",
+            },
+            "selected_runner_pass": {
+                "pass": True,
+                "evidence_ref": "control/events/runner-succeeded",
+            },
+            "participant_runtime_ready_at_turns": {
+                "pass": True,
+                "evidence_ref": "control/runtime/grant-turn-1",
+            },
+            "visible_surface_pass": {
+                "pass": True,
+                "evidence_ref": "plugin/surface/posted-turns",
+            },
+            "clean_transcript_pass": {
+                "pass": True,
+                "evidence_ref": "plugin/surface/clean-transcript",
+            },
+            "visible_closeout_pass": {
+                "pass": True,
+                "evidence_ref": "plugin/surface/visible-closeout",
+            },
+            "fallback_profile_pass": {
+                "pass": True,
+                "evidence_ref": "manual/profile-diagnostic",
+            },
+            "discussion_quality_pass": {
+                "pass": True,
+                "evidence_ref": "control/status/discussion-quality",
+            },
+        },
+    }
+    return plan
+
+
 def complete_runfix_015_plan() -> dict[str, object]:
     plan = complete_runfix_008_plan()
     plan["task_id"] = "plugin/RUNFIX-015"
@@ -428,6 +530,281 @@ def test_runfix_017_exposes_prior_claim_targets_and_quality_report() -> None:
     assert discussion_quality["orphan_speech_count"] == 0
     assert report["evidence_labels"]["lifecycle_pass"] == "runfix-005 status projection"
     assert report["evidence_labels"]["discussion_quality_pass"] == "argue quality evidence"
+
+
+def test_runfix2_005_complete_integrated_proof_is_ready_without_live_readiness() -> None:
+    report = build_discussion_activation_plan(complete_runfix2_005_plan())
+
+    assert report["status"] == "ready_for_approval"
+    assert report["task_id"] == "plugin/RUNFIX2-005"
+    assert report["behavior_task_id"] == "plugin/RUNFIX2-005"
+    assert report["live_readiness"] is False
+    proof = report["integrated_discussion_proof_report"]
+    assert proof["status"] == "proven"
+    assert proof["lifecycle_pass"]["status"] == "proven"
+    assert proof["selected_runner_pass"]["status"] == "proven"
+    assert proof["selected_runner_pass"]["canonical_speech"]["status"] == "proven"
+    assert proof["participant_runtime_ready_at_turns"]["status"] == "proven"
+    assert proof["visible_turn_count"] == {
+        "status": "proven",
+        "max_discussion_turns": 3,
+        "participant_count": 2,
+        "expected_visible_turns": 7,
+        "visible_turns_posted": 7,
+        "evidence_ref": "control/export/summary_turn_accounting",
+    }
+    assert proof["visible_surface_pass"]["status"] == "proven"
+    assert proof["clean_transcript_pass"]["status"] == "proven"
+    assert proof["visible_closeout_pass"]["status"] == "proven"
+    assert proof["fallback_profile_pass"]["status"] == "diagnostic_only"
+    assert proof["fallback_profile_pass"]["full_kan_success"] is False
+    assert proof["discussion_quality_pass"]["status"] == "proven"
+    assert proof["final_labels"]["status"] == "proven"
+
+
+def test_runfix2_005_missing_integrated_proof_fails_closed() -> None:
+    plan = complete_runfix2_005_plan()
+    plan.pop("integrated_discussion_proof")
+
+    report = build_discussion_activation_plan(plan)
+
+    assert report["status"] == "blocked"
+    assert report["integrated_discussion_proof_report"]["status"] == "blocked"
+    assert any(
+        blocker["code"] == "integrated_discussion_proof_missing" for blocker in report["blockers"]
+    )
+
+
+def test_runfix2_005_runner_started_only_fails_closed() -> None:
+    plan = complete_runfix2_005_plan()
+    proof = plan["integrated_discussion_proof"]
+    assert isinstance(proof, dict)
+    runner = proof["selected_runner"]
+    assert isinstance(runner, dict)
+    runner.pop("runner_invocation_succeeded_ref")
+    runner["runner_invocation_succeeded"] = False
+
+    report = build_discussion_activation_plan(plan)
+
+    assert report["status"] == "blocked"
+    assert (
+        report["integrated_discussion_proof_report"]["selected_runner_pass"]["status"] == "blocked"
+    )
+    assert any(
+        blocker["code"] == "integrated_selected_runner_started_only"
+        for blocker in report["blockers"]
+    )
+
+
+def test_runfix2_005_runner_success_ref_without_explicit_success_true_fails_closed() -> None:
+    plan = complete_runfix2_005_plan()
+    proof = plan["integrated_discussion_proof"]
+    assert isinstance(proof, dict)
+    runner = proof["selected_runner"]
+    assert isinstance(runner, dict)
+    runner.pop("runner_invocation_succeeded")
+
+    report = build_discussion_activation_plan(plan)
+
+    assert report["status"] == "blocked"
+    assert (
+        report["integrated_discussion_proof_report"]["selected_runner_pass"]["status"] == "blocked"
+    )
+    assert any(
+        blocker["code"] == "integrated_selected_runner_started_only"
+        for blocker in report["blockers"]
+    )
+
+
+@pytest.mark.parametrize(
+    ("proof_key", "evidence_kind", "expected_code"),
+    [
+        ("selected_runner", "fallback/manual", "integrated_selected_runner_substituted"),
+        (
+            "grant_turn_runtime_readiness",
+            "manual/fallback-profile-only",
+            "integrated_runtime_turn_substituted",
+        ),
+        (
+            "visible_surface",
+            "transcript/export-only",
+            "integrated_visible_surface_unproven_substituted",
+        ),
+        ("clean_transcript", "gateway-only", "integrated_clean_transcript_unproven_substituted"),
+        ("visible_closeout", "delivery-only", "integrated_visible_closeout_unproven_substituted"),
+    ],
+)
+def test_runfix2_005_natural_evidence_kind_substitutions_fail_closed(
+    proof_key: str,
+    evidence_kind: str,
+    expected_code: str,
+) -> None:
+    plan = complete_runfix2_005_plan()
+    proof = plan["integrated_discussion_proof"]
+    assert isinstance(proof, dict)
+    target = proof[proof_key]
+    if proof_key == "grant_turn_runtime_readiness":
+        assert isinstance(target, list)
+        row = target[0]
+        assert isinstance(row, dict)
+        row["evidence_kind"] = evidence_kind
+    else:
+        assert isinstance(target, dict)
+        target["evidence_kind"] = evidence_kind
+
+    report = build_discussion_activation_plan(plan)
+
+    assert report["status"] == "blocked"
+    assert any(blocker["code"] == expected_code for blocker in report["blockers"])
+
+
+def test_runfix2_005_durable_runner_failure_and_fallback_do_not_repair_pass() -> None:
+    plan = complete_runfix2_005_plan()
+    proof = plan["integrated_discussion_proof"]
+    assert isinstance(proof, dict)
+    runner = proof["selected_runner"]
+    assert isinstance(runner, dict)
+    runner.pop("runner_invocation_succeeded_ref")
+    runner["durable_runner_failure_ref"] = "control/events/runner-failed"
+    runner["manual_profile_only"] = True
+
+    report = build_discussion_activation_plan(plan)
+
+    selected_runner = report["integrated_discussion_proof_report"]["selected_runner_pass"]
+    assert report["status"] == "blocked"
+    assert selected_runner["status"] == "blocked"
+    assert selected_runner["canonical_speech"]["status"] == "proven"
+    assert report["integrated_discussion_proof_report"]["fallback_profile_pass"]["status"] == (
+        "diagnostic_only"
+    )
+    assert any(
+        blocker["code"] == "integrated_selected_runner_substituted"
+        for blocker in report["blockers"]
+    )
+    assert any(
+        blocker["code"] == "integrated_selected_runner_durable_failure"
+        for blocker in report["blockers"]
+    )
+
+
+def test_runfix2_005_missing_canonical_speech_linkage_fails_closed() -> None:
+    plan = complete_runfix2_005_plan()
+    proof = plan["integrated_discussion_proof"]
+    assert isinstance(proof, dict)
+    canonical = proof["canonical_speech"]
+    assert isinstance(canonical, dict)
+    canonical["speaker_selected_event_id"] = "evt_other"
+
+    report = build_discussion_activation_plan(plan)
+
+    assert report["status"] == "blocked"
+    assert (
+        report["integrated_discussion_proof_report"]["selected_runner_pass"]["canonical_speech"][
+            "status"
+        ]
+        == "blocked"
+    )
+    assert any(
+        blocker["code"] == "integrated_canonical_speech_unlinked" for blocker in report["blockers"]
+    )
+
+
+def test_runfix2_005_missing_or_stale_per_turn_runtime_readiness_fails_closed() -> None:
+    plan = complete_runfix2_005_plan()
+    proof = plan["integrated_discussion_proof"]
+    assert isinstance(proof, dict)
+    runtime_rows = proof["grant_turn_runtime_readiness"]
+    assert isinstance(runtime_rows, list)
+    row = runtime_rows[0]
+    assert isinstance(row, dict)
+    row["heartbeat_fresh"] = False
+    row["current_only"] = True
+
+    report = build_discussion_activation_plan(plan)
+
+    runtime_report = report["integrated_discussion_proof_report"][
+        "participant_runtime_ready_at_turns"
+    ]
+    assert report["status"] == "blocked"
+    assert runtime_report["status"] == "unproven"
+    assert runtime_report["turns"][0]["status"] == "blocked"
+    assert any(
+        blocker["code"] == "integrated_runtime_current_only" for blocker in report["blockers"]
+    )
+    assert any(
+        blocker["code"] == "integrated_runtime_turn_unproven" for blocker in report["blockers"]
+    )
+
+
+def test_runfix2_005_visible_turn_count_mismatch_fails_closed() -> None:
+    plan = complete_runfix2_005_plan()
+    proof = plan["integrated_discussion_proof"]
+    assert isinstance(proof, dict)
+    visible_turns = proof["visible_turns"]
+    assert isinstance(visible_turns, dict)
+    visible_turns["visible_turns_posted"] = 6
+
+    report = build_discussion_activation_plan(plan)
+
+    assert report["status"] == "blocked"
+    assert report["integrated_discussion_proof_report"]["visible_turn_count"]["status"] == (
+        "unproven"
+    )
+    assert any(
+        blocker["code"] == "integrated_visible_turn_count_mismatch"
+        for blocker in report["blockers"]
+    )
+
+
+def test_runfix2_005_clean_transcript_and_closeout_proof_fail_closed() -> None:
+    plan = complete_runfix2_005_plan()
+    proof = plan["integrated_discussion_proof"]
+    assert isinstance(proof, dict)
+    clean = proof["clean_transcript"]
+    closeout = proof["visible_closeout"]
+    assert isinstance(clean, dict)
+    assert isinstance(closeout, dict)
+    clean["audit_ids_in_visible_text"] = True
+    closeout.pop("evidence_ref")
+
+    report = build_discussion_activation_plan(plan)
+
+    assert report["status"] == "blocked"
+    assert report["integrated_discussion_proof_report"]["clean_transcript_pass"]["status"] == (
+        "blocked"
+    )
+    assert report["integrated_discussion_proof_report"]["visible_closeout_pass"]["status"] == (
+        "blocked"
+    )
+    assert any(
+        blocker["code"] == "integrated_clean_transcript_audit_ids_visible"
+        for blocker in report["blockers"]
+    )
+    assert any(
+        blocker["code"] == "integrated_visible_closeout_unproven" for blocker in report["blockers"]
+    )
+
+
+def test_runfix2_005_collapsed_or_missing_final_labels_fail_closed() -> None:
+    plan = complete_runfix2_005_plan()
+    proof = plan["integrated_discussion_proof"]
+    assert isinstance(proof, dict)
+    labels = proof["final_labels"]
+    assert isinstance(labels, dict)
+    labels["collapsed"] = True
+    labels.pop("selected_runner_pass")
+
+    report = build_discussion_activation_plan(plan)
+
+    assert report["status"] == "blocked"
+    assert report["integrated_discussion_proof_report"]["final_labels"]["status"] == "blocked"
+    assert any(
+        blocker["code"] == "integrated_final_labels_collapsed" for blocker in report["blockers"]
+    )
+    assert any(
+        blocker["code"] == "integrated_final_label_selected_runner_pass_missing"
+        for blocker in report["blockers"]
+    )
 
 
 def test_runfix_017_missing_operator_evidence_reports_runfix_017_blocker() -> None:

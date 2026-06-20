@@ -21,6 +21,7 @@ RUNFIX_012_TASK_ID: Final = "plugin/RUNFIX-012"
 RUNFIX_015_TASK_ID: Final = "plugin/RUNFIX-015"
 RUNFIX_017_TASK_ID: Final = "plugin/RUNFIX-017"
 RUNFIX_019_TASK_ID: Final = "plugin/RUNFIX-019"
+RUNFIX2_005_TASK_ID: Final = "plugin/RUNFIX2-005"
 SUPPORTED_TASK_IDS: Final[frozenset[str]] = frozenset(
     {
         RUNFIX_006_TASK_ID,
@@ -31,6 +32,7 @@ SUPPORTED_TASK_IDS: Final[frozenset[str]] = frozenset(
         RUNFIX_015_TASK_ID,
         RUNFIX_017_TASK_ID,
         RUNFIX_019_TASK_ID,
+        RUNFIX2_005_TASK_ID,
     }
 )
 TASK_ID: Final = RUNFIX_010_TASK_ID
@@ -65,7 +67,8 @@ def build_discussion_activation_plan(plan: Mapping[str, object]) -> JsonObject:
         raise ValueError(
             "plan.task_id must be plugin/RUNFIX-006, plugin/RUNFIX-007, "
             "plugin/RUNFIX-008, plugin/RUNFIX-010, plugin/RUNFIX-012, "
-            "plugin/RUNFIX-015, plugin/RUNFIX-017, or plugin/RUNFIX-019"
+            "plugin/RUNFIX-015, plugin/RUNFIX-017, plugin/RUNFIX-019, "
+            "or plugin/RUNFIX2-005"
         )
 
     blockers: list[JsonObject] = []
@@ -146,6 +149,11 @@ def build_discussion_activation_plan(plan: Mapping[str, object]) -> JsonObject:
         task_id=task_id,
         blockers=blockers,
     )
+    integrated_discussion_proof = _integrated_discussion_proof_report(
+        source.get("integrated_discussion_proof"),
+        task_id=task_id,
+        blockers=blockers,
+    )
 
     if not eligible_profiles:
         blockers.append(
@@ -180,6 +188,7 @@ def build_discussion_activation_plan(plan: Mapping[str, object]) -> JsonObject:
         "daemon_registry_membership_report": daemon_registry_membership,
         "participant_runtime_readiness_report": participant_runtime_readiness,
         "visible_author_guard_report": visible_author_guard,
+        "integrated_discussion_proof_report": integrated_discussion_proof,
         "final_report_contract": _final_report_contract(),
         "fallback_audit": cast(list[JsonValue], _fallback_audit()),
         "required_approvals": cast(list[JsonValue], required_approvals),
@@ -208,6 +217,7 @@ def _behavior_task_id(task_id: str) -> str:
         RUNFIX_015_TASK_ID,
         RUNFIX_017_TASK_ID,
         RUNFIX_019_TASK_ID,
+        RUNFIX2_005_TASK_ID,
     }:
         return task_id
     return RUNFIX_007_TASK_ID
@@ -1948,6 +1958,793 @@ def _final_report_contract() -> JsonObject:
             "none/shared_default_detected/unproven from visible_author_guard"
         ),
     }
+
+
+def _integrated_discussion_proof_report(
+    value: object,
+    *,
+    task_id: str,
+    blockers: list[JsonObject],
+) -> JsonObject:
+    report: JsonObject = {
+        "runfix_task_id": RUNFIX2_005_TASK_ID,
+        "status": "not_required",
+        "lifecycle_pass": _empty_integrated_check("lifecycle_pass"),
+        "selected_runner_pass": _empty_integrated_check("selected_runner_pass"),
+        "participant_runtime_ready_at_turns": _empty_integrated_check(
+            "participant_runtime_ready_at_turns"
+        )
+        | {"turns": []},
+        "visible_turn_count": {
+            "status": "unproven",
+            "max_discussion_turns": None,
+            "participant_count": None,
+            "expected_visible_turns": None,
+            "visible_turns_posted": None,
+            "evidence_ref": None,
+        },
+        "visible_surface_pass": _empty_integrated_check("visible_surface_pass"),
+        "clean_transcript_pass": _empty_integrated_check("clean_transcript_pass"),
+        "visible_closeout_pass": _empty_integrated_check("visible_closeout_pass"),
+        "fallback_profile_pass": {
+            "status": "not_supplied",
+            "label": "fallback_profile_pass",
+            "diagnostic_only": True,
+            "full_kan_success": False,
+            "evidence_ref": None,
+            "missing_evidence": [],
+        },
+        "discussion_quality_pass": _empty_integrated_check("discussion_quality_pass"),
+        "final_labels": {},
+    }
+    if task_id != RUNFIX2_005_TASK_ID:
+        return report
+
+    report["status"] = "blocked"
+    if not isinstance(value, Mapping):
+        blockers.append(
+            _blocker(
+                code="integrated_discussion_proof_missing",
+                owner="operator",
+                message=(
+                    "plugin/RUNFIX2-005 requires explicit integrated_discussion_proof evidence."
+                ),
+            )
+        )
+        return report
+
+    proof = _json_object(value, label="plan.integrated_discussion_proof")
+    lifecycle = _integrated_lifecycle_report(proof.get("lifecycle"), blockers=blockers)
+    selected_runner = _integrated_selected_runner_report(
+        proof.get("selected_runner"), blockers=blockers
+    )
+    canonical = _integrated_canonical_speech_report(
+        proof.get("canonical_speech"),
+        selected_runner=selected_runner,
+        blockers=blockers,
+    )
+    runtime = _integrated_turn_runtime_report(
+        proof.get("grant_turn_runtime_readiness"), blockers=blockers
+    )
+    visible_turn_count = _integrated_visible_turn_count_report(
+        proof.get("visible_turns"), blockers=blockers
+    )
+    visible_surface = _integrated_visible_surface_report(
+        proof.get("visible_surface"), blockers=blockers
+    )
+    clean_transcript = _integrated_clean_transcript_report(
+        proof.get("clean_transcript"), blockers=blockers
+    )
+    visible_closeout = _integrated_visible_closeout_report(
+        proof.get("visible_closeout"), blockers=blockers
+    )
+    fallback = _integrated_fallback_report(proof.get("fallback_profile"))
+    discussion_quality = _integrated_discussion_quality_report(
+        proof.get("discussion_quality"), blockers=blockers
+    )
+    final_labels = _integrated_final_labels_report(
+        proof.get("final_labels"),
+        lifecycle=lifecycle,
+        selected_runner=selected_runner,
+        canonical=canonical,
+        runtime=runtime,
+        visible_surface=visible_surface,
+        clean_transcript=clean_transcript,
+        visible_closeout=visible_closeout,
+        fallback=fallback,
+        discussion_quality=discussion_quality,
+        blockers=blockers,
+    )
+
+    selected_runner_pass = dict(selected_runner)
+    selected_runner_pass["canonical_speech"] = canonical
+    if canonical["status"] != "proven":
+        selected_runner_pass["status"] = "blocked"
+        selected_runner_pass["pass"] = False
+
+    report.update(
+        {
+            "lifecycle_pass": lifecycle,
+            "selected_runner_pass": selected_runner_pass,
+            "participant_runtime_ready_at_turns": runtime,
+            "visible_turn_count": visible_turn_count,
+            "visible_surface_pass": visible_surface,
+            "clean_transcript_pass": clean_transcript,
+            "visible_closeout_pass": visible_closeout,
+            "fallback_profile_pass": fallback,
+            "discussion_quality_pass": discussion_quality,
+            "final_labels": final_labels,
+        }
+    )
+    required_reports = (
+        lifecycle,
+        selected_runner_pass,
+        runtime,
+        visible_turn_count,
+        visible_surface,
+        clean_transcript,
+        visible_closeout,
+        final_labels,
+    )
+    if all(item["status"] == "proven" for item in required_reports):
+        report["status"] = "proven"
+    return report
+
+
+def _empty_integrated_check(label: str) -> JsonObject:
+    return {"status": "unproven", "label": label, "pass": False, "evidence_ref": None}
+
+
+def _integrated_lifecycle_report(value: object, *, blockers: list[JsonObject]) -> JsonObject:
+    report = _empty_integrated_check("lifecycle_pass")
+    if not isinstance(value, Mapping):
+        _append_integrated_blocker(
+            blockers,
+            report,
+            code="integrated_lifecycle_missing",
+            message="integrated_discussion_proof.lifecycle evidence is required.",
+        )
+        return report
+    lifecycle = _json_object(value, label="plan.integrated_discussion_proof.lifecycle")
+    evidence_ref = _optional_string_value(lifecycle.get("evidence_ref"))
+    if evidence_ref is not None:
+        report["evidence_ref"] = evidence_ref
+    if lifecycle.get("lifecycle_pass") is True and evidence_ref is not None:
+        report["status"] = "proven"
+        report["pass"] = True
+        return report
+    _append_integrated_blocker(
+        blockers,
+        report,
+        code="integrated_lifecycle_unproven",
+        message="lifecycle.lifecycle_pass=true and lifecycle.evidence_ref are required.",
+    )
+    return report
+
+
+def _integrated_selected_runner_report(value: object, *, blockers: list[JsonObject]) -> JsonObject:
+    report = _empty_integrated_check("selected_runner_pass") | {
+        "selected_member": None,
+        "speaker_selected_event_id": None,
+        "runner_invocation_started_ref": None,
+        "runner_invocation_succeeded_ref": None,
+        "durable_runner_failure_ref": None,
+    }
+    if not isinstance(value, Mapping):
+        _append_integrated_blocker(
+            blockers,
+            report,
+            code="integrated_selected_runner_missing",
+            message="integrated_discussion_proof.selected_runner evidence is required.",
+        )
+        return report
+    runner = _json_object(value, label="plan.integrated_discussion_proof.selected_runner")
+    for key in (
+        "selected_member",
+        "speaker_selected_event_id",
+        "runner_invocation_started_ref",
+        "runner_invocation_succeeded_ref",
+        "durable_runner_failure_ref",
+        "evidence_ref",
+    ):
+        item = _optional_string_value(runner.get(key))
+        if item is not None:
+            report[key] = item
+    substitution = _integrated_substitution(runner)
+    if substitution is not None:
+        _append_integrated_blocker(
+            blockers,
+            report,
+            code="integrated_selected_runner_substituted",
+            message=(
+                "selected_runner_pass cannot be satisfied by fallback/manual, transcript, "
+                "export, gateway-only, or delivery-only evidence."
+            ),
+        )
+    if _optional_string_value(runner.get("durable_runner_failure_ref")) is not None:
+        _append_integrated_blocker(
+            blockers,
+            report,
+            code="integrated_selected_runner_durable_failure",
+            message="Durable selected-runner failure blocks selected_runner_pass.",
+        )
+        return report
+    if substitution is not None:
+        return report
+    if (
+        _optional_string_value(runner.get("selected_member")) is not None
+        and _optional_string_value(runner.get("speaker_selected_event_id")) is not None
+        and _optional_string_value(runner.get("runner_invocation_succeeded_ref")) is not None
+        and runner.get("runner_invocation_succeeded") is True
+    ):
+        report["status"] = "proven"
+        report["pass"] = True
+        return report
+    if _optional_string_value(runner.get("runner_invocation_started_ref")) is not None:
+        _append_integrated_blocker(
+            blockers,
+            report,
+            code="integrated_selected_runner_started_only",
+            message="Selected-runner started evidence is not selected-runner success.",
+        )
+        return report
+    _append_integrated_blocker(
+        blockers,
+        report,
+        code="integrated_selected_runner_unproven",
+        message=(
+            "selected_member, speaker_selected_event_id, and "
+            "runner_invocation_succeeded_ref are required."
+        ),
+    )
+    return report
+
+
+def _integrated_canonical_speech_report(
+    value: object,
+    *,
+    selected_runner: JsonObject,
+    blockers: list[JsonObject],
+) -> JsonObject:
+    report = _empty_integrated_check("canonical_speech_linkage") | {
+        "speaker_selected_event_id": None,
+        "speech_event_id": None,
+        "speaker": None,
+    }
+    if not isinstance(value, Mapping):
+        _append_integrated_blocker(
+            blockers,
+            report,
+            code="integrated_canonical_speech_missing",
+            message="integrated_discussion_proof.canonical_speech evidence is required.",
+        )
+        return report
+    link = _json_object(value, label="plan.integrated_discussion_proof.canonical_speech")
+    for key in ("speaker_selected_event_id", "speech_event_id", "speaker", "evidence_ref"):
+        item = _optional_string_value(link.get(key))
+        if item is not None:
+            report[key] = item
+    if _integrated_substitution(link) is not None:
+        _append_integrated_blocker(
+            blockers,
+            report,
+            code="integrated_canonical_speech_substituted",
+            message="Canonical speech linkage cannot be satisfied by fallback/manual evidence.",
+        )
+        return report
+    selected_event = selected_runner.get("speaker_selected_event_id")
+    selected_member = selected_runner.get("selected_member")
+    linked = (
+        _optional_string_value(link.get("speaker_selected_event_id")) is not None
+        and _optional_string_value(link.get("speech_event_id")) is not None
+        and _optional_string_value(link.get("speaker")) is not None
+        and link.get("speaker_selected_event_id") == selected_event
+        and link.get("speaker") == selected_member
+    )
+    if linked:
+        report["status"] = "proven"
+        report["pass"] = True
+        return report
+    _append_integrated_blocker(
+        blockers,
+        report,
+        code="integrated_canonical_speech_unlinked",
+        message=(
+            "canonical_speech must link the selected speaker_selected_event_id to "
+            "a speech_event_id for the selected member."
+        ),
+    )
+    return report
+
+
+def _integrated_turn_runtime_report(value: object, *, blockers: list[JsonObject]) -> JsonObject:
+    report = _empty_integrated_check("participant_runtime_ready_at_turns") | {"turns": []}
+    if not isinstance(value, list) or not value:
+        _append_integrated_blocker(
+            blockers,
+            report,
+            code="integrated_runtime_turns_missing",
+            message="grant_turn_runtime_readiness must list grant/turn-time readiness rows.",
+        )
+        return report
+    rows: list[JsonObject] = []
+    for index, item in enumerate(value):
+        if not isinstance(item, Mapping):
+            row: JsonObject = {"status": "blocked", "turn": None, "diagnostic": "row_invalid"}
+            rows.append(row)
+            blockers.append(
+                _blocker(
+                    code="integrated_runtime_turn_invalid",
+                    owner="control/operator",
+                    message=f"grant_turn_runtime_readiness[{index}] must be an object.",
+                )
+            )
+            continue
+        readiness = _json_object(
+            item, label=f"plan.integrated_discussion_proof.grant_turn_runtime_readiness[{index}]"
+        )
+        row = _integrated_runtime_turn_row(readiness, index=index, blockers=blockers)
+        rows.append(row)
+    report["turns"] = cast(list[JsonValue], rows)
+    if all(row["status"] == "proven" for row in rows):
+        report["status"] = "proven"
+        report["pass"] = True
+    return report
+
+
+def _integrated_runtime_turn_row(
+    readiness: JsonObject,
+    *,
+    index: int,
+    blockers: list[JsonObject],
+) -> JsonObject:
+    turn = readiness.get("turn")
+    event_ref = _optional_string_value(
+        readiness.get("speaker_selected_event_id") or readiness.get("grant_event_id")
+    )
+    evidence_ref = _optional_string_value(readiness.get("evidence_ref"))
+    row: JsonObject = {
+        "status": "proven",
+        "turn": _json_value_or_none(turn),
+        "speaker_selected_event_id": event_ref,
+        "evidence_ref": evidence_ref,
+        "diagnostics": [],
+    }
+    missing: list[str] = []
+    if evidence_ref is None:
+        missing.append("evidence_ref")
+    if event_ref is None:
+        missing.append("speaker_selected_event_id")
+    for key in (
+        "subscriber_present",
+        "cursor_ack_fresh",
+        "heartbeat_fresh",
+        "attendance_terminal_success",
+        "preparation_terminal_success",
+        "selected_runner_prerequisites_met",
+    ):
+        if readiness.get(key) is not True:
+            missing.append(key)
+    if readiness.get("current_only") is True:
+        row["status"] = "blocked"
+        cast(list[JsonValue], row["diagnostics"]).append("current_only_status")
+        blockers.append(
+            _blocker(
+                code="integrated_runtime_current_only",
+                owner="control/operator",
+                message="Current-only runtime status is not grant/turn-time readiness proof.",
+            )
+        )
+    if readiness.get("stale") is True or readiness.get("fresh") is False:
+        row["status"] = "blocked"
+        cast(list[JsonValue], row["diagnostics"]).append("stale")
+        blockers.append(
+            _blocker(
+                code="integrated_runtime_turn_stale",
+                owner="control/operator",
+                message=f"grant_turn_runtime_readiness[{index}] evidence is stale.",
+            )
+        )
+    if readiness.get("ambiguous") is True:
+        row["status"] = "blocked"
+        cast(list[JsonValue], row["diagnostics"]).append("ambiguous")
+        blockers.append(
+            _blocker(
+                code="integrated_runtime_turn_ambiguous",
+                owner="control/operator",
+                message=f"grant_turn_runtime_readiness[{index}] evidence is ambiguous.",
+            )
+        )
+    substitution = _integrated_substitution(readiness)
+    if substitution is not None:
+        row["status"] = "blocked"
+        cast(list[JsonValue], row["diagnostics"]).append(substitution["reason"])
+        blockers.append(
+            _blocker(
+                code="integrated_runtime_turn_substituted",
+                owner="control/operator",
+                message="Runtime readiness at turns cannot use substituted evidence.",
+            )
+        )
+    if missing:
+        row["status"] = "blocked"
+        row["missing"] = cast(list[JsonValue], missing)
+        blockers.append(
+            _blocker(
+                code="integrated_runtime_turn_unproven",
+                owner="control/operator",
+                message=(
+                    f"grant_turn_runtime_readiness[{index}] is missing: " + ", ".join(missing) + "."
+                ),
+            )
+        )
+    return row
+
+
+def _integrated_visible_turn_count_report(
+    value: object, *, blockers: list[JsonObject]
+) -> JsonObject:
+    report: JsonObject = {
+        "status": "unproven",
+        "max_discussion_turns": None,
+        "participant_count": None,
+        "expected_visible_turns": None,
+        "visible_turns_posted": None,
+        "evidence_ref": None,
+    }
+    if not isinstance(value, Mapping):
+        blockers.append(
+            _blocker(
+                code="integrated_visible_turn_count_missing",
+                owner="operator",
+                message="integrated_discussion_proof.visible_turns evidence is required.",
+            )
+        )
+        return report
+    turns = _json_object(value, label="plan.integrated_discussion_proof.visible_turns")
+    max_discussion_turns = _non_negative_int_or_none(turns.get("max_discussion_turns"))
+    participant_count = _non_negative_int_or_none(turns.get("participant_count"))
+    posted = _non_negative_int_or_none(turns.get("visible_turns_posted") or turns.get("posted"))
+    evidence_ref = _optional_string_value(turns.get("evidence_ref"))
+    expected = (
+        max_discussion_turns + participant_count + 2
+        if max_discussion_turns is not None and participant_count is not None
+        else None
+    )
+    supplied_expected = _non_negative_int_or_none(turns.get("expected_visible_turns"))
+    if expected is not None and supplied_expected is not None and supplied_expected != expected:
+        blockers.append(
+            _blocker(
+                code="integrated_visible_turn_expected_formula_mismatch",
+                owner="operator/control",
+                message=(
+                    "expected_visible_turns must equal max_discussion_turns + "
+                    "participant_count + 2."
+                ),
+            )
+        )
+    report.update(
+        {
+            "max_discussion_turns": max_discussion_turns,
+            "participant_count": participant_count,
+            "expected_visible_turns": expected,
+            "visible_turns_posted": posted,
+            "evidence_ref": evidence_ref,
+        }
+    )
+    if expected is not None and posted == expected and evidence_ref is not None:
+        report["status"] = "proven"
+        return report
+    blockers.append(
+        _blocker(
+            code="integrated_visible_turn_count_mismatch",
+            owner="operator/control",
+            message=(
+                "Visible turns posted must equal max_discussion_turns + "
+                "participant_count + 2 with evidence_ref."
+            ),
+        )
+    )
+    return report
+
+
+def _integrated_visible_surface_report(value: object, *, blockers: list[JsonObject]) -> JsonObject:
+    return _integrated_boolean_evidence_report(
+        value,
+        label="visible_surface_pass",
+        field="visible_surface_pass",
+        source_label="visible_surface",
+        missing_code="integrated_visible_surface_missing",
+        unproven_code="integrated_visible_surface_unproven",
+        message="visible_surface.visible_surface_pass=true and evidence_ref are required.",
+        blockers=blockers,
+    )
+
+
+def _integrated_clean_transcript_report(value: object, *, blockers: list[JsonObject]) -> JsonObject:
+    report = _integrated_boolean_evidence_report(
+        value,
+        label="clean_transcript_pass",
+        field="clean_transcript_pass",
+        source_label="clean_transcript",
+        missing_code="integrated_clean_transcript_missing",
+        unproven_code="integrated_clean_transcript_unproven",
+        message="clean_transcript.clean_transcript_pass=true and evidence_ref are required.",
+        blockers=blockers,
+    )
+    if isinstance(value, Mapping):
+        clean = _json_object(value, label="plan.integrated_discussion_proof.clean_transcript")
+        forbidden = (
+            clean.get("audit_ids_in_visible_text") is True
+            or clean.get("raw_ids_in_visible_text") is True
+        )
+        if forbidden:
+            _append_integrated_blocker(
+                blockers,
+                report,
+                code="integrated_clean_transcript_audit_ids_visible",
+                message="Clean transcript proof must keep audit IDs out of visible rows.",
+            )
+    return report
+
+
+def _integrated_visible_closeout_report(value: object, *, blockers: list[JsonObject]) -> JsonObject:
+    return _integrated_boolean_evidence_report(
+        value,
+        label="visible_closeout_pass",
+        field="visible_closeout_pass",
+        source_label="visible_closeout",
+        missing_code="integrated_visible_closeout_missing",
+        unproven_code="integrated_visible_closeout_unproven",
+        message="visible_closeout.visible_closeout_pass=true and evidence_ref are required.",
+        blockers=blockers,
+    )
+
+
+def _integrated_discussion_quality_report(
+    value: object, *, blockers: list[JsonObject]
+) -> JsonObject:
+    if value is None:
+        return {
+            "status": "not_supplied",
+            "label": "discussion_quality_pass",
+            "pass": False,
+            "evidence_ref": None,
+        }
+    return _integrated_boolean_evidence_report(
+        value,
+        label="discussion_quality_pass",
+        field="discussion_quality_pass",
+        source_label="discussion_quality",
+        missing_code="integrated_discussion_quality_invalid",
+        unproven_code="integrated_discussion_quality_unproven",
+        message=(
+            "discussion_quality.discussion_quality_pass=true and evidence_ref are required "
+            "when supplied."
+        ),
+        blockers=blockers,
+    )
+
+
+def _integrated_boolean_evidence_report(
+    value: object,
+    *,
+    label: str,
+    field: str,
+    source_label: str,
+    missing_code: str,
+    unproven_code: str,
+    message: str,
+    blockers: list[JsonObject],
+) -> JsonObject:
+    report = _empty_integrated_check(label)
+    if not isinstance(value, Mapping):
+        _append_integrated_blocker(
+            blockers,
+            report,
+            code=missing_code,
+            message=f"integrated_discussion_proof.{source_label} evidence is required.",
+        )
+        return report
+    evidence = _json_object(value, label=f"plan.integrated_discussion_proof.{source_label}")
+    evidence_ref = _optional_string_value(evidence.get("evidence_ref"))
+    if evidence_ref is not None:
+        report["evidence_ref"] = evidence_ref
+    if _integrated_substitution(evidence) is not None:
+        _append_integrated_blocker(
+            blockers,
+            report,
+            code=f"{unproven_code}_substituted",
+            message=f"integrated_discussion_proof.{source_label} uses substituted evidence.",
+        )
+        return report
+    if evidence.get(field) is True and evidence_ref is not None:
+        report["status"] = "proven"
+        report["pass"] = True
+        return report
+    _append_integrated_blocker(blockers, report, code=unproven_code, message=message)
+    return report
+
+
+def _integrated_fallback_report(value: object) -> JsonObject:
+    report: JsonObject = {
+        "status": "not_supplied",
+        "label": "fallback_profile_pass",
+        "diagnostic_only": True,
+        "full_kan_success": False,
+        "evidence_ref": None,
+        "missing_evidence": [],
+    }
+    if not isinstance(value, Mapping):
+        return report
+    fallback = _json_object(value, label="plan.integrated_discussion_proof.fallback_profile")
+    evidence_ref = _optional_string_value(fallback.get("evidence_ref"))
+    missing = _optional_string_list(fallback.get("missing_evidence"))
+    if evidence_ref is not None:
+        report["evidence_ref"] = evidence_ref
+    report["missing_evidence"] = cast(list[JsonValue], missing)
+    report["status"] = "diagnostic_only"
+    return report
+
+
+def _integrated_final_labels_report(
+    value: object,
+    *,
+    lifecycle: JsonObject,
+    selected_runner: JsonObject,
+    canonical: JsonObject,
+    runtime: JsonObject,
+    visible_surface: JsonObject,
+    clean_transcript: JsonObject,
+    visible_closeout: JsonObject,
+    fallback: JsonObject,
+    discussion_quality: JsonObject,
+    blockers: list[JsonObject],
+) -> JsonObject:
+    required = {
+        "lifecycle_pass": lifecycle["status"] == "proven",
+        "selected_runner_pass": (
+            selected_runner["status"] == "proven" and canonical["status"] == "proven"
+        ),
+        "participant_runtime_ready_at_turns": runtime["status"] == "proven",
+        "visible_surface_pass": visible_surface["status"] == "proven",
+        "clean_transcript_pass": clean_transcript["status"] == "proven",
+        "visible_closeout_pass": visible_closeout["status"] == "proven",
+        "fallback_profile_pass": fallback["status"] == "diagnostic_only",
+    }
+    if discussion_quality["status"] != "not_supplied":
+        required["discussion_quality_pass"] = discussion_quality["status"] == "proven"
+    report: JsonObject = {"status": "proven", "labels": {}, "collapsed": False}
+    if not isinstance(value, Mapping):
+        blockers.append(
+            _blocker(
+                code="integrated_final_labels_missing",
+                owner="operator",
+                message="integrated_discussion_proof.final_labels must keep labels separate.",
+            )
+        )
+        report["status"] = "blocked"
+        return report
+    labels = _json_object(value, label="plan.integrated_discussion_proof.final_labels")
+    if labels.get("collapsed") is True or labels.get("all_pass") is True:
+        blockers.append(
+            _blocker(
+                code="integrated_final_labels_collapsed",
+                owner="operator",
+                message="Final labels must not collapse evidence axes into one pass label.",
+            )
+        )
+        report["status"] = "blocked"
+        report["collapsed"] = True
+    output_labels: JsonObject = {}
+    for label, expected in required.items():
+        item = labels.get(label)
+        if not isinstance(item, Mapping):
+            blockers.append(
+                _blocker(
+                    code=f"integrated_final_label_{label}_missing",
+                    owner="operator",
+                    message=f"final_labels.{label} is required and must be separate.",
+                )
+            )
+            report["status"] = "blocked"
+            continue
+        label_value = _json_object(
+            item, label=f"plan.integrated_discussion_proof.final_labels.{label}"
+        )
+        passed = label_value.get("pass") is True
+        evidence_ref = _optional_string_value(label_value.get("evidence_ref"))
+        output_labels[label] = {
+            "pass": passed,
+            "evidence_ref": evidence_ref,
+        }
+        if passed != expected:
+            blockers.append(
+                _blocker(
+                    code=f"integrated_final_label_{label}_mismatch",
+                    owner="operator",
+                    message=f"final_labels.{label} must match its evidence-derived result.",
+                )
+            )
+            report["status"] = "blocked"
+        if passed and evidence_ref is None and label != "fallback_profile_pass":
+            blockers.append(
+                _blocker(
+                    code=f"integrated_final_label_{label}_evidence_missing",
+                    owner="operator",
+                    message=f"final_labels.{label}.evidence_ref is required when pass=true.",
+                )
+            )
+            report["status"] = "blocked"
+    report["labels"] = output_labels
+    return report
+
+
+def _append_integrated_blocker(
+    blockers: list[JsonObject],
+    report: JsonObject,
+    *,
+    code: str,
+    message: str,
+) -> None:
+    blockers.append(_blocker(code=code, owner="operator/control", message=message))
+    report["status"] = "blocked"
+    report["pass"] = False
+
+
+def _integrated_substitution(evidence: JsonObject) -> JsonObject | None:
+    flags: tuple[tuple[str, str], ...] = (
+        ("fallback_manual", "fallback/manual"),
+        ("manual_profile_only", "manual/fallback-profile-only"),
+        ("fallback_profile_only", "manual/fallback-profile-only"),
+        ("transcript_export_only", "transcript/export-only"),
+        ("gateway_only", "gateway-only"),
+        ("delivery_only", "delivery-only"),
+        ("current_only", "current-only"),
+    )
+    for key, kind in flags:
+        if evidence.get(key) is True:
+            return {"kind": kind, "reason": key}
+    evidence_kind = _optional_string_value(evidence.get("evidence_kind"))
+    normalized_kind = _normalized_integrated_evidence_kind(evidence_kind)
+    if normalized_kind is not None:
+        return {"kind": normalized_kind, "reason": cast(str, evidence_kind)}
+    return None
+
+
+def _normalized_integrated_evidence_kind(value: str | None) -> str | None:
+    if value is None:
+        return None
+    normalized = value.strip().lower().replace("_", "-")
+    substitutions = {
+        "fallback-manual": "fallback/manual",
+        "fallback/manual": "fallback/manual",
+        "manual-profile-only": "manual/fallback-profile-only",
+        "manual/fallback-profile-only": "manual/fallback-profile-only",
+        "fallback-profile-only": "manual/fallback-profile-only",
+        "fallback/profile-only": "manual/fallback-profile-only",
+        "transcript-export-only": "transcript/export-only",
+        "transcript/export-only": "transcript/export-only",
+        "gateway-only": "gateway-only",
+        "delivery-only": "delivery-only",
+        "current-only": "current-only",
+    }
+    return substitutions.get(normalized)
+
+
+def _json_value_or_none(value: object) -> JsonValue | None:
+    if value is None:
+        return None
+    try:
+        return cast(JsonValue, value)
+    except TypeError:
+        return None
+
+
+def _non_negative_int_or_none(value: object) -> int | None:
+    if isinstance(value, bool) or not isinstance(value, int) or value < 0:
+        return None
+    return value
 
 
 def _non_negative_int(value: object) -> int:

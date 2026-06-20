@@ -833,7 +833,7 @@ KAN_SURFACE_RENDER_PROJECTION: Final[dict[str, object]] = {
 KAN_DISCUSSION_ACTIVATION_PLAN: Final[dict[str, object]] = {
     "name": "kan_discussion_activation_plan",
     "description": (
-        "Build a deterministic pure/local RUNFIX-017 KAN discussion activation "
+        "Build a deterministic pure/local RUNFIX/RUNFIX2 KAN discussion activation "
         "planner/doctor report from explicit caller-provided evidence only. The "
         "tool performs no environment reads, socket discovery, daemon startup, "
         "CLI fallback, Discord/Hermes/profile/gateway inspection, or provider/"
@@ -851,7 +851,8 @@ KAN_DISCUSSION_ACTIVATION_PLAN: Final[dict[str, object]] = {
                     "explicit daemon/socket/config evidence, participant profiles, "
                     "parent-channel allow-list inheritance proof, planned changes, "
                     "rollback, verification commands, approval gates, and separated "
-                    "RUNFIX evidence labels, and optional live-visible surface readiness."
+                    "RUNFIX evidence labels, optional live-visible surface readiness, "
+                    "and optional RUNFIX2 integrated discussion proof evidence."
                 ),
                 "properties": {
                     "schema_version": {"type": "integer", "const": 1},
@@ -866,6 +867,7 @@ KAN_DISCUSSION_ACTIVATION_PLAN: Final[dict[str, object]] = {
                             "plugin/RUNFIX-015",
                             "plugin/RUNFIX-017",
                             "plugin/RUNFIX-019",
+                            "plugin/RUNFIX2-005",
                         ],
                     },
                     "control_dependency": {
@@ -1007,6 +1009,25 @@ KAN_DISCUSSION_ACTIVATION_PLAN: Final[dict[str, object]] = {
                             "parent-channel fallback, or raw message id alone must not satisfy "
                             "the guard. The planner reports blockers only and does not claim "
                             "runtime enforcement or live readiness."
+                        ),
+                    },
+                    "integrated_discussion_proof": {
+                        "type": "object",
+                        "additionalProperties": True,
+                        "description": (
+                            "Explicit-only plugin/RUNFIX2-005 integrated proof input. "
+                            "When task_id is plugin/RUNFIX2-005, it must separately prove "
+                            "lifecycle_pass, selected_runner_pass with runner invocation "
+                            "success plus canonical linked speech for the selected member, "
+                            "participant_runtime_ready_at_turns using grant/turn-time rows, "
+                            "visible turn count as max_discussion_turns + participant_count + 2, "
+                            "visible_surface_pass, clean_transcript_pass, visible_closeout_pass, "
+                            "diagnostic-only fallback_profile_pass, optional "
+                            "discussion_quality_pass, and final_labels that do not collapse "
+                            "those axes. Manual/fallback/profile, transcript/export, "
+                            "delivery-only, gateway-only, or current-only evidence cannot "
+                            "satisfy selected-runner, runtime, visible-surface, "
+                            "clean-transcript, or closeout proof."
                         ),
                     },
                     "evidence_labels": {

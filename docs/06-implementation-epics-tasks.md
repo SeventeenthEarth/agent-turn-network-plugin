@@ -220,7 +220,7 @@ Exit: an approved live-local KAN discussion can run with production-friendly def
 
 SOT: `docs/10-live-transport-sot.md`. Control companion SOT: `../../kkachi-agent-network-control/docs/24-live-transport-control-sot.md`.
 
-Dependency gate: `control/RUNFIX2-001` locks evidence/config semantics before implementation claims. `control/RUNFIX2-002` must fix selected-runner response generation before `plugin/RUNFIX2-005` can claim `selected_runner_pass`. `control/RUNFIX2-003` must define the lifecycle turn formula before `plugin/RUNFIX2-004` and `plugin/RUNFIX2-005` claim expected visible turn counts.
+Dependency gate: `control/RUNFIX2-001` locks evidence/config semantics before implementation claims. `control/RUNFIX2-002` is completed/control-local for selected-runner response generation and runner-success accounting before `plugin/RUNFIX2-005` can claim `selected_runner_pass`. `control/RUNFIX2-003` must define the lifecycle turn formula before `plugin/RUNFIX2-004` and `plugin/RUNFIX2-005` claim expected visible turn counts.
 
 | Task ID | Task Title | Task Status | Task Description |
 |---|---|---|---|

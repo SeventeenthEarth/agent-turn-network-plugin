@@ -865,6 +865,7 @@ KAN_DISCUSSION_ACTIVATION_PLAN: Final[dict[str, object]] = {
                             "plugin/RUNFIX-012",
                             "plugin/RUNFIX-015",
                             "plugin/RUNFIX-017",
+                            "plugin/RUNFIX-019",
                         ],
                     },
                     "control_dependency": {
@@ -873,8 +874,9 @@ KAN_DISCUSSION_ACTIVATION_PLAN: Final[dict[str, object]] = {
                         "description": (
                             "Explicit control dependency completion evidence. "
                             "RUNFIX-006/007/008/010/015/017 require control/RUNFIX-005; "
-                            "RUNFIX-012 requires control/RUNFIX-011 local "
-                            "participant-runtime readiness proof."
+                            "RUNFIX-012 requires control/RUNFIX-011 local participant-runtime "
+                            "readiness proof; "
+                            "RUNFIX-019 requires control/RUNFIX-018 registry reconciliation proof."
                         ),
                     },
                     "plugin_install": {
@@ -933,6 +935,20 @@ KAN_DISCUSSION_ACTIVATION_PLAN: Final[dict[str, object]] = {
                             "discussion_quality_pass; repeated orphan counts are diagnostics "
                             "only and do not synthesize stance_links[]. Missing or ambiguous "
                             "evidence remains unproven/blocked."
+                        ),
+                    },
+                    "daemon_registry_membership": {
+                        "type": "object",
+                        "additionalProperties": True,
+                        "description": (
+                            "Explicit loaded daemon registry membership or planned reconcile "
+                            "evidence for the selected moderator and participants. Missing "
+                            "principals require planned_reconcile=true, mapping_unambiguous=true, "
+                            "and wrapper_resolves=true; loaded principals require enabled=true "
+                            "and explicit evidence_ref; ambiguous or disabled principals block "
+                            "live-visible activation. Use moderator or "
+                            "selected_moderator_principal when the moderator is not also "
+                            "a participant row."
                         ),
                     },
                     "request_context": {

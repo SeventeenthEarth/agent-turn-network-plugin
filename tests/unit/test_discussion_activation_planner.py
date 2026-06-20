@@ -67,9 +67,37 @@ def complete_plan() -> dict[str, object]:
     }
 
 
+def daemon_registry_membership(
+    *,
+    in_loaded_registry: bool = True,
+    planned_reconcile: bool = False,
+    mapping_unambiguous: bool = True,
+    wrapper_resolves: bool = True,
+    enabled: bool | None = True,
+    evidence_ref: str | None = "control/registry/show",
+) -> dict[str, object]:
+    row: dict[str, object] = {
+        "principal": "macho",
+        "in_loaded_registry": in_loaded_registry,
+        "mapping_unambiguous": mapping_unambiguous,
+        "planned_reconcile": planned_reconcile,
+        "wrapper_resolves": wrapper_resolves,
+    }
+    if enabled is not None:
+        row["enabled"] = enabled
+    membership: dict[str, object] = {
+        "registry_loaded": True,
+        "participants": [row],
+    }
+    if evidence_ref is not None:
+        membership["evidence_ref"] = evidence_ref
+    return membership
+
+
 def complete_runfix_008_plan() -> dict[str, object]:
     plan = complete_plan()
     plan["task_id"] = "plugin/RUNFIX-008"
+    plan["daemon_registry_membership"] = daemon_registry_membership()
     plan["operator_evidence"] = {
         "runner": {
             "speaker_selected_event_id": "evt_select_1",
@@ -736,6 +764,180 @@ def test_discord_origin_runfix_010_defaults_to_live_visible_blocks_without_surfa
     } in report["blockers"]
 
 
+def test_runfix_010_accepts_unambiguous_registry_reconcile_plan() -> None:
+    plan = complete_runfix_008_plan()
+    plan["task_id"] = "plugin/RUNFIX-010"
+    plan["request_context"] = {"source": "discord_thread"}
+    plan["visible_surface_readiness"] = {
+        "surface_bound": True,
+        "parent_channel_id": "parent-123",
+        "thread_id": "thread-456",
+        "turn_posting_strategy": "selected_speaker_profile_send",
+        "turn_delivery_probe_ref": "discord/thread-turn-probe",
+        "visible_closeout_probe_ref": "discord/thread-closeout-probe",
+        "real_profile_gateway_replies": True,
+        "cli_actor_speech_only": False,
+        "visible_turns_expected": 15,
+        "visible_turns_posted": 15,
+        "evidence_ref": "discord/thread-visible-proof",
+    }
+    plan["daemon_registry_membership"] = daemon_registry_membership(
+        in_loaded_registry=False,
+        planned_reconcile=True,
+        mapping_unambiguous=True,
+        wrapper_resolves=True,
+    )
+
+    report = build_discussion_activation_plan(plan)
+
+    assert report["status"] == "ready_for_approval"
+    registry_report = report["daemon_registry_membership_report"]
+    assert isinstance(registry_report, dict)
+    assert registry_report["planned_reconcile"] == ["macho"]
+
+
+def test_runfix_010_blocks_ambiguous_registry_principal_mapping() -> None:
+    plan = complete_runfix_008_plan()
+    plan["task_id"] = "plugin/RUNFIX-010"
+    plan["request_context"] = {"source": "discord_thread"}
+    plan["visible_surface_readiness"] = {
+        "surface_bound": True,
+        "parent_channel_id": "parent-123",
+        "thread_id": "thread-456",
+        "turn_posting_strategy": "selected_speaker_profile_send",
+        "turn_delivery_probe_ref": "discord/thread-turn-probe",
+        "visible_closeout_probe_ref": "discord/thread-closeout-probe",
+        "real_profile_gateway_replies": True,
+        "cli_actor_speech_only": False,
+        "visible_turns_expected": 15,
+        "visible_turns_posted": 15,
+        "evidence_ref": "discord/thread-visible-proof",
+    }
+    plan["daemon_registry_membership"] = daemon_registry_membership(
+        in_loaded_registry=False,
+        planned_reconcile=True,
+        mapping_unambiguous=False,
+        wrapper_resolves=True,
+    )
+
+    report = build_discussion_activation_plan(plan)
+
+    assert report["status"] == "blocked"
+    blockers = report["blockers"]
+    assert isinstance(blockers, list)
+    assert {
+        "code": "daemon_registry_principal_ambiguous",
+        "owner": "control/operator",
+        "message": "principal macho mapping is not explicitly unambiguous.",
+    } in blockers
+
+
+def test_runfix_010_blocks_missing_registry_evidence_ref() -> None:
+    plan = complete_runfix_008_plan()
+    plan["task_id"] = "plugin/RUNFIX-010"
+    plan["request_context"] = {"source": "discord_thread"}
+    plan["visible_surface_readiness"] = {
+        "surface_bound": True,
+        "parent_channel_id": "parent-123",
+        "thread_id": "thread-456",
+        "turn_posting_strategy": "selected_speaker_profile_send",
+        "turn_delivery_probe_ref": "discord/thread-turn-probe",
+        "visible_closeout_probe_ref": "discord/thread-closeout-probe",
+        "real_profile_gateway_replies": True,
+        "cli_actor_speech_only": False,
+        "visible_turns_expected": 15,
+        "visible_turns_posted": 15,
+        "evidence_ref": "discord/thread-visible-proof",
+    }
+    plan["daemon_registry_membership"] = daemon_registry_membership(evidence_ref=None)
+
+    report = build_discussion_activation_plan(plan)
+
+    assert report["status"] == "blocked"
+    assert any(
+        blocker["code"] == "daemon_registry_evidence_ref_missing" for blocker in report["blockers"]
+    )
+
+
+def test_runfix_010_blocks_loaded_registry_principal_without_enabled_true() -> None:
+    plan = complete_runfix_008_plan()
+    plan["task_id"] = "plugin/RUNFIX-010"
+    plan["request_context"] = {"source": "discord_thread"}
+    plan["visible_surface_readiness"] = {
+        "surface_bound": True,
+        "parent_channel_id": "parent-123",
+        "thread_id": "thread-456",
+        "turn_posting_strategy": "selected_speaker_profile_send",
+        "turn_delivery_probe_ref": "discord/thread-turn-probe",
+        "visible_closeout_probe_ref": "discord/thread-closeout-probe",
+        "real_profile_gateway_replies": True,
+        "cli_actor_speech_only": False,
+        "visible_turns_expected": 15,
+        "visible_turns_posted": 15,
+        "evidence_ref": "discord/thread-visible-proof",
+    }
+    plan["daemon_registry_membership"] = daemon_registry_membership(enabled=None)
+
+    report = build_discussion_activation_plan(plan)
+
+    assert report["status"] == "blocked"
+    assert any(
+        blocker["code"] == "daemon_registry_principal_not_enabled" for blocker in report["blockers"]
+    )
+
+
+def test_runfix_010_checks_selected_moderator_when_not_participant() -> None:
+    plan = complete_runfix_008_plan()
+    plan["task_id"] = "plugin/RUNFIX-010"
+    plan["request_context"] = {"source": "discord_thread"}
+    plan["visible_surface_readiness"] = {
+        "surface_bound": True,
+        "parent_channel_id": "parent-123",
+        "thread_id": "thread-456",
+        "turn_posting_strategy": "selected_speaker_profile_send",
+        "turn_delivery_probe_ref": "discord/thread-turn-probe",
+        "visible_closeout_probe_ref": "discord/thread-closeout-probe",
+        "real_profile_gateway_replies": True,
+        "cli_actor_speech_only": False,
+        "visible_turns_expected": 15,
+        "visible_turns_posted": 15,
+        "evidence_ref": "discord/thread-visible-proof",
+    }
+    plan["daemon_registry_membership"] = daemon_registry_membership()
+    cast_membership = plan["daemon_registry_membership"]
+    assert isinstance(cast_membership, dict)
+    cast_membership["selected_moderator_principal"] = "moderator-only"
+
+    report = build_discussion_activation_plan(plan)
+
+    assert report["status"] == "blocked"
+    assert any(
+        blocker["code"] == "daemon_registry_required_principal_missing"
+        and "moderator-only" in blocker["message"]
+        for blocker in report["blockers"]
+    )
+
+
+def test_runfix_019_requires_control_runfix_018_and_registry_membership() -> None:
+    plan = complete_plan()
+    plan["task_id"] = "plugin/RUNFIX-019"
+    plan["control_dependency"] = {
+        "task_id": "control/RUNFIX-018",
+        "status": "local implementation proof",
+        "evidence_ref": "control/docs/roadmap.md#runfix-018",
+    }
+    plan["daemon_registry_membership"] = daemon_registry_membership()
+
+    report = build_discussion_activation_plan(plan)
+
+    assert report["status"] == "ready_for_approval"
+    assert report["behavior_task_id"] == "plugin/RUNFIX-019"
+    registry_report = report["daemon_registry_membership_report"]
+    assert isinstance(registry_report, dict)
+    assert registry_report["required"] is True
+    assert registry_report["ready"] is True
+
+
 def test_runfix_010_live_visible_ready_requires_real_profile_gateway_and_not_cli_actor_only() -> (
     None
 ):
@@ -762,6 +964,10 @@ def test_runfix_010_live_visible_ready_requires_real_profile_gateway_and_not_cli
     assert report["visible_surface_readiness_report"]["ready"] is True
     assert report["visible_surface_readiness_report"]["surface_bound"] is True
     assert report["visible_surface_readiness_report"]["turn_delivery_proven"] is True
+    registry_report = report["daemon_registry_membership_report"]
+    assert isinstance(registry_report, dict)
+    assert registry_report["ready"] is True
+    assert registry_report["present"] == ["macho"]
     assert report["final_report_contract"] == {
         "lifecycle": "kan_lifecycle_finalized true/false from daemon/control evidence",
         "discussion_quality": (

@@ -76,6 +76,12 @@ Default work must stay local and fake/injected only:
    `responds_to_event_id` remains a legacy display hint and never overrides
    `stance_links[]`.
 
+## Daemon registry membership gate
+
+Before any `council.new` for a live-visible or cross-team council, operator evidence must separate daemon registry authority from profile/Discord readiness. The selected moderator and each participant must be present/enabled in the loaded daemon registry, or the activation plan must provide `daemon_registry_membership.participants[]` entries showing an unambiguous planned control-owned reconcile for the exact approved roster. Discord allow-list membership, visible-author probes, gateway `running`, plugin tool visibility, and `DISCORD_ALLOW_BOTS=none` do not make a principal valid in the daemon registry.
+
+Accepted planned reconcile evidence needs at least: `principal`, `in_loaded_registry: false`, `planned_reconcile: true`, `mapping_unambiguous: true`, and `wrapper_resolves: true`. Ambiguous mapping, disabled existing principals, unresolved wrappers, or missing loaded-registry evidence block before `council.new`; the control-owned reconcile also validates invalid/reserved principal ids before registry mutation. Do not downgrade to artifact-only or daemon CLI actor speech unless the operator explicitly approves that different mode before session creation. Registry membership persists across council sessions; subscription, heartbeat, cursor ack, attendance/preparation, and selected-runner readiness remain session-scoped runtime gates.
+
 ## KAN council moderation hard rules
 
 For any live KAN council, the moderator must preserve the daemon-governed

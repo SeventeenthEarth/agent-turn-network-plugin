@@ -312,6 +312,7 @@ def test_discussion_activation_plan_schema_is_pure_local_doctor_tool() -> None:
             "plugin/RUNFIX-012",
             "plugin/RUNFIX-015",
             "plugin/RUNFIX-017",
+            "plugin/RUNFIX-019",
         ],
     }
     operator_evidence = plan_schema["properties"]["operator_evidence"]

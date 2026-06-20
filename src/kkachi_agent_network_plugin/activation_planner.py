@@ -20,6 +20,7 @@ RUNFIX_010_TASK_ID: Final = "plugin/RUNFIX-010"
 RUNFIX_012_TASK_ID: Final = "plugin/RUNFIX-012"
 RUNFIX_015_TASK_ID: Final = "plugin/RUNFIX-015"
 RUNFIX_017_TASK_ID: Final = "plugin/RUNFIX-017"
+RUNFIX_019_TASK_ID: Final = "plugin/RUNFIX-019"
 SUPPORTED_TASK_IDS: Final[frozenset[str]] = frozenset(
     {
         RUNFIX_006_TASK_ID,
@@ -29,6 +30,7 @@ SUPPORTED_TASK_IDS: Final[frozenset[str]] = frozenset(
         RUNFIX_012_TASK_ID,
         RUNFIX_015_TASK_ID,
         RUNFIX_017_TASK_ID,
+        RUNFIX_019_TASK_ID,
     }
 )
 TASK_ID: Final = RUNFIX_010_TASK_ID
@@ -36,6 +38,10 @@ CONTROL_DEPENDENCY_TASK_ID: Final = "control/RUNFIX-005"
 CONTROL_DEPENDENCY_STATUS: Final = "completed/local-control"
 RUNFIX_012_CONTROL_DEPENDENCY_TASK_ID: Final = "control/RUNFIX-011"
 RUNFIX_012_CONTROL_DEPENDENCY_STATUSES: Final[frozenset[str]] = frozenset(
+    {"local implementation proof", "completed/local-control", "local-control"}
+)
+RUNFIX_019_CONTROL_DEPENDENCY_TASK_ID: Final = "control/RUNFIX-018"
+RUNFIX_019_CONTROL_DEPENDENCY_STATUSES: Final[frozenset[str]] = frozenset(
     {"local implementation proof", "completed/local-control", "local-control"}
 )
 TOOL_NAME: Final = "kan_discussion_activation_plan"
@@ -59,7 +65,7 @@ def build_discussion_activation_plan(plan: Mapping[str, object]) -> JsonObject:
         raise ValueError(
             "plan.task_id must be plugin/RUNFIX-006, plugin/RUNFIX-007, "
             "plugin/RUNFIX-008, plugin/RUNFIX-010, plugin/RUNFIX-012, "
-            "plugin/RUNFIX-015, or plugin/RUNFIX-017"
+            "plugin/RUNFIX-015, plugin/RUNFIX-017, or plugin/RUNFIX-019"
         )
 
     blockers: list[JsonObject] = []
@@ -121,6 +127,13 @@ def build_discussion_activation_plan(plan: Mapping[str, object]) -> JsonObject:
         task_id=task_id,
         blockers=blockers,
     )
+    daemon_registry_membership = _daemon_registry_membership_report(
+        source.get("daemon_registry_membership"),
+        eligible_profiles=eligible_profiles,
+        task_id=task_id,
+        requested_output_mode=cast(str, visible_surface_readiness["requested_output_mode"]),
+        blockers=blockers,
+    )
     participant_runtime_readiness = _participant_runtime_readiness_report(
         source.get("participant_runtime_readiness"),
         control_dependency_value=source.get("control_dependency"),
@@ -164,6 +177,7 @@ def build_discussion_activation_plan(plan: Mapping[str, object]) -> JsonObject:
         "operator_evidence_report": operator_evidence,
         "requested_output_mode": visible_surface_readiness["requested_output_mode"],
         "visible_surface_readiness_report": visible_surface_readiness,
+        "daemon_registry_membership_report": daemon_registry_membership,
         "participant_runtime_readiness_report": participant_runtime_readiness,
         "visible_author_guard_report": visible_author_guard,
         "final_report_contract": _final_report_contract(),
@@ -193,6 +207,7 @@ def _behavior_task_id(task_id: str) -> str:
         RUNFIX_012_TASK_ID,
         RUNFIX_015_TASK_ID,
         RUNFIX_017_TASK_ID,
+        RUNFIX_019_TASK_ID,
     }:
         return task_id
     return RUNFIX_007_TASK_ID
@@ -203,6 +218,9 @@ def _validate_control_dependency(
 ) -> None:
     if task_id == RUNFIX_012_TASK_ID:
         _validate_runfix_012_control_dependency(value, blockers=blockers)
+        return
+    if task_id == RUNFIX_019_TASK_ID:
+        _validate_runfix_019_control_dependency(value, blockers=blockers)
         return
 
     if not isinstance(value, Mapping):
@@ -279,6 +297,46 @@ def _validate_runfix_012_control_dependency(value: object, *, blockers: list[Jso
                 code="control_dependency_evidence_missing",
                 owner="control",
                 message="control/RUNFIX-011 evidence_ref is required.",
+            )
+        )
+
+
+def _validate_runfix_019_control_dependency(value: object, *, blockers: list[JsonObject]) -> None:
+    if not isinstance(value, Mapping):
+        blockers.append(
+            _blocker(
+                code="control_dependency_missing",
+                owner="control",
+                message="control/RUNFIX-018 registry reconciliation evidence is required.",
+            )
+        )
+        return
+    dependency = _json_object(value, label="plan.control_dependency")
+    if dependency.get("task_id") != RUNFIX_019_CONTROL_DEPENDENCY_TASK_ID:
+        blockers.append(
+            _blocker(
+                code="control_dependency_task_mismatch",
+                owner="control",
+                message="control_dependency.task_id must be control/RUNFIX-018.",
+            )
+        )
+    if dependency.get("status") not in RUNFIX_019_CONTROL_DEPENDENCY_STATUSES:
+        blockers.append(
+            _blocker(
+                code="control_dependency_not_completed",
+                owner="control",
+                message=(
+                    "control/RUNFIX-018 must have local implementation proof, "
+                    "completed/local-control, or local-control status."
+                ),
+            )
+        )
+    if not _non_empty_string(dependency.get("evidence_ref")):
+        blockers.append(
+            _blocker(
+                code="control_dependency_evidence_missing",
+                owner="control",
+                message="control/RUNFIX-018 evidence_ref is required.",
             )
         )
 
@@ -467,6 +525,9 @@ def _profile_classification(
         row = {"profile": profile_name}
         if _non_empty_string(evidence_ref):
             row["evidence_ref"] = cast(str, evidence_ref)
+        principal = profile.get("principal")
+        if _non_empty_string(principal) and principal != profile_name:
+            row["principal"] = cast(str, principal)
         tools_visible = effective_discord.get("tools_visible")
         bot_to_bot_enabled = effective_discord.get("bot_to_bot_enabled")
         if tools_visible is None:
@@ -552,6 +613,194 @@ def _profile_remediation(
         "excluded": cast(list[JsonValue], excluded_profiles),
         "blocked": cast(list[JsonValue], blocked_profiles),
     }
+
+
+def _daemon_registry_membership_report(
+    value: object,
+    *,
+    eligible_profiles: Sequence[JsonObject],
+    task_id: str,
+    requested_output_mode: str,
+    blockers: list[JsonObject],
+) -> JsonObject:
+    required = task_id == RUNFIX_019_TASK_ID or (
+        task_id == RUNFIX_010_TASK_ID and requested_output_mode == "live_visible_thread"
+    )
+    required_principals = [
+        cast(str, profile.get("principal") or profile.get("profile"))
+        for profile in eligible_profiles
+        if _non_empty_string(profile.get("principal") or profile.get("profile"))
+    ]
+    report: JsonObject = {
+        "required": required,
+        "registry_loaded": False,
+        "evidence_ref": None,
+        "required_principals": cast(list[JsonValue], required_principals),
+        "present": [],
+        "planned_reconcile": [],
+        "blocked": [],
+        "ready": not required,
+    }
+    if not isinstance(value, Mapping):
+        if required:
+            blockers.append(
+                _blocker(
+                    code="daemon_registry_membership_missing",
+                    owner="control/operator",
+                    message=(
+                        "Live-visible council activation requires explicit loaded daemon "
+                        "registry membership evidence or an unambiguous planned reconcile."
+                    ),
+                )
+            )
+            report["ready"] = False
+        return report
+
+    membership = _json_object(value, label="plan.daemon_registry_membership")
+    report["registry_loaded"] = membership.get("registry_loaded") is True
+    if _non_empty_string(membership.get("evidence_ref")):
+        report["evidence_ref"] = cast(str, membership.get("evidence_ref"))
+    elif required:
+        _append_registry_block(
+            report,
+            blockers,
+            code="daemon_registry_evidence_ref_missing",
+            message="daemon_registry_membership.evidence_ref is required.",
+            required=required,
+        )
+    if membership.get("registry_loaded") is not True:
+        _append_registry_block(
+            report,
+            blockers,
+            code="daemon_registry_not_loaded",
+            message="daemon_registry_membership.registry_loaded must be true with evidence.",
+            required=required,
+        )
+
+    moderator = _optional_string_value(
+        membership.get("selected_moderator_principal") or membership.get("moderator")
+    )
+    if moderator is not None and moderator not in required_principals:
+        required_principals.append(moderator)
+        report["required_principals"] = cast(list[JsonValue], required_principals)
+
+    participants_value = membership.get("participants") or membership.get("members")
+    if not isinstance(participants_value, list):
+        _append_registry_block(
+            report,
+            blockers,
+            code="daemon_registry_participants_missing",
+            message="daemon_registry_membership.participants must list each planned principal.",
+            required=required,
+        )
+        return report
+
+    rows: dict[str, JsonObject] = {}
+    for index, item in enumerate(participants_value):
+        if not isinstance(item, Mapping):
+            _append_registry_block(
+                report,
+                blockers,
+                code="daemon_registry_participant_row_invalid",
+                message=f"daemon_registry_membership.participants[{index}] must be an object.",
+                required=required,
+            )
+            continue
+        row = _json_object(item, label=f"plan.daemon_registry_membership.participants[{index}]")
+        principal = _optional_string_value(row.get("principal") or row.get("member"))
+        if principal is None:
+            _append_registry_block(
+                report,
+                blockers,
+                code="daemon_registry_principal_missing",
+                message=f"daemon_registry_membership.participants[{index}].principal is required.",
+                required=required,
+            )
+            continue
+        if principal in rows:
+            _append_registry_block(
+                report,
+                blockers,
+                code="daemon_registry_principal_duplicate",
+                message=f"daemon_registry_membership has duplicate principal {principal}.",
+                required=required,
+            )
+            continue
+        rows[principal] = row
+
+    for principal in required_principals:
+        evidence_row = rows.get(principal)
+        if evidence_row is None:
+            _append_registry_block(
+                report,
+                blockers,
+                code="daemon_registry_required_principal_missing",
+                message=f"daemon registry evidence is missing required principal {principal}.",
+                required=required,
+            )
+            continue
+        if evidence_row.get("mapping_unambiguous") is not True:
+            _append_registry_block(
+                report,
+                blockers,
+                code="daemon_registry_principal_ambiguous",
+                message=f"principal {principal} mapping is not explicitly unambiguous.",
+                principal=principal,
+                required=required,
+            )
+            continue
+        if evidence_row.get("in_loaded_registry") is True:
+            if evidence_row.get("enabled") is not True:
+                _append_registry_block(
+                    report,
+                    blockers,
+                    code="daemon_registry_principal_not_enabled",
+                    message=(
+                        f"principal {principal} must have enabled=true in the loaded registry."
+                    ),
+                    principal=principal,
+                    required=required,
+                )
+                continue
+            cast(list[JsonValue], report["present"]).append(principal)
+            continue
+        if (
+            evidence_row.get("planned_reconcile") is True
+            and evidence_row.get("wrapper_resolves") is True
+        ):
+            cast(list[JsonValue], report["planned_reconcile"]).append(principal)
+            continue
+        _append_registry_block(
+            report,
+            blockers,
+            code="daemon_registry_reconcile_not_proven",
+            message=(
+                f"principal {principal} is absent from the loaded registry and lacks "
+                "planned_reconcile=true plus wrapper_resolves=true evidence."
+            ),
+            principal=principal,
+            required=required,
+        )
+
+    report["ready"] = bool(report["registry_loaded"]) and not report["blocked"]
+    return report
+
+
+def _append_registry_block(
+    report: JsonObject,
+    blockers: list[JsonObject],
+    *,
+    code: str,
+    message: str,
+    required: bool,
+    principal: str | None = None,
+) -> None:
+    blocked: JsonObject = {"code": code, "message": message}
+    if principal is not None:
+        blocked["principal"] = principal
+    cast(list[JsonValue], report["blocked"]).append(blocked)
+    if required:
+        blockers.append(_blocker(code=code, owner="control/operator", message=message))
 
 
 def _visible_surface_readiness_report(

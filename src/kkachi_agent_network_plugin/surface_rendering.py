@@ -40,6 +40,9 @@ SUPPORTED_DELIVERY_STATUSES: Final[frozenset[str]] = frozenset(
     {"posted", "failed", "pending_followup", "missing", "unproven", "missing/unproven"}
 )
 CURSOR_ORDER_PATTERN: Final = re.compile(r"^cur_(\d+)(?:_|$)")
+PROGRESS_FIELD_NAMES: Final[frozenset[str]] = frozenset(
+    {"visible_turn_index", "visible_turn_total"}
+)
 
 
 def render_surface_projection(projection: Mapping[str, object]) -> JsonObject:
@@ -71,9 +74,12 @@ def render_surface_projection(projection: Mapping[str, object]) -> JsonObject:
         event = cast(JsonObject, item["event"])
         event_type = cast(str, event["type"])
         payload = _mapping_or_empty(event.get("payload"), label=f"{event_type}.payload")
+        visible_label = _visible_label(event=event, payload=payload)
         if event_type == "session_created":
             rows.append(_session_created_row(item=item, payload=payload))
-            visible_transcript.append(_session_header_visible_row(event=event, payload=payload))
+            visible_transcript.append(
+                _session_header_visible_row(event=event, payload=payload, label=visible_label)
+            )
             linked_authority_configured = bool(
                 _mapping_or_empty(
                     payload.get("linked_authority"),
@@ -84,28 +90,28 @@ def render_surface_projection(projection: Mapping[str, object]) -> JsonObject:
         if event_type == "speaker_selected":
             grant = _speaker_grant_row(item=item, event=event, payload=payload)
             rows.append(grant)
-            visible_transcript.append(_speaker_grant_visible_row(grant))
+            visible_transcript.append(_speaker_grant_visible_row(grant, label=visible_label))
             floor_grants[(grant["turn"], cast(str, grant["member"]))] = grant
             continue
         if event_type == "speech":
             speech = _speech_row(item=item, event=event, payload=payload, grants=floor_grants)
             rows.append(speech)
-            visible_transcript.append(_speech_visible_row(speech))
+            visible_transcript.append(_speech_visible_row(speech, label=visible_label))
             continue
         if event_type == "draft_conclusion":
             draft = _draft_conclusion_row(item=item, event=event, payload=payload)
             rows.append(draft)
-            visible_transcript.append(_draft_conclusion_visible_row(draft))
+            visible_transcript.append(_draft_conclusion_visible_row(draft, label=visible_label))
             continue
         if event_type == "consensus_vote_requested":
             vote_request = _vote_request_row(item=item, event=event, payload=payload)
             rows.append(vote_request)
-            visible_transcript.append(_vote_request_visible_row(vote_request))
+            visible_transcript.append(_vote_request_visible_row(vote_request, label=visible_label))
             continue
         if event_type == "consensus_vote":
             vote = _vote_row(item=item, event=event, payload=payload)
             rows.append(vote)
-            visible_transcript.append(_vote_visible_row(vote))
+            visible_transcript.append(_vote_visible_row(vote, label=visible_label))
             continue
         if event_type in {"council_finalized", "council_unresolved", "session_cancelled"}:
             terminal_seen = True
@@ -117,7 +123,11 @@ def render_surface_projection(projection: Mapping[str, object]) -> JsonObject:
                 )
             )
             closeout = _terminal_visible_row(
-                item=item, event=event, payload=payload, require_closeout=require_terminal_closeout
+                item=item,
+                event=event,
+                payload=payload,
+                require_closeout=require_terminal_closeout,
+                label=visible_label,
             )
             if closeout is not None:
                 terminal_closeout_seen = True
@@ -350,50 +360,41 @@ def _terminal_rows(
 
 
 def _session_header_visible_row(
-    *, event: Mapping[str, object], payload: Mapping[str, object]
+    *, event: Mapping[str, object], payload: Mapping[str, object], label: str
 ) -> JsonObject:
-    moderator_value = event.get("from")
-    moderator = (
-        "moderator"
-        if moderator_value is None
-        else _required_string(moderator_value, label="session_created.from")
-    )
+    if event.get("from") is not None:
+        _required_string(event.get("from"), label="session_created.from")
     surface = _mapping_or_empty(payload.get("surface"), label="session_created.payload.surface")
     surface_kind = surface.get("kind")
     if surface_kind is not None:
-        surface_label = _required_string(surface_kind, label="session_created.payload.surface.kind")
-        text = f"Council session opened for {surface_label}."
-    else:
-        text = "Council session opened."
-    return {"kind": "header", "moderator": moderator, "text": text}
+        _required_string(surface_kind, label="session_created.payload.surface.kind")
+    text = "Council session opened."
+    return {"kind": "header", "label": label, "text": _visible_text(label, text)}
 
 
-def _speaker_grant_visible_row(row: Mapping[str, JsonValue]) -> JsonObject:
-    turn = row["turn"]
+def _speaker_grant_visible_row(row: Mapping[str, JsonValue], *, label: str) -> JsonObject:
+    _turn_value(row.get("turn"), label="floor_grant.turn")
     member = _required_string(row.get("member"), label="floor_grant.member")
+    text = f"Next speaker: {member}."
     return {
         "kind": "floor_grant",
-        "turn": turn,
-        "member": member,
-        "text": f"Turn {turn}: {member} has the floor.",
+        "label": label,
+        "text": _visible_text(label, text),
     }
 
 
-def _speech_visible_row(row: Mapping[str, JsonValue]) -> JsonObject:
-    turn = row["turn"]
+def _speech_visible_row(row: Mapping[str, JsonValue], *, label: str) -> JsonObject:
+    _turn_value(row.get("turn"), label="speech.turn")
     member = _required_string(row.get("member"), label="speech.member")
     content = _required_string(row.get("content"), label="speech.content")
     visible: JsonObject = {
         "kind": "speech",
-        "turn": turn,
-        "speaker": member,
+        "label": label,
         "speech": content,
     }
     contribution_type = row.get("contribution_type")
     if contribution_type is not None:
-        visible["contribution_type"] = _required_string(
-            contribution_type, label="speech.contribution_type"
-        )
+        _required_string(contribution_type, label="speech.contribution_type")
     relation_summary = _relation_summary(row.get("stance_links"))
     if relation_summary:
         visible["relation_summary"] = cast(list[JsonValue], relation_summary)
@@ -403,41 +404,39 @@ def _speech_visible_row(row: Mapping[str, JsonValue]) -> JsonObject:
     quality_warnings = _quality_warnings(row.get("quality_diagnostics"))
     if quality_warnings:
         visible["quality_warnings"] = cast(list[JsonValue], quality_warnings)
-    text_lines = [content]
-    if contribution_type is not None:
-        text_lines[0] = f"{text_lines[0]} [{visible['contribution_type']}]"
+    text_lines = [f"{member}: {content}"]
     text_lines.extend(relation_summary)
     text_lines.extend(claims_summary)
     text_lines.extend(f"Quality warning: {warning}" for warning in quality_warnings)
-    visible["text"] = "\n".join(text_lines)
+    visible["text"] = _visible_text(label, "\n".join(text_lines))
     return visible
 
 
-def _draft_conclusion_visible_row(row: Mapping[str, JsonValue]) -> JsonObject:
+def _draft_conclusion_visible_row(row: Mapping[str, JsonValue], *, label: str) -> JsonObject:
     draft_version = row["draft_version"]
     moderator = _required_string(row.get("moderator"), label="draft_closeout.moderator")
     content = _required_string(row.get("content"), label="draft_closeout.content")
     return {
         "kind": "draft_closeout",
-        "moderator": moderator,
-        "draft_version": draft_version,
-        "text": f"Draft closeout v{draft_version}: {content}",
+        "label": label,
+        "text": _visible_text(
+            label, f"{moderator} proposed draft closeout v{draft_version}: {content}"
+        ),
         "final": False,
     }
 
 
-def _vote_request_visible_row(row: Mapping[str, JsonValue]) -> JsonObject:
+def _vote_request_visible_row(row: Mapping[str, JsonValue], *, label: str) -> JsonObject:
     draft_version = row["draft_version"]
-    moderator = _required_string(row.get("moderator"), label="vote_request.moderator")
+    _required_string(row.get("moderator"), label="vote_request.moderator")
     return {
         "kind": "vote_request",
-        "moderator": moderator,
-        "draft_version": draft_version,
-        "text": f"Consensus vote requested for draft v{draft_version}.",
+        "label": label,
+        "text": _visible_text(label, f"Consensus vote requested for draft v{draft_version}."),
     }
 
 
-def _vote_visible_row(row: Mapping[str, JsonValue]) -> JsonObject:
+def _vote_visible_row(row: Mapping[str, JsonValue], *, label: str) -> JsonObject:
     draft_version = row["draft_version"]
     member = _required_string(row.get("member"), label="vote.member")
     vote = _required_string(row.get("vote"), label="vote.vote")
@@ -447,10 +446,9 @@ def _vote_visible_row(row: Mapping[str, JsonValue]) -> JsonObject:
         text = f"{text} Reason: {_required_string(reason, label='vote.reason')}"
     return {
         "kind": "vote",
-        "member": member,
-        "draft_version": draft_version,
+        "label": label,
         "vote": vote,
-        "text": text,
+        "text": _visible_text(label, text),
     }
 
 
@@ -460,6 +458,7 @@ def _terminal_visible_row(
     event: Mapping[str, object],
     payload: Mapping[str, object],
     require_closeout: bool,
+    label: str,
 ) -> JsonObject | None:
     status, evidence = _delivery_status(payload.get("surface_evidence"), label="surface_evidence")
     if status != "posted" or evidence is None:
@@ -470,22 +469,18 @@ def _terminal_visible_row(
         evidence=evidence, terminal_event_id=cast(str, item["event_id"])
     )
     event_type = cast(str, event["type"])
-    moderator_value = event.get("from")
-    moderator = (
-        "moderator"
-        if moderator_value is None
-        else _required_string(moderator_value, label=f"{event_type}.from")
-    )
+    moderator = "moderator"
+    if event.get("from") is not None:
+        moderator = _required_string(event.get("from"), label=f"{event_type}.from")
     if event_type == "council_finalized":
         summary = _required_string(
             payload.get("final_summary"), label="council_finalized.payload.final_summary"
         )
         visible: JsonObject = {
             "kind": "final_closeout",
-            "moderator": moderator,
+            "label": label,
             "outcome": "finalized",
-            "text": f"Final closeout: {summary}",
-            "evidence_pointer": _compact_evidence_pointer(evidence),
+            "text": _visible_text(label, f"{moderator} final closeout: {summary}"),
         }
         consensus = payload.get("consensus")
         if consensus is not None:
@@ -500,19 +495,128 @@ def _terminal_visible_row(
         )
         return {
             "kind": "final_closeout",
-            "moderator": moderator,
+            "label": label,
             "outcome": "unresolved",
-            "text": f"Unresolved closeout: {reason}",
-            "evidence_pointer": _compact_evidence_pointer(evidence),
+            "text": _visible_text(label, f"{moderator} unresolved closeout: {reason}"),
         }
     reason = _required_string(payload.get("reason"), label="session_cancelled.payload.reason")
     return {
         "kind": "final_closeout",
-        "moderator": moderator,
+        "label": label,
         "outcome": "cancelled",
-        "text": f"Cancelled closeout: {reason}",
-        "evidence_pointer": _compact_evidence_pointer(evidence),
+        "text": _visible_text(label, f"{moderator} cancelled closeout: {reason}"),
     }
+
+
+def _visible_label(*, event: Mapping[str, object], payload: Mapping[str, object]) -> str:
+    direct = _visible_progress_from_fields(
+        event,
+        payload,
+        labels=("event", f"{event.get('type', 'event')}.payload"),
+    )
+    if direct is not None:
+        return direct
+    nested = _visible_progress_from_nested(payload.get("discussion_lifecycle"))
+    if nested is not None:
+        return nested
+    return "[KAN]"
+
+
+def _visible_progress_from_fields(
+    *objects: Mapping[str, object], labels: tuple[str, ...]
+) -> str | None:
+    fields_present = [any(field in item for field in PROGRESS_FIELD_NAMES) for item in objects]
+    if not any(fields_present):
+        return None
+    progress_values: list[tuple[int, int]] = []
+    for item, label in zip(objects, labels, strict=True):
+        has_index = "visible_turn_index" in item
+        has_total = "visible_turn_total" in item
+        if not has_index and not has_total:
+            continue
+        if not has_index or not has_total:
+            raise ValueError(f"{label}.visible_turn progress requires index and total")
+        progress_values.append(
+            _visible_progress_pair(
+                index_value=item.get("visible_turn_index"),
+                total_value=item.get("visible_turn_total"),
+                label=label,
+            )
+        )
+    first = progress_values[0]
+    if any(value != first for value in progress_values[1:]):
+        raise ValueError("visible_turn progress fields are ambiguous")
+    return _format_visible_progress(*first)
+
+
+def _visible_progress_from_nested(value: object) -> str | None:
+    if value is None:
+        return None
+    if not isinstance(value, Mapping):
+        raise ValueError("discussion_lifecycle must be a JSON object when present")
+    lifecycle = require_json_object(value, label="discussion_lifecycle")
+    candidates: list[tuple[int, int]] = []
+    direct = _visible_progress_from_fields(
+        lifecycle,
+        labels=("discussion_lifecycle",),
+    )
+    if direct is not None:
+        # Re-parse to keep ambiguity checks between supported nested shapes exact.
+        candidates.append(
+            _visible_progress_pair(
+                index_value=lifecycle.get("visible_turn_index"),
+                total_value=lifecycle.get("visible_turn_total"),
+                label="discussion_lifecycle",
+            )
+        )
+    visible_turn = lifecycle.get("visible_turn")
+    if visible_turn is not None:
+        if not isinstance(visible_turn, Mapping):
+            raise ValueError("discussion_lifecycle.visible_turn must be a JSON object")
+        visible_turn_payload = require_json_object(
+            visible_turn, label="discussion_lifecycle.visible_turn"
+        )
+        has_index = "index" in visible_turn_payload
+        has_total = "total" in visible_turn_payload
+        if not has_index or not has_total:
+            raise ValueError("discussion_lifecycle.visible_turn progress requires index and total")
+        candidates.append(
+            _visible_progress_pair(
+                index_value=visible_turn_payload.get("index"),
+                total_value=visible_turn_payload.get("total"),
+                label="discussion_lifecycle.visible_turn",
+            )
+        )
+    if not candidates:
+        return None
+    first = candidates[0]
+    if any(candidate != first for candidate in candidates[1:]):
+        raise ValueError("discussion_lifecycle visible progress is ambiguous")
+    return _format_visible_progress(*first)
+
+
+def _visible_progress_pair(
+    *, index_value: object, total_value: object, label: str
+) -> tuple[int, int]:
+    if isinstance(index_value, bool) or not isinstance(index_value, int):
+        raise ValueError(f"{label}.visible_turn_index must be a non-negative integer")
+    if isinstance(total_value, bool) or not isinstance(total_value, int):
+        raise ValueError(f"{label}.visible_turn_total must be a positive integer")
+    if index_value < 0:
+        raise ValueError(f"{label}.visible_turn_index must be a non-negative integer")
+    if total_value <= 0:
+        raise ValueError(f"{label}.visible_turn_total must be a positive integer")
+    if index_value > total_value:
+        raise ValueError("visible_turn_index must not exceed visible_turn_total")
+    return index_value, total_value
+
+
+def _format_visible_progress(index: int, total: int) -> str:
+    return f"[KAN | T{index}/{total}]"
+
+
+def _visible_text(label: str, body: str) -> str:
+    return f"{label}\n{body}"
 
 
 def _speech_argument_field(value: object, *, field_name: str) -> JsonValue:
@@ -589,9 +693,10 @@ def _relation_summary(value: JsonValue | None) -> list[str]:
         stance = _required_string(item.get("stance"), label="speech.stance_links[].stance")
         target = item.get("target_claim_id")
         if target is None:
-            target = _required_string(
+            _required_string(
                 item.get("target_event_id"), label="speech.stance_links[].target_event_id"
             )
+            target = "referenced speech"
         else:
             target = _required_string(target, label="speech.stance_links[].target_claim_id")
         speaker = item.get("target_speaker")
@@ -599,9 +704,11 @@ def _relation_summary(value: JsonValue | None) -> list[str]:
             speaker = item.get("speaker")
         line = f"{stance} {target}"
         if speaker is not None:
-            line = (
-                f"{line} {_required_string(speaker, label='speech.stance_links[].target_speaker')}"
-            )
+            speaker_label = _required_string(speaker, label="speech.stance_links[].target_speaker")
+            if target == "referenced speech":
+                line = f"{line} by {speaker_label}"
+            else:
+                line = f"{line} {speaker_label}"
         rationale = item.get("rationale")
         if rationale is not None:
             line = f"{line}: {_required_string(rationale, label='speech.stance_links[].rationale')}"
@@ -814,27 +921,6 @@ def _validate_terminal_evidence_reference(
             raise ValueError("visible_closeout_evidence_mismatch")
     if not reference_seen:
         raise ValueError("visible_closeout_evidence_reference_missing")
-
-
-def _compact_evidence_pointer(evidence: Mapping[str, JsonValue]) -> str:
-    for key in (
-        "final_message_id",
-        "message_id",
-        "message_ref",
-        "kanban_comment_id",
-        "vault_decision_note",
-    ):
-        value = evidence.get(key)
-        if isinstance(value, str) and value.strip():
-            return value
-    value = evidence.get("evidence")
-    if isinstance(value, str) and value.strip():
-        return value
-    if isinstance(value, list) and value:
-        first = value[0]
-        if isinstance(first, str) and first.strip():
-            return first
-    raise ValueError("visible_closeout_evidence_pointer_missing")
 
 
 __all__ = ["SURFACE_PROJECTION_SCHEMA_VERSION", "render_surface_projection"]

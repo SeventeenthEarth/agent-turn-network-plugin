@@ -274,7 +274,14 @@ def test_surface_projection_renders_clean_visible_closeout_transcript_and_audit_
                     "session_id": "sess-visux",
                     "type": "speech",
                     "from": "seohwang",
-                    "payload": {"turn": 1, "speech": "Fail closed on missing final proof."},
+                    "payload": {
+                        "turn": 1,
+                        "speech": "Fail closed on missing final proof.",
+                        "visible_turn_index": 1,
+                        "visible_turn_total": 3,
+                        "runner_id": "runner-visible-hidden",
+                        "speech_event_id": "evt-speech-hidden",
+                    },
                 },
             },
             {
@@ -285,7 +292,14 @@ def test_surface_projection_renders_clean_visible_closeout_transcript_and_audit_
                     "session_id": "sess-visux",
                     "type": "draft_conclusion",
                     "from": "gongmyeong",
-                    "payload": {"draft_version": 1, "draft": "Ship with posted proof only."},
+                    "payload": {
+                        "draft_version": 1,
+                        "draft": "Ship with posted proof only.",
+                        "discussion_lifecycle": {
+                            "visible_turn": {"index": 2, "total": 3},
+                            "lifecycle_stage": "closeout",
+                        },
+                    },
                 },
             },
             {
@@ -321,6 +335,8 @@ def test_surface_projection_renders_clean_visible_closeout_transcript_and_audit_
                     "payload": {
                         "final_summary": "Approved with visible proof.",
                         "consensus": "approve",
+                        "visible_turn_index": 3,
+                        "visible_turn_total": 3,
                         "surface_evidence": {
                             "status": "posted",
                             "final_message_id": "msg-final",
@@ -348,18 +364,138 @@ def test_surface_projection_renders_clean_visible_closeout_transcript_and_audit_
         "vote",
         "final_closeout",
     ]
+    assert visible_transcript[2]["label"] == "[KAN | T1/3]"
+    assert visible_transcript[1]["text"] == "[KAN]\nNext speaker: seohwang."
+    assert (
+        visible_transcript[2]["text"]
+        == "[KAN | T1/3]\nseohwang: Fail closed on missing final proof."
+    )
+    assert visible_transcript[3]["label"] == "[KAN | T2/3]"
+    assert visible_transcript[3]["text"] == (
+        "[KAN | T2/3]\ngongmyeong proposed draft closeout v1: Ship with posted proof only."
+    )
+    assert visible_transcript[5]["text"] == (
+        "[KAN]\nseohwang voted approve on draft v1. Reason: Proof present."
+    )
     assert visible_transcript[-1] == {
         "kind": "final_closeout",
-        "moderator": "gongmyeong",
+        "label": "[KAN | T3/3]",
         "outcome": "finalized",
-        "text": "Final closeout: Approved with visible proof.",
+        "text": "[KAN | T3/3]\ngongmyeong final closeout: Approved with visible proof.",
         "consensus": "approve",
-        "evidence_pointer": "msg-final",
     }
-    assert all("cursor" not in row and "event_id" not in row for row in visible_transcript)
+    forbidden_visible_keys = {
+        "cursor",
+        "event_id",
+        "member",
+        "speaker",
+        "moderator",
+        "evidence_pointer",
+        "runner_id",
+        "speech_event_id",
+        "speaker_selected_event_id",
+    }
+    assert all(forbidden_visible_keys.isdisjoint(row) for row in visible_transcript)
+    visible_text = "\n".join(str(row["text"]) for row in visible_transcript)
+    assert "Next speaker: seohwang." in visible_text
+    assert "seohwang: Fail closed on missing final proof." in visible_text
+    assert "seohwang voted approve on draft v1." in visible_text
+    assert "gongmyeong final closeout: Approved with visible proof." in visible_text
+    for hidden_text in (
+        "sess-visux",
+        "evt-",
+        "cur_",
+        "msg-final",
+        "comment-final",
+        "runner-visible-hidden",
+        "speech_event_id",
+        "speaker_selected_event_id",
+        "thread-visux",
+    ):
+        assert hidden_text not in visible_text
     assert result["audit_log"][0]["cursor"] == "cur_000000000001_evt_session"
     assert result["audit_log"][-1]["event_id"] == "evt-final"
+    assert result["audit_log"][2]["evidence"]["speaker_selected_event_id"] == "evt-grant"
+    assert result["audit_log"][-2]["evidence"]["final_message_id"] == "msg-final"
     assert result["source_event_count"] == 7
+
+
+def test_surface_projection_fails_closed_for_malformed_visible_progress() -> None:
+    with pytest.raises(ValueError, match="visible_turn progress requires index and total"):
+        render_surface_projection(
+            {
+                "schema_version": 1,
+                "session_id": "sess-progress",
+                "events": [
+                    {
+                        "cursor": "cur_000000000001_evt_session",
+                        "event": {
+                            "event_id": "evt-session",
+                            "session_id": "sess-progress",
+                            "type": "session_created",
+                            "payload": {
+                                "visible_turn_index": 1,
+                            },
+                        },
+                    }
+                ],
+            }
+        )
+
+
+def test_surface_projection_fails_closed_for_ambiguous_nested_visible_progress() -> None:
+    with pytest.raises(ValueError, match="discussion_lifecycle visible progress is ambiguous"):
+        render_surface_projection(
+            {
+                "schema_version": 1,
+                "session_id": "sess-progress",
+                "events": [
+                    {
+                        "cursor": "cur_000000000001_evt_session",
+                        "event": {
+                            "event_id": "evt-session",
+                            "session_id": "sess-progress",
+                            "type": "session_created",
+                            "payload": {
+                                "discussion_lifecycle": {
+                                    "visible_turn_index": 1,
+                                    "visible_turn_total": 3,
+                                    "visible_turn": {"index": 2, "total": 3},
+                                }
+                            },
+                        },
+                    }
+                ],
+            }
+        )
+
+
+def test_surface_projection_remains_local_and_exposes_no_live_fallback() -> None:
+    result = render_surface_projection(
+        {
+            "schema_version": 1,
+            "session_id": "sess-local",
+            "events": [
+                {
+                    "cursor": "cur_000000000001_evt_session",
+                    "event": {
+                        "event_id": "evt-session",
+                        "session_id": "sess-local",
+                        "type": "session_created",
+                        "payload": {"surface": {"kind": "discord_thread"}},
+                    },
+                }
+            ],
+        }
+    )
+
+    assert result["live_readiness"] is False
+    assert result["order_authority"] == "daemon_cursor"
+    assert result["visible_transcript"] == [
+        {"kind": "header", "label": "[KAN]", "text": "[KAN]\nCouncil session opened."}
+    ]
+    assert "fallback" not in result
+    assert "delivery" not in result
 
 
 def test_surface_projection_closeout_mode_fails_closed_when_terminal_outcome_missing() -> None:
@@ -593,6 +729,50 @@ def test_surface_projection_renders_synthesis_with_multiple_claims_and_links() -
     ]
 
 
+def test_surface_projection_hides_raw_relation_event_ids_from_visible_summary() -> None:
+    raw_link = {
+        "target_event_id": "evt-speech-1",
+        "target_speaker": "macho",
+        "stance": "support",
+        "rationale": "Uses the prior event.",
+    }
+    projection = _argument_projection(
+        [
+            _speech_event(
+                order=3,
+                event_id="evt-speech-1",
+                turn=1,
+                speaker="macho",
+                speech="First speech by cursor order.",
+            ),
+            _speech_event(
+                order=5,
+                event_id="evt-speech-2",
+                turn=2,
+                speaker="seohwang",
+                speech="Support the previous speech without leaking its event id.",
+                extra_payload={
+                    "stance_links": [raw_link],
+                    "contribution_type": "support",
+                },
+            ),
+        ]
+    )
+
+    result = render_surface_projection(projection)
+
+    speech_row = result["audit_log"][4]
+    assert speech_row["stance_links"] == [raw_link]
+    visible = result["visible_transcript"][4]
+    assert visible["relation_summary"] == [
+        "support referenced speech by macho: Uses the prior event."
+    ]
+    visible_text = visible["text"]
+    assert "support referenced speech by macho: Uses the prior event." in visible_text
+    for hidden_text in ("evt-speech-1", "evt-", "cur_", "runner", "message_id"):
+        assert hidden_text not in visible_text
+
+
 def test_surface_projection_renders_quality_warning_without_rewriting_speech() -> None:
     diagnostics = {
         "severity": "warning",
@@ -625,7 +805,7 @@ def test_surface_projection_renders_quality_warning_without_rewriting_speech() -
     assert visible["quality_warnings"] == [
         "warning orphan_speech: Accepted in warn mode but missing relation links."
     ]
-    assert visible["text"].startswith("The original speech text must remain exact.")
+    assert visible["text"].startswith("[KAN]\nmacho: The original speech text must remain exact.")
 
 
 def test_surface_projection_renders_quality_warning_with_code_and_no_severity() -> None:
@@ -732,7 +912,11 @@ def test_surface_projection_argument_graph_respects_daemon_cursor_order() -> Non
     speech_rows = [row for row in result["audit_log"] if row["type"] == "speech"]
     assert [row["event_id"] for row in speech_rows] == ["evt-speech-1", "evt-speech-2"]
     visible_speech = [row for row in result["visible_transcript"] if row["kind"] == "speech"]
-    assert [row["speaker"] for row in visible_speech] == ["macho", "seohwang"]
+    assert [row["speech"] for row in visible_speech] == [
+        "First speech by cursor order.",
+        "Second speech by cursor order.",
+    ]
+    assert all("speaker" not in row for row in visible_speech)
 
 
 def _argument_projection(speech_events: list[dict[str, object]]) -> dict[str, object]:

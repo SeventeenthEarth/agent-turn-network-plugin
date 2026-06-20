@@ -127,7 +127,7 @@ Planned RUNFIX2 cross-repo sequence:
 
 | Global Order | Repo | Task ID | Task Status | Purpose |
 |---:|---|---|---|---|
-| 1 | control | RUNFIX2-001 | planned | Evidence/config semantics and terminal readiness model: production defaults may require the live path, while final pass labels remain evidence-derived and grant-time readiness is separated from stale post-final freshness. |
+| 1 | control | RUNFIX2-001 | completed/control-local | Evidence/config semantics and terminal readiness model: control local implementation separates status generation time from event-time readiness evaluation and keeps pass labels evidence-derived. Control KAH final gates, official review, and Blue acceptance passed; plugin-owned downstream consumption remains scoped to later RUNFIX2 tasks. |
 | 2 | control | RUNFIX2-002 | planned | Selected-runner Hermes adapter fix: response-generation command contract replaces delivery-only `send <prompt>` mismatch; runner success must link to canonical `speech`. |
 | 3 | control | RUNFIX2-003 | planned | Discussion lifecycle closeout: T0 moderator opening, T1..Tmax participant discussion, one participant closeout per participant, and final moderator summary/conclusion; expected visible turns are `max_discussion_turns + participant_count + 2`. |
 | 4 | plugin | RUNFIX2-004 | planned | Clean visible transcript rendering: visible Discord header becomes concise, e.g. `[KAN | T15/15]`, while audit/export keeps machine identifiers. |

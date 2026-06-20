@@ -112,6 +112,28 @@ RUNFIX evidence labels are mandatory in operator reports:
 | 18 | control | RUNFIX-018 | local implementation proof control dependency | Control KAH run `run-20260619T214003Z-8a2afe33923f` implements daemon-owned registry reconciliation for explicit `council.new` rosters. If a selected moderator/participant principal is missing from the loaded registry but the principal id is valid, non-reserved, and same-named wrapper resolution is unambiguous, the daemon adds the member to persistent `registry.yaml`, reloads, snapshots, and reports `registry_reconcile`; ambiguous, invalid, unresolved, or disabled principals fail closed before session creation. |
 | 19 | plugin | RUNFIX-019 | local implementation proof | Plugin KAH run `run-20260619T214004Z-4d1e54b7304a` extends `kan_discussion_activation_plan`, schema, operator guide, and bundled skills with explicit `daemon_registry_membership` evidence. Live-visible plans must show each eligible principal is loaded/enabled or has an unambiguous planned reconcile; ambiguous mapping, disabled principals, missing registry evidence, or unresolved wrappers block before `council.new` without downgrading to artifact-only or daemon CLI actor speech. |
 
+
+## RUNFIX2 discussion runtime usability hardening
+
+RUNFIX2 records the 2026-06-20 KLM/주유 live discussion feedback as a new five-PR hardening epic. It is a continuation of RUNFIX, but it does not erase RUNFIX evidence semantics. Operators and plugin tools must distinguish configuration intent from proof:
+
+- `visible_surface_enabled` / `visible_surface_required`, `participant_runtime_required`, and `selected_runner_required` may default to true in production/operator activation plans when the task scope approves them.
+- `visible_surface_pass`, `participant_runtime_live_ready`, `selected_runner_pass`, and `discussion_quality_pass` are evidence-derived report labels. They must not be forced true by config defaults, final lifecycle success, transcript/export existence, manual profile text, or Discord messages alone.
+- For finalized sessions, reports should separate current runtime freshness from grant/turn-time runtime readiness. A completed council naturally stops producing fresh heartbeat/ack evidence; stale post-final freshness is a diagnostic, not by itself proof that prerequisites were missing during the discussion.
+- `selected_runner_pass` requires daemon-selected runner success and linked canonical `speech`. A runner terminal failure such as `malformed_or_missing_response` remains a blocker until a later selected-runner invocation succeeds through the fixed adapter path.
+- Visible Discord messages should be short and audience-facing. Session ids, role/color labels, `speaker_selected_event_id`, `speech_event_id`, runner ids, and delivery/evidence details remain in audit/export/status surfaces.
+
+Planned RUNFIX2 cross-repo sequence:
+
+| Global Order | Repo | Task ID | Task Status | Purpose |
+|---:|---|---|---|---|
+| 1 | control | RUNFIX2-001 | planned | Evidence/config semantics and terminal readiness model: production defaults may require the live path, while final pass labels remain evidence-derived and grant-time readiness is separated from stale post-final freshness. |
+| 2 | control | RUNFIX2-002 | planned | Selected-runner Hermes adapter fix: response-generation command contract replaces delivery-only `send <prompt>` mismatch; runner success must link to canonical `speech`. |
+| 3 | control | RUNFIX2-003 | planned | Discussion lifecycle closeout: T0 moderator opening, T1..Tmax participant discussion, one participant closeout per participant, and final moderator summary/conclusion; expected visible turns are `max_discussion_turns + participant_count + 2`. |
+| 4 | plugin | RUNFIX2-004 | planned | Clean visible transcript rendering: visible Discord header becomes concise, e.g. `[KAN | T15/15]`, while audit/export keeps machine identifiers. |
+| 5 | plugin | RUNFIX2-005 | planned | Integrated live-local proof: approved bounded pilot proves selected-runner success, grant-time runtime readiness, expected visible turn count, clean transcript, visible closeout, and separated final evidence labels. |
+
+
 ### Profile and Discord eligibility policy
 
 KAN discussion channels are bot-to-bot-free by default. A profile whose effective Discord configuration allows bot-to-bot replies is excluded from the KAN discussion allow-list unless a later explicitly approved policy changes that rule. Activation planning must list candidate profiles as `eligible`, `excluded`, or `blocked/unknown`, with the reason for every exclusion. Eligible profiles only may be included in parent-channel allow-list dry-runs or applies.

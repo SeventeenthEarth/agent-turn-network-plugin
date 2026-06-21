@@ -12,6 +12,8 @@ Do not equate these three states:
 
 A live-visible KAN discussion preflight needs explicit evidence for all relevant layers. `kan_discussion_activation_plan` is pure/local and does not discover the environment by itself; if tool visibility, bot-to-bot state, allow-list inheritance, or visible author proof is not supplied as evidence, the correct planner result is `blocked` / `unknown`, even when the local operator has already verified those facts elsewhere.
 
+Cross-team participants do not need full pilot-acceptance proof before the first discussion attempt. They need a minimal start gate: valid roster/registry or unambiguous reconcile, profile/plugin surface, bot-to-bot-safe Discord posture, and a target visible surface. Runtime readiness, selected-runner proof, visible author linkage, visible turn counts, and final acceptance labels are collected during and after the discussion unless one of them exposes a true `start_blocker`.
+
 ## Evidence to collect before rerunning the planner
 
 For each participant profile, collect **and then copy these facts into the `kan_discussion_activation_plan` input**. Do not leave them as prose in the moderator's notes; the planner is pure/local and only evaluates caller-provided fields.

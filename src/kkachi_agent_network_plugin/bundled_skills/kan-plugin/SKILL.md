@@ -192,6 +192,18 @@ Participant response template:
 }
 ```
 
+## Runner stdout semantic framing contract
+
+Selected-runner participant and moderator wrappers must emit exactly one compact JSONL object on stdout for the canonical semantic response. Use one line, no markdown fence, and no surrounding prose. Put runtime diagnostics, wrapper logs, and provider warnings on stderr or in structured evidence fields; never wrap them around the stdout semantic record.
+
+Council speech runner stdout contract:
+
+```json
+{"type":"speech","payload":{"speech":"Visible participant answer only.","claims":[],"stance_links":[],"contribution_type":"support","new_axis_reason":null,"evidence":[]}}
+```
+
+Pretty/multiline JSON is compatibility input only: the control adapter may normalize it so real Hermes output does not fail solely on formatting, but prompts and bundled skills must still require compact JSONL. Delivery/fallback-only JSON remains adapter_command_mismatch, and malformed JSON remains malformed_or_missing_response.
+
 `speech` is the only human-visible answer text. `claims[]`,
 `stance_links[]`, `contribution_type`, `new_axis_reason`, and optional
 `evidence[]` are structured evidence fields. Do not substitute a simulated role
@@ -263,15 +275,34 @@ distinguish the mode in the task brief:
   turn-by-turn visibility is not guaranteed;
 - `artifact_only`: transcript/export artifacts only.
 
-If `live_visible_thread` cannot be proven, fail closed before session creation
-instead of silently running artifact-only. Required preflight evidence:
+For `live_visible_thread`, do not silently satisfy the request with artifact-only
+or daemon CLI actor speech. Also do not require final pilot-acceptance evidence
+before `council.new`. Classify findings into:
 
-- Discord thread id, or approved parent-channel fallback with `fallback_reason`;
-- turn-posting probe for selected-speaker/profile-send or the approved fallback
-  poster;
-- visible closeout probe;
-- `real_profile_gateway_replies: true`;
-- `cli_actor_speech_only: false`.
+- `start_blocker`: blocks `council.new`;
+- `runtime_evidence_pending`: collect during attendance, preparation,
+  poll/hand-raise, selected-runner, speech, delivery, and closeout;
+- `final_acceptance_unproven`: report as separated closeout labels.
+
+Only `start_blocker` findings block `council.new`: unavailable
+daemon/protocol/tool surface, missing or invalid roster, unresolved registry
+principals with no unambiguous control-owned reconcile, explicitly unavailable
+profile/plugin tool surface, missing target Discord surface, positively detected
+bot-to-bot or shared/default-author risk without approval, or unapproved
+provider/profile/gateway/auth/token mutation.
+
+Do not treat missing selected-runner proof, participant runtime freshness,
+same-path per-turn author linkage, visible turn counts, ARGUE relation counts,
+or discussion-quality proof as automatic start blockers. Track them as
+`runtime_evidence_pending` or `final_acceptance_unproven` and report them
+separately at closeout.
+
+Do not treat `kan_discussion_activation_plan.live_readiness=false` as a
+`council.new` blocker by itself. The planner is a pure/local doctor and never
+proves live readiness. If its `status` is `blocked`, classify each blocker:
+only `start_blocker` findings stop session creation. If evidence is missing but
+can be collected without profile/provider/gateway/auth/token mutation, collect
+the probe before asking the user.
 
 Final reports must not equate transcript/export success with a visible Discord
 discussion. Report these fields separately: `KAN lifecycle finalized`,

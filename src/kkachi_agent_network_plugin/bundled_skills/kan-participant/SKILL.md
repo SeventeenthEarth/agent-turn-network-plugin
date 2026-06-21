@@ -71,6 +71,18 @@ Required or expected fields:
 }
 ```
 
+## Runner stdout semantic framing contract
+
+When acting through a selected-runner wrapper, emit exactly one compact JSONL object on stdout for the canonical response. Use one line, no markdown fence, and no surrounding prose. Write runtime diagnostics, wrapper logs, and provider warnings to stderr or structured evidence fields, not around the stdout semantic record.
+
+Required stdout form for a council speech runner:
+
+```json
+{"type":"speech","payload":{"speech":"Visible participant answer only.","claims":[],"stance_links":[],"contribution_type":"support","new_axis_reason":null,"evidence":[]}}
+```
+
+Pretty/multiline JSON is compatibility input only: the control adapter may normalize it, but participant prompts must still ask for compact JSONL. Delivery/fallback-only JSON remains adapter_command_mismatch, and malformed JSON remains malformed_or_missing_response.
+
 Allowed `contribution_type` / stance vocabulary includes `support`, `challenge`, `refine`, `extend`, `synthesize`, `question`, `risk_addition`, `decision_frame`, and `new_axis` where supported by the tool schema.
 
 ## ARGUE quality rules

@@ -69,6 +69,68 @@ def test_bundled_kan_skill_ships_council_moderation_hard_rules() -> None:
         assert "repair forward with a moderator intervention" in normalized
 
 
+def test_bundled_kan_skills_split_start_blockers_from_runtime_evidence() -> None:
+    plugin_text = read_bundled_skill_text("kan-plugin")
+    moderator_text = read_bundled_skill_text("kan-moderator")
+    guide_text = (ROOT / "docs" / "09-skill-and-operator-guide.md").read_text(encoding="utf-8")
+    live_reference = (
+        ROOT
+        / "src"
+        / "kkachi_agent_network_plugin"
+        / "bundled_skills"
+        / "kan-moderator"
+        / "references"
+        / "live-visible-preflight-and-council-new.md"
+    ).read_text(encoding="utf-8")
+    cross_team_reference = (
+        ROOT
+        / "src"
+        / "kkachi_agent_network_plugin"
+        / "bundled_skills"
+        / "kan-moderator"
+        / "references"
+        / "cross-team-participant-preflight-evidence.md"
+    ).read_text(encoding="utf-8")
+
+    combined = "\n".join(
+        [plugin_text, moderator_text, guide_text, live_reference, cross_team_reference]
+    )
+    normalized = " ".join(combined.split())
+
+    for label in [
+        "`start_blocker`",
+        "`runtime_evidence_pending`",
+        "`final_acceptance_unproven`",
+    ]:
+        assert label in normalized
+
+    assert "Only `start_blocker` findings block `council.new`" in normalized
+    assert "do not automatically stop before `council.new`" in normalized
+    assert "Do not treat `kan_discussion_activation_plan.live_readiness=false`" in normalized
+    assert "selected-runner proof" in normalized
+    assert "participant runtime freshness" in normalized
+    assert "ARGUE relation counts" in normalized
+    assert "collect the probe before asking the user" in normalized
+    assert "Cross-team participants do not need full pilot-acceptance proof" in normalized
+
+
+def test_bundled_kan_skills_define_runner_jsonl_framing_contract() -> None:
+    plugin_text = read_bundled_skill_text("kan-plugin")
+    moderator_text = read_bundled_skill_text("kan-moderator")
+    participant_text = read_bundled_skill_text("kan-participant")
+    guide_text = (ROOT / "docs" / "09-skill-and-operator-guide.md").read_text(encoding="utf-8")
+    combined = "\n".join([plugin_text, moderator_text, participant_text, guide_text])
+    normalized = " ".join(combined.split())
+
+    assert "Runner stdout semantic framing contract" in normalized
+    assert "exactly one compact JSONL object on stdout" in normalized
+    assert "no markdown fence" in normalized
+    assert "no surrounding prose" in normalized
+    assert "Pretty/multiline JSON is compatibility input only" in normalized
+    assert "Delivery/fallback-only JSON remains adapter_command_mismatch" in normalized
+    assert "malformed JSON remains malformed_or_missing_response" in normalized
+
+
 def test_bundled_kan_skill_has_valid_hermes_frontmatter() -> None:
     for name in bundled_skill_names():
         text = read_bundled_skill_text(name)

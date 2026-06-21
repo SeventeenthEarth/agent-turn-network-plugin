@@ -30,7 +30,7 @@ Split a task only when the dependency, approval gate, failure domain, or reviewe
 
 The plugin may develop ahead of `kkachi-agent-network-control` only when a task can be completed against docs, local fakes, or control conformance fixtures. When a task requires a control daemon capability, command, feature flag, fixture, or delivery-evidence path that does not exist yet, keep or move that task to `blocked` instead of inventing plugin-side fallback behavior.
 
-Historical completed plugin tasks before the post-Release live-local work preserve their original short task IDs such as `SCAFF-1`, `DAEMN-1`, and `SKILL-2` for audit continuity. New post-Release cross-repo live-local epics use five-letter uppercase epic IDs and three-digit task IDs. When a capability spans control and plugin, both repositories use the same epic ID and one globally sequential task number stream; cite tasks with repo-qualified notation such as `control/RUNFIX-001` or `plugin/RUNFIX-002`. A repo-local roadmap may therefore skip numbers owned by the sibling repo.
+Historical completed plugin tasks before the post-Release live-local work preserve their original short task IDs such as `SCAFF-1`, `DAEMN-1`, and `SKILL-2` for audit continuity. New post-Release cross-repo live-local epics normally use five-letter uppercase epic IDs and three-digit task IDs. `HUN` is the user-approved exception for the Hermes Unified Network public rename task stream. When a capability spans control and plugin, both repositories use the same epic ID and one globally sequential task number stream; cite tasks with repo-qualified notation such as `control/RUNFIX-001` or `plugin/RUNFIX-002`. A repo-local roadmap may therefore skip numbers owned by the sibling repo.
 
 Use `docs/07-core-compatibility.md` as the compatibility SOT. The short rule is:
 
@@ -228,3 +228,22 @@ Dependency gate: `control/RUNFIX2-001` locks evidence/config semantics before im
 | RUNFIX2-005 | Integrated live-local discussion proof | local implementation proof | Local plugin implementation now supports explicit-only `integrated_discussion_proof` for RUNFIX2-005, with separated lifecycle, selected-runner, runtime-at-turns, visible-surface, clean-transcript, visible-closeout, fallback, discussion-quality, and final-label axes. Selected-runner proof requires runner success plus canonical linked speech for the selected member; per-turn runtime readiness must be grant/turn-time evidence; visible count validates the RUNFIX2 formula. Manual/profile fallback remains diagnostic-only and cannot repair selected-runner failure. `live_readiness` remains false; actual live pilot, Discord/daemon/profile/provider/gateway/auth/token mutation, production readiness, push, and broad rollout remain separately approval-bound. |
 
 Control-owned RUNFIX2 tasks are listed in the control roadmap: `control/RUNFIX2-001`, `control/RUNFIX2-002`, and `control/RUNFIX2-003`. Plugin rows here record only plugin-owned implementation/proof work and cross-repo dependency boundaries.
+
+## HUN: Hermes Unified Network public rename and runtime split
+
+Epic ID: `HUN`
+
+Exit: the plugin repository is public-ready under the Hermes Unified Network name with HUN-only package, manifest, tool, skill, docs, tests, and guardrails. This is a clean public rename: in-repository legacy aliases are not part of the compatibility contract. Live readiness, production activation, Discord delivery, package publication, hosted repository rename, and profile/provider/gateway/auth/token mutation remain separately approved scopes.
+
+| Task ID | Task Title | Task Status | Task Description |
+|---|---|---|---|
+| HUN-002 | Plugin naming SOT and roadmap lock | completed/docs-only | Added `docs/12-hermes-unified-network-plugin-naming-sot.md` to lock the plugin-side public naming contract: product `Hermes Unified Network`, short label `HUN`, repo `hun-plugin`, distribution `hermes-unified-network-plugin`, import package `hermes_unified_network_plugin`, manifest id `hermes-unified-network-plugin`, tool prefix `hun_`, bundled skills `hun-plugin` / `hun-moderator` / `hun-participant`, clean no-alias policy, and downstream plugin task sequence. This task does not rename source directories, mutate live profile/gateway/provider/auth/token state, publish packages, claim live readiness, or complete the repository-wide stale-reference sweep. |
+| HUN-004 | Plugin package and manifest rename | planned | Rename Python distribution/import package, plugin manifest, root entrypoint imports, package metadata, and plugin-load smoke to the HUN plugin naming contract. |
+| HUN-006 | Plugin tool API rename | planned | Rename Hermes tool schemas, handlers, tests, and contract docs to `hun_*` with no legacy aliases. |
+| HUN-008 | HUN activation planner evidence model | planned | Reconfirm activation planner fields under HUN names, including explicit vanilla Hermes profile/plugin visibility evidence and separated daemon/profile/visible-surface readiness. |
+| HUN-009 | HUN bundled skills rename and public rewrite | planned | Rename bundled skills to `hun-plugin`, `hun-moderator`, and `hun-participant`, fold moderation hard rules into `hun-moderator` unless separately approved, and rewrite packaged guidance for public operator use without private/internal release language. |
+| HUN-010 | Plugin public docs and package scrub | planned | Rewrite plugin docs, README, package metadata, examples, and operator guide for HUN-only wording and public release suitability. |
+| HUN-013 | Plugin HUN guardrails | planned | Add forbidden-term guardrails and plugin-load smoke checks so stale legacy and private terms cannot re-enter packaged source, docs, skills, or manifest content. |
+| HUN-014 | Cross-repo HUN final compatibility | planned | Final cross-repo stale-reference scan, HUN control/plugin compatibility proof, and release-readiness sync. |
+
+Control-owned HUN rows are listed in the control roadmap. Use repo-qualified task names when needed, for example `control/HUN-001` and `plugin/HUN-002`.

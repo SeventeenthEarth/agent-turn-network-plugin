@@ -18,6 +18,7 @@ Control daemon/CLI authority lives in `../../kkachi-agent-network-control/docs/`
 10. `09-skill-and-operator-guide.md` — bundled KAN skill install, enable, rollback, troubleshooting, and local isolated plugin-load smoke boundary
 11. `10-live-transport-sot.md` — plugin-side live transport SOT for `LTRAN` / `PARTC` / `SURFD`: main-agent CLI control, participant-agent plugin transport, member runtime response flow, daemon authority boundaries, completed docs-only `plugin/LTRAN-001` mapping, and control companion SOT dependencies
 12. `11-council-argument-graph-sot.md` — plugin-side `ARGUE` SOT for council argument graph schemas, selected participant response, fail-closed handler behavior, visible relation rendering, packaged guidance, and sequential control/plugin implementation DAG
+13. `12-hermes-unified-network-plugin-naming-sot.md` — plugin-side Hermes Unified Network naming SOT for `HUN`, package/import/tool/skill names, clean no-alias policy, and downstream plugin task sequencing
 
 ## Required Makefile targets
 

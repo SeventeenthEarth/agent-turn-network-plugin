@@ -31,10 +31,11 @@ kas:
   tailoring_mode: "profile_local_role_semantic_tailoring"
 workflow:
   graph: ".kkachi-workflow.yaml"
-  graph_id: "graph-kkachi-project-kkachi-agent-network-plugin-surfd001-20260614"
+  graph_id: "graph-kkachi-project-kkachi-agent-network-plugin-kas-v017-kah-v013-20260621"
   configured_by: "macho"
-  apply_event_id: "evt-001122"
-  approval_ref: "주군-discord-kan-plugin-kas-kah-reinstall-workflow-reconfigure-20260614"
+  apply_event_id: "evt-002514"
+  proposal_id: "gprop-000004"
+  approval_ref: "주군-discord-kan-plugin-workflow-graph-refresh-approval-20260621"
 live_transport:
   plugin_sot: "docs/10-live-transport-sot.md"
   control_sot: "../kkachi-agent-network-control/docs/24-live-transport-control-sot.md"

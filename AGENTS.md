@@ -60,8 +60,8 @@ requirements and not KAN runtime/operator skills. Do not mention or require prof
 Ordinary direct edits, tests, docs updates, and reviews may proceed from the repo
 SOT and the commands documented here.
 
-When an explicitly selected workflow helper is available, `.kkachi/` and
-`.kkachi-workflow.yaml` may be used as evidence/state helpers. If those helpers
+When an explicitly selected workflow helper is available, `.kkachi/` and the
+local ignored `.kkachi-workflow.yaml` may be used as evidence/state helpers. If those helpers
 are unavailable, record the direct-development evidence instead of blocking the
 work solely because KAS/KAH is absent.
 
@@ -116,25 +116,28 @@ Rules:
 Development-class work may use the optional workflow graph when explicitly selected:
 
 ```text
-intake -> sot -> roadmap -> task-classification -> plan -> vet -> ask -> implement -> enhance-test -> ai-slop-cleaner -> optimize -> docs-update -> verify -> color-review -> color-adjust -> octo-review -> octo-adjudication -> post-octo-adjust -> final
+intake -> sot -> roadmap -> task-classification -> plan -> vet -> ask -> implement -> enhance-test -> ai-slop-cleaner -> optimize -> docs -> verify -> review -> request-feedback-1 -> handle-feedback-1 -> mar-review -> second-color-review -> final
 ```
+
+The local applied graph id is `graph-kkachi-project-kkachi-agent-network-plugin-kas-v017-kah-v013-20260621` and the KAH apply event is `evt-002514`. The graph is intentionally local/ignored and aligns this repo with KAS v0.1.7 / KAH v0.1.13 workflow-managed surfaces and the MAR review lane.
 
 Plan-stage default:
 
 1. Produce plan evidence.
 2. Blue performs direct vet.
-3. Red performs official durable Kanban plan review.
+3. Red/Orange perform official durable Kanban plan review when KAS/KAH roadmap policy requires it.
 4. Requested changes return to the same planner lane.
-5. Implementation starts only after Blue + Red plan acceptance and the ask/authorization gate.
+5. Implementation starts only after required plan acceptance and the ask/authorization gate.
 
-Orange/Gray are not default plan-stage participants unless task-specific authority, risk, or 주군 requires them. They are normal participants for implementation/final color review.
+Gray is not a default plan-stage participant unless task-specific authority, risk, or 주군 requires it. Orange is the default PM/operator-value plan reviewer when KAS/KAH roadmap policy requires Red/Orange plan vet. Orange/Gray are normal participants for implementation/final color review.
 
 Color review rules:
 
 - Official KAN plugin color review uses 서황 Red, 종회 Orange, 만총 Gray, and Blue synthesis by 마초.
-- `delegate_task`, temporary helpers, and Octo/helper output are not official Red/Orange/Gray evidence.
+- `delegate_task`, temporary helpers, and helper output are not official Red/Orange/Gray evidence.
 - Color review converges through Blue synthesis, selected implementer-lane adjustment, rerun verification, and re-review until no valid requested changes remain.
-- GLM Octo is one official external review event unless waived or separately scoped. Octo feedback is adjudicated by Blue + color reviewers; valid findings then route through the selected implementer lane.
+- MAR review is the default independent review lane for development/implementation tasks unless 주군 explicitly waives or replaces it before start; required roles are `logic`, `security`, `arch`, `cve`, and `test_adequacy`.
+- Post-MAR color review is required for development/implementation tasks unless the task classification records a concrete not-applicable reason.
 
 ## Task classification
 
@@ -166,12 +169,12 @@ Do not substitute `codex exec` for a lane labeled `codex app-server`. If the app
 Use the repo Makefile targets rather than raw broad pytest when possible:
 
 ```bash
-kkachi-agent-helper graph validate --json
-kkachi-agent-helper project doctor --json
-kkachi-agent-skills doctor --workflow-graph --project /Users/draccoon/Workspace/SeventeenthEarth/kkachi/kkachi-agent-network-plugin --json
-make test-prepare
-make check-core-contract
-make test
+HOME=/Users/draccoon /Users/draccoon/.local/bin/kkachi-agent-helper-toolchain graph validate --file .kkachi-workflow.yaml --json
+HOME=/Users/draccoon /Users/draccoon/.local/bin/kkachi-agent-helper-toolchain project doctor --json
+HOME=/Users/draccoon /Users/draccoon/.local/bin/kkachi-agent-skills-toolchain doctor --project . --workflow-graph --json
+HOME=/Users/draccoon make test-prepare
+HOME=/Users/draccoon make check-core-contract
+HOME=/Users/draccoon make test
 ```
 
 `make test` expands to the project tiered targets and avoids duplicate-test-name import mismatch pitfalls seen with raw broad pytest in related KAN plugin workflows.

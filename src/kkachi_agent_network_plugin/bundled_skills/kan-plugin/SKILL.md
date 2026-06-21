@@ -62,8 +62,10 @@ Default work must stay local and fake/injected only:
    `visible_transcript` for operator-facing discussion text and keep raw
    cursor/event details in `audit_log`/`rows` evidence.
 6. Treat `kan_discussion_activation_plan` output as a dry-run planner/doctor
-   report only. It can prepare an approval-gated activation plan from explicit
-   evidence, but it never proves live readiness.
+   report only. It can prepare an activation plan from explicit evidence, but
+   it never proves live readiness. For a Discord-origin `live_visible_thread`
+   discussion whose start gate passes, `ready_to_start` means the moderator
+   should proceed to `council.new` without asking for another approval.
    For Discord-origin council requests, assume the operator expects
    `live_visible_thread` output unless they explicitly confirm `artifact_only`,
    `daemon_cli_actor_speech`, transcript-only, or export-only mode before
@@ -277,7 +279,9 @@ distinguish the mode in the task brief:
 
 For `live_visible_thread`, do not silently satisfy the request with artifact-only
 or daemon CLI actor speech. Also do not require final pilot-acceptance evidence
-before `council.new`. Classify findings into:
+before `council.new`. If the user has already asked for the KAN discussion and
+the start gate passes, do not ask for another approval; start the council.
+Classify findings into:
 
 - `start_blocker`: blocks `council.new`;
 - `runtime_evidence_pending`: collect during attendance, preparation,
@@ -357,7 +361,8 @@ operation or treat it as no-restart thread readiness.
 
 Reports must label fallback/manual profile evidence as `fallback_profile_pass`.
 That evidence never equals selected-speaker runner success or KAN live discussion
-readiness. Minimum readiness evidence remains approval-gated: selected-runner
+readiness. Minimum acceptance/live-readiness evidence remains evidence-gated, not
+start-approval-gated: selected-runner
 invocation from `speaker_selected`, selected-runner submitted canonical `speech`
 linkage, visible-surface evidence, ARGUE relation counts/diagnostics, and explicit
 production/non-scope disclaimers. Durable runner failure is a terminal-failure

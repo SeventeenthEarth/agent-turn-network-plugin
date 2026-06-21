@@ -5,7 +5,7 @@ This reference captures a reusable KAN moderator pattern from a Discord-origin r
 ## Correct operator sequence
 
 1. Load `kan-moderator` and `kan-plugin` guidance before acting.
-2. Confirm the requested output mode. Discord-origin “discuss / council” requests default to `live_visible_thread` unless the user explicitly approves `artifact_only` or `daemon_cli_actor_speech` before session creation.
+2. Confirm the requested output mode. Discord-origin “discuss / council” requests default to `live_visible_thread` unless the user explicitly approves `artifact_only` or `daemon_cli_actor_speech` before session creation. If the user already asked for the KAN discussion and the live-visible start gate passes, do not ask for another approval; start the council.
 3. Run daemon/tool health checks, but do not treat `kan_daemon_status ok=true` as sufficient live-discussion readiness. It proves daemon/protocol visibility only.
 4. Run `kan_discussion_activation_plan` with the relevant RUNFIX planning mode:
    - `plugin/RUNFIX-010` for live visible surface readiness: surface binding, turn-posting probe, visible closeout probe, real profile/gateway replies, and `cli_actor_speech_only=false`.
@@ -17,6 +17,7 @@ This reference captures a reusable KAN moderator pattern from a Discord-origin r
    - `final_acceptance_unproven`: proceed when the start gate passes, then report as a separated closeout label.
 6. Only `start_blocker` findings block `council.new`. A pure/local planner may report missing evidence because it cannot discover the environment. That is a probe or field-mapping task unless the missing evidence proves an unsafe or impossible start condition.
 7. Do not treat `kan_discussion_activation_plan.live_readiness=false` as a start blocker by itself; the planner never proves live readiness.
+8. `ready_to_start` means the moderator should proceed to `council.new`. `ready_for_approval` is not the live-visible discussion start signal; it applies only to apply/mutation or activation-planning scopes.
 
 ## Participant profile evidence that is not enough
 

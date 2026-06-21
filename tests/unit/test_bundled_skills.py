@@ -112,6 +112,9 @@ def test_bundled_kan_skills_split_start_blockers_from_runtime_evidence() -> None
     assert "ARGUE relation counts" in normalized
     assert "collect the probe before asking the user" in normalized
     assert "Cross-team participants do not need full pilot-acceptance proof" in normalized
+    assert "do not ask for another approval; start the council" in normalized
+    assert "`ready_to_start` means the moderator should proceed to `council.new`" in normalized
+    assert "`ready_for_approval` is not the live-visible discussion start signal" in normalized
 
 
 def test_bundled_kan_skills_define_runner_jsonl_framing_contract() -> None:

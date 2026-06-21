@@ -1167,7 +1167,8 @@ def test_runfix_010_accepts_unambiguous_registry_reconcile_plan() -> None:
 
     report = build_discussion_activation_plan(plan)
 
-    assert report["status"] == "ready_for_approval"
+    assert report["status"] == "ready_to_start"
+    assert report["additional_operator_approval_required"] is False
     registry_report = report["daemon_registry_membership_report"]
     assert isinstance(registry_report, dict)
     assert registry_report["planned_reconcile"] == ["macho"]
@@ -1336,7 +1337,9 @@ def test_runfix_010_live_visible_ready_requires_real_profile_gateway_and_not_cli
 
     report = build_discussion_activation_plan(plan)
 
-    assert report["status"] == "ready_for_approval"
+    assert report["status"] == "ready_to_start"
+    assert report["additional_operator_approval_required"] is False
+    assert report["start_authority"] == "discord_request_authorizes_live_visible_thread"
     assert report["requested_output_mode"] == "live_visible_thread"
     assert report["visible_surface_readiness_report"]["ready"] is True
     assert report["visible_surface_readiness_report"]["surface_bound"] is True

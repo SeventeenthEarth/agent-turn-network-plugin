@@ -30,7 +30,7 @@ Before `council.new` or any visible council run, separate preflight findings int
 2. `runtime_evidence_pending`: does not block `council.new`; collect it during attendance, preparation, poll/hand-raise, selected-runner, speech, visible delivery, and closeout.
 3. `final_acceptance_unproven`: does not block `council.new`; report it as a separated closeout label after the run.
 
-Discord-origin discussion requests default to `live_visible_thread`; artifact-only, transcript-only, export-only, or daemon CLI actor speech still requires explicit pre-session confirmation. Do not silently downgrade a Discord request, but do not require final pilot-acceptance proof before starting the council.
+Discord-origin discussion requests default to `live_visible_thread`; artifact-only, transcript-only, export-only, or daemon CLI actor speech still requires explicit pre-session confirmation. If the user has asked for a KAN discussion and the live-visible start gate passes, do not ask for another approval; start the council. Do not silently downgrade a Discord request, but do not require final pilot-acceptance proof before starting the council. `ready_to_start` means the moderator should proceed to `council.new`; `ready_for_approval` is not the live-visible discussion start signal.
 
 Only `start_blocker` findings block `council.new`. Treat these as start blockers:
 

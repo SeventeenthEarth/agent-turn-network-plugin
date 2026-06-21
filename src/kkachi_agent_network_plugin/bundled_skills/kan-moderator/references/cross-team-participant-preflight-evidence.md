@@ -14,6 +14,8 @@ A live-visible KAN discussion preflight needs explicit evidence for all relevant
 
 Cross-team participants do not need full pilot-acceptance proof before the first discussion attempt. They need a minimal start gate: valid roster/registry or unambiguous reconcile, profile/plugin surface, bot-to-bot-safe Discord posture, and a target visible surface. Runtime readiness, selected-runner proof, visible author linkage, visible turn counts, and final acceptance labels are collected during and after the discussion unless one of them exposes a true `start_blocker`.
 
+When 주군 or another user has already asked for the cross-team KAN discussion and the minimal start gate passes, do not ask for another approval; start the council. `ready_to_start` means the moderator should proceed to `council.new`; `ready_for_approval` is not the live-visible discussion start signal.
+
 ## Evidence to collect before rerunning the planner
 
 For each participant profile, collect **and then copy these facts into the `kan_discussion_activation_plan` input**. Do not leave them as prose in the moderator's notes; the planner is pure/local and only evaluates caller-provided fields.

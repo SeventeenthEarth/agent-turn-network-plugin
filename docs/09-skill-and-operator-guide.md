@@ -69,8 +69,10 @@ Default verification and operator rehearsal are local only:
    `visible_transcript` for operator-facing discussion text and keep raw
    cursor/event details in `audit_log`/`rows` evidence.
 6. Treat `kan_discussion_activation_plan` output as a dry-run planner/doctor
-   report only. It may classify readiness for explicit approval, but it never
-   proves live readiness or authorizes apply/pilot scope.
+   report only. It never proves live readiness or authorizes broad apply/pilot
+   scope. For a Discord-origin `live_visible_thread` discussion whose start gate
+   passes, `ready_to_start` means proceed to `council.new` without another
+   approval prompt.
 7. Treat ARGUE argument-graph support as static/fake/injected schema and tool
    contract coverage only. `claims[]`, `stance_links[]`, `contribution_type`,
    `new_axis_reason`, `evidence[]`, and `hand_raise.target_links[]` are
@@ -257,7 +259,7 @@ Final reports must keep these fields separate: `lifecycle_pass`, `selected_runne
 - Discussion activation requires an explicit dry-run plan before any apply step. The `kan_discussion_activation_plan` tool can build the planner/doctor report from caller-provided evidence: control daemon/socket/config evidence, participant profile list, selected Discord parent channel, effective Discord profile eligibility, planned allow-list/config changes, rollback, smoke commands, and approval boundary.
 - Profiles with effective bot-to-bot enabled Discord behavior are excluded from KAN discussion allow-lists by default. Report every excluded profile and reason/remediation; `allow_list_targets` must include eligible profiles only.
 - Visible-pilot surface policy is thread-preferred and parent-channel fallback allowed. Create or use a dedicated thread under the approved parent channel first. If thread creation/posting is unsupported, use the approved parent channel directly as a fallback, but record `fallback_reason` in the task brief, KAN surface metadata, visible closeout, and final report. Parent-channel fallback is not no-restart thread readiness, and manual participant messages remain diagnostic-only unless canonical KAN event linkage is also proven.
-- Discord-origin council requests default to `live_visible_thread` output. Do not silently satisfy a Discord thread request with artifact-only daemon CLI actor speech. If the operator explicitly asks for `artifact_only`, `daemon_cli_actor_speech`, or transcript/export-only output, record that confirmation before `council.new`; otherwise classify preflight findings before session creation.
+- Discord-origin council requests default to `live_visible_thread` output. Do not silently satisfy a Discord thread request with artifact-only daemon CLI actor speech. If the operator explicitly asks for `artifact_only`, `daemon_cli_actor_speech`, or transcript/export-only output, record that confirmation before `council.new`; otherwise classify preflight findings before session creation. When the user has already asked for the KAN discussion and the start gate passes, do not ask for another approval; start the council.
 - Use three preflight categories. `start_blocker` blocks `council.new`; `runtime_evidence_pending` is collected during attendance, preparation, selected-runner, speech, delivery, and closeout; `final_acceptance_unproven` is reported as separated closeout labels. Only `start_blocker` findings block `council.new`.
 - `start_blocker` findings are unavailable daemon/protocol/tool surface, missing or invalid roster, unresolved registry principals with no unambiguous control-owned reconcile, explicitly unavailable profile/plugin tool surface, missing target Discord surface, positively detected bot-to-bot or shared/default-author risk without approval, or unapproved provider/profile/gateway/auth/token mutation.
 - Missing selected-runner proof, participant runtime freshness, same-path per-turn author linkage, visible turn counts, ARGUE relation counts, and discussion-quality proof are not automatic start blockers. Track them as `runtime_evidence_pending` or `final_acceptance_unproven`, then report them separately at closeout.
@@ -267,7 +269,7 @@ Final reports must keep these fields separate: `lifecycle_pass`, `selected_runne
 - Fallback/manual participant messages may be useful diagnostic evidence, but they must be labeled `fallback_profile_pass` and must not be reported as selected-speaker runner success or KAN live discussion readiness.
 - `kan_discussion_activation_plan` always keeps `live_readiness: false`; it must not read env vars, inspect current Hermes/Discord/profile/gateway state, open sockets, shell out, start daemons, mutate profiles/gateway/Discord/auth/token/provider/model settings, or infer readiness from missing evidence. Do not treat `kan_discussion_activation_plan.live_readiness=false` as a `council.new` blocker by itself. If the planner returns `status: blocked`, do not automatically stop before `council.new`; classify each blocker first.
 
-Minimum live-local acceptance evidence remains approval-gated and includes: `runner_invocation_started` from `speaker_selected`, selected-runner submitted canonical `speech` linkage, visible-surface evidence, ARGUE relation counts/diagnostics, eligible-profile-only allow-list evidence, and explicit no-claim language for production activation. These labels gate acceptance/live-readiness claims, not the basic `council.new` start gate. Durable runner failure is a terminal-failure diagnostic and blocks `selected_runner_pass` / live-readiness claims unless a later task explicitly proves a new selected-runner success path.
+Minimum live-local acceptance evidence remains evidence-gated and includes: `runner_invocation_started` from `speaker_selected`, selected-runner submitted canonical `speech` linkage, visible-surface evidence, ARGUE relation counts/diagnostics, eligible-profile-only allow-list evidence, and explicit no-claim language for production activation. These labels gate acceptance/live-readiness claims, not the basic `council.new` start gate or a second approval prompt. Durable runner failure is a terminal-failure diagnostic and blocks `selected_runner_pass` / live-readiness claims unless a later task explicitly proves a new selected-runner success path.
 
 For `plugin/RUNFIX-008`, `kan_discussion_activation_plan` also exposes an
 `operator_evidence_report` from explicit caller-provided `operator_evidence`
@@ -316,8 +318,12 @@ For `plugin/RUNFIX-012`, the report adds
   prerequisites;
 - `visible_surface_proof`: remains separate from participant runtime evidence.
 
-`ready_for_approval` is only a bounded planner/operator status. It never means
-`live_readiness`, live Discord delivery, production activation, or broad rollout.
+`ready_to_start` is the live-visible discussion start signal: the moderator should
+proceed to `council.new` when the user already requested the discussion and no
+`start_blocker` remains. `ready_for_approval` is not the live-visible discussion
+start signal; it is only for bounded apply/mutation or activation-planning scope.
+Neither status means `live_readiness`, live Discord delivery, production
+activation, or broad rollout.
 
 ## Install guidance
 

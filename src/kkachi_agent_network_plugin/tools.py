@@ -524,7 +524,7 @@ def handle_discussion_activation_plan(
         payload = _coerce_args(args, allowed_keys=frozenset({"plan"}))
         plan = _required_json_object(payload.get("plan"), label="plan")
         data = build_discussion_activation_plan(plan)
-        ok = data["status"] == "ready_for_approval"
+        ok = data["status"] in {"ready_for_approval", "ready_to_start"}
         return _json_activation_plan(tool=tool, ok=bool(ok), data=data)
     except Exception as exc:  # noqa: BLE001 - Hermes handlers must never raise.
         return _json_error(tool, exc)

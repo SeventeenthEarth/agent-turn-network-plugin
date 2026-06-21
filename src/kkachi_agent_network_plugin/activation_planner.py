@@ -164,14 +164,30 @@ def build_discussion_activation_plan(plan: Mapping[str, object]) -> JsonObject:
             )
         )
 
+    requested_output_mode = cast(str, visible_surface_readiness["requested_output_mode"])
+    request_source = cast(str, visible_surface_readiness["request_source"])
     status = _status(
-        blockers=blockers, blocked_profiles=blocked_profiles, eligible_profiles=eligible_profiles
+        blockers=blockers,
+        blocked_profiles=blocked_profiles,
+        eligible_profiles=eligible_profiles,
+        requested_output_mode=requested_output_mode,
+        request_source=request_source,
+    )
+    additional_operator_approval_required = status == "ready_for_approval"
+    start_authority = (
+        "discord_request_authorizes_live_visible_thread"
+        if status == "ready_to_start"
+        else "explicit_operator_approval_required"
+        if status == "ready_for_approval"
+        else "blocked_or_not_ready"
     )
     return {
         "schema_version": ACTIVATION_PLAN_SCHEMA_VERSION,
         "task_id": task_id,
         "behavior_task_id": _behavior_task_id(task_id),
         "status": status,
+        "additional_operator_approval_required": additional_operator_approval_required,
+        "start_authority": start_authority,
         "live_readiness": False,
         "eligible_profiles": cast(list[JsonValue], eligible_profiles),
         "excluded_profiles": cast(list[JsonValue], excluded_profiles),
@@ -3536,11 +3552,15 @@ def _status(
     blockers: list[JsonObject],
     blocked_profiles: list[JsonObject],
     eligible_profiles: list[JsonObject],
+    requested_output_mode: str,
+    request_source: str,
 ) -> str:
     if any(blocker["code"] != "no_eligible_profiles" for blocker in blockers) or blocked_profiles:
         return "blocked"
     if blockers or not eligible_profiles:
         return "not_ready"
+    if requested_output_mode == "live_visible_thread" and request_source.startswith("discord"):
+        return "ready_to_start"
     return "ready_for_approval"
 
 

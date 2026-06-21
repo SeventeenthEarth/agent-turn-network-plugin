@@ -32,6 +32,12 @@ EXPECTED_TOOLS = [
     "kan_discord_send_message",
 ]
 
+EXPECTED_BUNDLED_SKILLS = [
+    "kan-plugin",
+    "kan-moderator",
+    "kan-participant",
+]
+
 
 def test_plugin_manifest_declares_fake_injected_tool_surface() -> None:
     manifest = yaml.safe_load((ROOT / "plugin.yaml").read_text(encoding="utf-8"))
@@ -64,6 +70,9 @@ def test_root_entrypoint_matches_hermes_directory_plugin_contract() -> None:
 
     assert [tool["name"] for tool in fake_ctx.registered_tools] == EXPECTED_TOOLS
     assert all(callable(tool["handler"]) for tool in fake_ctx.registered_tools)
+    assert [skill["name"] for skill in fake_ctx.registered_skills] == EXPECTED_BUNDLED_SKILLS
+    assert all(skill["path"].name == "SKILL.md" for skill in fake_ctx.registered_skills)
+    assert all(skill["path"].exists() for skill in fake_ctx.registered_skills)
     assert fake_ctx.registered_hooks == []
     assert fake_ctx.registered_commands == []
 
@@ -211,11 +220,15 @@ def _load_root_entrypoint() -> ModuleType:
 class FakePluginContext:
     def __init__(self) -> None:
         self.registered_tools: list[dict[str, Any]] = []
+        self.registered_skills: list[dict[str, Any]] = []
         self.registered_hooks: list[tuple[str, Any]] = []
         self.registered_commands: list[dict[str, Any]] = []
 
     def register_tool(self, **kwargs: Any) -> None:
         self.registered_tools.append(kwargs)
+
+    def register_skill(self, **kwargs: Any) -> None:
+        self.registered_skills.append(kwargs)
 
     def handler(self, name: str) -> Any:
         for tool in self.registered_tools:

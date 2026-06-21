@@ -222,16 +222,24 @@ Final reports must keep these fields separate: `lifecycle_pass`, `selected_runne
 `kkachi-agent-network-plugin` must ship the operator guidance needed to use its
 tool surface. Do not leave KAN runtime/operator guidance as ops-only,
 profile-local, or external-directory-only skills. The plugin package owns and
-registers these bundled companion skills together:
+registers these bundled companion skills together as read-only, plugin-qualified
+skills:
 
 - `kan-plugin`: plugin/operator surface and hard boundaries;
 - `kan-moderator`: council preflight, activation planning, lifecycle, visible-surface, and closeout duties;
 - `kan-participant`: selected-speaker and participant response duties.
 
-Treat a profile where plugin tools are enabled but these companion skills are
-absent, stale, or available only from an unrelated external skill directory as
-incomplete KAN plugin activation. Fix the plugin bundled-skill set or install
-flow instead of asking 주군 to provide extra manual field-mapping instructions.
+Canonical Hermes loads use the qualified names
+`kkachi-agent-network-plugin:kan-plugin`,
+`kkachi-agent-network-plugin:kan-moderator`, and
+`kkachi-agent-network-plugin:kan-participant`. Do not require flat
+profile-local copies for the normal KAN plugin path.
+
+Treat a profile where plugin tools are enabled but these companion skills cannot
+be loaded by plugin-qualified name, are stale, or are available only from an
+unrelated external skill directory as incomplete KAN plugin activation. Fix the
+plugin bundled-skill registration or package data instead of asking 주군 to
+provide extra manual field-mapping instructions.
 
 For `kan_discussion_activation_plan`, role skills must explicitly tell
 moderators to materialize collected evidence into planner fields such as
@@ -373,7 +381,7 @@ text is diagnostic-only and never full KAN success.
 
 ## Rollback guidance
 
-Rollback is local and reversible: remove the copied skill file or disable the
-profile entry that points at it, restore the previous plugin package version, and
-rerun the local make gates. Do not delete live Hermes state or modify daemon
-storage as part of SKILL-2 rollback.
+Rollback is local and reversible: restore the previous plugin package version or
+disable the plugin, then rerun the local make gates. Do not delete live Hermes
+state, mutate profile-local skill directories, or modify daemon storage as part
+of SKILL-2 rollback.

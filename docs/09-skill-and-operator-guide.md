@@ -12,7 +12,7 @@ src/kkachi_agent_network_plugin/bundled_skills/kan-moderator/SKILL.md
 src/kkachi_agent_network_plugin/bundled_skills/kan-participant/SKILL.md
 ```
 
-The package exposes import-safe resource helpers and registers these read-only plugin-provided skills when Hermes loads the plugin. A profile activation flow may also copy them from this bundled source into a flat profile skill directory when plain skill names are required. The bundled source remains canonical; ops external skill directories are not required for KAN plugin use.
+The package exposes import-safe resource helpers and registers these read-only plugin-provided skills when Hermes loads the plugin. Canonical activation loads them by plugin-qualified names such as `kkachi-agent-network-plugin:kan-plugin`, `kkachi-agent-network-plugin:kan-moderator`, and `kkachi-agent-network-plugin:kan-participant`; it must not require profile-local flat copies. The bundled source remains canonical; ops external skill directories are not required for KAN plugin use.
 
 This guide does not enable a live plugin, contact a daemon, modify the sibling
 control repo, or prove production activation, live plugin readiness, or live
@@ -220,10 +220,10 @@ visible Discord surface. Do not treat this operator guide, local isolated
 plugin-load smoke, or fake/injected fixture harness as live readiness.
 
 KAS does not install, own, activate, or gate KAN runtime/plugin/bundled-skill artifacts.
-The KAN plugin package owns the bundled guidance source; an explicitly approved
-Hermes/plugin activation flow may copy or register it into a profile, but KAN
-development and KAN use must not depend on profile-local KAS development phase
-skills being present.
+The KAN plugin package owns the bundled guidance source and exposes it through
+Hermes plugin-qualified skills. KAN development and KAN use must not depend on
+profile-local flat copies or profile-local KAS development phase skills being
+present.
 
 
 ## RUNFIX post-pilot guardrails (RUNFIX-014/RUNFIX-015/RUNFIX-016 proof, RUNFIX-017 candidate)
@@ -353,11 +353,11 @@ Before enabling, confirm:
 
 Rollback is local and reversible:
 
-1. Remove the copied `kan-plugin` skill from the non-live profile or test
-   fixture, or restore the previous copied text.
-2. Restore the previous plugin package revision/version.
-3. Confirm the profile no longer references the copied skill artifact.
-4. Rerun local verification.
+1. Restore the previous plugin package revision/version or disable the plugin in
+   the non-live profile/test fixture.
+2. Confirm plugin-qualified bundled skill loads no longer reference the reverted
+   package revision.
+3. Rerun local verification.
 
 Do not delete live Hermes state, daemon storage, Discord messages, tokens,
 gateway config, sockets, or localhost services as part of SKILL-2 rollback.
@@ -367,7 +367,7 @@ gateway config, sockets, or localhost services as part of SKILL-2 rollback.
 | Symptom | Likely cause | Safe response |
 | --- | --- | --- |
 | Bundled skill cannot be found | Package data missing or wrong resource name | Use `bundled_skill_names()` and `read_bundled_skill_text("kan-plugin")`; verify the package contains `bundled_skills/kan-plugin/SKILL.md`. |
-| Skill claims live readiness | Overclaiming docs or stale copied skill | Replace with the bundled skill text; SKILL-2 is fake/injected plus local isolated plugin-load smoke only. |
+| Skill claims live readiness | Overclaiming docs or stale bundled skill text | Restore the bundled skill text from the package source; SKILL-2 is fake/injected plus local isolated plugin-load smoke only. |
 | Slash commands appear | Manifest or entrypoint drift | Restore `provides_commands: []` and verify the root entrypoint registers no commands. |
 | `kan_session_status` appears | Unsupported session-status drift | Remove the surface until `session.status.read` fixture/protocol authority exists. |
 | ARGUE fields are dropped or inferred from legacy pointers | Contract drift or hidden state inference | Preserve explicit argument-graph fields verbatim and treat `responds_to_event_id` as display-only; do not infer state from Discord/Hermes order. |

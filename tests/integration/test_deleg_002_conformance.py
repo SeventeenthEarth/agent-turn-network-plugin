@@ -7,10 +7,10 @@ from typing import Any, cast
 
 import pytest
 
-from kkachi_agent_network_plugin.client import DaemonClient, StaticDaemonTransport
-from kkachi_agent_network_plugin.client.daemon import OP_COMMAND_SUBMIT
-from kkachi_agent_network_plugin.protocol import JsonObject, JsonValue
-from kkachi_agent_network_plugin.tools import handle_delegate_action, handle_delegate_new
+from hermes_unified_network_plugin.client import DaemonClient, StaticDaemonTransport
+from hermes_unified_network_plugin.client.daemon import OP_COMMAND_SUBMIT
+from hermes_unified_network_plugin.protocol import JsonObject, JsonValue
+from hermes_unified_network_plugin.tools import handle_delegate_action, handle_delegate_new
 
 CONTROL_CONFORMANCE_ROOT = (
     Path(__file__).resolve().parents[2].parent
@@ -235,7 +235,7 @@ def test_deleg_002_success_fixtures_submit_exact_fake_command_envelopes(
     assert body["request_id"] == request_fixture["request_id"]
     assert body["idempotency_key"] == _idempotency_key(request_fixture)
     assert body["client_metadata"] == {
-        "name": "kkachi-agent-network-plugin",
+        "name": "hermes-unified-network-plugin",
         "version": "0.1.0",
         "transport": "injected",
     }

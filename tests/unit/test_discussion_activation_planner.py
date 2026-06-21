@@ -4,8 +4,8 @@ import json
 
 import pytest
 
-from kkachi_agent_network_plugin.activation_planner import build_discussion_activation_plan
-from kkachi_agent_network_plugin.tools import handle_discussion_activation_plan
+from hermes_unified_network_plugin.activation_planner import build_discussion_activation_plan
+from hermes_unified_network_plugin.tools import handle_discussion_activation_plan
 
 
 def complete_plan() -> dict[str, object]:

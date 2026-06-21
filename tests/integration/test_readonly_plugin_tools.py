@@ -4,14 +4,14 @@ import json
 from collections.abc import Callable
 from typing import Any
 
-from kkachi_agent_network_plugin.client import DaemonClient, StaticDaemonTransport
-from kkachi_agent_network_plugin.client.daemon import (
+from hermes_unified_network_plugin.client import DaemonClient, StaticDaemonTransport
+from hermes_unified_network_plugin.client.daemon import (
     OP_DIAGNOSTICS_READ,
     OP_STATUS_READ,
     OP_STREAM_TAIL,
     OP_VERSION_READ,
 )
-from kkachi_agent_network_plugin.tools import register_tools
+from hermes_unified_network_plugin.tools import register_tools
 
 
 def test_fake_hermes_context_invokes_registered_readonly_handlers() -> None:

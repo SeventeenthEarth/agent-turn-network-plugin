@@ -35,7 +35,7 @@ def load_guardrails() -> ModuleType:
 def write_docs(root: Path, *, include_fail_closed: bool = True) -> None:
     docs = root / "docs"
     docs.mkdir()
-    skill = root / "src" / "kkachi_agent_network_plugin" / "bundled_skills" / "kan-plugin"
+    skill = root / "src" / "hermes_unified_network_plugin" / "bundled_skills" / "kan-plugin"
     skill.mkdir(parents=True)
     (skill / "SKILL.md").write_text(
         "---\n"
@@ -130,7 +130,7 @@ def test_docs_guardrails_reject_bundled_skill_without_frontmatter(tmp_path: Path
     skill = (
         tmp_path
         / "src"
-        / "kkachi_agent_network_plugin"
+        / "hermes_unified_network_plugin"
         / "bundled_skills"
         / "kan-plugin"
         / "SKILL.md"

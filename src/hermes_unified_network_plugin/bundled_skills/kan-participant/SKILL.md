@@ -6,7 +6,7 @@ author: 17번째 지구 Kkachi
 license: MIT
 metadata:
   hermes:
-    tags: [kan, kkachi-agent-network, participant, council, selected-speaker, argue]
+    tags: [kan, Hermes Unified Network, participant, council, selected-speaker, argue]
     related_skills: [kan-plugin]
 ---
 
@@ -16,7 +16,7 @@ Use this skill when you are a selected KAN participant, selected-speaker runner,
 
 ## Authority and boundary
 
-- Canonical KAN discussion/operator source: `kkachi-agent-network-plugin/src/kkachi_agent_network_plugin/bundled_skills/kan-plugin/SKILL.md`.
+- Canonical KAN discussion/operator source: `hermes-unified-network-plugin/src/hermes_unified_network_plugin/bundled_skills/kan-plugin/SKILL.md`.
 - The daemon owns council lifecycle, selection, stream cursors, speech events, and validation.
 - The participant must not simulate another member, substitute a role prompt, or turn wrapper/runtime logs into speech.
 - A Discord/Hermes chat message alone is not council speech. It must be submitted as canonical daemon `speech` through the selected participant path.

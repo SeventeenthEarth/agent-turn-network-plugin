@@ -11,8 +11,8 @@ from typing import Any
 import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
-PACKAGE_MODULE = "kkachi_agent_network_plugin"
-PACKAGE_NAME = "kkachi-agent-network-plugin"
+PACKAGE_MODULE = "hermes_unified_network_plugin"
+PACKAGE_NAME = "hermes-unified-network-plugin"
 EXPECTED_TOOLS = [
     "kan_daemon_status",
     "kan_compatibility_diagnostics",
@@ -173,7 +173,7 @@ def require_entrypoint(root: Path) -> None:
     try:
         sys.path[:] = entrypoint_sys_path()
         entrypoint = load_module(
-            entrypoint_path, "kkachi_agent_network_plugin_root_bootstrap", package_root=True
+            entrypoint_path, "hermes_unified_network_plugin_root_bootstrap", package_root=True
         )
     finally:
         sys.path[:] = previous_path

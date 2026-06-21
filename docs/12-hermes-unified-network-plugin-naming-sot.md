@@ -104,7 +104,7 @@ The rename must not change runtime authority:
 | Task | Repo | Status | Purpose |
 | --- | --- | --- | --- |
 | HUN-002 | plugin | completed/docs-only | Lock this plugin naming SOT and plugin roadmap entries. |
-| HUN-004 | plugin | planned | Rename Python distribution/import package, plugin manifest, entrypoint imports, and package-load smoke. |
+| HUN-004 | plugin | local implementation proof | Renamed Python distribution/import package, plugin manifest, entrypoint imports, package metadata/build/version/mypy paths, and package-load smoke under bounded local proof; HUN-006/HUN-009/HUN-010/HUN-013 remain deferred. |
 | HUN-006 | plugin | planned | Rename Hermes tool schemas, handlers, tests, and contract docs to `hun_*`. |
 | HUN-008 | plugin | planned | Reconfirm activation planner evidence fields under HUN names and vanilla Hermes profile/plugin visibility requirements. |
 | HUN-009 | plugin | planned | Rename bundled skills to `hun-plugin`, `hun-moderator`, and `hun-participant`, fold moderation hard rules into `hun-moderator` unless separately approved, and rewrite packaged guidance as public-safe operator guidance. |

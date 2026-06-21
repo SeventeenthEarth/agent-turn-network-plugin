@@ -1,4 +1,4 @@
-"""Bundled operator skill resources for kkachi-agent-network-plugin.
+"""Bundled operator skill resources for hermes-unified-network-plugin.
 
 The helpers in this module are import-safe: they expose packaged text resources
 only and never install files into a Hermes profile or discover live runtime

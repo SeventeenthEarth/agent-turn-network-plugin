@@ -2,14 +2,14 @@ from __future__ import annotations
 
 import pytest
 
-from kkachi_agent_network_plugin.client import DaemonClient, StaticDaemonTransport
-from kkachi_agent_network_plugin.client.daemon import (
+from hermes_unified_network_plugin.client import DaemonClient, StaticDaemonTransport
+from hermes_unified_network_plugin.client.daemon import (
     OP_COMMAND_SUBMIT,
     OP_STATUS_READ,
     OP_VERSION_READ,
 )
-from kkachi_agent_network_plugin.errors import DaemonCommandError, DaemonProtocolError
-from kkachi_agent_network_plugin.protocol import JsonObject
+from hermes_unified_network_plugin.errors import DaemonCommandError, DaemonProtocolError
+from hermes_unified_network_plugin.protocol import JsonObject
 
 BASE_RESPONSE: JsonObject = {
     "protocol_version": "kan-protocol-v1alpha0",

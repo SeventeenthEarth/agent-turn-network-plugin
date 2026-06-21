@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from kkachi_agent_network_plugin.discord_surface import (
+from hermes_unified_network_plugin.discord_surface import (
     DEFAULT_TEST_LABEL,
     DiscordMessageResult,
     DiscordMessageTarget,

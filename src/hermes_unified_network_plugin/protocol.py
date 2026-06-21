@@ -15,7 +15,7 @@ from typing import Final, TypeAlias, cast
 
 SUPPORTED_PROTOCOL_VERSION: Final = "kan-protocol-v1alpha0"
 COMMAND_ENVELOPE_VERSION: Final = "kan-command-envelope-v1alpha0"
-CLIENT_NAME: Final = "kkachi-agent-network-plugin"
+CLIENT_NAME: Final = "hermes-unified-network-plugin"
 CLIENT_VERSION: Final = "0.1.0"
 REQUIRED_FEATURE_GROUPS: Final[tuple[str, ...]] = (
     "version.read",

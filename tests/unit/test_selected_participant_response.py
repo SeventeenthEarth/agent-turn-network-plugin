@@ -7,14 +7,14 @@ from typing import Any, cast
 
 import pytest
 
-from kkachi_agent_network_plugin.client import DaemonClient, StaticDaemonTransport
-from kkachi_agent_network_plugin.client.daemon import (
+from hermes_unified_network_plugin.client import DaemonClient, StaticDaemonTransport
+from hermes_unified_network_plugin.client.daemon import (
     OP_COMMAND_SUBMIT,
     OP_STREAM_ACK,
     OP_VERSION_READ,
 )
-from kkachi_agent_network_plugin.protocol import JsonObject
-from kkachi_agent_network_plugin.tools import handle_selected_participant_response
+from hermes_unified_network_plugin.protocol import JsonObject
+from hermes_unified_network_plugin.tools import handle_selected_participant_response
 
 BASE_VERSION_WITH_PARTC: JsonObject = {
     "protocol_version": "kan-protocol-v1alpha0",

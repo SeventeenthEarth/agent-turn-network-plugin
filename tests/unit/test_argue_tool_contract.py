@@ -6,10 +6,10 @@ from collections.abc import Callable, Mapping
 from pathlib import Path
 from typing import Any, cast
 
-from kkachi_agent_network_plugin.client import DaemonClient, StaticDaemonTransport
-from kkachi_agent_network_plugin.client.daemon import OP_COMMAND_SUBMIT, OP_VERSION_READ
-from kkachi_agent_network_plugin.protocol import JsonObject
-from kkachi_agent_network_plugin.tools import handle_council_command
+from hermes_unified_network_plugin.client import DaemonClient, StaticDaemonTransport
+from hermes_unified_network_plugin.client.daemon import OP_COMMAND_SUBMIT, OP_VERSION_READ
+from hermes_unified_network_plugin.protocol import JsonObject
+from hermes_unified_network_plugin.tools import handle_council_command
 
 CONTROL_CONFORMANCE_ROOT = (
     Path(__file__).resolve().parents[2].parent

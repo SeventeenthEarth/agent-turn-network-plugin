@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 import yaml
 
-from kkachi_agent_network_plugin.bundled_skills import (
+from hermes_unified_network_plugin.bundled_skills import (
     BUNDLED_SKILL_NAME,
     BUNDLED_SKILL_NAMES,
     bundled_skill_names,
@@ -76,7 +76,7 @@ def test_bundled_kan_skills_split_start_blockers_from_runtime_evidence() -> None
     live_reference = (
         ROOT
         / "src"
-        / "kkachi_agent_network_plugin"
+        / "hermes_unified_network_plugin"
         / "bundled_skills"
         / "kan-moderator"
         / "references"
@@ -85,7 +85,7 @@ def test_bundled_kan_skills_split_start_blockers_from_runtime_evidence() -> None
     cross_team_reference = (
         ROOT
         / "src"
-        / "kkachi_agent_network_plugin"
+        / "hermes_unified_network_plugin"
         / "bundled_skills"
         / "kan-moderator"
         / "references"

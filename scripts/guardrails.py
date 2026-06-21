@@ -47,7 +47,7 @@ FORBIDDEN_OPERATOR_CLAIMS = [
     "kan_session_status is supported",
     "provides_commands: [kan",
 ]
-BUNDLED_SKILL = "src/kkachi_agent_network_plugin/bundled_skills/kan-plugin/SKILL.md"
+BUNDLED_SKILL = "src/hermes_unified_network_plugin/bundled_skills/kan-plugin/SKILL.md"
 
 
 def read_required_docs(root: Path) -> str:

@@ -3,14 +3,14 @@ from __future__ import annotations
 import json
 import os
 
-import kkachi_agent_network_plugin as plugin
-from kkachi_agent_network_plugin.client import DaemonClient, StaticDaemonTransport
-from kkachi_agent_network_plugin.client.daemon import (
+import hermes_unified_network_plugin as plugin
+from hermes_unified_network_plugin.client import DaemonClient, StaticDaemonTransport
+from hermes_unified_network_plugin.client.daemon import (
     OP_STATUS_READ,
     OP_STREAM_TAIL,
     OP_VERSION_READ,
 )
-from kkachi_agent_network_plugin.tools import handle_daemon_status, handle_stream_tail
+from hermes_unified_network_plugin.tools import handle_daemon_status, handle_stream_tail
 
 
 def test_e2e_scaffold_uses_isolated_environment_only() -> None:

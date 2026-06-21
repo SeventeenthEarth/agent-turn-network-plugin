@@ -4,8 +4,8 @@ import json
 from collections.abc import Callable
 from typing import Any
 
-from kkachi_agent_network_plugin.discord_surface import DiscordMessageResult, DiscordMessageTarget
-from kkachi_agent_network_plugin.tools import register_tools
+from hermes_unified_network_plugin.discord_surface import DiscordMessageResult, DiscordMessageTarget
+from hermes_unified_network_plugin.tools import register_tools
 
 
 def test_fake_hermes_context_invokes_injected_discord_sender_once() -> None:

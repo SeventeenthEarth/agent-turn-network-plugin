@@ -6,7 +6,7 @@ author: 17번째 지구 Kkachi
 license: MIT
 metadata:
   hermes:
-    tags: [kan, kkachi-agent-network, moderator, council, live-visible, argue]
+    tags: [kan, Hermes Unified Network, moderator, council, live-visible, argue]
     related_skills: [kan-plugin]
 ---
 
@@ -16,7 +16,7 @@ Use this skill when you are the moderator/operator for a KAN council or live-vis
 
 ## Authority and boundary
 
-- Canonical KAN discussion/operator source: `kkachi-agent-network-plugin/src/kkachi_agent_network_plugin/bundled_skills/kan-plugin/SKILL.md`.
+- Canonical KAN discussion/operator source: `hermes-unified-network-plugin/src/hermes_unified_network_plugin/bundled_skills/kan-plugin/SKILL.md`.
 - KAN control daemon remains lifecycle, event, stream, cursor, lock, and state authority.
 - Plugin tools are typed client surfaces. They must not own lifecycle state, logs, locks, consensus, cursors, idempotency, Discord state, or fallback discovery.
 - Discord/Hermes messages are visible/evidence surfaces only. They become council state only when backed by daemon-owned typed events.

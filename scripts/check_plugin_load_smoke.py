@@ -17,8 +17,8 @@ from typing import Any
 import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
-PACKAGE_MODULE = "kkachi_agent_network_plugin"
-PACKAGE_NAME = "kkachi-agent-network-plugin"
+PACKAGE_MODULE = "hermes_unified_network_plugin"
+PACKAGE_NAME = "hermes-unified-network-plugin"
 TOOLSET = "kkachi_agent_network"
 EXPECTED_TOOLS = [
     "kan_daemon_status",
@@ -101,7 +101,7 @@ def require_package_and_bundled_skill(plugin_home: Path) -> None:
         .get("targets", {})
         .get("wheel", {})
     )
-    if wheel.get("packages") != ["src/kkachi_agent_network_plugin"]:
+    if wheel.get("packages") != ["src/hermes_unified_network_plugin"]:
         raise SystemExit("plugin-load smoke wheel package inclusion mismatch")
 
     bundled_root = plugin_home / "src" / PACKAGE_MODULE / "bundled_skills"
@@ -181,7 +181,7 @@ def load_entrypoint(plugin_home: Path) -> ModuleType:
         sys.path[:] = entrypoint_sys_path()
         return load_module(
             plugin_home / "__init__.py",
-            "kkachi_agent_network_plugin_root_plugin_load_smoke",
+            "hermes_unified_network_plugin_root_plugin_load_smoke",
             package_root=True,
         )
     finally:

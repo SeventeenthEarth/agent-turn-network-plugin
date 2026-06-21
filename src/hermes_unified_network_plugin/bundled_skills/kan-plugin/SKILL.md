@@ -1,6 +1,6 @@
 ---
 name: kan-plugin
-description: Use when operating the packaged kkachi-agent-network-plugin Hermes adapter, explaining its current fake/injected tool surface, or preparing a non-live install/enable/rollback plan.
+description: Use when operating the packaged hermes-unified-network-plugin Hermes adapter, explaining its current fake/injected tool surface, or preparing a non-live install/enable/rollback plan.
 version: 0.1.0
 author: 17번째 지구 Kkachi
 license: MIT
@@ -13,7 +13,7 @@ metadata:
 # KAN Plugin Operator Skill
 
 Use this skill when an operator or agent needs to work with the packaged
-`kkachi-agent-network-plugin` Hermes adapter, explain its current safe surface,
+`hermes-unified-network-plugin` Hermes adapter, explain its current safe surface,
 or prepare a non-live install/enable/rollback plan.
 
 ## Current capability boundary
@@ -233,7 +233,7 @@ Final reports must keep these fields separate: `lifecycle_pass`, `selected_runne
 
 ## Required KAN companion skills
 
-`kkachi-agent-network-plugin` must ship the operator guidance needed to use its
+`hermes-unified-network-plugin` must ship the operator guidance needed to use its
 tool surface. Do not leave KAN runtime/operator guidance as ops-only,
 profile-local, or external-directory-only skills. The plugin package owns and
 registers these bundled companion skills together as read-only, plugin-qualified
@@ -244,9 +244,9 @@ skills:
 - `kan-participant`: selected-speaker and participant response duties.
 
 Canonical Hermes loads use the qualified names
-`kkachi-agent-network-plugin:kan-plugin`,
-`kkachi-agent-network-plugin:kan-moderator`, and
-`kkachi-agent-network-plugin:kan-participant`. Do not require flat
+`hermes-unified-network-plugin:kan-plugin`,
+`hermes-unified-network-plugin:kan-moderator`, and
+`hermes-unified-network-plugin:kan-participant`. Do not require flat
 profile-local copies for the normal KAN plugin path.
 
 Treat a profile where plugin tools are enabled but these companion skills cannot
@@ -379,7 +379,7 @@ text is diagnostic-only and never full KAN success.
 
 ## Operator workflow
 
-
+HUN-004 caveat: the package and manifest now use `hermes-unified-network-plugin` / `hermes_unified_network_plugin`, but `docs/09-skill-and-operator-guide.md` is still a pre-HUN operator guide until HUN-010. Treat stale package-qualified examples in that guide as HUN-010 follow-up material; for package/manifest identity, prefer this bundled skill plus `docs/12-hermes-unified-network-plugin-naming-sot.md`.
 
 1. Inspect `plugin.yaml` and confirm the tool list plus
    `provides_commands: []`.
@@ -401,7 +401,7 @@ text is diagnostic-only and never full KAN success.
 ## Troubleshooting prompts
 
 - Missing bundled skill: verify package data under
-  `kkachi_agent_network_plugin/bundled_skills/kan-plugin/SKILL.md` and use the
+  `hermes_unified_network_plugin/bundled_skills/kan-plugin/SKILL.md` and use the
   import-safe resource helper instead of profile writes.
 - Unexpected slash commands: inspect the manifest and root entrypoint; the
   expected command surface is empty.

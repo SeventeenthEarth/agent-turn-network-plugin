@@ -5,13 +5,13 @@ import os
 
 import pytest
 
-from kkachi_agent_network_plugin.client import DaemonClient, StaticDaemonTransport
-from kkachi_agent_network_plugin.client.daemon import OP_STATUS_READ, OP_STREAM_TAIL
-from kkachi_agent_network_plugin.errors import (
+from hermes_unified_network_plugin.client import DaemonClient, StaticDaemonTransport
+from hermes_unified_network_plugin.client.daemon import OP_STATUS_READ, OP_STREAM_TAIL
+from hermes_unified_network_plugin.errors import (
     DaemonProtocolError,
     DaemonTransportError,
 )
-from kkachi_agent_network_plugin.tools import (
+from hermes_unified_network_plugin.tools import (
     handle_daemon_status,
     handle_delegate_action,
     handle_delegate_new,

@@ -7,16 +7,16 @@ from typing import cast
 
 import pytest
 
-from kkachi_agent_network_plugin.client.stream import (
+from hermes_unified_network_plugin.client.stream import (
     parse_stream_frame,
     parse_stream_frames_ndjson,
     parse_stream_tail_response,
 )
-from kkachi_agent_network_plugin.errors import (
+from hermes_unified_network_plugin.errors import (
     DaemonProtocolError,
     DaemonStreamError,
 )
-from kkachi_agent_network_plugin.protocol import STREAM_TAIL_FRAME_LIMIT, JsonObject
+from hermes_unified_network_plugin.protocol import STREAM_TAIL_FRAME_LIMIT, JsonObject
 
 
 def valid_frame() -> JsonObject:

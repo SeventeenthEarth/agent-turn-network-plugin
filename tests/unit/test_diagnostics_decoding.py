@@ -6,9 +6,9 @@ from typing import cast
 
 import pytest
 
-from kkachi_agent_network_plugin.client.diagnostics import parse_daemon_diagnostics
-from kkachi_agent_network_plugin.errors import DaemonErrorDetails, DaemonProtocolError
-from kkachi_agent_network_plugin.protocol import DIAGNOSTIC_CHECK_LIMIT, JsonObject
+from hermes_unified_network_plugin.client.diagnostics import parse_daemon_diagnostics
+from hermes_unified_network_plugin.errors import DaemonErrorDetails, DaemonProtocolError
+from hermes_unified_network_plugin.protocol import DIAGNOSTIC_CHECK_LIMIT, JsonObject
 
 
 def valid_diagnostics() -> JsonObject:

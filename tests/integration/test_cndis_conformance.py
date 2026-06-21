@@ -7,11 +7,11 @@ from typing import Any, cast
 
 import pytest
 
-from kkachi_agent_network_plugin import schemas
-from kkachi_agent_network_plugin.client import DaemonClient, StaticDaemonTransport
-from kkachi_agent_network_plugin.client.daemon import OP_COMMAND_SUBMIT, OP_VERSION_READ
-from kkachi_agent_network_plugin.protocol import JsonObject
-from kkachi_agent_network_plugin.tools import handle_council_command, handle_delivery_evidence
+from hermes_unified_network_plugin import schemas
+from hermes_unified_network_plugin.client import DaemonClient, StaticDaemonTransport
+from hermes_unified_network_plugin.client.daemon import OP_COMMAND_SUBMIT, OP_VERSION_READ
+from hermes_unified_network_plugin.protocol import JsonObject
+from hermes_unified_network_plugin.tools import handle_council_command, handle_delivery_evidence
 
 CONTROL_CONFORMANCE_ROOT = (
     Path(__file__).resolve().parents[2].parent

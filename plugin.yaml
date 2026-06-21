@@ -1,6 +1,6 @@
-name: kkachi-agent-network-plugin
+name: hermes-unified-network-plugin
 version: 0.1.0
-description: "Hermes plugin adapter for kkachi-agent-network; exposes fake/injected read-only tools, delegation/review command-envelope tools, CNDIS council/delivery-evidence tools, selected participant response proof, pure visible-surface projection rendering, a pure RUNFIX discussion activation planner/doctor, and an injected-only Discord helper without slash-command bindings."
+description: "Hermes plugin adapter for Hermes Unified Network; exposes fake/injected read-only tools, delegation/review command-envelope tools, CNDIS council/delivery-evidence tools, selected participant response proof, pure visible-surface projection rendering, a pure RUNFIX discussion activation planner/doctor, and an injected-only Discord helper without slash-command bindings."
 author: "17번째 지구 Kkachi"
 kind: standalone
 provides_tools:

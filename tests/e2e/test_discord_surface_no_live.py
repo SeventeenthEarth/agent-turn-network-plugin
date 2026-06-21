@@ -5,8 +5,8 @@ import os
 
 import pytest
 
-from kkachi_agent_network_plugin.discord_surface import DEFAULT_TEST_LABEL, e2e_config_from_env
-from kkachi_agent_network_plugin.tools import handle_discord_send_message
+from hermes_unified_network_plugin.discord_surface import DEFAULT_TEST_LABEL, e2e_config_from_env
+from hermes_unified_network_plugin.tools import handle_discord_send_message
 
 
 def test_e2e_discord_helper_default_no_live_with_live_looking_env(

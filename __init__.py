@@ -1,4 +1,4 @@
-"""Hermes directory plugin entrypoint for kkachi-agent-network-plugin.
+"""Hermes directory plugin entrypoint for hermes-unified-network-plugin.
 
 Registers read-only status/diagnostics/stream-tail tools, DELRV-1
 delegation/review command-envelope tools, CNDIS-1 council/delivery-evidence
@@ -22,14 +22,14 @@ if _SRC_PATH.is_dir():
     if _src not in sys.path:
         sys.path.insert(0, _src)
 
-from kkachi_agent_network_plugin.bundled_skills import (  # noqa: E402
+from hermes_unified_network_plugin.bundled_skills import (  # noqa: E402
     bundled_skill_names,
     bundled_skill_resource,
 )
-from kkachi_agent_network_plugin.client.daemon import DaemonClient  # noqa: E402
-from kkachi_agent_network_plugin.client.live import load_plugin_local_live_config  # noqa: E402
-from kkachi_agent_network_plugin.errors import DaemonTransportError  # noqa: E402
-from kkachi_agent_network_plugin.tools import (  # noqa: E402
+from hermes_unified_network_plugin.client.daemon import DaemonClient  # noqa: E402
+from hermes_unified_network_plugin.client.live import load_plugin_local_live_config  # noqa: E402
+from hermes_unified_network_plugin.errors import DaemonTransportError  # noqa: E402
+from hermes_unified_network_plugin.tools import (  # noqa: E402
     ClientFactory,
     ToolRegistrationContext,
     register_tools,

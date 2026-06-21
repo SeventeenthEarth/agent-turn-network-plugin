@@ -4,9 +4,9 @@ import json
 from collections.abc import Callable
 from typing import Any
 
-from kkachi_agent_network_plugin.client import DaemonClient, StaticDaemonTransport
-from kkachi_agent_network_plugin.client.daemon import OP_COMMAND_SUBMIT, OP_VERSION_READ
-from kkachi_agent_network_plugin.tools import register_tools
+from hermes_unified_network_plugin.client import DaemonClient, StaticDaemonTransport
+from hermes_unified_network_plugin.client.daemon import OP_COMMAND_SUBMIT, OP_VERSION_READ
+from hermes_unified_network_plugin.tools import register_tools
 
 
 def test_fake_hermes_context_invokes_registered_delegate_handlers() -> None:

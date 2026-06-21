@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from kkachi_agent_network_plugin import schemas
-from kkachi_agent_network_plugin.protocol import STREAM_TAIL_FRAME_LIMIT
+from hermes_unified_network_plugin import schemas
+from hermes_unified_network_plugin.protocol import STREAM_TAIL_FRAME_LIMIT
 
 
 def test_schemas_expose_only_authorized_fake_injected_tools() -> None:

@@ -4,17 +4,17 @@ from pathlib import Path
 
 import pytest
 
-from kkachi_agent_network_plugin.conformance import (
+from hermes_unified_network_plugin.conformance import (
     load_conformance_manifest,
     parse_conformance_manifest,
 )
-from kkachi_agent_network_plugin.errors import DaemonCompatibilityError
+from hermes_unified_network_plugin.errors import DaemonCompatibilityError
 
 ROOT = Path(__file__).resolve().parents[2]
 PLUGIN_DRAFT_MANIFEST = (
     ROOT
     / "src"
-    / "kkachi_agent_network_plugin"
+    / "hermes_unified_network_plugin"
     / "testdata"
     / "conformance"
     / "manifest.draft.json"

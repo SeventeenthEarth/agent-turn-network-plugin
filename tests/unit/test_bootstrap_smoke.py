@@ -125,7 +125,7 @@ def write_bootstrap_fixture(
     provides_commands: str = "[]",
     root_entrypoint: str | None = None,
 ) -> None:
-    package = root / "src" / "kkachi_agent_network_plugin"
+    package = root / "src" / "hermes_unified_network_plugin"
     package.mkdir(parents=True)
     package.joinpath("__init__.py").write_text(
         package_metadata
@@ -133,17 +133,17 @@ def write_bootstrap_fixture(
         f'__version__ = "{package_version}"\n\n'
         "def package_metadata() -> dict[str, str]:\n"
         "    return {\n"
-        '        "name": "kkachi-agent-network-plugin",\n'
-        '        "module": "kkachi_agent_network_plugin",\n'
+        '        "name": "hermes-unified-network-plugin",\n'
+        '        "module": "hermes_unified_network_plugin",\n'
         '        "version": __version__,\n'
         "    }\n",
         encoding="utf-8",
     )
     root.joinpath("plugin.yaml").write_text(
         manifest_text
-        or "name: kkachi-agent-network-plugin\n"
+        or "name: hermes-unified-network-plugin\n"
         f"version: {manifest_version}\n"
-        'description: "Hermes plugin scaffold for kkachi-agent-network."\n'
+        'description: "Hermes plugin scaffold for Hermes Unified Network."\n'
         'author: "17번째 지구 Kkachi"\n'
         "kind: standalone\n"
         f"provides_tools: {provides_tools}\n"

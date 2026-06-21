@@ -6,8 +6,8 @@ from typing import Any, cast
 
 import pytest
 
-from kkachi_agent_network_plugin.client import DaemonClient, StaticDaemonTransport
-from kkachi_agent_network_plugin.client.daemon import (
+from hermes_unified_network_plugin.client import DaemonClient, StaticDaemonTransport
+from hermes_unified_network_plugin.client.daemon import (
     OP_COMMAND_SUBMIT,
     OP_DIAGNOSTICS_READ,
     OP_STATUS_READ,
@@ -15,8 +15,8 @@ from kkachi_agent_network_plugin.client.daemon import (
     OP_STREAM_TAIL,
     OP_VERSION_READ,
 )
-from kkachi_agent_network_plugin.protocol import JsonObject
-from kkachi_agent_network_plugin.tools import (
+from hermes_unified_network_plugin.protocol import JsonObject
+from hermes_unified_network_plugin.tools import (
     handle_compatibility_diagnostics,
     handle_council_command,
     handle_daemon_status,
@@ -765,7 +765,7 @@ def test_delegate_new_submits_delegate_new_envelope_with_caller_metadata() -> No
                 "request_id": "req-1",
                 "idempotency_key": "idem-1",
                 "client_metadata": {
-                    "name": "kkachi-agent-network-plugin",
+                    "name": "hermes-unified-network-plugin",
                     "version": "0.1.0",
                     "transport": "injected",
                 },
@@ -1381,7 +1381,7 @@ def _discord_tool_args(target: JsonObject | None = None) -> JsonObject:
 
 
 def test_discord_send_message_handler_fails_closed_without_sender() -> None:
-    from kkachi_agent_network_plugin.tools import handle_discord_send_message
+    from hermes_unified_network_plugin.tools import handle_discord_send_message
 
     result = decode(handle_discord_send_message(_discord_tool_args()))
 
@@ -1396,11 +1396,11 @@ def test_discord_send_message_handler_fails_closed_without_sender() -> None:
 
 
 def test_discord_send_message_handler_rejects_missing_target_before_sender() -> None:
-    from kkachi_agent_network_plugin.discord_surface import (
+    from hermes_unified_network_plugin.discord_surface import (
         DiscordMessageResult,
         DiscordMessageTarget,
     )
-    from kkachi_agent_network_plugin.tools import handle_discord_send_message
+    from hermes_unified_network_plugin.tools import handle_discord_send_message
 
     sender_called = False
 
@@ -1422,11 +1422,11 @@ def test_discord_send_message_handler_rejects_missing_target_before_sender() -> 
 
 
 def test_discord_send_message_handler_rejects_active_target_before_sender() -> None:
-    from kkachi_agent_network_plugin.discord_surface import (
+    from hermes_unified_network_plugin.discord_surface import (
         DiscordMessageResult,
         DiscordMessageTarget,
     )
-    from kkachi_agent_network_plugin.tools import handle_discord_send_message
+    from hermes_unified_network_plugin.tools import handle_discord_send_message
 
     sender_called = False
 
@@ -1457,11 +1457,11 @@ def test_discord_send_message_handler_rejects_active_target_before_sender() -> N
 
 
 def test_discord_send_message_handler_calls_fake_sender_once_on_valid_target() -> None:
-    from kkachi_agent_network_plugin.discord_surface import (
+    from hermes_unified_network_plugin.discord_surface import (
         DiscordMessageResult,
         DiscordMessageTarget,
     )
-    from kkachi_agent_network_plugin.tools import handle_discord_send_message
+    from hermes_unified_network_plugin.tools import handle_discord_send_message
 
     calls: list[tuple[DiscordMessageTarget, str]] = []
 

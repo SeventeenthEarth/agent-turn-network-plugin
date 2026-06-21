@@ -7,7 +7,7 @@ Use this when 주군 asks non-KAN lane members, such as KLM 장수 profiles, to 
 Do not equate these three states:
 
 1. A profile can see `kan-plugin` / `kan-moderator` / `kan-participant` skills.
-2. A profile has the `kkachi-agent-network-plugin` installed and tool-visible.
+2. A profile has the `hermes-unified-network-plugin` installed and tool-visible.
 3. A profile is ready for a live-visible KAN council in a specific Discord thread.
 
 A live-visible KAN discussion preflight needs explicit evidence for all relevant layers. `kan_discussion_activation_plan` is pure/local and does not discover the environment by itself; if tool visibility, bot-to-bot state, allow-list inheritance, or visible author proof is not supplied as evidence, the correct planner result is `blocked` / `unknown`, even when the local operator has already verified those facts elsewhere.
@@ -20,9 +20,9 @@ When 주군 or another user has already asked for the cross-team KAN discussion 
 
 For each participant profile, collect **and then copy these facts into the `kan_discussion_activation_plan` input**. Do not leave them as prose in the moderator's notes; the planner is pure/local and only evaluates caller-provided fields.
 
-- `hermes --profile <profile> plugins list` shows `kkachi-agent-network-plugin` enabled. Map this into `participant_profiles[].effective_discord.tools_visible: true` and include the command/session evidence in `proof_ref` or a sibling evidence field.
+- `hermes --profile <profile> plugins list` shows `hermes-unified-network-plugin` enabled. Map this into `participant_profiles[].effective_discord.tools_visible: true` and include the command/session evidence in `proof_ref` or a sibling evidence field.
 - Fresh profile smoke proves `kan_daemon_status ok=true` and current `live_readiness` value. Map this into the participant profile evidence, not just the final report.
-- `hermes --profile <profile> chat -Q --max-turns 3 -s kkachi-agent-network-plugin:kan-plugin -q '...'` or the corresponding `kkachi-agent-network-plugin:kan-moderator` / `kkachi-agent-network-plugin:kan-participant` load succeeds when role behavior depends on bundled guidance. Plugin-provided skills are read-only and plugin-qualified; do not require flat profile-local `kan-plugin` copies for the canonical path.
+- `hermes --profile <profile> chat -Q --max-turns 3 -s hermes-unified-network-plugin:kan-plugin -q '...'` or the corresponding `hermes-unified-network-plugin:kan-moderator` / `hermes-unified-network-plugin:kan-participant` load succeeds when role behavior depends on bundled guidance. Plugin-provided skills are read-only and plugin-qualified; do not require flat profile-local `kan-plugin` copies for the canonical path.
 - `DISCORD_ALLOW_BOTS=none` or equivalent effective gateway proof is present unless 주군 explicitly approved bot-to-bot behavior for the pilot. Map this into `participant_profiles[].effective_discord.bot_to_bot_enabled: false`.
 - The target Discord parent channel id, not only the thread id, is in `discord.allowed_channels` for every participant. If thread id is also known, include it too, but do not mistake a thread-only id for parent allow-list inheritance proof. Map this into `discord_parent_channel.parent_channel_id`, participant `allowed_channels`, and `discord_parent_channel.allow_list_inheritance_proven: true` only when parent-channel inheritance proof exists.
 - Gateway was restarted after config/plugin changes, and logs show `Connected as <expected bot>` plus `✓ discord connected`.
@@ -75,7 +75,7 @@ After plugin install/enable and gateway restart, a minimal evidence package can 
 
 ```bash
 # Tool visibility / daemon smoke
-hermes --profile <profile> chat -Q --max-turns 3 -s kkachi-agent-network-plugin:kan-plugin -q \
+hermes --profile <profile> chat -Q --max-turns 3 -s hermes-unified-network-plugin:kan-plugin -q \
   'Call kan_daemon_status exactly once. Then print only ok=<ok field> live_readiness=<live_readiness field if present> error=<error field if present>.'
 
 # Visible author proof for Discord parent + thread
@@ -91,4 +91,4 @@ Record each returned Discord `message_id` as author proof. If the send succeeds 
 
 If a moderator reports `HAN_BLOCK` because these evidence classes were missing, treat it as a correct fail-closed preflight result, not as proof the plugin is unusable. Fix the missing evidence, restart affected gateways, rerun fresh smoke/probes, then tell the moderator to start a new session or `/reset` before rerunning preflight so the old blocked context does not anchor the next attempt.
 
-Keep KAN development authority separate from KAN usage: cross-team KLM members may use KAN as discussion participants without becoming owners of `kkachi-agent-network-control` or `kkachi-agent-network-plugin`.
+Keep KAN development authority separate from KAN usage: cross-team KLM members may use KAN as discussion participants without becoming owners of `kkachi-agent-network-control` or `hermes-unified-network-plugin`.

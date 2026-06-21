@@ -4,18 +4,18 @@ from typing import cast
 
 import pytest
 
-from kkachi_agent_network_plugin.client import DaemonClient, StaticDaemonTransport
-from kkachi_agent_network_plugin.client.daemon import (
+from hermes_unified_network_plugin.client import DaemonClient, StaticDaemonTransport
+from hermes_unified_network_plugin.client.daemon import (
     OP_STATUS_READ,
     OP_STREAM_TAIL,
     OP_VERSION_READ,
 )
-from kkachi_agent_network_plugin.errors import (
+from hermes_unified_network_plugin.errors import (
     DaemonCompatibilityError,
     DaemonProtocolError,
     DaemonTransportError,
 )
-from kkachi_agent_network_plugin.protocol import JsonObject
+from hermes_unified_network_plugin.protocol import JsonObject
 
 BASE_RESPONSE: JsonObject = {
     "protocol_version": "kan-protocol-v1alpha0",

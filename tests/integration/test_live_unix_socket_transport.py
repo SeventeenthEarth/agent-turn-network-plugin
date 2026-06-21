@@ -7,18 +7,18 @@ from typing import Any
 
 import pytest
 
-from kkachi_agent_network_plugin.client import DaemonClient
-from kkachi_agent_network_plugin.client import transport as transport_module
-from kkachi_agent_network_plugin.client.daemon import (
+from hermes_unified_network_plugin.client import DaemonClient
+from hermes_unified_network_plugin.client import transport as transport_module
+from hermes_unified_network_plugin.client.daemon import (
     OP_STATUS_READ,
     OP_STREAM_ACK,
     OP_VERSION_READ,
 )
-from kkachi_agent_network_plugin.client.live import live_client_factory_from_config
-from kkachi_agent_network_plugin.client.transport import UnixSocketDaemonTransport
-from kkachi_agent_network_plugin.errors import DaemonCommandError, DaemonTransportError
-from kkachi_agent_network_plugin.protocol import JsonObject
-from kkachi_agent_network_plugin.tools import register_tools
+from hermes_unified_network_plugin.client.live import live_client_factory_from_config
+from hermes_unified_network_plugin.client.transport import UnixSocketDaemonTransport
+from hermes_unified_network_plugin.errors import DaemonCommandError, DaemonTransportError
+from hermes_unified_network_plugin.protocol import JsonObject
+from hermes_unified_network_plugin.tools import register_tools
 
 BASE_RESPONSE: JsonObject = {
     "protocol_version": "kan-protocol-v1alpha0",
@@ -31,7 +31,7 @@ BASE_RESPONSE: JsonObject = {
 def test_unix_socket_transport_reads_version_and_status_live_smoke(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    socket_path = "/var/run/kkachi-agent-networkd.sock"
+    socket_path = "/var/run/hund.sock"
     socket_script = patch_unix_socket(
         monkeypatch,
         socket_path=socket_path,
@@ -67,7 +67,7 @@ def test_unix_socket_transport_reads_version_and_status_live_smoke(
 def test_configured_register_time_factory_powers_status_only(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    socket_path = "/var/run/kkachi-agent-networkd.sock"
+    socket_path = "/var/run/hund.sock"
     socket_script = patch_unix_socket(
         monkeypatch,
         socket_path=socket_path,
@@ -95,7 +95,7 @@ def test_configured_register_time_factory_powers_status_only(
 def test_unix_socket_transport_accepts_control_status_shape_without_readiness_flag(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    socket_path = "/var/run/kkachi-agent-networkd.sock"
+    socket_path = "/var/run/hund.sock"
     patch_unix_socket(
         monkeypatch,
         socket_path=socket_path,
@@ -126,7 +126,7 @@ def test_unix_socket_transport_accepts_control_status_shape_without_readiness_fl
 def test_unix_socket_transport_maps_stream_tail_to_canonical_stream_replay(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    socket_path = "/var/run/kkachi-agent-networkd.sock"
+    socket_path = "/var/run/hund.sock"
     old_frame: JsonObject = {
         "cursor": "cur_000000000011_evt_old",
         "is_replay": True,
@@ -211,7 +211,7 @@ def test_unix_socket_transport_maps_stream_tail_to_canonical_stream_replay(
 def test_unix_socket_transport_maps_stream_ack_to_canonical_daemon_command(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    socket_path = "/var/run/kkachi-agent-networkd.sock"
+    socket_path = "/var/run/hund.sock"
     socket_script = patch_unix_socket(
         monkeypatch,
         socket_path=socket_path,
@@ -273,7 +273,7 @@ def test_unix_socket_transport_maps_stream_ack_to_canonical_daemon_command(
 def test_unix_socket_transport_unwraps_command_submit_to_canonical_daemon_command(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    socket_path = "/var/run/kkachi-agent-networkd.sock"
+    socket_path = "/var/run/hund.sock"
     socket_script = patch_unix_socket(
         monkeypatch,
         socket_path=socket_path,
@@ -323,7 +323,7 @@ def test_unix_socket_transport_unwraps_command_submit_to_canonical_daemon_comman
 def test_unix_socket_transport_preserves_command_submit_structured_errors(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    socket_path = "/var/run/kkachi-agent-networkd.sock"
+    socket_path = "/var/run/hund.sock"
     patch_unix_socket(
         monkeypatch,
         socket_path=socket_path,
@@ -368,7 +368,7 @@ def test_unix_socket_transport_preserves_command_submit_structured_errors(
 def test_unix_socket_transport_rejects_unrepresentable_idempotency_boundary_before_socket(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    socket_path = "/var/run/kkachi-agent-networkd.sock"
+    socket_path = "/var/run/hund.sock"
     socket_script = patch_unix_socket(
         monkeypatch,
         socket_path=socket_path,
@@ -395,7 +395,7 @@ def test_unix_socket_transport_rejects_unrepresentable_idempotency_boundary_befo
 
 
 def test_live_client_factory_uses_explicit_config_only(monkeypatch: pytest.MonkeyPatch) -> None:
-    socket_path = "/var/run/kkachi-agent-networkd.sock"
+    socket_path = "/var/run/hund.sock"
     socket_script = patch_unix_socket(
         monkeypatch,
         socket_path=socket_path,

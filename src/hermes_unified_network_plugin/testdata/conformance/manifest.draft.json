@@ -2,8 +2,8 @@
   "manifest_version": 1,
   "protocol_version": "kan-protocol-v1alpha0",
   "stability": "draft-plugin-local-scaffold",
-  "owner_repo": "kkachi-agent-network-plugin",
-  "consumer_repo": "kkachi-agent-network-plugin",
+  "owner_repo": "hermes-unified-network-plugin",
+  "consumer_repo": "hermes-unified-network-plugin",
   "fixtures": [],
   "required_feature_groups": [
     "version.read",

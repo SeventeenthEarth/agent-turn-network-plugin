@@ -4,13 +4,13 @@ from pathlib import Path
 
 import pytest
 
-from kkachi_agent_network_plugin.client.live import (
+from hermes_unified_network_plugin.client.live import (
     configured_live_client_factory,
     live_client_factory_from_config,
     load_plugin_local_live_config,
     parse_plugin_local_live_config,
 )
-from kkachi_agent_network_plugin.errors import DaemonTransportError
+from hermes_unified_network_plugin.errors import DaemonTransportError
 
 
 def test_no_config_preserves_fail_closed_no_client_factory() -> None:
@@ -19,7 +19,7 @@ def test_no_config_preserves_fail_closed_no_client_factory() -> None:
 
 
 def test_load_plugin_local_live_config_accepts_only_approved_shape(tmp_path: Path) -> None:
-    socket_path = "/var/run/kkachi-agent-networkd.sock"
+    socket_path = "/var/run/hund.sock"
     config_path = tmp_path / "config.yaml"
     config_path.write_text(
         f'live_transport:\n  unix_socket_path: "{socket_path}"\n',

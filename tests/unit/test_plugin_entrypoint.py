@@ -9,10 +9,10 @@ from typing import Any
 
 import yaml  # type: ignore[import-untyped]
 
-from kkachi_agent_network_plugin.client import DaemonClient, StaticDaemonTransport
-from kkachi_agent_network_plugin.client import transport as transport_module
-from kkachi_agent_network_plugin.client.daemon import OP_STATUS_READ
-from kkachi_agent_network_plugin.protocol import JsonObject
+from hermes_unified_network_plugin.client import DaemonClient, StaticDaemonTransport
+from hermes_unified_network_plugin.client import transport as transport_module
+from hermes_unified_network_plugin.client.daemon import OP_STATUS_READ
+from hermes_unified_network_plugin.protocol import JsonObject
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -43,10 +43,10 @@ def test_plugin_manifest_declares_fake_injected_tool_surface() -> None:
     manifest = yaml.safe_load((ROOT / "plugin.yaml").read_text(encoding="utf-8"))
 
     assert manifest == {
-        "name": "kkachi-agent-network-plugin",
+        "name": "hermes-unified-network-plugin",
         "version": "0.1.0",
         "description": (
-            "Hermes plugin adapter for kkachi-agent-network; exposes fake/injected "
+            "Hermes plugin adapter for Hermes Unified Network; exposes fake/injected "
             "read-only tools, delegation/review command-envelope tools, CNDIS "
             "council/delivery-evidence tools, selected participant response proof, "
             "pure visible-surface projection rendering, a pure RUNFIX discussion "
@@ -82,7 +82,7 @@ def test_root_entrypoint_uses_adjacent_config_when_no_explicit_config_or_factory
     monkeypatch: Any,
 ) -> None:
     module = _load_root_entrypoint()
-    socket_path = "/var/run/kkachi-agent-networkd.sock"
+    socket_path = "/var/run/hund.sock"
     (tmp_path / "config.yaml").write_text(
         f'live_transport:\n  unix_socket_path: "{socket_path}"\n',
         encoding="utf-8",
@@ -205,7 +205,7 @@ def test_root_entrypoint_preserves_explicit_client_factory_precedence(
 
 def _load_root_entrypoint() -> ModuleType:
     spec = importlib.util.spec_from_file_location(
-        "hermes_plugins.kkachi_agent_network_plugin_under_test",
+        "hermes_plugins.hermes_unified_network_plugin_under_test",
         ROOT / "__init__.py",
         submodule_search_locations=[str(ROOT)],
     )

@@ -40,7 +40,7 @@ def test_command_envelope_serialization_is_canonical_and_idempotency_ready() -> 
         '"version":"0.1.0"},"command":"session.note",'
         '"envelope_version":"kan-command-envelope-v1alpha0","idempotency_key":"idem-001",'
         '"payload":{"a":{"nested":true},"z":2},'
-        '"protocol_version":"kan-protocol-v1alpha0","request_id":"req-001"}'
+        '"protocol_version":"hun-protocol-v1alpha0","request_id":"req-001"}'
     )
     assert json.loads(envelope.canonical_json())["payload"] == {"a": {"nested": True}, "z": 2}
 

@@ -17,7 +17,7 @@ from hermes_unified_network_plugin.protocol import JsonObject
 from hermes_unified_network_plugin.tools import handle_selected_participant_response
 
 BASE_VERSION_WITH_PARTC: JsonObject = {
-    "protocol_version": "kan-protocol-v1alpha0",
+    "protocol_version": "hun-protocol-v1alpha0",
     "daemon_version": "0.0.0-fake",
     "feature_groups": [
         "version.read",
@@ -185,7 +185,7 @@ def test_selected_participant_response_submits_speak_then_acks_selected_cursor()
     assert transport.requests[3] == (
         OP_STREAM_ACK,
         {
-            "protocol_version": "kan-protocol-v1alpha0",
+            "protocol_version": "hun-protocol-v1alpha0",
             "session_id": "sess-partc",
             "member": "kas",
             "cursor": "cur_000000000042_evt_selected",

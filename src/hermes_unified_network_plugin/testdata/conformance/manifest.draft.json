@@ -1,6 +1,6 @@
 {
   "manifest_version": 1,
-  "protocol_version": "kan-protocol-v1alpha0",
+  "protocol_version": "hun-protocol-v1alpha0",
   "stability": "draft-plugin-local-scaffold",
   "owner_repo": "hermes-unified-network-plugin",
   "consumer_repo": "hermes-unified-network-plugin",

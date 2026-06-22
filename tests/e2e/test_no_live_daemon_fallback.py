@@ -51,7 +51,7 @@ def test_e2e_stream_tail_requires_version_probe_even_with_live_env_vars(
     monkeypatch.setenv("KAN_STREAM_URL", "ws://127.0.0.1:65535/stream")
     client = DaemonClient(
         StaticDaemonTransport(
-            {OP_STREAM_TAIL: {"protocol_version": "kan-protocol-v1alpha0", "frames": []}}
+            {OP_STREAM_TAIL: {"protocol_version": "hun-protocol-v1alpha0", "frames": []}}
         )
     )
 

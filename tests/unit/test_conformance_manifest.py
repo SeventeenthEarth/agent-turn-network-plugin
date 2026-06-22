@@ -25,7 +25,7 @@ CORE_MANIFEST = (
 
 BASE_MANIFEST = {
     "manifest_version": 1,
-    "protocol_version": "kan-protocol-v1alpha0",
+    "protocol_version": "hun-protocol-v1alpha0",
     "stability": "draft-docs-scaffold",
     "fixtures": [],
     "required_feature_groups": ["version.read", "command_envelope", "structured_error"],
@@ -35,7 +35,7 @@ BASE_MANIFEST = {
 def test_plugin_local_zero_fixture_manifest_is_draft_only_and_not_live_ready() -> None:
     manifest = load_conformance_manifest(PLUGIN_DRAFT_MANIFEST)
 
-    assert manifest.protocol_version == "kan-protocol-v1alpha0"
+    assert manifest.protocol_version == "hun-protocol-v1alpha0"
     assert manifest.fixtures == ()
     assert manifest.live_readiness is False
 

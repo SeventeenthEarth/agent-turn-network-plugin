@@ -8,7 +8,7 @@ from pathlib import Path
 PLUGIN = Path(__file__).resolve().parents[1]
 CONTROL_REPO = os.environ.get("KAN_CONTROL_REPO") or os.environ.get("KAN_CORE_REPO")
 CORE = Path(CONTROL_REPO or PLUGIN.parent / "kkachi-agent-network-control").resolve()
-EXPECTED_PROTOCOL = "kan-protocol-v1alpha0"
+EXPECTED_PROTOCOL = "hun-protocol-v1alpha0"
 REQUIRED_CONTROL_PHRASES = [
     EXPECTED_PROTOCOL,
     "Milestone unlock matrix",

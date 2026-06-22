@@ -9,7 +9,7 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
 SCRIPT = ROOT / "scripts" / "check_core_contract.py"
-PROTOCOL = "kan-protocol-v1alpha0"
+PROTOCOL = "hun-protocol-v1alpha0"
 
 
 def load_check_core_contract() -> ModuleType:

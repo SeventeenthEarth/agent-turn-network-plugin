@@ -18,20 +18,20 @@ def test_fake_hermes_context_invokes_registered_readonly_handlers() -> None:
     transport = StaticDaemonTransport(
         {
             OP_STATUS_READ: {
-                "protocol_version": "kan-protocol-v1alpha0",
+                "protocol_version": "hun-protocol-v1alpha0",
                 "daemon_version": "0.0.0-fake",
                 "status": "fake-ready",
                 "feature_groups": ["version.read", "command_envelope", "structured_error"],
                 "live_readiness": False,
             },
             OP_DIAGNOSTICS_READ: {
-                "protocol_version": "kan-protocol-v1alpha0",
+                "protocol_version": "hun-protocol-v1alpha0",
                 "daemon_version": "0.0.0-fake",
                 "live_readiness": False,
                 "checks": [{"name": "structured_error", "ok": True}],
             },
             OP_VERSION_READ: {
-                "protocol_version": "kan-protocol-v1alpha0",
+                "protocol_version": "hun-protocol-v1alpha0",
                 "daemon_version": "0.0.0-fake",
                 "feature_groups": [
                     "version.read",
@@ -42,7 +42,7 @@ def test_fake_hermes_context_invokes_registered_readonly_handlers() -> None:
                 "live_readiness": False,
             },
             OP_STREAM_TAIL: {
-                "protocol_version": "kan-protocol-v1alpha0",
+                "protocol_version": "hun-protocol-v1alpha0",
                 "frames": [
                     {
                         "cursor": "cur_1",
@@ -92,16 +92,16 @@ def test_fake_hermes_context_invokes_registered_readonly_handlers() -> None:
     assert diagnostics["ok"] is True
     assert stream_tail["ok"] is True
     assert transport.requests == [
-        (OP_STATUS_READ, {"protocol_version": "kan-protocol-v1alpha0"}),
+        (OP_STATUS_READ, {"protocol_version": "hun-protocol-v1alpha0"}),
         (
             OP_DIAGNOSTICS_READ,
-            {"protocol_version": "kan-protocol-v1alpha0", "session_id": "sess-int"},
+            {"protocol_version": "hun-protocol-v1alpha0", "session_id": "sess-int"},
         ),
-        (OP_VERSION_READ, {"protocol_version": "kan-protocol-v1alpha0"}),
+        (OP_VERSION_READ, {"protocol_version": "hun-protocol-v1alpha0"}),
         (
             OP_STREAM_TAIL,
             {
-                "protocol_version": "kan-protocol-v1alpha0",
+                "protocol_version": "hun-protocol-v1alpha0",
                 "session_id": "sess-int",
                 "member": "agent-1",
                 "since_cursor": "cur_prev",

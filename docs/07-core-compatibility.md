@@ -11,7 +11,7 @@ The control-side SOT is `../../kkachi-agent-network-control/docs/21-cross-repo-d
 | Field | Value |
 | --- | --- |
 | Control repo | `../../kkachi-agent-network-control` |
-| Protocol version | `kan-protocol-v1alpha0` |
+| Protocol version | `hun-protocol-v1alpha0` |
 | Fixture manifest | `../../kkachi-agent-network-control/testdata/conformance/manifest.json` |
 | Stability | draft, docs/scaffold/client-foundation plus fake/injected HPLUG-2 read-only status/diagnostics/stream-tail tools, DELRV command tools, CNDIS council/delivery-evidence tools, ARGUE static argument-graph schema/tool contract coverage, HPLUG-3 unsupported slash-command documentation, SKILL-2 compatibility matrix, and local isolated plugin-load smoke |
 | Plugin behavior on mismatch | fail closed; no live fallback; affected tool returns `ok:false` |
@@ -73,7 +73,7 @@ tests, and `make check-plugin-load-smoke` local isolated plugin-load smoke gate.
 
 | Surface or feature | Control / Hermes status | Plugin support | Evidence source | Unsupported or degraded behavior |
 | --- | --- | --- | --- | --- |
-| Protocol `kan-protocol-v1alpha0` | Control conformance manifest declares the protocol | Supported for fake/injected client compatibility checks | `make check-core-contract`, `docs/07-core-compatibility.md`, `src/kkachi_agent_network_plugin/protocol.py` | Any other protocol fails closed before compatibility is claimed. |
+| Protocol `hun-protocol-v1alpha0` | Control conformance manifest declares the protocol | Supported for fake/injected client compatibility checks | `make check-core-contract`, `docs/07-core-compatibility.md`, `src/kkachi_agent_network_plugin/protocol.py` | Any other protocol fails closed before compatibility is claimed. |
 | `version.read` | Control-supported compatibility probe | Used by stream, council, and delivery-evidence feature gates through injected clients | `tests/unit/test_status_version_client.py`, `tests/unit/test_tool_handlers.py`, `tests/integration/test_cndis_conformance.py` | `session.status.read` is not implemented or exposed. |
 | Command/event envelope and structured error | Control-supported command envelope and daemon error contract | Supported through `kan_delegate_new`, `kan_delegate_action`, `kan_council_command`, and `kan_delivery_evidence` with caller-supplied request/idempotency IDs | `tests/unit/test_command_envelope.py`, `tests/unit/test_daemon_error_decoding.py`, `tests/integration/test_delegate_plugin_tools.py` | Unknown commands, malformed envelopes, missing IDs, or daemon structured failures return JSON `ok:false`; no local lifecycle or retry state is added. |
 | Stream features | Control feature group `stream_frame` gates retained stream reads | `kan_stream_tail` supported only with positive injected `version.read` compatibility | `tests/unit/test_stream_frame_parsing.py`, `tests/integration/test_fake_daemon_stream_diagnostics.py` | Missing `stream_frame`, malformed frames, live sockets, SSE, WebSocket, CLI, or daemon discovery fail closed / remain unsupported. |

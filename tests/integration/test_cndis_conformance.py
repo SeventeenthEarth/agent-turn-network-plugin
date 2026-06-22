@@ -99,7 +99,7 @@ def _version_response() -> JsonObject:
     required_feature_groups = manifest["required_feature_groups"]
     assert isinstance(required_feature_groups, list)
     return {
-        "protocol_version": "kan-protocol-v1alpha0",
+        "protocol_version": "hun-protocol-v1alpha0",
         "daemon_version": "0.0.0-conformance-fake",
         "feature_groups": cast(list[str], required_feature_groups),
         "live_readiness": False,

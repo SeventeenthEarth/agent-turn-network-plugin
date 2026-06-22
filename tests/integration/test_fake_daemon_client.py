@@ -12,7 +12,7 @@ from hermes_unified_network_plugin.errors import DaemonCommandError, DaemonProto
 from hermes_unified_network_plugin.protocol import JsonObject
 
 BASE_RESPONSE: JsonObject = {
-    "protocol_version": "kan-protocol-v1alpha0",
+    "protocol_version": "hun-protocol-v1alpha0",
     "daemon_version": "0.0.0-fake",
     "feature_groups": ["version.read", "command_envelope", "structured_error"],
     "live_readiness": False,

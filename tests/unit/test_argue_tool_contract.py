@@ -18,7 +18,7 @@ CONTROL_CONFORMANCE_ROOT = (
     / "conformance"
 )
 BASE_VERSION_WITH_COUNCIL: JsonObject = {
-    "protocol_version": "kan-protocol-v1alpha0",
+    "protocol_version": "hun-protocol-v1alpha0",
     "daemon_version": "0.0.0-fake",
     "feature_groups": ["version.read", "command_envelope", "structured_error", "council.lifecycle"],
     "live_readiness": False,

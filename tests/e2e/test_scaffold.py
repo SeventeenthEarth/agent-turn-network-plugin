@@ -29,7 +29,7 @@ def test_e2e_readonly_handler_smoke_uses_explicit_fake_transport_only() -> None:
                 StaticDaemonTransport(
                     {
                         OP_STATUS_READ: {
-                            "protocol_version": "kan-protocol-v1alpha0",
+                            "protocol_version": "hun-protocol-v1alpha0",
                             "daemon_version": "0.0.0-fake",
                             "status": "fake-ready",
                             "feature_groups": [
@@ -58,7 +58,7 @@ def test_e2e_stream_tail_handler_smoke_uses_explicit_fake_transport_only() -> No
                 StaticDaemonTransport(
                     {
                         OP_VERSION_READ: {
-                            "protocol_version": "kan-protocol-v1alpha0",
+                            "protocol_version": "hun-protocol-v1alpha0",
                             "daemon_version": "0.0.0-fake",
                             "feature_groups": [
                                 "version.read",
@@ -69,7 +69,7 @@ def test_e2e_stream_tail_handler_smoke_uses_explicit_fake_transport_only() -> No
                             "live_readiness": False,
                         },
                         OP_STREAM_TAIL: {
-                            "protocol_version": "kan-protocol-v1alpha0",
+                            "protocol_version": "hun-protocol-v1alpha0",
                             "frames": [],
                         },
                     }

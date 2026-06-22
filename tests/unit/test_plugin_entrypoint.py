@@ -93,7 +93,7 @@ def test_root_entrypoint_uses_adjacent_config_when_no_explicit_config_or_factory
         socket_path=socket_path,
         responses={
             OP_STATUS_READ: {
-                "protocol_version": "kan-protocol-v1alpha0",
+                "protocol_version": "hun-protocol-v1alpha0",
                 "daemon_version": "0.0.0-adjacent-config",
                 "status": "adjacent-config-ready",
                 "feature_groups": ["version.read", "command_envelope", "structured_error"],

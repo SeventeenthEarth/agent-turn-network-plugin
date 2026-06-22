@@ -18,7 +18,7 @@ from hermes_unified_network_plugin.errors import (
 from hermes_unified_network_plugin.protocol import JsonObject
 
 BASE_RESPONSE: JsonObject = {
-    "protocol_version": "kan-protocol-v1alpha0",
+    "protocol_version": "hun-protocol-v1alpha0",
     "daemon_version": "0.0.0-fake",
     "feature_groups": ["version.read", "command_envelope", "structured_error"],
     "live_readiness": False,
@@ -42,13 +42,13 @@ def test_status_and_version_reads_use_injected_transport_only() -> None:
     version = client.read_version()
     status = client.read_status()
 
-    assert version.protocol_version == "kan-protocol-v1alpha0"
+    assert version.protocol_version == "hun-protocol-v1alpha0"
     assert version.live_readiness is False
     assert status.status == "fake-ready"
     assert status.live_readiness is False
     assert transport.requests == [
-        (OP_VERSION_READ, {"protocol_version": "kan-protocol-v1alpha0"}),
-        (OP_STATUS_READ, {"protocol_version": "kan-protocol-v1alpha0"}),
+        (OP_VERSION_READ, {"protocol_version": "hun-protocol-v1alpha0"}),
+        (OP_STATUS_READ, {"protocol_version": "hun-protocol-v1alpha0"}),
     ]
 
 
@@ -76,7 +76,7 @@ def test_stream_tail_missing_stream_frame_feature_fails_closed_before_stream_ope
     transport = StaticDaemonTransport(
         {
             OP_VERSION_READ: dict(BASE_RESPONSE),
-            OP_STREAM_TAIL: {"protocol_version": "kan-protocol-v1alpha0", "frames": []},
+            OP_STREAM_TAIL: {"protocol_version": "hun-protocol-v1alpha0", "frames": []},
         }
     )
     client = DaemonClient(transport)
@@ -84,7 +84,7 @@ def test_stream_tail_missing_stream_frame_feature_fails_closed_before_stream_ope
     with pytest.raises(DaemonCompatibilityError, match="stream_frame"):
         client.read_stream_tail(session_id="sess-unit-1", member="agent-1")
 
-    assert transport.requests == [(OP_VERSION_READ, {"protocol_version": "kan-protocol-v1alpha0"})]
+    assert transport.requests == [(OP_VERSION_READ, {"protocol_version": "hun-protocol-v1alpha0"})]
 
 
 @pytest.mark.parametrize(

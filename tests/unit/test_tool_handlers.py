@@ -30,14 +30,14 @@ from hermes_unified_network_plugin.tools import (
 )
 
 BASE_STATUS: JsonObject = {
-    "protocol_version": "kan-protocol-v1alpha0",
+    "protocol_version": "hun-protocol-v1alpha0",
     "daemon_version": "0.0.0-fake",
     "status": "fake-ready",
     "feature_groups": ["version.read", "command_envelope", "structured_error"],
     "live_readiness": False,
 }
 BASE_VERSION_WITH_STREAM: JsonObject = {
-    "protocol_version": "kan-protocol-v1alpha0",
+    "protocol_version": "hun-protocol-v1alpha0",
     "daemon_version": "0.0.0-fake",
     "feature_groups": ["version.read", "command_envelope", "structured_error", "stream_frame"],
     "live_readiness": False,
@@ -53,13 +53,13 @@ BASE_VERSION_WITH_STREAM_ACK: JsonObject = {
     ],
 }
 BASE_VERSION_WITHOUT_STREAM: JsonObject = {
-    "protocol_version": "kan-protocol-v1alpha0",
+    "protocol_version": "hun-protocol-v1alpha0",
     "daemon_version": "0.0.0-fake",
     "feature_groups": ["version.read", "command_envelope", "structured_error"],
     "live_readiness": False,
 }
 BASE_VERSION_WITH_CNDIS: JsonObject = {
-    "protocol_version": "kan-protocol-v1alpha0",
+    "protocol_version": "hun-protocol-v1alpha0",
     "daemon_version": "0.0.0-fake",
     "feature_groups": [
         "version.read",
@@ -71,7 +71,7 @@ BASE_VERSION_WITH_CNDIS: JsonObject = {
     "live_readiness": False,
 }
 BASE_VERSION_WITHOUT_CNDIS: JsonObject = {
-    "protocol_version": "kan-protocol-v1alpha0",
+    "protocol_version": "hun-protocol-v1alpha0",
     "daemon_version": "0.0.0-fake",
     "feature_groups": ["version.read", "command_envelope", "structured_error"],
     "live_readiness": False,
@@ -93,12 +93,12 @@ BASE_FRAME: JsonObject = {
     },
 }
 BASE_STREAM_TAIL: JsonObject = {
-    "protocol_version": "kan-protocol-v1alpha0",
+    "protocol_version": "hun-protocol-v1alpha0",
     "frames": [BASE_FRAME],
     "next_cursor": "cur_next",
 }
 BASE_DIAGNOSTICS: JsonObject = {
-    "protocol_version": "kan-protocol-v1alpha0",
+    "protocol_version": "hun-protocol-v1alpha0",
     "daemon_version": "0.0.0-fake",
     "live_readiness": False,
     "checks": [
@@ -152,7 +152,7 @@ def test_daemon_status_handler_returns_json_success_from_explicit_fake_client() 
     assert result == {
         "ok": True,
         "tool": "kan_daemon_status",
-        "protocol_version": "kan-protocol-v1alpha0",
+        "protocol_version": "hun-protocol-v1alpha0",
         "live_readiness": False,
         "data": {
             "daemon_version": "0.0.0-fake",
@@ -173,7 +173,7 @@ def test_compatibility_diagnostics_handler_returns_redacted_json_success() -> No
     assert result == {
         "ok": True,
         "tool": "kan_compatibility_diagnostics",
-        "protocol_version": "kan-protocol-v1alpha0",
+        "protocol_version": "hun-protocol-v1alpha0",
         "live_readiness": False,
         "data": {
             "daemon_version": "0.0.0-fake",
@@ -203,7 +203,7 @@ def test_stream_tail_handler_returns_redacted_json_success_from_explicit_fake_cl
     assert result == {
         "ok": True,
         "tool": "kan_stream_tail",
-        "protocol_version": "kan-protocol-v1alpha0",
+        "protocol_version": "hun-protocol-v1alpha0",
         "live_readiness": False,
         "data": {
             "frames": [
@@ -543,7 +543,7 @@ def test_stream_tail_handler_requires_stream_feature_before_tail_operation() -> 
 
     assert result["ok"] is False
     assert result["error"]["category"] == "compatibility"
-    assert transport.requests == [(OP_VERSION_READ, {"protocol_version": "kan-protocol-v1alpha0"})]
+    assert transport.requests == [(OP_VERSION_READ, {"protocol_version": "hun-protocol-v1alpha0"})]
 
 
 def test_stream_ack_handler_submits_ack_after_stream_feature_probe() -> None:
@@ -576,11 +576,11 @@ def test_stream_ack_handler_submits_ack_after_stream_feature_probe() -> None:
         },
     }
     assert transport.requests == [
-        (OP_VERSION_READ, {"protocol_version": "kan-protocol-v1alpha0"}),
+        (OP_VERSION_READ, {"protocol_version": "hun-protocol-v1alpha0"}),
         (
             OP_STREAM_ACK,
             {
-                "protocol_version": "kan-protocol-v1alpha0",
+                "protocol_version": "hun-protocol-v1alpha0",
                 "session_id": "sess-1",
                 "member": "agent-1",
                 "cursor": "cur_000000000012_evt_01HV",
@@ -611,7 +611,7 @@ def test_stream_ack_handler_requires_stream_ack_feature_before_ack_operation() -
     assert result["tool"] == "kan_stream_ack"
     assert result["error"]["category"] == "compatibility"
     assert "stream.ack" in result["error"]["message"]
-    assert transport.requests == [(OP_VERSION_READ, {"protocol_version": "kan-protocol-v1alpha0"})]
+    assert transport.requests == [(OP_VERSION_READ, {"protocol_version": "hun-protocol-v1alpha0"})]
 
 
 @pytest.mark.parametrize("field", ["session_id", "member", "cursor", "command_id"])
@@ -698,7 +698,7 @@ def test_stream_tail_handler_malformed_stream_payload_fails_closed() -> None:
             client_factory=factory_for(
                 {
                     OP_VERSION_READ: BASE_VERSION_WITH_STREAM,
-                    OP_STREAM_TAIL: {"protocol_version": "kan-protocol-v1alpha0", "frames": ["[]"]},
+                    OP_STREAM_TAIL: {"protocol_version": "hun-protocol-v1alpha0", "frames": ["[]"]},
                 }
             ),
         )
@@ -747,7 +747,7 @@ def test_delegate_new_submits_delegate_new_envelope_with_caller_metadata() -> No
         (
             OP_COMMAND_SUBMIT,
             {
-                "protocol_version": "kan-protocol-v1alpha0",
+                "protocol_version": "hun-protocol-v1alpha0",
                 "envelope_version": "kan-command-envelope-v1alpha0",
                 "command": "delegate.new",
                 "payload": {
@@ -1114,7 +1114,7 @@ def test_council_participant_commands_submit_after_feature_probe(
     assert result["ok"] is True
     assert transport.requests[0] == (
         OP_VERSION_READ,
-        {"protocol_version": "kan-protocol-v1alpha0"},
+        {"protocol_version": "hun-protocol-v1alpha0"},
     )
     operation, body = transport.requests[1]
     assert operation == OP_COMMAND_SUBMIT
@@ -1229,7 +1229,7 @@ def test_cndis_handlers_fail_compatibility_before_submit_when_feature_missing(
     assert result["ok"] is False
     assert result["error"]["category"] == "compatibility"
     assert missing_feature in result["error"]["message"]
-    assert transport.requests == [(OP_VERSION_READ, {"protocol_version": "kan-protocol-v1alpha0"})]
+    assert transport.requests == [(OP_VERSION_READ, {"protocol_version": "hun-protocol-v1alpha0"})]
 
 
 @pytest.mark.parametrize(

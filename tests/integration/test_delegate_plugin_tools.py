@@ -13,7 +13,7 @@ def test_fake_hermes_context_invokes_registered_delegate_handlers() -> None:
     transport = StaticDaemonTransport(
         {
             OP_VERSION_READ: {
-                "protocol_version": "kan-protocol-v1alpha0",
+                "protocol_version": "hun-protocol-v1alpha0",
                 "daemon_version": "0.0.0-fake",
                 "feature_groups": [
                     "version.read",
@@ -133,7 +133,7 @@ def test_fake_hermes_context_invokes_registered_delegate_handlers() -> None:
     }
     assert transport.requests[2] == (
         OP_VERSION_READ,
-        {"protocol_version": "kan-protocol-v1alpha0"},
+        {"protocol_version": "hun-protocol-v1alpha0"},
     )
     assert transport.requests[3][0] == OP_COMMAND_SUBMIT
     assert transport.requests[3][1] is not None
@@ -148,7 +148,7 @@ def test_fake_hermes_context_invokes_registered_delegate_handlers() -> None:
     }
     assert transport.requests[4] == (
         OP_VERSION_READ,
-        {"protocol_version": "kan-protocol-v1alpha0"},
+        {"protocol_version": "hun-protocol-v1alpha0"},
     )
     assert transport.requests[5][0] == OP_COMMAND_SUBMIT
     assert transport.requests[5][1] is not None

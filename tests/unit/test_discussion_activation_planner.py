@@ -34,10 +34,10 @@ def complete_plan() -> dict[str, object]:
         "participant_profiles": [
             {
                 "profile": "macho",
-                "effective_discord": {
+                "effective_hermes": {
                     "tools_visible": True,
                     "bot_to_bot_enabled": False,
-                    "evidence_ref": "profile/macho/effective-discord",
+                    "evidence_ref": "profile/macho/effective-hermes",
                 },
             },
             {
@@ -194,6 +194,22 @@ def complete_runfix_012_plan() -> dict[str, object]:
         },
     }
     return plan
+
+
+def complete_hun_008_plan() -> dict[str, object]:
+    plan = complete_runfix_012_plan()
+    plan["task_id"] = "plugin/HUN-008"
+    return plan
+
+
+def complete_prior_task_plan(task_id: str) -> dict[str, object]:
+    if task_id == "plugin/HUN-008":
+        return complete_hun_008_plan()
+    if task_id == "plugin/RUNFIX-017":
+        return complete_runfix_017_plan()
+    if task_id in {"plugin/RUNFIX-008", "plugin/RUNFIX-010"}:
+        return complete_runfix_008_plan()
+    return complete_plan()
 
 
 def complete_runfix_017_plan() -> dict[str, object]:
@@ -401,8 +417,8 @@ def test_complete_dry_run_is_ready_for_approval_without_live_readiness() -> None
     assert report["eligible_profiles"] == [
         {
             "profile": "macho",
-            "reason": "effective_discord_tools_visible_and_bot_to_bot_disabled",
-            "evidence_ref": "profile/macho/effective-discord",
+            "reason": "effective_hermes_tools_visible_and_bot_to_bot_disabled",
+            "evidence_ref": "profile/macho/effective-hermes",
         }
     ]
     assert report["excluded_profiles"] == [
@@ -412,7 +428,7 @@ def test_complete_dry_run_is_ready_for_approval_without_live_readiness() -> None
             "evidence_ref": "profile/seohwang/bot-to-bot-enabled",
             "remediation": (
                 "Disable bot-to-bot replies for this profile or omit it from the "
-                "KAN discussion allow-list."
+                "HUN discussion allow-list."
             ),
         }
     ]
@@ -465,6 +481,26 @@ def test_complete_dry_run_is_ready_for_approval_without_live_readiness() -> None
         "new_axis_reason",
     ]
     assert report["operator_evidence_report"]["runner_evidence"]["status"] == "unproven"
+    assert report["activation_evidence_model_report"] == {
+        "task_id": "plugin/HUN-008",
+        "public_tool_name": "hun_discussion_activation_plan",
+        "legacy_public_aliases_allowed": False,
+        "historical_dependency_labels": [
+            "control/RUNFIX-005",
+            "control/RUNFIX-011",
+            "control/RUNFIX-018",
+        ],
+        "readiness_axes": {
+            "plugin_install_tool_visibility": "plugin_install",
+            "daemon_socket_config_compatibility": "control_daemon",
+            "profile_gateway_visibility": "participant_profiles",
+            "visible_surface_readiness": "visible_surface_readiness_report",
+            "selected_runner_runtime_proof": "participant_runtime_readiness_report",
+            "final_live_readiness_claim": "live_readiness_false",
+        },
+        "local_proof_only": True,
+        "live_readiness": False,
+    }
 
 
 def test_legacy_kan_activation_tool_name_does_not_satisfy_visibility() -> None:
@@ -502,16 +538,11 @@ def test_runfix_006_task_id_remains_accepted_with_runfix_007_behavior_label() ->
         "plugin/RUNFIX-008",
         "plugin/RUNFIX-010",
         "plugin/RUNFIX-017",
+        "plugin/HUN-008",
     ],
 )
 def test_prior_runfix_task_ids_remain_accepted(task_id: str) -> None:
-    plan = (
-        complete_runfix_017_plan()
-        if task_id == "plugin/RUNFIX-017"
-        else complete_runfix_008_plan()
-        if task_id in {"plugin/RUNFIX-008", "plugin/RUNFIX-010"}
-        else complete_plan()
-    )
+    plan = complete_prior_task_plan(task_id)
     plan["task_id"] = task_id
     if task_id == "plugin/RUNFIX-010":
         plan["request_context"] = {
@@ -524,6 +555,100 @@ def test_prior_runfix_task_ids_remain_accepted(task_id: str) -> None:
     assert report["task_id"] == task_id
     assert report["status"] == "ready_for_approval"
     assert report["live_readiness"] is False
+
+
+def test_hun_008_is_local_proof_only_even_for_discord_origin_request() -> None:
+    plan = complete_hun_008_plan()
+    plan["request_context"] = {"source": "discord_thread"}
+
+    report = build_discussion_activation_plan(plan)
+
+    assert report["task_id"] == "plugin/HUN-008"
+    assert report["behavior_task_id"] == "plugin/HUN-008"
+    assert report["status"] == "ready_for_approval"
+    assert report["start_authority"] == "explicit_operator_approval_required"
+    assert report["live_readiness"] is False
+    assert report["requested_output_mode"] == "live_visible_thread"
+    assert report["visible_surface_readiness_report"]["ready"] is False
+    assert report["participant_runtime_readiness_report"]["ready"] is True
+    assert report["activation_evidence_model_report"]["legacy_public_aliases_allowed"] is False
+
+
+@pytest.mark.parametrize(
+    ("task_id", "status"),
+    [
+        ("control/RUNFIX-005", "completed/local-control"),
+        ("control/RUNFIX-011", "local implementation proof"),
+        ("control/RUNFIX-018", "local-control"),
+    ],
+)
+def test_hun_008_control_dependency_accepts_historical_labels(task_id: str, status: str) -> None:
+    plan = complete_hun_008_plan()
+    plan["control_dependency"] = {
+        "task_id": task_id,
+        "status": status,
+        "evidence_ref": f"control/docs/roadmap.md#{task_id.removeprefix('control/')}",
+    }
+
+    report = build_discussion_activation_plan(plan)
+
+    assert report["status"] == "ready_for_approval"
+    assert report["behavior_task_id"] == "plugin/HUN-008"
+    assert report["live_readiness"] is False
+    assert task_id in report["activation_evidence_model_report"]["historical_dependency_labels"]
+
+
+@pytest.mark.parametrize(
+    ("control_dependency", "blocker_code"),
+    [
+        (None, "control_dependency_missing"),
+        (
+            {
+                "task_id": "control/RUNFIX-999",
+                "status": "local-control",
+                "evidence_ref": "control/docs/roadmap.md#runfix-999",
+            },
+            "control_dependency_task_mismatch",
+        ),
+        (
+            {
+                "task_id": "control/RUNFIX-018",
+                "status": "planned",
+                "evidence_ref": "control/docs/roadmap.md#runfix-018",
+            },
+            "control_dependency_not_completed",
+        ),
+        (
+            {
+                "task_id": "control/RUNFIX-018",
+                "status": "local-control",
+            },
+            "control_dependency_evidence_missing",
+        ),
+        (
+            {
+                "task_id": "control/RUNFIX-018",
+                "status": "local-control",
+                "evidence_ref": "",
+            },
+            "control_dependency_evidence_missing",
+        ),
+    ],
+)
+def test_hun_008_control_dependency_invalid_evidence_fails_closed(
+    control_dependency: object, blocker_code: str
+) -> None:
+    plan = complete_hun_008_plan()
+    if control_dependency is None:
+        plan.pop("control_dependency")
+    else:
+        plan["control_dependency"] = control_dependency
+
+    report = build_discussion_activation_plan(plan)
+
+    assert report["status"] == "blocked"
+    assert report["live_readiness"] is False
+    assert any(blocker["code"] == blocker_code for blocker in report["blockers"])
 
 
 def test_runfix_017_exposes_prior_claim_targets_and_quality_report() -> None:
@@ -1855,7 +1980,7 @@ def test_bot_to_bot_enabled_profiles_are_excluded_by_default() -> None:
             "evidence_ref": "profile/jonghoe/bot-to-bot",
             "remediation": (
                 "Disable bot-to-bot replies for this profile or omit it from the "
-                "KAN discussion allow-list."
+                "HUN discussion allow-list."
             ),
         }
     ]
@@ -1898,11 +2023,11 @@ def test_missing_tool_visibility_or_eligibility_blocks_profile(
             "reason": reason,
             "evidence_ref": "profile/manchong",
             "remediation": (
-                "Provide explicit effective Discord tool visibility evidence."
+                "Provide explicit effective Hermes profile tool visibility evidence."
                 if reason == "tools_visibility_unknown"
-                else "Enable/verify the profile-visible KAN plugin tools before allow-listing."
+                else "Enable/verify the profile-visible HUN plugin tools before allow-listing."
                 if reason == "tools_visibility_missing_or_false"
-                else "Provide explicit effective Discord bot-to-bot policy evidence."
+                else "Provide explicit effective Hermes bot-to-bot policy evidence."
             ),
         }
     ]
@@ -1932,7 +2057,7 @@ def test_effective_discord_unknowns_block_even_when_legacy_fields_look_eligible(
             "profile": "macho",
             "reason": "bot_to_bot_eligibility_unknown",
             "evidence_ref": "profile/macho/effective-discord-unknown",
-            "remediation": "Provide explicit effective Discord bot-to-bot policy evidence.",
+            "remediation": "Provide explicit effective Hermes bot-to-bot policy evidence.",
         }
     ]
 

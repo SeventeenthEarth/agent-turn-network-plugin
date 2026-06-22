@@ -833,7 +833,7 @@ HUN_SURFACE_RENDER_PROJECTION: Final[dict[str, object]] = {
 HUN_DISCUSSION_ACTIVATION_PLAN: Final[dict[str, object]] = {
     "name": "hun_discussion_activation_plan",
     "description": (
-        "Build a deterministic pure/local RUNFIX/RUNFIX2 KAN discussion activation "
+        "Build a deterministic pure/local HUN discussion activation "
         "planner/doctor report from explicit caller-provided evidence only. The "
         "tool performs no environment reads, socket discovery, daemon startup, "
         "CLI fallback, Discord/Hermes/profile/gateway inspection, or provider/"
@@ -846,13 +846,13 @@ HUN_DISCUSSION_ACTIVATION_PLAN: Final[dict[str, object]] = {
                 "type": "object",
                 "description": (
                     "Explicit activation planning evidence with schema_version=1, "
-                    "control/RUNFIX-005 or control/RUNFIX-011 dependency evidence, "
-                    "plugin tool visibility, "
+                    "HUN task evidence, historical control/RUNFIX dependency labels, "
+                    "HUN plugin tool visibility, "
                     "explicit daemon/socket/config evidence, participant profiles, "
                     "parent-channel allow-list inheritance proof, planned changes, "
                     "rollback, verification commands, approval gates, and separated "
-                    "RUNFIX evidence labels, optional live-visible surface readiness, "
-                    "and optional RUNFIX2 integrated discussion proof evidence."
+                    "evidence labels, optional live-visible surface readiness, "
+                    "and optional integrated discussion proof evidence."
                 ),
                 "properties": {
                     "schema_version": {"type": "integer", "const": 1},
@@ -868,6 +868,7 @@ HUN_DISCUSSION_ACTIVATION_PLAN: Final[dict[str, object]] = {
                             "plugin/RUNFIX-017",
                             "plugin/RUNFIX-019",
                             "plugin/RUNFIX2-005",
+                            "plugin/HUN-008",
                         ],
                     },
                     "control_dependency": {
@@ -878,7 +879,8 @@ HUN_DISCUSSION_ACTIVATION_PLAN: Final[dict[str, object]] = {
                             "RUNFIX-006/007/008/010/015/017 require control/RUNFIX-005; "
                             "RUNFIX-012 requires control/RUNFIX-011 local participant-runtime "
                             "readiness proof; "
-                            "RUNFIX-019 requires control/RUNFIX-018 registry reconciliation proof."
+                            "RUNFIX-019 requires control/RUNFIX-018 registry reconciliation proof; "
+                            "HUN-008 preserves those IDs as historical dependency labels."
                         ),
                     },
                     "plugin_install": {
@@ -900,9 +902,10 @@ HUN_DISCUSSION_ACTIVATION_PLAN: Final[dict[str, object]] = {
                         "type": "array",
                         "items": {"type": "object", "additionalProperties": True},
                         "description": (
-                            "Candidate profile rows with explicit effective_discord "
-                            "evidence, or legacy tools_visible/bot_to_bot_enabled "
-                            "fields for compatibility. Unknowns block; bot-to-bot "
+                            "Candidate profile rows with explicit effective_hermes "
+                            "profile visibility evidence. Historical effective_discord or "
+                            "tools_visible/bot_to_bot_enabled fields remain compatibility "
+                            "input only, not public aliases. Unknowns block; bot-to-bot "
                             "enabled profiles are excluded by default."
                         ),
                     },
@@ -1041,7 +1044,7 @@ HUN_DISCUSSION_ACTIVATION_PLAN: Final[dict[str, object]] = {
                             "discussion_quality_pass": {},
                         },
                         "description": (
-                            "RUNFIX labels remain separate and default to unproven "
+                            "Evidence labels remain separate and default to unproven "
                             "unless explicit evidence is supplied."
                         ),
                     },

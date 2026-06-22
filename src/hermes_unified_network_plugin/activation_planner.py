@@ -1,4 +1,4 @@
-"""Pure dry-run KAN discussion activation planner.
+"""Pure dry-run HUN discussion activation planner.
 
 The planner consumes explicit caller-provided evidence only. It performs no
 environment, Discord, Hermes, daemon, socket, CLI, profile, gateway, provider,
@@ -22,6 +22,7 @@ RUNFIX_015_TASK_ID: Final = "plugin/RUNFIX-015"
 RUNFIX_017_TASK_ID: Final = "plugin/RUNFIX-017"
 RUNFIX_019_TASK_ID: Final = "plugin/RUNFIX-019"
 RUNFIX2_005_TASK_ID: Final = "plugin/RUNFIX2-005"
+HUN_008_TASK_ID: Final = "plugin/HUN-008"
 SUPPORTED_TASK_IDS: Final[frozenset[str]] = frozenset(
     {
         RUNFIX_006_TASK_ID,
@@ -33,6 +34,7 @@ SUPPORTED_TASK_IDS: Final[frozenset[str]] = frozenset(
         RUNFIX_017_TASK_ID,
         RUNFIX_019_TASK_ID,
         RUNFIX2_005_TASK_ID,
+        HUN_008_TASK_ID,
     }
 )
 TASK_ID: Final = RUNFIX_010_TASK_ID
@@ -45,6 +47,17 @@ RUNFIX_012_CONTROL_DEPENDENCY_STATUSES: Final[frozenset[str]] = frozenset(
 RUNFIX_019_CONTROL_DEPENDENCY_TASK_ID: Final = "control/RUNFIX-018"
 RUNFIX_019_CONTROL_DEPENDENCY_STATUSES: Final[frozenset[str]] = frozenset(
     {"local implementation proof", "completed/local-control", "local-control"}
+)
+HUN_008_HISTORICAL_DEPENDENCY_LABELS: Final[tuple[str, ...]] = (
+    CONTROL_DEPENDENCY_TASK_ID,
+    RUNFIX_012_CONTROL_DEPENDENCY_TASK_ID,
+    RUNFIX_019_CONTROL_DEPENDENCY_TASK_ID,
+)
+HUN_008_CONTROL_DEPENDENCY_TASK_IDS: Final[frozenset[str]] = frozenset(
+    HUN_008_HISTORICAL_DEPENDENCY_LABELS
+)
+HUN_008_CONTROL_DEPENDENCY_STATUSES: Final[frozenset[str]] = frozenset(
+    {"completed/local-control", "local implementation proof", "local-control"}
 )
 TOOL_NAME: Final = "hun_discussion_activation_plan"
 EVIDENCE_LABELS: Final[tuple[str, ...]] = (
@@ -68,7 +81,7 @@ def build_discussion_activation_plan(plan: Mapping[str, object]) -> JsonObject:
             "plan.task_id must be plugin/RUNFIX-006, plugin/RUNFIX-007, "
             "plugin/RUNFIX-008, plugin/RUNFIX-010, plugin/RUNFIX-012, "
             "plugin/RUNFIX-015, plugin/RUNFIX-017, plugin/RUNFIX-019, "
-            "or plugin/RUNFIX2-005"
+            "plugin/RUNFIX2-005, or plugin/HUN-008"
         )
 
     blockers: list[JsonObject] = []
@@ -172,6 +185,7 @@ def build_discussion_activation_plan(plan: Mapping[str, object]) -> JsonObject:
         eligible_profiles=eligible_profiles,
         requested_output_mode=requested_output_mode,
         request_source=request_source,
+        task_id=task_id,
     )
     additional_operator_approval_required = status == "ready_for_approval"
     start_authority = (
@@ -199,6 +213,7 @@ def build_discussion_activation_plan(plan: Mapping[str, object]) -> JsonObject:
         "parent_channel_plan": parent_channel_plan,
         "participant_argue_response_template": _participant_argue_response_template(),
         "operator_evidence_report": operator_evidence,
+        "activation_evidence_model_report": _activation_evidence_model_report(),
         "requested_output_mode": visible_surface_readiness["requested_output_mode"],
         "visible_surface_readiness_report": visible_surface_readiness,
         "daemon_registry_membership_report": daemon_registry_membership,
@@ -234,6 +249,7 @@ def _behavior_task_id(task_id: str) -> str:
         RUNFIX_017_TASK_ID,
         RUNFIX_019_TASK_ID,
         RUNFIX2_005_TASK_ID,
+        HUN_008_TASK_ID,
     }:
         return task_id
     return RUNFIX_007_TASK_ID
@@ -247,6 +263,9 @@ def _validate_control_dependency(
         return
     if task_id == RUNFIX_019_TASK_ID:
         _validate_runfix_019_control_dependency(value, blockers=blockers)
+        return
+    if task_id == HUN_008_TASK_ID:
+        _validate_hun_008_control_dependency(value, blockers=blockers)
         return
 
     if not isinstance(value, Mapping):
@@ -363,6 +382,52 @@ def _validate_runfix_019_control_dependency(value: object, *, blockers: list[Jso
                 code="control_dependency_evidence_missing",
                 owner="control",
                 message="control/RUNFIX-018 evidence_ref is required.",
+            )
+        )
+
+
+def _validate_hun_008_control_dependency(value: object, *, blockers: list[JsonObject]) -> None:
+    if not isinstance(value, Mapping):
+        blockers.append(
+            _blocker(
+                code="control_dependency_missing",
+                owner="control",
+                message=(
+                    "plugin/HUN-008 requires explicit historical control dependency "
+                    "evidence for the activation planner model."
+                ),
+            )
+        )
+        return
+    dependency = _json_object(value, label="plan.control_dependency")
+    if dependency.get("task_id") not in HUN_008_CONTROL_DEPENDENCY_TASK_IDS:
+        blockers.append(
+            _blocker(
+                code="control_dependency_task_mismatch",
+                owner="control",
+                message=(
+                    "control_dependency.task_id must be one of the known historical "
+                    "activation planner dependency labels."
+                ),
+            )
+        )
+    if dependency.get("status") not in HUN_008_CONTROL_DEPENDENCY_STATUSES:
+        blockers.append(
+            _blocker(
+                code="control_dependency_not_completed",
+                owner="control",
+                message=(
+                    "plugin/HUN-008 control dependency status must be completed/local-control, "
+                    "local implementation proof, or local-control."
+                ),
+            )
+        )
+    if not _non_empty_string(dependency.get("evidence_ref")):
+        blockers.append(
+            _blocker(
+                code="control_dependency_evidence_missing",
+                owner="control",
+                message="plugin/HUN-008 control_dependency.evidence_ref is required.",
             )
         )
 
@@ -546,22 +611,24 @@ def _profile_classification(
         profile_name = _required_string(
             profile.get("profile"), label=f"plan.participant_profiles[{index}].profile"
         )
-        effective_discord = _effective_discord(profile, index=index)
-        evidence_ref = effective_discord.get("evidence_ref") or profile.get("evidence_ref")
+        effective_hermes = _effective_hermes_visibility(profile, index=index)
+        evidence_ref = effective_hermes.get("evidence_ref") or profile.get("evidence_ref")
         row = {"profile": profile_name}
         if _non_empty_string(evidence_ref):
             row["evidence_ref"] = cast(str, evidence_ref)
         principal = profile.get("principal")
         if _non_empty_string(principal) and principal != profile_name:
             row["principal"] = cast(str, principal)
-        tools_visible = effective_discord.get("tools_visible")
-        bot_to_bot_enabled = effective_discord.get("bot_to_bot_enabled")
+        tools_visible = effective_hermes.get("tools_visible")
+        bot_to_bot_enabled = effective_hermes.get("bot_to_bot_enabled")
         if tools_visible is None:
             blocked_profiles.append(
                 {
                     **row,
                     "reason": "tools_visibility_unknown",
-                    "remediation": "Provide explicit effective Discord tool visibility evidence.",
+                    "remediation": (
+                        "Provide explicit effective Hermes profile tool visibility evidence."
+                    ),
                 }
             )
             continue
@@ -571,7 +638,7 @@ def _profile_classification(
                     **row,
                     "reason": "tools_visibility_missing_or_false",
                     "remediation": (
-                        "Enable/verify the profile-visible KAN plugin tools before allow-listing."
+                        "Enable/verify the profile-visible HUN plugin tools before allow-listing."
                     ),
                 }
             )
@@ -581,7 +648,7 @@ def _profile_classification(
                 {
                     **row,
                     "reason": "bot_to_bot_eligibility_unknown",
-                    "remediation": "Provide explicit effective Discord bot-to-bot policy evidence.",
+                    "remediation": "Provide explicit effective Hermes bot-to-bot policy evidence.",
                 }
             )
             continue
@@ -592,7 +659,7 @@ def _profile_classification(
                     "reason": "bot_to_bot_enabled",
                     "remediation": (
                         "Disable bot-to-bot replies for this profile or omit it from the "
-                        "KAN discussion allow-list."
+                        "HUN discussion allow-list."
                     ),
                 }
             )
@@ -602,21 +669,23 @@ def _profile_classification(
                 {
                     **row,
                     "reason": "bot_to_bot_eligibility_unknown",
-                    "remediation": "Provide explicit effective Discord bot-to-bot policy evidence.",
+                    "remediation": "Provide explicit effective Hermes bot-to-bot policy evidence.",
                 }
             )
             continue
         eligible.append(
             {
                 **row,
-                "reason": "effective_discord_tools_visible_and_bot_to_bot_disabled",
+                "reason": "effective_hermes_tools_visible_and_bot_to_bot_disabled",
             }
         )
     return eligible
 
 
-def _effective_discord(profile: JsonObject, *, index: int) -> JsonObject:
-    value = profile.get("effective_discord")
+def _effective_hermes_visibility(profile: JsonObject, *, index: int) -> JsonObject:
+    value = profile.get("effective_hermes")
+    if value is None:
+        value = profile.get("effective_discord")
     if value is None:
         return {
             "tools_visible": profile.get("tools_visible"),
@@ -625,9 +694,9 @@ def _effective_discord(profile: JsonObject, *, index: int) -> JsonObject:
         }
     if not isinstance(value, Mapping):
         raise ValueError(
-            f"plan.participant_profiles[{index}].effective_discord must be an object when present"
+            f"plan.participant_profiles[{index}].effective_hermes must be an object when present"
         )
-    return _json_object(value, label=f"plan.participant_profiles[{index}].effective_discord")
+    return _json_object(value, label=f"plan.participant_profiles[{index}].effective_hermes")
 
 
 def _profile_remediation(
@@ -638,6 +707,25 @@ def _profile_remediation(
     return {
         "excluded": cast(list[JsonValue], excluded_profiles),
         "blocked": cast(list[JsonValue], blocked_profiles),
+    }
+
+
+def _activation_evidence_model_report() -> JsonObject:
+    return {
+        "task_id": HUN_008_TASK_ID,
+        "public_tool_name": TOOL_NAME,
+        "legacy_public_aliases_allowed": False,
+        "historical_dependency_labels": list(HUN_008_HISTORICAL_DEPENDENCY_LABELS),
+        "readiness_axes": {
+            "plugin_install_tool_visibility": "plugin_install",
+            "daemon_socket_config_compatibility": "control_daemon",
+            "profile_gateway_visibility": "participant_profiles",
+            "visible_surface_readiness": "visible_surface_readiness_report",
+            "selected_runner_runtime_proof": "participant_runtime_readiness_report",
+            "final_live_readiness_claim": "live_readiness_false",
+        },
+        "local_proof_only": True,
+        "live_readiness": False,
     }
 
 
@@ -3554,12 +3642,17 @@ def _status(
     eligible_profiles: list[JsonObject],
     requested_output_mode: str,
     request_source: str,
+    task_id: str,
 ) -> str:
     if any(blocker["code"] != "no_eligible_profiles" for blocker in blockers) or blocked_profiles:
         return "blocked"
     if blockers or not eligible_profiles:
         return "not_ready"
-    if requested_output_mode == "live_visible_thread" and request_source.startswith("discord"):
+    if (
+        task_id == RUNFIX_010_TASK_ID
+        and requested_output_mode == "live_visible_thread"
+        and request_source.startswith("discord")
+    ):
         return "ready_to_start"
     return "ready_for_approval"
 

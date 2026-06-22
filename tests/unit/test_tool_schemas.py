@@ -286,6 +286,7 @@ def test_discussion_activation_plan_schema_is_pure_local_doctor_tool() -> None:
     assert schema["name"] == "hun_discussion_activation_plan"
     description = str(schema["description"]).lower()
     assert "pure/local" in description
+    assert "hun discussion activation" in description
     assert "explicit caller-provided evidence only" in description
     assert "live readiness false" in description
     assert "cli fallback" in description
@@ -316,8 +317,16 @@ def test_discussion_activation_plan_schema_is_pure_local_doctor_tool() -> None:
             "plugin/RUNFIX-017",
             "plugin/RUNFIX-019",
             "plugin/RUNFIX2-005",
+            "plugin/HUN-008",
         ],
     }
+    assert (
+        "HUN-008 preserves those IDs"
+        in plan_schema["properties"]["control_dependency"]["description"]
+    )
+    participant_profiles = plan_schema["properties"]["participant_profiles"]
+    assert "effective_hermes" in participant_profiles["description"]
+    assert "not public aliases" in participant_profiles["description"]
     operator_evidence = plan_schema["properties"]["operator_evidence"]
     assert "ARGUE counts" in operator_evidence["description"]
     assert "speaker_selected -> speech linkage" in operator_evidence["description"]

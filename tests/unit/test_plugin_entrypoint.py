@@ -18,18 +18,18 @@ ROOT = Path(__file__).resolve().parents[2]
 
 
 EXPECTED_TOOLS = [
-    "kan_daemon_status",
-    "kan_compatibility_diagnostics",
-    "kan_stream_tail",
-    "kan_stream_ack",
-    "kan_delegate_new",
-    "kan_delegate_action",
-    "kan_council_command",
-    "kan_selected_participant_response",
-    "kan_delivery_evidence",
-    "kan_surface_render_projection",
-    "kan_discussion_activation_plan",
-    "kan_discord_send_message",
+    "hun_daemon_status",
+    "hun_compatibility_diagnostics",
+    "hun_stream_tail",
+    "hun_stream_ack",
+    "hun_delegate_new",
+    "hun_delegate_action",
+    "hun_council_command",
+    "hun_selected_participant_response",
+    "hun_delivery_evidence",
+    "hun_surface_render_projection",
+    "hun_discussion_activation_plan",
+    "hun_discord_send_message",
 ]
 
 EXPECTED_BUNDLED_SKILLS = [
@@ -37,6 +37,8 @@ EXPECTED_BUNDLED_SKILLS = [
     "kan-moderator",
     "kan-participant",
 ]
+
+LEGACY_TOOL_NAMES = [name.replace("hun_", "kan_", 1) for name in EXPECTED_TOOLS]
 
 
 def test_plugin_manifest_declares_fake_injected_tool_surface() -> None:
@@ -59,6 +61,7 @@ def test_plugin_manifest_declares_fake_injected_tool_surface() -> None:
         "provides_hooks": [],
         "provides_commands": [],
     }
+    assert not set(LEGACY_TOOL_NAMES) & set(manifest["provides_tools"])
 
 
 def test_root_entrypoint_matches_hermes_directory_plugin_contract() -> None:
@@ -69,6 +72,7 @@ def test_root_entrypoint_matches_hermes_directory_plugin_contract() -> None:
     module.register(fake_ctx)
 
     assert [tool["name"] for tool in fake_ctx.registered_tools] == EXPECTED_TOOLS
+    assert not set(LEGACY_TOOL_NAMES) & {tool["name"] for tool in fake_ctx.registered_tools}
     assert all(callable(tool["handler"]) for tool in fake_ctx.registered_tools)
     assert [skill["name"] for skill in fake_ctx.registered_skills] == EXPECTED_BUNDLED_SKILLS
     assert all(skill["path"].name == "SKILL.md" for skill in fake_ctx.registered_skills)
@@ -104,7 +108,7 @@ def test_root_entrypoint_uses_adjacent_config_when_no_explicit_config_or_factory
     fake_ctx = FakePluginContext()
 
     module.register(fake_ctx)
-    status = json.loads(fake_ctx.handler("kan_daemon_status")({}))
+    status = json.loads(fake_ctx.handler("hun_daemon_status")({}))
 
     assert status["ok"] is True
     assert status["data"]["status"] == "adjacent-config-ready"
@@ -124,7 +128,7 @@ def test_root_entrypoint_malformed_adjacent_config_registers_fail_closed_handler
     fake_ctx = FakePluginContext()
 
     module.register(fake_ctx)
-    status = json.loads(fake_ctx.handler("kan_daemon_status")({}))
+    status = json.loads(fake_ctx.handler("hun_daemon_status")({}))
 
     assert [tool["name"] for tool in fake_ctx.registered_tools] == EXPECTED_TOOLS
     assert status["ok"] is False
@@ -142,7 +146,7 @@ def test_root_entrypoint_non_utf8_adjacent_config_registers_fail_closed_handler(
     fake_ctx = FakePluginContext()
 
     module.register(fake_ctx)
-    status = json.loads(fake_ctx.handler("kan_daemon_status")({}))
+    status = json.loads(fake_ctx.handler("hun_daemon_status")({}))
 
     assert [tool["name"] for tool in fake_ctx.registered_tools] == EXPECTED_TOOLS
     assert status["ok"] is False

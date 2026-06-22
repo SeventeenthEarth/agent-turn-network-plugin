@@ -78,7 +78,7 @@ def _assert_no_transport_on_invalid(args: JsonObject, expected_message: str) -> 
     result = _decode(handle_council_command(args, client_factory=client_factory))
 
     assert result["ok"] is False
-    assert result["tool"] == "kan_council_command"
+    assert result["tool"] == "hun_council_command"
     assert result["error"] == {
         "category": "validation",
         "message": expected_message,

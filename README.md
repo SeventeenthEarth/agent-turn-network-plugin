@@ -1,6 +1,6 @@
 # kkachi-agent-network-plugin
 
-`kkachi-agent-network-plugin` is the Python Hermes plugin adapter for KAN. In the current local stage it exposes fake/injected Hermes plugin tools only: read-only `kan_daemon_status`, `kan_compatibility_diagnostics`, `kan_stream_tail`, `kan_stream_ack`, command-envelope `kan_delegate_new` and `kan_delegate_action`, `kan_council_command`, `kan_selected_participant_response`, `kan_delivery_evidence`, pure local `kan_surface_render_projection`, pure local `kan_discussion_activation_plan`, plus the injected-only `kan_discord_send_message` helper. It also packages a `kan-plugin` operator skill and has a local isolated plugin-load smoke gate for the repository entrypoint. Hermes has a plugin slash-command host API, but this plugin still has no KAN slash-command bindings, live daemon discovery, live/default Discord gateway wiring, session-status tool, production activation claim, KAB bridge claim, or live plugin readiness claim.
+`kkachi-agent-network-plugin` is the Python Hermes plugin adapter for KAN. In the current local stage it exposes fake/injected Hermes plugin tools only: read-only `hun_daemon_status`, `hun_compatibility_diagnostics`, `hun_stream_tail`, `hun_stream_ack`, command-envelope `hun_delegate_new` and `hun_delegate_action`, `hun_council_command`, `hun_selected_participant_response`, `hun_delivery_evidence`, pure local `hun_surface_render_projection`, pure local `hun_discussion_activation_plan`, plus the injected-only `hun_discord_send_message` helper. It also packages a `kan-plugin` operator skill and has a local isolated plugin-load smoke gate for the repository entrypoint. Hermes has a plugin slash-command host API, but this plugin still has no KAN slash-command bindings, live daemon discovery, live/default Discord gateway wiring, session-status tool, production activation claim, KAB bridge claim, or live plugin readiness claim.
 
 The plugin is not the source of truth. `kkachi-agent-networkd` owns `channel.jsonl`, SQLite projections, locks, replay, cursors, and state transitions.
 
@@ -46,11 +46,11 @@ Key docs:
 
 Local fake/injected plugin stage. The package layout, plugin manifest, root Hermes directory entrypoint, status/diagnostics/stream-tail tools, delegation/review command-envelope tools, council/delivery-evidence command tools, pure visible-surface projection renderer, pure discussion activation planner/doctor, injected-only Discord helper, bundled `kan-plugin` operator skill, compatibility matrix, and local isolated plugin-load smoke gate are in place. Handlers return JSON strings, preserve fail-closed error categories, redact sensitive diagnostics/stream payloads, and require explicit fake/injected `DaemonClient` factories, explicit caller-provided planner evidence, or explicit injected Discord senders for daemon/planner/Discord surfaces.
 
-`kan_stream_tail` probes `version.read` for `stream_frame` compatibility before `stream.tail`. `kan_delegate_new` submits `delegate.new`; `kan_delegate_action` accepts only the exact implemented `delegate.*` action/review/delivery enum, rejects `delegate.request` and top-level `review`, requires caller-supplied `request_id`/`idempotency_key`, and owns no lifecycle/idempotency state.
+`hun_stream_tail` probes `version.read` for `stream_frame` compatibility before `stream.tail`. `hun_delegate_new` submits `delegate.new`; `hun_delegate_action` accepts only the exact implemented `delegate.*` action/review/delivery enum, rejects `delegate.request` and top-level `review`, requires caller-supplied `request_id`/`idempotency_key`, and owns no lifecycle/idempotency state.
 
-`kan_council_command` accepts only the exact implemented `council.*` lifecycle enum and probes `version.read` for `council.lifecycle` before `command.submit`. `kan_selected_participant_response` submits a wrapper-proven `council.speak` payload for the selected member, then acks the selected cursor only after submit succeeds. `kan_delivery_evidence` accepts only `delegate.escalation_delivered` and `delegate.escalation_delivery_failed` and probes for `delivery_evidence` first. These tools preserve caller-supplied IDs and own no logs, locks, cursors, consensus/lifecycle state, idempotency/dedupe, or delivery evidence transitions.
+`hun_council_command` accepts only the exact implemented `council.*` lifecycle enum and probes `version.read` for `council.lifecycle` before `command.submit`. `hun_selected_participant_response` submits a wrapper-proven `council.speak` payload for the selected member, then acks the selected cursor only after submit succeeds. `hun_delivery_evidence` accepts only `delegate.escalation_delivered` and `delegate.escalation_delivery_failed` and probes for `delivery_evidence` first. These tools preserve caller-supplied IDs and own no logs, locks, cursors, consensus/lifecycle state, idempotency/dedupe, or delivery evidence transitions.
 
-`kan_surface_render_projection` is pure/local: it accepts explicit daemon/control
+`hun_surface_render_projection` is pure/local: it accepts explicit daemon/control
 projection JSON, sorts by daemon cursor/order authority, renders a clean
 `visible_transcript` for operator-facing discussion text, keeps raw cursors/event
 ids in `audit_log`/`rows`, and returns `live_readiness: false`. In closeout mode
@@ -61,7 +61,7 @@ closeout proof. It performs no daemon
 reads, Discord reads or sends, environment reads, lifecycle transitions, or CLI
 fallback.
 
-`kan_discussion_activation_plan` is pure/local: it accepts explicit operator
+`hun_discussion_activation_plan` is pure/local: it accepts explicit operator
 activation-planning evidence only and returns a deterministic dry-run
 planner/doctor report. It classifies profiles as eligible, excluded, or
 blocked/unknown from explicit effective Discord evidence; excludes
@@ -74,12 +74,12 @@ returns `live_readiness: false`. It performs no environment reads, current
 Hermes/Discord/profile/gateway inspection, socket discovery, CLI fallback, daemon
 startup, Discord sends, or profile/gateway/provider/auth/token/model mutation.
 
-`kan_discord_send_message` validates an explicit dedicated Discord test target with a
+`hun_discord_send_message` validates an explicit dedicated Discord test target with a
 visible label and cleanup hint, then calls only an injected `send_message` callable. It
 fails closed without sender injection, does not read environment variables or current
 Hermes/Discord state, and treats Discord IDs only as evidence pointers.
 
-`kan_session_status` remains deferred until the control repo provides fixture/protocol authority for `session.status.read`. KAN slash commands remain unsupported and `provides_commands: []` remains unchanged. SKILL-2 does not install into the user's Hermes profile and does not prove live daemon support, live Discord sending, production activation, KAB bridge behavior, or live Hermes integration.
+`hun_session_status` remains deferred until the control repo provides fixture/protocol authority for `session.status.read`. KAN slash commands remain unsupported and `provides_commands: []` remains unchanged. SKILL-2 does not install into the user's Hermes profile and does not prove live daemon support, live Discord sending, production activation, KAB bridge behavior, or live Hermes integration.
 
 ## Test targets
 

@@ -31,75 +31,75 @@ def hplug_register_lines(*, include_hook: bool = False, include_command: bool = 
     return (
         "def register(ctx: object) -> None:\n"
         "    ctx.register_tool(\n"
-        '        name="kan_daemon_status",\n'
+        '        name="hun_daemon_status",\n'
         '        toolset="kkachi_agent_network",\n'
-        '        schema={"name": "kan_daemon_status"},\n'
+        '        schema={"name": "hun_daemon_status"},\n'
         '        handler=lambda args: "{}",\n'
         "    )\n"
         "    ctx.register_tool(\n"
-        '        name="kan_compatibility_diagnostics",\n'
+        '        name="hun_compatibility_diagnostics",\n'
         '        toolset="kkachi_agent_network",\n'
-        '        schema={"name": "kan_compatibility_diagnostics"},\n'
+        '        schema={"name": "hun_compatibility_diagnostics"},\n'
         '        handler=lambda args: "{}",\n'
         "    )\n"
         "    ctx.register_tool(\n"
-        '        name="kan_stream_tail",\n'
+        '        name="hun_stream_tail",\n'
         '        toolset="kkachi_agent_network",\n'
-        '        schema={"name": "kan_stream_tail"},\n'
+        '        schema={"name": "hun_stream_tail"},\n'
         '        handler=lambda args: "{}",\n'
         "    )\n"
         "    ctx.register_tool(\n"
-        '        name="kan_stream_ack",\n'
+        '        name="hun_stream_ack",\n'
         '        toolset="kkachi_agent_network",\n'
-        '        schema={"name": "kan_stream_ack"},\n'
+        '        schema={"name": "hun_stream_ack"},\n'
         '        handler=lambda args: "{}",\n'
         "    )\n"
         "    ctx.register_tool(\n"
-        '        name="kan_delegate_new",\n'
+        '        name="hun_delegate_new",\n'
         '        toolset="kkachi_agent_network",\n'
-        '        schema={"name": "kan_delegate_new"},\n'
+        '        schema={"name": "hun_delegate_new"},\n'
         '        handler=lambda args: "{}",\n'
         "    )\n"
         "    ctx.register_tool(\n"
-        '        name="kan_delegate_action",\n'
+        '        name="hun_delegate_action",\n'
         '        toolset="kkachi_agent_network",\n'
-        '        schema={"name": "kan_delegate_action"},\n'
+        '        schema={"name": "hun_delegate_action"},\n'
         '        handler=lambda args: "{}",\n'
         "    )\n"
         "    ctx.register_tool(\n"
-        '        name="kan_council_command",\n'
+        '        name="hun_council_command",\n'
         '        toolset="kkachi_agent_network",\n'
-        '        schema={"name": "kan_council_command"},\n'
+        '        schema={"name": "hun_council_command"},\n'
         '        handler=lambda args: "{}",\n'
         "    )\n"
         "    ctx.register_tool(\n"
-        '        name="kan_selected_participant_response",\n'
+        '        name="hun_selected_participant_response",\n'
         '        toolset="kkachi_agent_network",\n'
-        '        schema={"name": "kan_selected_participant_response"},\n'
+        '        schema={"name": "hun_selected_participant_response"},\n'
         '        handler=lambda args: "{}",\n'
         "    )\n"
         "    ctx.register_tool(\n"
-        '        name="kan_delivery_evidence",\n'
+        '        name="hun_delivery_evidence",\n'
         '        toolset="kkachi_agent_network",\n'
-        '        schema={"name": "kan_delivery_evidence"},\n'
+        '        schema={"name": "hun_delivery_evidence"},\n'
         '        handler=lambda args: "{}",\n'
         "    )\n"
         "    ctx.register_tool(\n"
-        '        name="kan_surface_render_projection",\n'
+        '        name="hun_surface_render_projection",\n'
         '        toolset="kkachi_agent_network",\n'
-        '        schema={"name": "kan_surface_render_projection"},\n'
+        '        schema={"name": "hun_surface_render_projection"},\n'
         '        handler=lambda args: "{}",\n'
         "    )\n"
         "    ctx.register_tool(\n"
-        '        name="kan_discussion_activation_plan",\n'
+        '        name="hun_discussion_activation_plan",\n'
         '        toolset="kkachi_agent_network",\n'
-        '        schema={"name": "kan_discussion_activation_plan"},\n'
+        '        schema={"name": "hun_discussion_activation_plan"},\n'
         '        handler=lambda args: "{}",\n'
         "    )\n"
         "    ctx.register_tool(\n"
-        '        name="kan_discord_send_message",\n'
+        '        name="hun_discord_send_message",\n'
         '        toolset="kkachi_agent_network",\n'
-        '        schema={"name": "kan_discord_send_message"},\n'
+        '        schema={"name": "hun_discord_send_message"},\n'
         '        handler=lambda args: "{}",\n'
         "    )\n"
         f"{hook_line}"
@@ -115,11 +115,11 @@ def write_bootstrap_fixture(
     manifest_text: str | None = None,
     manifest_version: str = "0.1.0",
     provides_tools: str = (
-        '["kan_daemon_status", "kan_compatibility_diagnostics", "kan_stream_tail", '
-        '"kan_stream_ack", "kan_delegate_new", "kan_delegate_action", '
-        '"kan_council_command", "kan_selected_participant_response", '
-        '"kan_delivery_evidence", "kan_surface_render_projection", '
-        '"kan_discussion_activation_plan", "kan_discord_send_message"]'
+        '["hun_daemon_status", "hun_compatibility_diagnostics", "hun_stream_tail", '
+        '"hun_stream_ack", "hun_delegate_new", "hun_delegate_action", '
+        '"hun_council_command", "hun_selected_participant_response", '
+        '"hun_delivery_evidence", "hun_surface_render_projection", '
+        '"hun_discussion_activation_plan", "hun_discord_send_message"]'
     ),
     provides_hooks: str = "[]",
     provides_commands: str = "[]",

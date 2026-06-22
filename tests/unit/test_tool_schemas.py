@@ -6,28 +6,29 @@ from hermes_unified_network_plugin.protocol import STREAM_TAIL_FRAME_LIMIT
 
 def test_schemas_expose_only_authorized_fake_injected_tools() -> None:
     assert schemas.tool_names() == (
-        "kan_daemon_status",
-        "kan_compatibility_diagnostics",
-        "kan_stream_tail",
-        "kan_stream_ack",
-        "kan_delegate_new",
-        "kan_delegate_action",
-        "kan_council_command",
-        "kan_selected_participant_response",
-        "kan_delivery_evidence",
-        "kan_surface_render_projection",
-        "kan_discussion_activation_plan",
-        "kan_discord_send_message",
+        "hun_daemon_status",
+        "hun_compatibility_diagnostics",
+        "hun_stream_tail",
+        "hun_stream_ack",
+        "hun_delegate_new",
+        "hun_delegate_action",
+        "hun_council_command",
+        "hun_selected_participant_response",
+        "hun_delivery_evidence",
+        "hun_surface_render_projection",
+        "hun_discussion_activation_plan",
+        "hun_discord_send_message",
     )
-    assert [schema["name"] for schema in schemas.KAN_TOOL_SCHEMAS] == list(schemas.tool_names())
+    assert [schema["name"] for schema in schemas.HUN_TOOL_SCHEMAS] == list(schemas.tool_names())
+    assert all(not name.startswith("kan_") for name in schemas.tool_names())
     assert "delegate.request" not in schemas.DELEGATE_ACTION_COMMANDS
     assert "review" not in schemas.DELEGATE_ACTION_COMMANDS
 
 
 def test_daemon_status_schema_has_no_arguments_and_no_write_claims() -> None:
-    schema = schemas.KAN_DAEMON_STATUS
+    schema = schemas.HUN_DAEMON_STATUS
 
-    assert schema["name"] == "kan_daemon_status"
+    assert schema["name"] == "hun_daemon_status"
     assert "read-only" in str(schema["description"]).lower()
     assert "command.submit" not in str(schema["description"]).lower()
     assert schema["parameters"] == {
@@ -38,9 +39,9 @@ def test_daemon_status_schema_has_no_arguments_and_no_write_claims() -> None:
 
 
 def test_compatibility_diagnostics_schema_accepts_optional_session_id_only() -> None:
-    schema = schemas.KAN_COMPATIBILITY_DIAGNOSTICS
+    schema = schemas.HUN_COMPATIBILITY_DIAGNOSTICS
 
-    assert schema["name"] == "kan_compatibility_diagnostics"
+    assert schema["name"] == "hun_compatibility_diagnostics"
     assert "diagnostics" in str(schema["description"]).lower()
     assert schema["parameters"] == {
         "type": "object",
@@ -56,9 +57,9 @@ def test_compatibility_diagnostics_schema_accepts_optional_session_id_only() -> 
 
 
 def test_stream_tail_schema_requires_session_and_member_with_bounded_optional_cursor() -> None:
-    schema = schemas.KAN_STREAM_TAIL
+    schema = schemas.HUN_STREAM_TAIL
 
-    assert schema["name"] == "kan_stream_tail"
+    assert schema["name"] == "hun_stream_tail"
     assert "stream tail" in str(schema["description"]).lower()
     assert schema["parameters"] == {
         "type": "object",
@@ -92,9 +93,9 @@ def test_stream_tail_schema_requires_session_and_member_with_bounded_optional_cu
 
 
 def test_stream_ack_schema_requires_cursor_and_command_id() -> None:
-    schema = schemas.KAN_STREAM_ACK
+    schema = schemas.HUN_STREAM_ACK
 
-    assert schema["name"] == "kan_stream_ack"
+    assert schema["name"] == "hun_stream_ack"
     assert "stream ack" in str(schema["description"]).lower()
     assert schema["parameters"] == {
         "type": "object",
@@ -126,6 +127,7 @@ def test_stream_ack_schema_requires_cursor_and_command_id() -> None:
 
 
 def test_hplug2_does_not_expose_deferred_session_status_schema() -> None:
+    assert "hun_session_status" not in schemas.tool_names()
     assert "kan_session_status" not in schemas.tool_names()
 
 
@@ -167,7 +169,7 @@ def test_argue_schema_fragments_expose_council_argument_graph_fields() -> None:
 
 
 def test_council_command_schema_documents_argue_payload_preservation() -> None:
-    schema = schemas.KAN_COUNCIL_COMMAND
+    schema = schemas.HUN_COUNCIL_COMMAND
     payload_schema = schema["parameters"]["properties"]["payload"]
     nested_payload = payload_schema["properties"]["payload"]
 
@@ -187,7 +189,7 @@ def test_council_command_schema_documents_argue_payload_preservation() -> None:
 
 
 def test_selected_participant_response_schema_accepts_explicit_argue_fields() -> None:
-    schema_properties = schemas.KAN_SELECTED_PARTICIPANT_RESPONSE["parameters"]["properties"]
+    schema_properties = schemas.HUN_SELECTED_PARTICIPANT_RESPONSE["parameters"]["properties"]
     participant_response = schema_properties["participant_response"]
     properties = participant_response["properties"]
 
@@ -230,9 +232,9 @@ def test_selected_participant_response_schema_accepts_explicit_argue_fields() ->
 
 
 def test_surface_render_projection_schema_is_pure_local_projection_tool() -> None:
-    schema = schemas.KAN_SURFACE_RENDER_PROJECTION
+    schema = schemas.HUN_SURFACE_RENDER_PROJECTION
 
-    assert schema["name"] == "kan_surface_render_projection"
+    assert schema["name"] == "hun_surface_render_projection"
     description = str(schema["description"]).lower()
     assert "pure" in description
     assert "no daemon reads" in description
@@ -279,9 +281,9 @@ def test_surface_render_projection_schema_is_pure_local_projection_tool() -> Non
 
 
 def test_discussion_activation_plan_schema_is_pure_local_doctor_tool() -> None:
-    schema = schemas.KAN_DISCUSSION_ACTIVATION_PLAN
+    schema = schemas.HUN_DISCUSSION_ACTIVATION_PLAN
 
-    assert schema["name"] == "kan_discussion_activation_plan"
+    assert schema["name"] == "hun_discussion_activation_plan"
     description = str(schema["description"]).lower()
     assert "pure/local" in description
     assert "explicit caller-provided evidence only" in description
@@ -355,9 +357,9 @@ def test_discussion_activation_plan_schema_is_pure_local_doctor_tool() -> None:
 
 
 def test_delegate_new_schema_requires_explicit_metadata_and_creation_fields() -> None:
-    schema = schemas.KAN_DELEGATE_NEW
+    schema = schemas.HUN_DELEGATE_NEW
 
-    assert schema["name"] == "kan_delegate_new"
+    assert schema["name"] == "hun_delegate_new"
     assert "delegate.new" in str(schema["description"])
     assert schema["parameters"] == {
         "type": "object",
@@ -439,9 +441,9 @@ def test_delegate_new_schema_requires_explicit_metadata_and_creation_fields() ->
 
 
 def test_delegate_action_schema_uses_closed_implemented_delegate_enum() -> None:
-    schema = schemas.KAN_DELEGATE_ACTION
+    schema = schemas.HUN_DELEGATE_ACTION
 
-    assert schema["name"] == "kan_delegate_action"
+    assert schema["name"] == "hun_delegate_action"
     assert schema["parameters"] == {
         "type": "object",
         "properties": {
@@ -527,7 +529,7 @@ def test_cndis_tool_schemas_use_closed_control_command_enums() -> None:
         "delegate.escalation_delivered",
         "delegate.escalation_delivery_failed",
     )
-    council_parameters = schemas.KAN_COUNCIL_COMMAND["parameters"]
+    council_parameters = schemas.HUN_COUNCIL_COMMAND["parameters"]
     assert council_parameters["required"] == [
         "command",
         "session_id",
@@ -539,7 +541,7 @@ def test_cndis_tool_schemas_use_closed_control_command_enums() -> None:
     assert council_parameters["properties"]["command"]["enum"] == list(schemas.COUNCIL_COMMANDS)
     assert council_parameters["properties"]["payload"]["type"] == "object"
     assert council_parameters["properties"]["payload"]["additionalProperties"] is True
-    assert schemas.KAN_DELIVERY_EVIDENCE["parameters"] == {
+    assert schemas.HUN_DELIVERY_EVIDENCE["parameters"] == {
         "type": "object",
         "properties": {
             "command": {
@@ -583,9 +585,9 @@ def test_cndis_tool_schemas_use_closed_control_command_enums() -> None:
 
 
 def test_discord_send_message_schema_is_injected_only_and_target_gated() -> None:
-    schema = schemas.KAN_DISCORD_SEND_MESSAGE
+    schema = schemas.HUN_DISCORD_SEND_MESSAGE
 
-    assert schema["name"] == "kan_discord_send_message"
+    assert schema["name"] == "hun_discord_send_message"
     description = str(schema["description"])
     assert "explicit injected send_message" in description
     assert "fails closed without sender injection" in description

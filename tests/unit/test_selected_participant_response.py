@@ -121,7 +121,7 @@ def test_selected_participant_response_submits_speak_then_acks_selected_cursor()
 
     assert result == {
         "ok": True,
-        "tool": "kan_selected_participant_response",
+        "tool": "hun_selected_participant_response",
         "live_readiness": False,
         "data": {
             "selected_member": "kas",
@@ -267,7 +267,7 @@ def test_selected_participant_response_rejects_runtime_noise_before_transport(
     result = decode(handle_selected_participant_response(args, client_factory=never_client_factory))
 
     assert result["ok"] is False
-    assert result["tool"] == "kan_selected_participant_response"
+    assert result["tool"] == "hun_selected_participant_response"
     assert result["error"] == {
         "category": "validation",
         "message": "participant_response.message contains runtime/system noise",
@@ -328,7 +328,7 @@ def test_selected_participant_response_rejects_invalid_argue_fields_before_trans
     result = decode(handle_selected_participant_response(args, client_factory=client_factory))
 
     assert result["ok"] is False
-    assert result["tool"] == "kan_selected_participant_response"
+    assert result["tool"] == "hun_selected_participant_response"
     assert result["error"] == {
         "category": "validation",
         "message": (
@@ -354,7 +354,7 @@ def test_selected_participant_response_rejects_role_substitution_before_transpor
     result = decode(handle_selected_participant_response(args, client_factory=client_factory))
 
     assert result["ok"] is False
-    assert result["tool"] == "kan_selected_participant_response"
+    assert result["tool"] == "hun_selected_participant_response"
     assert result["error"] == {
         "category": "validation",
         "message": "participant_response.role_substitution must be false",
@@ -472,7 +472,7 @@ def test_selected_participant_response_rejects_invalid_membr_evidence_before_tra
     result = decode(handle_selected_participant_response(args, client_factory=client_factory))
 
     assert result["ok"] is False
-    assert result["tool"] == "kan_selected_participant_response"
+    assert result["tool"] == "hun_selected_participant_response"
     assert result["error"] == {
         "category": "validation",
         "message": message,
@@ -810,7 +810,7 @@ def test_selected_participant_response_does_not_ack_when_speak_submit_fails() ->
     )
 
     assert result["ok"] is False
-    assert result["tool"] == "kan_selected_participant_response"
+    assert result["tool"] == "hun_selected_participant_response"
     assert result["error"]["category"] == "conflict"
     assert [operation for operation, _body in transport.requests] == [
         OP_VERSION_READ,

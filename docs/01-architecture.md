@@ -79,25 +79,25 @@ CNDIS-2 injected Discord helper
 
 The plugin currently registers the manifest-declared fake/injected Hermes tools and no hooks or KAN slash commands:
 
-- `kan_daemon_status` — fake/injected daemon status read;
-- `kan_compatibility_diagnostics` — fake/injected diagnostics read with redaction;
-- `kan_stream_tail` — fake/injected retained stream tail read that requires positive `stream_frame` compatibility before `stream.tail`.
-- `kan_stream_ack` — fake/injected stream cursor ack that requires positive `stream.ack` compatibility before `stream.ack`.
-- `kan_delegate_new` — fake/injected `delegate.new` command-envelope submission with caller-supplied request/idempotency metadata;
-- `kan_delegate_action` — fake/injected closed-enum `delegate.*` action/review/delivery command-envelope submission. Its top-level `session_id` overrides/sets `payload.session_id` before submit.
-- `kan_council_command` — fake/injected closed-enum `council.*` lifecycle command-envelope submission with `council.lifecycle` pre-probe and no plugin-owned council state;
-- `kan_selected_participant_response` — fake/injected selected-member `council.speak`
+- `hun_daemon_status` — fake/injected daemon status read;
+- `hun_compatibility_diagnostics` — fake/injected diagnostics read with redaction;
+- `hun_stream_tail` — fake/injected retained stream tail read that requires positive `stream_frame` compatibility before `stream.tail`.
+- `hun_stream_ack` — fake/injected stream cursor ack that requires positive `stream.ack` compatibility before `stream.ack`.
+- `hun_delegate_new` — fake/injected `delegate.new` command-envelope submission with caller-supplied request/idempotency metadata;
+- `hun_delegate_action` — fake/injected closed-enum `delegate.*` action/review/delivery command-envelope submission. Its top-level `session_id` overrides/sets `payload.session_id` before submit.
+- `hun_council_command` — fake/injected closed-enum `council.*` lifecycle command-envelope submission with `council.lifecycle` pre-probe and no plugin-owned council state;
+- `hun_selected_participant_response` — fake/injected selected-member `council.speak`
   proof submission followed by selected-cursor ack only after submit succeeds;
-- `kan_delivery_evidence` — fake/injected closed-enum `delegate.escalation_delivered` / `delegate.escalation_delivery_failed` command-envelope submission with `delivery_evidence` pre-probe and no plugin-owned delivery-evidence transitions.
-- `kan_surface_render_projection` — pure/local visible-surface projection from daemon/control event data; cursor order is authority, speech requires matching `speaker_selected` floor-grant evidence, draft/vote/final closeout entries render into a clean `visible_transcript`, raw cursors/event ids remain in `audit_log`/`rows`, delivery pointers stay evidence-only, and `live_readiness` remains false.
-- `kan_discussion_activation_plan` — pure/local RUNFIX dry-run planner/doctor from explicit caller-provided evidence; it classifies eligible, excluded, and blocked/unknown profiles from explicit effective Discord evidence, excludes bot-to-bot-enabled profiles by default, emits eligible-only `allow_list_targets`, profile remediation, parent-channel proof state, and fallback-audit rejection rows, keeps RUNFIX evidence labels separate, reports unproven parent-channel inheritance as a gateway blocker, performs no discovery or mutation, and keeps `live_readiness` false.
-- `kan_discord_send_message` — fake/injected Discord helper that requires a dedicated
+- `hun_delivery_evidence` — fake/injected closed-enum `delegate.escalation_delivered` / `delegate.escalation_delivery_failed` command-envelope submission with `delivery_evidence` pre-probe and no plugin-owned delivery-evidence transitions.
+- `hun_surface_render_projection` — pure/local visible-surface projection from daemon/control event data; cursor order is authority, speech requires matching `speaker_selected` floor-grant evidence, draft/vote/final closeout entries render into a clean `visible_transcript`, raw cursors/event ids remain in `audit_log`/`rows`, delivery pointers stay evidence-only, and `live_readiness` remains false.
+- `hun_discussion_activation_plan` — pure/local RUNFIX dry-run planner/doctor from explicit caller-provided evidence; it classifies eligible, excluded, and blocked/unknown profiles from explicit effective Discord evidence, excludes bot-to-bot-enabled profiles by default, emits eligible-only `allow_list_targets`, profile remediation, parent-channel proof state, and fallback-audit rejection rows, keeps RUNFIX evidence labels separate, reports unproven parent-channel inheritance as a gateway blocker, performs no discovery or mutation, and keeps `live_readiness` false.
+- `hun_discord_send_message` — fake/injected Discord helper that requires a dedicated
   test target and an injected `send_message` callable; it returns Discord IDs only as
   evidence pointers and fails closed without sender injection.
 
 Later tasks may provide:
 
-- `kan_session_status` after control `session.status.read` fixture/protocol authority exists;
+- `hun_session_status` after control `session.status.read` fixture/protocol authority exists;
 - cursor/session diagnostic tools;
 - transcript/export tools;
 - live transport according to `docs/10-live-transport-sot.md`, where the CLI is the main-agent control plane, the plugin is the participant-agent KAN client surface, member runtimes invoke real participant profiles, the daemon remains the only event/state authority, and companion control `LTRAN` / `MEMBR` / `SURFD` epics must complete before the matching plugin epics start;

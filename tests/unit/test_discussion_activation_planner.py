@@ -21,8 +21,8 @@ def complete_plan() -> dict[str, object]:
             "installed": True,
             "enabled": True,
             "tool_names": [
-                "kan_daemon_status",
-                "kan_discussion_activation_plan",
+                "hun_daemon_status",
+                "hun_discussion_activation_plan",
             ],
             "evidence_ref": "plugin-load-smoke",
         },
@@ -465,6 +465,22 @@ def test_complete_dry_run_is_ready_for_approval_without_live_readiness() -> None
         "new_axis_reason",
     ]
     assert report["operator_evidence_report"]["runner_evidence"]["status"] == "unproven"
+
+
+def test_legacy_kan_activation_tool_name_does_not_satisfy_visibility() -> None:
+    plan = complete_plan()
+    install = plan["plugin_install"]
+    assert isinstance(install, dict)
+    install["tool_names"] = ["kan_discussion_activation_plan"]
+
+    report = build_discussion_activation_plan(plan)
+
+    assert report["status"] == "blocked"
+    assert {
+        "code": "activation_tool_visibility_missing",
+        "owner": "plugin",
+        "message": "hun_discussion_activation_plan must be visible in plugin_install.tool_names.",
+    } in report["blockers"]
 
 
 def test_runfix_006_task_id_remains_accepted_with_runfix_007_behavior_label() -> None:
@@ -1971,7 +1987,7 @@ def test_handler_wraps_report_and_keeps_live_readiness_false() -> None:
     body = json.loads(handle_discussion_activation_plan({"plan": complete_plan()}))
 
     assert body["ok"] is True
-    assert body["tool"] == "kan_discussion_activation_plan"
+    assert body["tool"] == "hun_discussion_activation_plan"
     assert body["live_readiness"] is False
     assert body["data"]["status"] == "ready_for_approval"
     assert body["data"]["live_readiness"] is False
@@ -1981,6 +1997,6 @@ def test_handler_fails_closed_for_malformed_args() -> None:
     body = json.loads(handle_discussion_activation_plan({"plan": {"schema_version": 2}}))
 
     assert body["ok"] is False
-    assert body["tool"] == "kan_discussion_activation_plan"
+    assert body["tool"] == "hun_discussion_activation_plan"
     assert body["live_readiness"] is False
     assert body["error"]["category"] == "validation"

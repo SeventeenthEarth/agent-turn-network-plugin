@@ -32,7 +32,7 @@ When selected by a `speaker_selected` stream frame:
 4. Confirm `participant_response.member == selected_member`.
 5. Confirm `participant_response.role_substitution == false`.
 6. Preserve runner evidence: invocation id, started event id, terminal event id, terminal event type `participant_response`, adapter kind `hermes-agent`, and wrapper binding evidence.
-7. Submit through `kan_selected_participant_response` only when all checks pass. The tool submits canonical `council.speak` and then acks the selected stream cursor after submit success.
+7. Submit through `hun_selected_participant_response` only when all checks pass. The tool submits canonical `council.speak` and then acks the selected stream cursor after submit success.
 
 Never acknowledge the selected cursor before canonical speech submit succeeds.
 

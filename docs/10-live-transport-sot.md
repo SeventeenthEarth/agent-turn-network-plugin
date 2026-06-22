@@ -254,19 +254,19 @@ Current registered plugin tool inventory is the manifest-declared fake/injected 
 
 | Surface | Purpose | Plane | Notes |
 |---|---|---|---|
-| `kan_daemon_status` | read daemon status/readiness | agent/diagnostic | live only with explicit config; fail closed otherwise |
-| `kan_compatibility_diagnostics` | read compatibility and redacted checks | agent/diagnostic | no hidden live discovery |
-| `kan_stream_tail` | read retained frames | agent plane | minimum read path; implemented by `plugin/LTRAN-003`; preserve replay-before-live semantics |
-| future non-tool `kan_stream_follow` | long poll or follow frames | agent plane | optional planning placeholder; not registered and not counted in the manifest-declared tool inventory; must preserve replay-before-live semantics if later scoped |
-| `kan_stream_ack` | acknowledge processed cursor | agent plane | PARTC-001 candidate implementation; local/candidate proof only, not production/runtime approval |
-| `kan_delegate_new` | submit `delegate.new` command envelope | agent plane | fake/injected command tool; no plugin-owned lifecycle state |
-| `kan_delegate_action` | submit supported `delegate.*` action command envelopes | agent plane | fake/injected command tool; no plugin-owned lifecycle state |
-| `kan_council_command` | typed participant writes | agent plane | participant commands such as `ready`, `hand_raise`, `speak`, `vote`; main-agent control use should prefer CLI |
-| `kan_selected_participant_response` | convert selected participant response evidence into `council.speak` plus cursor ack | agent plane | PARTC-002 candidate/local bounded no-live proof only; consumes fake/injected control `MEMBR` evidence and does not invoke real profiles or grant runtime activation |
-| `kan_delivery_evidence` | record evidence command where supported | delivery evidence | Discord IDs are evidence pointers only |
-| `kan_surface_render_projection` | render visible-surface projection from daemon/control event data | visible surface evidence | local/candidate proof only; cursor order is authority, speech requires matching `speaker_selected` evidence, delivery pointers stay evidence-only, `live_readiness` remains false |
-| `kan_discussion_activation_plan` | build dry-run discussion activation planner/doctor report | activation planning evidence | pure/local RUNFIX-006/008/010/012 planner only; explicit caller-provided evidence, effective Discord eligibility, bot-to-bot exclusion, eligible-only allow-list targets, parent-channel inheritance proof/blocker, participant ARGUE response template, runner/ARGUE/canonical speech-link evidence reporting, explicit control/RUNFIX-011 participant runtime readiness diagnostics, fallback audit/disclosure, separated RUNFIX labels, `live_readiness` remains false |
-| `kan_discord_send_message` | injected-only visible send helper | delivery plane | no default/live sender; not daemon state |
+| `hun_daemon_status` | read daemon status/readiness | agent/diagnostic | live only with explicit config; fail closed otherwise |
+| `hun_compatibility_diagnostics` | read compatibility and redacted checks | agent/diagnostic | no hidden live discovery |
+| `hun_stream_tail` | read retained frames | agent plane | minimum read path; implemented by `plugin/LTRAN-003`; preserve replay-before-live semantics |
+| future non-tool `hun_stream_follow` | long poll or follow frames | agent plane | optional planning placeholder; not registered and not counted in the manifest-declared tool inventory; must preserve replay-before-live semantics if later scoped |
+| `hun_stream_ack` | acknowledge processed cursor | agent plane | PARTC-001 candidate implementation; local/candidate proof only, not production/runtime approval |
+| `hun_delegate_new` | submit `delegate.new` command envelope | agent plane | fake/injected command tool; no plugin-owned lifecycle state |
+| `hun_delegate_action` | submit supported `delegate.*` action command envelopes | agent plane | fake/injected command tool; no plugin-owned lifecycle state |
+| `hun_council_command` | typed participant writes | agent plane | participant commands such as `ready`, `hand_raise`, `speak`, `vote`; main-agent control use should prefer CLI |
+| `hun_selected_participant_response` | convert selected participant response evidence into `council.speak` plus cursor ack | agent plane | PARTC-002 candidate/local bounded no-live proof only; consumes fake/injected control `MEMBR` evidence and does not invoke real profiles or grant runtime activation |
+| `hun_delivery_evidence` | record evidence command where supported | delivery evidence | Discord IDs are evidence pointers only |
+| `hun_surface_render_projection` | render visible-surface projection from daemon/control event data | visible surface evidence | local/candidate proof only; cursor order is authority, speech requires matching `speaker_selected` evidence, delivery pointers stay evidence-only, `live_readiness` remains false |
+| `hun_discussion_activation_plan` | build dry-run discussion activation planner/doctor report | activation planning evidence | pure/local RUNFIX-006/008/010/012 planner only; explicit caller-provided evidence, effective Discord eligibility, bot-to-bot exclusion, eligible-only allow-list targets, parent-channel inheritance proof/blocker, participant ARGUE response template, runner/ARGUE/canonical speech-link evidence reporting, explicit control/RUNFIX-011 participant runtime readiness diagnostics, fallback audit/disclosure, separated RUNFIX labels, `live_readiness` remains false |
+| `hun_discord_send_message` | injected-only visible send helper | delivery plane | no default/live sender; not daemon state |
 
 The plugin must:
 
@@ -445,7 +445,7 @@ Member runtime for the selected participant observes `speaker_selected` and invo
 The participant agent emits:
 
 ```text
-kan_council_command(command="council.speak", ...)
+hun_council_command(command="council.speak", ...)
 ```
 
 or the equivalent protocol-client write. The daemon records `speech`.
@@ -704,7 +704,7 @@ Required plugin-specific assertions:
 
 Disposable data-home pilot should prove:
 
-- CLI `daemon status` and plugin `kan_daemon_status` address the same daemon/data home;
+- CLI `daemon status` and plugin `hun_daemon_status` address the same daemon/data home;
 - CLI `version --features --format json` and plugin compatibility diagnostics agree on required feature groups;
 - CLI council command and plugin participant write produce equivalent daemon events;
 - CLI stream/tail and plugin stream/tail return compatible frames/cursors;
@@ -824,7 +824,7 @@ PARTC-001 remains candidate/local implementation proof only. It does not claim P
 
 Deliverables:
 
-- candidate/local bounded no-live proof for `kan_selected_participant_response` using fake/injected control `MEMBR` evidence only;
+- candidate/local bounded no-live proof for `hun_selected_participant_response` using fake/injected control `MEMBR` evidence only;
 - validate `speaker_selected` recipient/member evidence and participant response provenance without simulated role substitution;
 - submit the resulting participant response through plugin/protocol-client `council.speak`;
 - acknowledge the selected stream cursor only after the `council.speak` submit succeeds;
@@ -850,7 +850,7 @@ Boundaries:
 ### SURFD-001: visible room helper/rendering boundary
 
 SURFD-001 candidate/local implementation proof is in place through
-`kan_surface_render_projection`. The tool renders explicit daemon/control
+`hun_surface_render_projection`. The tool renders explicit daemon/control
 projection event JSON into separated `visible_transcript` and `audit_log`/`rows`:
 operator-facing transcript entries include session header, compact floor grant,
 selected participant speech, draft closeout proposals, vote progress, and final
@@ -883,12 +883,12 @@ Local proof boundaries:
   `pending_followup`, and `missing/unproven`;
 - unsupported event types, unsupported schema versions, duplicate cursor
   authority, floor-grant mismatches, and proofless delivery evidence fail closed;
-- `kan_discord_send_message` remains injected-only and non-default.
+- `hun_discord_send_message` remains injected-only and non-default.
 
 
 ### RUNFIX-015: visible author guard (local implementation proof)
 
-`plugin/RUNFIX-015` local implementation proof is recorded under plugin KAH run `run-20260619T071526Z-7d2ba33b07d5`. The pure/local `kan_discussion_activation_plan` now exposes a pre-`council.new` `visible_author_guard_report` from explicit caller-provided evidence only. It does not read profiles, gateway config, Discord state, environment, sockets, or live messages, and it does not claim runtime enforcement unless a caller/operator path consumes blockers before session creation.
+`plugin/RUNFIX-015` local implementation proof is recorded under plugin KAH run `run-20260619T071526Z-7d2ba33b07d5`. The pure/local `hun_discussion_activation_plan` now exposes a pre-`council.new` `visible_author_guard_report` from explicit caller-provided evidence only. It does not read profiles, gateway config, Discord state, environment, sockets, or live messages, and it does not claim runtime enforcement unless a caller/operator path consumes blockers before session creation.
 
 Implemented acceptance:
 
@@ -909,8 +909,8 @@ Implementation-candidate acceptance:
 
 - selected-participant prompts include a compact prior claim graph with `event_id`, optional `claim_id`, and prompt-guidance-only `speaker`, `summary`, and `available_stances`;
 - non-opening quality-required turns with sufficient local context include at least one `stance_links[]` target that validates against caller-provided `event_id`/`claim_id` targets, or declare `contribution_type: "new_axis"` with non-empty `new_axis_reason`;
-- `kan_selected_participant_response` and operator guidance preserve `claims[]`, `stance_links[]`, `contribution_type`, `new_axis_reason`, and optional `evidence[]` without synthetic inference;
-- `kan_discussion_activation_plan` requires explicit `discussion_quality` evidence for the quality gate rather than substituting participant-response summaries;
+- `hun_selected_participant_response` and operator guidance preserve `claims[]`, `stance_links[]`, `contribution_type`, `new_axis_reason`, and optional `evidence[]` without synthetic inference;
+- `hun_discussion_activation_plan` requires explicit `discussion_quality` evidence for the quality gate rather than substituting participant-response summaries;
 - in `quality_required`, the first orphan non-opening speech blocks `discussion_quality_pass`; repeated orphan counts remain diagnostic evidence, and warning-only behavior is reserved for `quality_warn`;
 - final reports split `lifecycle_pass`, `discussion_quality_pass`, `orphan_speech_count`, `linked_speech_count`, `stance_link_count`, and `new_axis_count`.
 

@@ -139,8 +139,8 @@ DELIVERY_EVIDENCE_COMMANDS: Final[tuple[str, ...]] = (
     "delegate.escalation_delivery_failed",
 )
 
-KAN_DAEMON_STATUS: Final[dict[str, object]] = {
-    "name": "kan_daemon_status",
+HUN_DAEMON_STATUS: Final[dict[str, object]] = {
+    "name": "hun_daemon_status",
     "description": (
         "Read-only KAN daemon status through an explicit fake/injected daemon client. "
         "Fails closed when no client is injected; performs no write, live daemon discovery, "
@@ -153,8 +153,8 @@ KAN_DAEMON_STATUS: Final[dict[str, object]] = {
     },
 }
 
-KAN_COMPATIBILITY_DIAGNOSTICS: Final[dict[str, object]] = {
-    "name": "kan_compatibility_diagnostics",
+HUN_COMPATIBILITY_DIAGNOSTICS: Final[dict[str, object]] = {
+    "name": "hun_compatibility_diagnostics",
     "description": (
         "Read-only KAN compatibility diagnostics through an explicit fake/injected daemon "
         "client. Returns redacted diagnostic checks and fails closed without live fallback."
@@ -172,8 +172,8 @@ KAN_COMPATIBILITY_DIAGNOSTICS: Final[dict[str, object]] = {
     },
 }
 
-KAN_STREAM_TAIL: Final[dict[str, object]] = {
-    "name": "kan_stream_tail",
+HUN_STREAM_TAIL: Final[dict[str, object]] = {
+    "name": "hun_stream_tail",
     "description": (
         "Read-only KAN stream tail through an explicit fake/injected daemon client. "
         "Requires stream_frame compatibility from the injected transport and fails closed "
@@ -210,8 +210,8 @@ KAN_STREAM_TAIL: Final[dict[str, object]] = {
     },
 }
 
-KAN_STREAM_ACK: Final[dict[str, object]] = {
-    "name": "kan_stream_ack",
+HUN_STREAM_ACK: Final[dict[str, object]] = {
+    "name": "hun_stream_ack",
     "description": (
         "Submit a KAN stream ack through an explicit fake/injected daemon client. "
         "The caller supplies command_id as the daemon idempotency key; the plugin "
@@ -247,8 +247,8 @@ KAN_STREAM_ACK: Final[dict[str, object]] = {
     },
 }
 
-KAN_DELEGATE_NEW: Final[dict[str, object]] = {
-    "name": "kan_delegate_new",
+HUN_DELEGATE_NEW: Final[dict[str, object]] = {
+    "name": "hun_delegate_new",
     "description": (
         "Submit a delegate.new command envelope through an explicit fake/injected daemon "
         "client. The caller must supply request_id and idempotency_key; the plugin does "
@@ -334,8 +334,8 @@ KAN_DELEGATE_NEW: Final[dict[str, object]] = {
     },
 }
 
-KAN_DELEGATE_ACTION: Final[dict[str, object]] = {
-    "name": "kan_delegate_action",
+HUN_DELEGATE_ACTION: Final[dict[str, object]] = {
+    "name": "hun_delegate_action",
     "description": (
         "Submit one exact implemented delegate.* action/review/delivery command through "
         "an explicit fake/injected daemon client. Rejects delegate.request, top-level "
@@ -382,8 +382,8 @@ KAN_DELEGATE_ACTION: Final[dict[str, object]] = {
     },
 }
 
-KAN_COUNCIL_COMMAND: Final[dict[str, object]] = {
-    "name": "kan_council_command",
+HUN_COUNCIL_COMMAND: Final[dict[str, object]] = {
+    "name": "hun_council_command",
     "description": (
         "Submit one exact implemented council.* lifecycle command through an explicit "
         "fake/injected daemon client. The plugin probes council.lifecycle with injected "
@@ -448,8 +448,8 @@ KAN_COUNCIL_COMMAND: Final[dict[str, object]] = {
     },
 }
 
-KAN_DELIVERY_EVIDENCE: Final[dict[str, object]] = {
-    "name": "kan_delivery_evidence",
+HUN_DELIVERY_EVIDENCE: Final[dict[str, object]] = {
+    "name": "hun_delivery_evidence",
     "description": (
         "Submit a delivery-evidence command through an explicit fake/injected daemon "
         "client. The plugin probes delivery_evidence with injected version.read before "
@@ -499,8 +499,8 @@ KAN_DELIVERY_EVIDENCE: Final[dict[str, object]] = {
     },
 }
 
-KAN_SELECTED_PARTICIPANT_RESPONSE: Final[dict[str, object]] = {
-    "name": "kan_selected_participant_response",
+HUN_SELECTED_PARTICIPANT_RESPONSE: Final[dict[str, object]] = {
+    "name": "hun_selected_participant_response",
     "description": (
         "Submit a selected participant response as canonical council.speak through an "
         "explicit fake/injected or configured live daemon client, mapping the caller's "
@@ -713,8 +713,8 @@ KAN_SELECTED_PARTICIPANT_RESPONSE: Final[dict[str, object]] = {
     },
 }
 
-KAN_DISCORD_SEND_MESSAGE: Final[dict[str, object]] = {
-    "name": "kan_discord_send_message",
+HUN_DISCORD_SEND_MESSAGE: Final[dict[str, object]] = {
+    "name": "hun_discord_send_message",
     "description": (
         "Send a Discord message only through an explicit injected send_message callable. "
         "Requires a dedicated test target and fails closed without sender injection; it "
@@ -780,8 +780,8 @@ KAN_DISCORD_SEND_MESSAGE: Final[dict[str, object]] = {
     },
 }
 
-KAN_SURFACE_RENDER_PROJECTION: Final[dict[str, object]] = {
-    "name": "kan_surface_render_projection",
+HUN_SURFACE_RENDER_PROJECTION: Final[dict[str, object]] = {
+    "name": "hun_surface_render_projection",
     "description": (
         "Render explicit daemon/control projection event JSON into separated clean "
         "visible transcript rows, audit rows, and evidence pointers. This pure tool "
@@ -830,8 +830,8 @@ KAN_SURFACE_RENDER_PROJECTION: Final[dict[str, object]] = {
     },
 }
 
-KAN_DISCUSSION_ACTIVATION_PLAN: Final[dict[str, object]] = {
-    "name": "kan_discussion_activation_plan",
+HUN_DISCUSSION_ACTIVATION_PLAN: Final[dict[str, object]] = {
+    "name": "hun_discussion_activation_plan",
     "description": (
         "Build a deterministic pure/local RUNFIX/RUNFIX2 KAN discussion activation "
         "planner/doctor report from explicit caller-provided evidence only. The "
@@ -1067,26 +1067,26 @@ KAN_DISCUSSION_ACTIVATION_PLAN: Final[dict[str, object]] = {
     },
 }
 
-KAN_TOOL_SCHEMAS: Final[tuple[dict[str, object], ...]] = (
-    KAN_DAEMON_STATUS,
-    KAN_COMPATIBILITY_DIAGNOSTICS,
-    KAN_STREAM_TAIL,
-    KAN_STREAM_ACK,
-    KAN_DELEGATE_NEW,
-    KAN_DELEGATE_ACTION,
-    KAN_COUNCIL_COMMAND,
-    KAN_SELECTED_PARTICIPANT_RESPONSE,
-    KAN_DELIVERY_EVIDENCE,
-    KAN_SURFACE_RENDER_PROJECTION,
-    KAN_DISCUSSION_ACTIVATION_PLAN,
-    KAN_DISCORD_SEND_MESSAGE,
+HUN_TOOL_SCHEMAS: Final[tuple[dict[str, object], ...]] = (
+    HUN_DAEMON_STATUS,
+    HUN_COMPATIBILITY_DIAGNOSTICS,
+    HUN_STREAM_TAIL,
+    HUN_STREAM_ACK,
+    HUN_DELEGATE_NEW,
+    HUN_DELEGATE_ACTION,
+    HUN_COUNCIL_COMMAND,
+    HUN_SELECTED_PARTICIPANT_RESPONSE,
+    HUN_DELIVERY_EVIDENCE,
+    HUN_SURFACE_RENDER_PROJECTION,
+    HUN_DISCUSSION_ACTIVATION_PLAN,
+    HUN_DISCORD_SEND_MESSAGE,
 )
 
 
 def tool_names() -> tuple[str, ...]:
     """Return tool names in registration order."""
 
-    return tuple(str(schema["name"]) for schema in KAN_TOOL_SCHEMAS)
+    return tuple(str(schema["name"]) for schema in HUN_TOOL_SCHEMAS)
 
 
 __all__ = [
@@ -1103,17 +1103,17 @@ __all__ = [
     "DELIVERY_EVIDENCE_COMMANDS",
     "DELEGATE_ACTION_COMMANDS",
     "DELEGATE_NEW_COMMAND",
-    "KAN_COMPATIBILITY_DIAGNOSTICS",
-    "KAN_COUNCIL_COMMAND",
-    "KAN_DAEMON_STATUS",
-    "KAN_DELEGATE_ACTION",
-    "KAN_DELEGATE_NEW",
-    "KAN_DELIVERY_EVIDENCE",
-    "KAN_DISCUSSION_ACTIVATION_PLAN",
-    "KAN_DISCORD_SEND_MESSAGE",
-    "KAN_SELECTED_PARTICIPANT_RESPONSE",
-    "KAN_STREAM_ACK",
-    "KAN_STREAM_TAIL",
-    "KAN_TOOL_SCHEMAS",
+    "HUN_COMPATIBILITY_DIAGNOSTICS",
+    "HUN_COUNCIL_COMMAND",
+    "HUN_DAEMON_STATUS",
+    "HUN_DELEGATE_ACTION",
+    "HUN_DELEGATE_NEW",
+    "HUN_DELIVERY_EVIDENCE",
+    "HUN_DISCUSSION_ACTIVATION_PLAN",
+    "HUN_DISCORD_SEND_MESSAGE",
+    "HUN_SELECTED_PARTICIPANT_RESPONSE",
+    "HUN_STREAM_ACK",
+    "HUN_STREAM_TAIL",
+    "HUN_TOOL_SCHEMAS",
     "tool_names",
 ]

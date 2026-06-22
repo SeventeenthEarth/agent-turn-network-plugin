@@ -79,5 +79,5 @@ def test_e2e_stream_tail_handler_smoke_uses_explicit_fake_transport_only() -> No
     )
 
     assert result["ok"] is True
-    assert result["tool"] == "kan_stream_tail"
+    assert result["tool"] == "hun_stream_tail"
     assert result["data"] == {"frames": [], "next_cursor": None}

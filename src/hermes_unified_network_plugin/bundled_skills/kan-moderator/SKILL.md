@@ -56,7 +56,7 @@ Treat these as `final_acceptance_unproven`, not start blockers:
 - ARGUE relation counts and discussion-quality proof;
 - visible turn count and real profile/gateway reply count.
 
-When using `kan_discussion_activation_plan`, materialize collected evidence into planner input fields such as `participant_profiles[].effective_discord.tools_visible`, `participant_profiles[].effective_discord.bot_to_bot_enabled`, `discord_parent_channel.allow_list_inheritance_proven`, and `visible_surface_readiness`; prose notes or prior human knowledge do not count. If the planner returns `status: blocked`, classify each blocker before acting: only `start_blocker` blocks `council.new`; runtime and final-acceptance evidence gaps remain tracked evidence. Do not treat `kan_discussion_activation_plan.live_readiness=false` as a start blocker by itself because the planner is pure/local and never proves live readiness.
+When using `hun_discussion_activation_plan`, materialize collected evidence into planner input fields such as `participant_profiles[].effective_discord.tools_visible`, `participant_profiles[].effective_discord.bot_to_bot_enabled`, `discord_parent_channel.allow_list_inheritance_proven`, and `visible_surface_readiness`; prose notes or prior human knowledge do not count. If the planner returns `status: blocked`, classify each blocker before acting: only `start_blocker` blocks `council.new`; runtime and final-acceptance evidence gaps remain tracked evidence. Do not treat `hun_discussion_activation_plan.live_readiness=false` as a start blocker by itself because the planner is pure/local and never proves live readiness.
 
 If evidence is missing but can be collected without mutating profile/provider/gateway/auth/token state, collect the probe before asking the user. If collecting evidence requires mutation, credentials, or unavailable external permissions, stop and ask for approval.
 
@@ -65,7 +65,7 @@ For cross-team KLM/KAN participant onboarding and the evidence package needed be
 
 ## Council lifecycle spine
 
-Use daemon-owned `kan_council_command` commands with caller-supplied `command_id`, `request_id`, and `idempotency_key`.
+Use daemon-owned `hun_council_command` commands with caller-supplied `command_id`, `request_id`, and `idempotency_key`.
 
 Minimum lifecycle before discussion turns:
 
@@ -135,4 +135,4 @@ Final moderator closeout must separate:
 - shared/default author fallback status;
 - explicit non-scope such as production readiness or broad rollout.
 
-Do not equate transcript/export success with a visible Discord discussion. Use `kan_surface_render_projection` only to render explicit daemon/control projection rows into visible transcript and audit evidence; it is not lifecycle authority.
+Do not equate transcript/export success with a visible Discord discussion. Use `hun_surface_render_projection` only to render explicit daemon/control projection rows into visible transcript and audit evidence; it is not lifecycle authority.

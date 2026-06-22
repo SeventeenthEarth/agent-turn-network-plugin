@@ -82,7 +82,7 @@ def test_e2e_stream_tail_handler_does_not_use_live_env_fallback(
     result = json.loads(handle_stream_tail({"session_id": "sess-e2e", "member": "agent-1"}))
 
     assert result["ok"] is False
-    assert result["tool"] == "kan_stream_tail"
+    assert result["tool"] == "hun_stream_tail"
     assert result["error"]["category"] == "unavailable"
     assert "client factory" in result["error"]["message"]
 
@@ -127,10 +127,10 @@ def test_e2e_delegate_handlers_do_not_use_live_env_fallback(
     )
 
     assert delegate_new["ok"] is False
-    assert delegate_new["tool"] == "kan_delegate_new"
+    assert delegate_new["tool"] == "hun_delegate_new"
     assert delegate_new["error"]["category"] == "unavailable"
     assert "client factory" in delegate_new["error"]["message"]
     assert delegate_action["ok"] is False
-    assert delegate_action["tool"] == "kan_delegate_action"
+    assert delegate_action["tool"] == "hun_delegate_action"
     assert delegate_action["error"]["category"] == "unavailable"
     assert "client factory" in delegate_action["error"]["message"]

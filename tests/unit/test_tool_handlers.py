@@ -151,7 +151,7 @@ def test_daemon_status_handler_returns_json_success_from_explicit_fake_client() 
 
     assert result == {
         "ok": True,
-        "tool": "kan_daemon_status",
+        "tool": "hun_daemon_status",
         "protocol_version": "hun-protocol-v1alpha0",
         "live_readiness": False,
         "data": {
@@ -172,7 +172,7 @@ def test_compatibility_diagnostics_handler_returns_redacted_json_success() -> No
 
     assert result == {
         "ok": True,
-        "tool": "kan_compatibility_diagnostics",
+        "tool": "hun_compatibility_diagnostics",
         "protocol_version": "hun-protocol-v1alpha0",
         "live_readiness": False,
         "data": {
@@ -202,7 +202,7 @@ def test_stream_tail_handler_returns_redacted_json_success_from_explicit_fake_cl
 
     assert result == {
         "ok": True,
-        "tool": "kan_stream_tail",
+        "tool": "hun_stream_tail",
         "protocol_version": "hun-protocol-v1alpha0",
         "live_readiness": False,
         "data": {
@@ -235,13 +235,13 @@ def test_handlers_fail_closed_without_client_factory() -> None:
     stream_tail = decode(handle_stream_tail({"session_id": "sess-1", "member": "agent-1"}))
 
     assert status["ok"] is False
-    assert status["tool"] == "kan_daemon_status"
+    assert status["tool"] == "hun_daemon_status"
     assert status["error"]["category"] == "unavailable"
     assert "client factory" in status["error"]["message"]
     assert diagnostics["ok"] is False
     assert diagnostics["error"]["category"] == "unavailable"
     assert stream_tail["ok"] is False
-    assert stream_tail["tool"] == "kan_stream_tail"
+    assert stream_tail["tool"] == "hun_stream_tail"
     assert stream_tail["error"]["category"] == "unavailable"
 
 
@@ -270,7 +270,7 @@ def test_surface_render_projection_handler_returns_local_projection_success() ->
 
     assert result == {
         "ok": True,
-        "tool": "kan_surface_render_projection",
+        "tool": "hun_surface_render_projection",
         "live_readiness": False,
         "data": {
             "local_projection": {
@@ -344,7 +344,7 @@ def test_surface_render_projection_handler_fails_closed_for_bad_projection() -> 
     )
 
     assert result["ok"] is False
-    assert result["tool"] == "kan_surface_render_projection"
+    assert result["tool"] == "hun_surface_render_projection"
     assert result["live_readiness"] is False
     assert result["error"] == {
         "category": "validation",
@@ -368,7 +368,7 @@ def test_discussion_activation_plan_handler_returns_local_doctor_report() -> Non
                     "plugin_install": {
                         "installed": True,
                         "enabled": True,
-                        "tool_names": ["kan_discussion_activation_plan"],
+                        "tool_names": ["hun_discussion_activation_plan"],
                     },
                     "control_daemon": {
                         "mode": "explicit",
@@ -398,7 +398,7 @@ def test_discussion_activation_plan_handler_returns_local_doctor_report() -> Non
     )
 
     assert result["ok"] is True
-    assert result["tool"] == "kan_discussion_activation_plan"
+    assert result["tool"] == "hun_discussion_activation_plan"
     assert result["live_readiness"] is False
     assert result["data"]["status"] == "ready_for_approval"
     assert result["data"]["behavior_task_id"] == "plugin/RUNFIX-007"
@@ -565,7 +565,7 @@ def test_stream_ack_handler_submits_ack_after_stream_feature_probe() -> None:
 
     assert result == {
         "ok": True,
-        "tool": "kan_stream_ack",
+        "tool": "hun_stream_ack",
         "live_readiness": False,
         "data": {
             "command_id": "cmd-ack-1",
@@ -608,7 +608,7 @@ def test_stream_ack_handler_requires_stream_ack_feature_before_ack_operation() -
     )
 
     assert result["ok"] is False
-    assert result["tool"] == "kan_stream_ack"
+    assert result["tool"] == "hun_stream_ack"
     assert result["error"]["category"] == "compatibility"
     assert "stream.ack" in result["error"]["message"]
     assert transport.requests == [(OP_VERSION_READ, {"protocol_version": "hun-protocol-v1alpha0"})]
@@ -634,7 +634,7 @@ def test_stream_ack_handler_rejects_missing_required_args_before_transport(field
     result = decode(handle_stream_ack(args, client_factory=client_factory))
 
     assert result["ok"] is False
-    assert result["tool"] == "kan_stream_ack"
+    assert result["tool"] == "hun_stream_ack"
     assert result["error"] == {
         "category": "validation",
         "message": f"{field} must be a non-empty string",
@@ -734,7 +734,7 @@ def test_delegate_new_submits_delegate_new_envelope_with_caller_metadata() -> No
 
     assert result == {
         "ok": True,
-        "tool": "kan_delegate_new",
+        "tool": "hun_delegate_new",
         "live_readiness": False,
         "data": {
             "command_id": "cmd-1",
@@ -823,7 +823,7 @@ def test_delegate_new_rejects_nested_non_json_values_before_transport(
     result = decode(handle_delegate_new(args, client_factory=client_factory))
 
     assert result["ok"] is False
-    assert result["tool"] == "kan_delegate_new"
+    assert result["tool"] == "hun_delegate_new"
     assert result["error"] == {
         "category": "validation",
         "message": message,
@@ -961,7 +961,7 @@ def test_delegate_action_preserves_structured_daemon_conflict_error() -> None:
     )
 
     assert result["ok"] is False
-    assert result["tool"] == "kan_delegate_action"
+    assert result["tool"] == "hun_delegate_action"
     assert result["error"] == {
         "category": "conflict",
         "message": "duplicate idempotency key",
@@ -995,7 +995,7 @@ def test_delegate_new_malformed_daemon_response_fails_closed_as_protocol_error()
     )
 
     assert result["ok"] is False
-    assert result["tool"] == "kan_delegate_new"
+    assert result["tool"] == "hun_delegate_new"
     assert result["error"]["category"] == "protocol"
     assert result["live_readiness"] is False
 
@@ -1034,7 +1034,7 @@ def test_delegate_handlers_fail_closed_without_client_factory() -> None:
     assert delegate_new["ok"] is False
     assert delegate_new["error"]["category"] == "unavailable"
     assert delegate_action["ok"] is False
-    assert delegate_action["tool"] == "kan_delegate_action"
+    assert delegate_action["tool"] == "hun_delegate_action"
     assert delegate_action["error"]["category"] == "unavailable"
 
 
@@ -1342,7 +1342,7 @@ def test_cndis_handler_preserves_structured_daemon_error_after_feature_probe() -
     )
 
     assert result["ok"] is False
-    assert result["tool"] == "kan_council_command"
+    assert result["tool"] == "hun_council_command"
     assert result["error"] == {
         "category": "validation",
         "message": "only the council moderator may perform this action",
@@ -1362,7 +1362,7 @@ def test_cndis_malformed_daemon_response_fails_closed_after_feature_probe() -> N
     )
 
     assert result["ok"] is False
-    assert result["tool"] == "kan_delivery_evidence"
+    assert result["tool"] == "hun_delivery_evidence"
     assert result["error"]["category"] == "protocol"
 
 
@@ -1386,7 +1386,7 @@ def test_discord_send_message_handler_fails_closed_without_sender() -> None:
     result = decode(handle_discord_send_message(_discord_tool_args()))
 
     assert result["ok"] is False
-    assert result["tool"] == "kan_discord_send_message"
+    assert result["tool"] == "hun_discord_send_message"
     assert result["live_readiness"] is False
     assert result["error"] == {
         "category": "validation",
@@ -1480,7 +1480,7 @@ def test_discord_send_message_handler_calls_fake_sender_once_on_valid_target() -
 
     assert result == {
         "ok": True,
-        "tool": "kan_discord_send_message",
+        "tool": "hun_discord_send_message",
         "live_readiness": False,
         "data": {
             "message_id": "msg-1",

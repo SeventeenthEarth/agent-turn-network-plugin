@@ -314,7 +314,7 @@ def test_deleg_002_permission_and_validation_error_fixtures_fail_closed(
 
     expected_error = _mapping(error_fixture["error"], label="error")
     assert result["ok"] is False
-    assert result["tool"] == "kan_delegate_action"
+    assert result["tool"] == "hun_delegate_action"
     assert result["live_readiness"] is False
     assert result["error"] == {
         "category": expected_error["category"],
@@ -393,7 +393,7 @@ def test_plugin_local_malformed_fake_daemon_responses_fail_closed(
     )
 
     assert result["ok"] is False
-    assert result["tool"] == "kan_delegate_action"
+    assert result["tool"] == "hun_delegate_action"
     assert result["live_readiness"] is False
     assert result["error"]["category"] == "protocol"
 

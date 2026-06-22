@@ -105,9 +105,9 @@ def handle_daemon_status(
         _ = _coerce_args(args, allowed_keys=frozenset())
         client = _require_client(client_factory)
         status = client.read_status()
-        return _json_success("kan_daemon_status", status, _status_data(status))
+        return _json_success("hun_daemon_status", status, _status_data(status))
     except Exception as exc:  # noqa: BLE001 - Hermes handlers must never raise.
-        return _json_error("kan_daemon_status", exc)
+        return _json_error("hun_daemon_status", exc)
 
 
 def handle_compatibility_diagnostics(
@@ -124,12 +124,12 @@ def handle_compatibility_diagnostics(
         client = _require_client(client_factory)
         diagnostics = client.read_diagnostics(session_id=session_id)
         return _json_success(
-            "kan_compatibility_diagnostics",
+            "hun_compatibility_diagnostics",
             diagnostics,
             _diagnostics_data(diagnostics),
         )
     except Exception as exc:  # noqa: BLE001 - Hermes handlers must never raise.
-        return _json_error("kan_compatibility_diagnostics", exc)
+        return _json_error("hun_compatibility_diagnostics", exc)
 
 
 def handle_stream_tail(
@@ -156,9 +156,9 @@ def handle_stream_tail(
             since_cursor=since_cursor,
             limit=limit,
         )
-        return _json_stream_success("kan_stream_tail", stream_tail, _stream_tail_data(stream_tail))
+        return _json_stream_success("hun_stream_tail", stream_tail, _stream_tail_data(stream_tail))
     except Exception as exc:  # noqa: BLE001 - Hermes handlers must never raise.
-        return _json_error("kan_stream_tail", exc)
+        return _json_error("hun_stream_tail", exc)
 
 
 def handle_stream_ack(
@@ -169,7 +169,7 @@ def handle_stream_ack(
 ) -> str:
     """Submit a stream cursor acknowledgement as JSON or fail closed."""
 
-    tool = "kan_stream_ack"
+    tool = "hun_stream_ack"
     try:
         payload = _coerce_args(
             args,
@@ -199,7 +199,7 @@ def handle_delegate_new(
 ) -> str:
     """Submit a delegate.new envelope as a JSON string or fail closed."""
 
-    tool = "kan_delegate_new"
+    tool = "hun_delegate_new"
     try:
         payload = _coerce_args(
             args,
@@ -256,7 +256,7 @@ def handle_delegate_action(
 ) -> str:
     """Submit an exact delegate.* action envelope as JSON or fail closed."""
 
-    tool = "kan_delegate_action"
+    tool = "hun_delegate_action"
     try:
         payload = _coerce_args(
             args,
@@ -295,7 +295,7 @@ def handle_council_command(
 ) -> str:
     """Submit an exact council.* lifecycle envelope as JSON or fail closed."""
 
-    tool = "kan_council_command"
+    tool = "hun_council_command"
     try:
         payload = _coerce_args(
             args,
@@ -334,7 +334,7 @@ def handle_selected_participant_response(
 ) -> str:
     """Submit a selected participant council.speak response, then ack its cursor."""
 
-    tool = "kan_selected_participant_response"
+    tool = "hun_selected_participant_response"
     try:
         payload = _coerce_args(
             args,
@@ -441,7 +441,7 @@ def handle_delivery_evidence(
 ) -> str:
     """Submit an exact delivery-evidence envelope as JSON or fail closed."""
 
-    tool = "kan_delivery_evidence"
+    tool = "hun_delivery_evidence"
     try:
         payload = _coerce_args(
             args,
@@ -480,7 +480,7 @@ def handle_discord_send_message(
 ) -> str:
     """Send Discord message through an explicit injected sender or fail closed."""
 
-    tool = "kan_discord_send_message"
+    tool = "hun_discord_send_message"
     try:
         payload = _coerce_args(args, allowed_keys=frozenset({"content", "target"}))
         target_value = payload.get("target")
@@ -503,7 +503,7 @@ def handle_surface_render_projection(
 ) -> str:
     """Render explicit daemon/control projection JSON without side effects."""
 
-    tool = "kan_surface_render_projection"
+    tool = "hun_surface_render_projection"
     try:
         payload = _coerce_args(args, allowed_keys=frozenset({"projection"}))
         projection = _required_json_object(payload.get("projection"), label="projection")
@@ -519,7 +519,7 @@ def handle_discussion_activation_plan(
 ) -> str:
     """Build a pure dry-run discussion activation planner/doctor report."""
 
-    tool = "kan_discussion_activation_plan"
+    tool = "hun_discussion_activation_plan"
     try:
         payload = _coerce_args(args, allowed_keys=frozenset({"plan"}))
         plan = _required_json_object(payload.get("plan"), label="plan")
@@ -583,36 +583,36 @@ def register_tools(
 
     registrations: tuple[tuple[str, dict[str, object], Callable[[object | None], str]], ...]
     registrations = (
-        ("kan_daemon_status", schemas.KAN_DAEMON_STATUS, daemon_status_handler),
+        ("hun_daemon_status", schemas.HUN_DAEMON_STATUS, daemon_status_handler),
         (
-            "kan_compatibility_diagnostics",
-            schemas.KAN_COMPATIBILITY_DIAGNOSTICS,
+            "hun_compatibility_diagnostics",
+            schemas.HUN_COMPATIBILITY_DIAGNOSTICS,
             compatibility_diagnostics_handler,
         ),
-        ("kan_stream_tail", schemas.KAN_STREAM_TAIL, stream_tail_handler),
-        ("kan_stream_ack", schemas.KAN_STREAM_ACK, stream_ack_handler),
-        ("kan_delegate_new", schemas.KAN_DELEGATE_NEW, delegate_new_handler),
-        ("kan_delegate_action", schemas.KAN_DELEGATE_ACTION, delegate_action_handler),
-        ("kan_council_command", schemas.KAN_COUNCIL_COMMAND, council_command_handler),
+        ("hun_stream_tail", schemas.HUN_STREAM_TAIL, stream_tail_handler),
+        ("hun_stream_ack", schemas.HUN_STREAM_ACK, stream_ack_handler),
+        ("hun_delegate_new", schemas.HUN_DELEGATE_NEW, delegate_new_handler),
+        ("hun_delegate_action", schemas.HUN_DELEGATE_ACTION, delegate_action_handler),
+        ("hun_council_command", schemas.HUN_COUNCIL_COMMAND, council_command_handler),
         (
-            "kan_selected_participant_response",
-            schemas.KAN_SELECTED_PARTICIPANT_RESPONSE,
+            "hun_selected_participant_response",
+            schemas.HUN_SELECTED_PARTICIPANT_RESPONSE,
             selected_participant_response_handler,
         ),
-        ("kan_delivery_evidence", schemas.KAN_DELIVERY_EVIDENCE, delivery_evidence_handler),
+        ("hun_delivery_evidence", schemas.HUN_DELIVERY_EVIDENCE, delivery_evidence_handler),
         (
-            "kan_surface_render_projection",
-            schemas.KAN_SURFACE_RENDER_PROJECTION,
+            "hun_surface_render_projection",
+            schemas.HUN_SURFACE_RENDER_PROJECTION,
             surface_render_projection_handler,
         ),
         (
-            "kan_discussion_activation_plan",
-            schemas.KAN_DISCUSSION_ACTIVATION_PLAN,
+            "hun_discussion_activation_plan",
+            schemas.HUN_DISCUSSION_ACTIVATION_PLAN,
             discussion_activation_plan_handler,
         ),
         (
-            "kan_discord_send_message",
-            schemas.KAN_DISCORD_SEND_MESSAGE,
+            "hun_discord_send_message",
+            schemas.HUN_DISCORD_SEND_MESSAGE,
             discord_send_message_handler,
         ),
     )

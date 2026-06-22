@@ -46,7 +46,7 @@ RUNFIX_019_CONTROL_DEPENDENCY_TASK_ID: Final = "control/RUNFIX-018"
 RUNFIX_019_CONTROL_DEPENDENCY_STATUSES: Final[frozenset[str]] = frozenset(
     {"local implementation proof", "completed/local-control", "local-control"}
 )
-TOOL_NAME: Final = "kan_discussion_activation_plan"
+TOOL_NAME: Final = "hun_discussion_activation_plan"
 EVIDENCE_LABELS: Final[tuple[str, ...]] = (
     "lifecycle_pass",
     "fallback_profile_pass",
@@ -411,7 +411,7 @@ def _validate_plugin_install(value: object, *, blockers: list[JsonObject]) -> No
                 code="activation_tool_visibility_missing",
                 owner="plugin",
                 message=(
-                    "kan_discussion_activation_plan must be visible in plugin_install.tool_names."
+                    "hun_discussion_activation_plan must be visible in plugin_install.tool_names."
                 ),
             )
         )
@@ -1312,7 +1312,7 @@ def _visible_author_guard_report(
                 code="visible_author_guard_runtime_claim_unsupported",
                 owner="operator",
                 message=(
-                    "kan_discussion_activation_plan is planner-only and must not claim "
+                    "hun_discussion_activation_plan is planner-only and must not claim "
                     "runtime visible-author enforcement."
                 ),
             )

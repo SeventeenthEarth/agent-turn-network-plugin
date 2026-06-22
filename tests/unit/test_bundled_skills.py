@@ -31,7 +31,7 @@ def test_bundled_kan_skill_resource_is_import_safe_and_readable() -> None:
     assert "# KAN Plugin Operator Skill" in text
     assert "does not install itself into a Hermes profile" in text
     assert "provides_commands: []" in text
-    assert "kan_session_status" in text
+    assert "hun_session_status" in text
     assert "ARGUE argument-graph support as static/fake/injected" in text
     assert "Participant response template" in text
     assert "speaker_selected -> speech linkage" in text
@@ -106,7 +106,7 @@ def test_bundled_kan_skills_split_start_blockers_from_runtime_evidence() -> None
 
     assert "Only `start_blocker` findings block `council.new`" in normalized
     assert "do not automatically stop before `council.new`" in normalized
-    assert "Do not treat `kan_discussion_activation_plan.live_readiness=false`" in normalized
+    assert "Do not treat `hun_discussion_activation_plan.live_readiness=false`" in normalized
     assert "selected-runner proof" in normalized
     assert "participant runtime freshness" in normalized
     assert "ARGUE relation counts" in normalized
@@ -165,7 +165,7 @@ def test_bundled_skill_and_operator_docs_do_not_overclaim_unsupported_surfaces()
         "production activation is supported",
         "live plugin readiness is supported",
         "KAB readiness is supported",
-        "kan_session_status is supported",
+        "hun_session_status is supported",
         "provides_commands: [kan",
         "live daemon discovery is supported",
         "uses the current Hermes session",

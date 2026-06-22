@@ -21,18 +21,18 @@ PACKAGE_MODULE = "hermes_unified_network_plugin"
 PACKAGE_NAME = "hermes-unified-network-plugin"
 TOOLSET = "kkachi_agent_network"
 EXPECTED_TOOLS = [
-    "kan_daemon_status",
-    "kan_compatibility_diagnostics",
-    "kan_stream_tail",
-    "kan_stream_ack",
-    "kan_delegate_new",
-    "kan_delegate_action",
-    "kan_council_command",
-    "kan_selected_participant_response",
-    "kan_delivery_evidence",
-    "kan_surface_render_projection",
-    "kan_discussion_activation_plan",
-    "kan_discord_send_message",
+    "hun_daemon_status",
+    "hun_compatibility_diagnostics",
+    "hun_stream_tail",
+    "hun_stream_ack",
+    "hun_delegate_new",
+    "hun_delegate_action",
+    "hun_council_command",
+    "hun_selected_participant_response",
+    "hun_delivery_evidence",
+    "hun_surface_render_projection",
+    "hun_discussion_activation_plan",
+    "hun_discord_send_message",
 ]
 LIVE_LOOKING_ENV = {
     "HERMES_HOME": "/live/hermes/home",
@@ -106,8 +106,8 @@ def require_package_and_bundled_skill(plugin_home: Path) -> None:
 
     bundled_root = plugin_home / "src" / PACKAGE_MODULE / "bundled_skills"
     expected_skills = {
-        "kan-plugin": ("name: kan-plugin", "provides_commands: []", "kan_session_status"),
-        "kan-moderator": ("name: kan-moderator", "kan_discussion_activation_plan", "tools_visible"),
+        "kan-plugin": ("name: kan-plugin", "provides_commands: []", "hun_session_status"),
+        "kan-moderator": ("name: kan-moderator", "hun_discussion_activation_plan", "tools_visible"),
         "kan-participant": ("name: kan-participant", "selected-speaker", "stance_links"),
     }
     for skill_name, phrases in expected_skills.items():
@@ -239,7 +239,7 @@ def require_handler_fail_closed(context: FakeHermesContext) -> dict[str, str]:
         if not isinstance(result, str):
             raise SystemExit(f"plugin-load smoke handler did not return JSON string: {name}")
         body = json.loads(result)
-        if name in {"kan_surface_render_projection", "kan_discussion_activation_plan"}:
+        if name in {"hun_surface_render_projection", "hun_discussion_activation_plan"}:
             if body.get("ok") is not True or body.get("live_readiness") is not False:
                 raise SystemExit(
                     "plugin-load smoke pure local handler must succeed locally: "
@@ -266,20 +266,20 @@ def require_entrypoint_fail_closed(plugin_home: Path) -> dict[str, str]:
 
 
 def representative_args(tool_name: str) -> dict[str, object]:
-    if tool_name == "kan_daemon_status":
+    if tool_name == "hun_daemon_status":
         return {}
-    if tool_name == "kan_compatibility_diagnostics":
+    if tool_name == "hun_compatibility_diagnostics":
         return {"session_id": "sess-smoke"}
-    if tool_name == "kan_stream_tail":
+    if tool_name == "hun_stream_tail":
         return {"session_id": "sess-smoke", "member": "agent-smoke", "limit": 1}
-    if tool_name == "kan_stream_ack":
+    if tool_name == "hun_stream_ack":
         return {
             "session_id": "sess-smoke",
             "member": "agent-smoke",
             "cursor": "cur-smoke",
             "command_id": "cmd-smoke-stream-ack",
         }
-    if tool_name == "kan_delegate_new":
+    if tool_name == "hun_delegate_new":
         return {
             "session_id": "sess-smoke",
             "moderator": "moderator-smoke",
@@ -294,7 +294,7 @@ def representative_args(tool_name: str) -> dict[str, object]:
             "request_id": "req-smoke-delegate-new",
             "idempotency_key": "idem-smoke-delegate-new",
         }
-    if tool_name == "kan_delegate_action":
+    if tool_name == "hun_delegate_action":
         return {
             "session_id": "sess-smoke",
             "command": "delegate.submit",
@@ -302,7 +302,7 @@ def representative_args(tool_name: str) -> dict[str, object]:
             "idempotency_key": "idem-smoke-delegate-action",
             "payload": {"command_id": "cmd-smoke"},
         }
-    if tool_name == "kan_council_command":
+    if tool_name == "hun_council_command":
         return {
             "session_id": "sess-smoke",
             "command": "council.ready",
@@ -310,7 +310,7 @@ def representative_args(tool_name: str) -> dict[str, object]:
             "idempotency_key": "idem-smoke-council",
             "payload": {"command_id": "cmd-smoke", "actor": "agent-smoke"},
         }
-    if tool_name == "kan_selected_participant_response":
+    if tool_name == "hun_selected_participant_response":
         return {
             "session_id": "sess-smoke",
             "selected_member": "agent-smoke",
@@ -343,7 +343,7 @@ def representative_args(tool_name: str) -> dict[str, object]:
             "idempotency_key": "idem-smoke-speak",
             "ack_command_id": "cmd-smoke-ack",
         }
-    if tool_name == "kan_delivery_evidence":
+    if tool_name == "hun_delivery_evidence":
         return {
             "session_id": "sess-smoke",
             "command": "delegate.escalation_delivered",
@@ -351,7 +351,7 @@ def representative_args(tool_name: str) -> dict[str, object]:
             "idempotency_key": "idem-smoke-delivery",
             "payload": {"command_id": "cmd-smoke", "escalation": "evt-smoke"},
         }
-    if tool_name == "kan_surface_render_projection":
+    if tool_name == "hun_surface_render_projection":
         return {
             "projection": {
                 "schema_version": 1,
@@ -369,7 +369,7 @@ def representative_args(tool_name: str) -> dict[str, object]:
                 ],
             }
         }
-    if tool_name == "kan_discussion_activation_plan":
+    if tool_name == "hun_discussion_activation_plan":
         return {
             "plan": {
                 "schema_version": 1,
@@ -383,8 +383,8 @@ def representative_args(tool_name: str) -> dict[str, object]:
                     "installed": True,
                     "enabled": True,
                     "tool_names": [
-                        "kan_daemon_status",
-                        "kan_discussion_activation_plan",
+                        "hun_daemon_status",
+                        "hun_discussion_activation_plan",
                     ],
                 },
                 "control_daemon": {
@@ -412,7 +412,7 @@ def representative_args(tool_name: str) -> dict[str, object]:
                 "approval_gates": ["explicit live-local apply approval"],
             }
         }
-    if tool_name == "kan_discord_send_message":
+    if tool_name == "hun_discord_send_message":
         return {
             "content": "local isolated plugin-load smoke",
             "target": {

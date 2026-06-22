@@ -10,13 +10,13 @@ discussion/evidence, not canonical state.
 
 - Discord message IDs, channel IDs, and thread IDs are evidence pointers.
 - `channel.jsonl` in the control daemon remains the SOT.
-- `kan_discord_send_message` is an injected-only helper. It requires a caller-supplied
+- `hun_discord_send_message` is an injected-only helper. It requires a caller-supplied
   `send_message` callable plus an explicit dedicated test target; without the injected
   sender it returns a fail-closed JSON error and does not post.
 - The helper does not read environment variables, discover current Hermes sessions,
   inspect active Discord threads, open gateway/socket/CLI connections, or use tokens.
 - The plugin records delivery success/failure only through fake/injected
-  `kan_delivery_evidence` command submission. Discord message IDs, channel IDs, and
+  `hun_delivery_evidence` command submission. Discord message IDs, channel IDs, and
   thread IDs remain evidence pointers; they are not daemon state.
 - The daemon must not require raw Discord tokens.
 - Free-form Discord replies are never parsed as authoritative lifecycle transitions.

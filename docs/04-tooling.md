@@ -86,7 +86,7 @@ local isolated plugin-load smoke boundary are documented in `docs/09-skill-and-o
 SCAFF-5 delivers a scaffold smoke gate for the first plugin scaffold PR. It proves:
 
 - the plugin package imports through the `src/` layout and exposes stable metadata;
-- the plugin manifest is a YAML mapping with the expected name, version, standalone kind, exact `provides_tools: [kan_daemon_status, kan_compatibility_diagnostics, kan_stream_tail, kan_stream_ack, kan_delegate_new, kan_delegate_action, kan_council_command, kan_selected_participant_response, kan_delivery_evidence, kan_surface_render_projection, kan_discussion_activation_plan, kan_discord_send_message]`, and explicit empty `provides_hooks: []` / `provides_commands: []` declarations;
+- the plugin manifest is a YAML mapping with the expected name, version, standalone kind, exact `provides_tools: [hun_daemon_status, hun_compatibility_diagnostics, hun_stream_tail, hun_stream_ack, hun_delegate_new, hun_delegate_action, hun_council_command, hun_selected_participant_response, hun_delivery_evidence, hun_surface_render_projection, hun_discussion_activation_plan, hun_discord_send_message]`, and explicit empty `provides_hooks: []` / `provides_commands: []` declarations;
 - the root directory-plugin entrypoint exposes `register(ctx)`;
 - the entrypoint registers callable fake/injected JSON-string handlers and does not register hooks or KAN slash commands;
 - `make test` succeeds without live Hermes, Discord, daemon, or network resources.
@@ -127,7 +127,7 @@ No async test dependency is introduced because DAEMN-2 does not implement live s
 
 HPLUG-2 maps DAEMN-2 stream-tail support into the plugin layer without adding dependencies:
 
-- `schemas.py` declares `kan_stream_tail` with required `session_id`/`member`, optional `since_cursor`, bounded `limit`, and `additionalProperties: false`.
+- `schemas.py` declares `hun_stream_tail` with required `session_id`/`member`, optional `since_cursor`, bounded `limit`, and `additionalProperties: false`.
 - `tools.py` validates stream-tail args before transport, requires explicit `client_factory`, calls `read_stream_tail()`, serializes frames/events into JSON, and redacts sensitive payload/details values.
 - `plugin.yaml`, the root entrypoint, and bootstrap smoke tests include these read-only tools and still no hooks or slash commands.
 
@@ -135,9 +135,9 @@ HPLUG-2 maps DAEMN-2 stream-tail support into the plugin layer without adding de
 
 DELRV-1 maps exact daemon-owned delegation/review command names into fake/injected Hermes tools without adding dependencies:
 
-- `schemas.py` declares `kan_delegate_new` and `kan_delegate_action`; the action schema uses a closed enum for implemented `delegate.*` commands and omits `delegate.request` / top-level `review`.
+- `schemas.py` declares `hun_delegate_new` and `hun_delegate_action`; the action schema uses a closed enum for implemented `delegate.*` commands and omits `delegate.request` / top-level `review`.
 - `tools.py` validates required caller-supplied `request_id` and `idempotency_key`, builds command envelopes through `DaemonClient.build_command_envelope(...)`, submits via `submit_command(...)`, preserves structured daemon errors, and does not generate IDs or keep lifecycle/idempotency state.
-- `kan_delegate_action` always overwrites/sets `payload.session_id` from the top-level `session_id` before submit.
+- `hun_delegate_action` always overwrites/sets `payload.session_id` from the top-level `session_id` before submit.
 - `plugin.yaml`, the root entrypoint, and bootstrap smoke tests declare the two DELRV-1 tools while preserving `provides_commands: []`.
 
 No live daemon discovery, localhost/socket transport, Hermes/Discord/gateway/auth/token access, or CLI fallback is introduced.
@@ -148,7 +148,7 @@ CNDIS-1 maps exact daemon-owned council and delivery-evidence command names into
 
 - `protocol.py` declares `delivery_evidence` and `council.lifecycle` feature groups and required feature tuples.
 - `client/daemon.py` exposes `require_feature_groups(...)`, which performs injected `version.read` only and fails closed before submit on missing features.
-- `schemas.py` declares `kan_council_command` and `kan_delivery_evidence` with closed enums and `additionalProperties: false`.
+- `schemas.py` declares `hun_council_command` and `hun_delivery_evidence` with closed enums and `additionalProperties: false`.
 - `tools.py` validates command-specific payload fields, preserves caller-supplied `request_id`/`idempotency_key`, normalizes top-level `session_id` into the command payload, probes required features, and submits through the explicit fake/injected client.
 - `plugin.yaml`, the root entrypoint, and bootstrap smoke tests declare the two CNDIS-1 tools while preserving `provides_hooks: []` and `provides_commands: []`.
 
@@ -156,13 +156,13 @@ No live daemon discovery, localhost/socket transport, Hermes/Discord/gateway/aut
 
 ## CNDIS-2 Discord helper module
 
-CNDIS-2 adds `discord_surface.py` and the `kan_discord_send_message` schema/handler
+CNDIS-2 adds `discord_surface.py` and the `hun_discord_send_message` schema/handler
 without adding dependencies:
 
 - `discord_surface.py` defines typed target/result objects, a `SendMessageFn` protocol,
   `send_discord_message(...)`, and inert `e2e_config_from_env(...)` parsing from an
   explicitly supplied mapping;
-- `schemas.py` declares a target-gated `kan_discord_send_message` tool schema;
+- `schemas.py` declares a target-gated `hun_discord_send_message` tool schema;
 - `tools.py` requires an injected sender and renders fail-closed JSON when the sender,
   target, dedicated-test marker, visible live label, or cleanup hint is missing;
 - `plugin.yaml`, the root entrypoint, and bootstrap smoke tests declare the helper tool

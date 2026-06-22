@@ -10,14 +10,14 @@ Hermes currently provides a real plugin slash-command host API through `PluginCo
 
 Supported now:
 
-- `kan_daemon_status` — read-only fake/injected daemon status tool.
-- `kan_compatibility_diagnostics` — read-only fake/injected diagnostics tool with redaction.
-- `kan_stream_tail` — read-only fake/injected retained stream tail tool with `stream_frame` pre-probe.
-- `kan_delegate_new` — fake/injected `delegate.new` command-envelope submission tool with caller-supplied request/idempotency metadata.
-- `kan_delegate_action` — fake/injected closed-enum `delegate.*` action/review/delivery command-envelope submission tool.
-- `kan_council_command` — fake/injected closed-enum `council.*` lifecycle command-envelope submission tool with `council.lifecycle` pre-probe.
-- `kan_delivery_evidence` — fake/injected closed-enum delivery-evidence command-envelope submission tool with `delivery_evidence` pre-probe.
-- `kan_discord_send_message` — fake/injected Discord helper tool that requires an
+- `hun_daemon_status` — read-only fake/injected daemon status tool.
+- `hun_compatibility_diagnostics` — read-only fake/injected diagnostics tool with redaction.
+- `hun_stream_tail` — read-only fake/injected retained stream tail tool with `stream_frame` pre-probe.
+- `hun_delegate_new` — fake/injected `delegate.new` command-envelope submission tool with caller-supplied request/idempotency metadata.
+- `hun_delegate_action` — fake/injected closed-enum `delegate.*` action/review/delivery command-envelope submission tool.
+- `hun_council_command` — fake/injected closed-enum `council.*` lifecycle command-envelope submission tool with `council.lifecycle` pre-probe.
+- `hun_delivery_evidence` — fake/injected closed-enum delivery-evidence command-envelope submission tool with `delivery_evidence` pre-probe.
+- `hun_discord_send_message` — fake/injected Discord helper tool that requires an
   injected sender and dedicated test target; it returns Discord IDs only as evidence
   pointers and fails closed by default.
 
@@ -26,7 +26,7 @@ Unsupported now:
 - KAN slash commands through `ctx.register_command`.
 - Native Discord slash-command registration for KAN operations.
 - Additional write-capable KAN tools beyond the DELRV-1/CNDIS-1 fake/injected command-envelope tools and the CNDIS-2 injected-only Discord helper.
-- `kan_session_status` and any `session.status.read` surface.
+- `hun_session_status` and any `session.status.read` surface.
 - Live daemon discovery, localhost/socket/SSE/WebSocket transport, or CLI fallback.
 - Default/live Hermes gateway/send_message delivery helpers, current-session/current-thread
   fallback, or Discord helper behavior that claims daemon-recorded evidence.
@@ -48,8 +48,8 @@ KAN plugin readiness boundary:
 - The plugin does not register slash commands; DELRV-1/CNDIS-1 command-envelope tools are Hermes tools, not slash-command bindings.
 - The plugin is not installed/enabled as a live Hermes plugin in the active environment, so no live plugin command claim is valid.
 - Free-form Discord replies or slash invocations must not become authoritative lifecycle transitions; daemon events remain the SOT.
-- `kan_discord_send_message` does not change daemon evidence. Delivery evidence remains
-  daemon-owned through `kan_delivery_evidence`; Discord IDs are evidence pointers only.
+- `hun_discord_send_message` does not change daemon evidence. Delivery evidence remains
+  daemon-owned through `hun_delivery_evidence`; Discord IDs are evidence pointers only.
 
 ## Future binding requirements
 

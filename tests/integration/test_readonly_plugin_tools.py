@@ -65,25 +65,25 @@ def test_fake_hermes_context_invokes_registered_readonly_handlers() -> None:
     register_tools(ctx, client_factory=lambda: DaemonClient(transport))
 
     assert [tool["name"] for tool in ctx.registered_tools] == [
-        "kan_daemon_status",
-        "kan_compatibility_diagnostics",
-        "kan_stream_tail",
-        "kan_stream_ack",
-        "kan_delegate_new",
-        "kan_delegate_action",
-        "kan_council_command",
-        "kan_selected_participant_response",
-        "kan_delivery_evidence",
-        "kan_surface_render_projection",
-        "kan_discussion_activation_plan",
-        "kan_discord_send_message",
+        "hun_daemon_status",
+        "hun_compatibility_diagnostics",
+        "hun_stream_tail",
+        "hun_stream_ack",
+        "hun_delegate_new",
+        "hun_delegate_action",
+        "hun_council_command",
+        "hun_selected_participant_response",
+        "hun_delivery_evidence",
+        "hun_surface_render_projection",
+        "hun_discussion_activation_plan",
+        "hun_discord_send_message",
     ]
-    status = json.loads(ctx.handlers["kan_daemon_status"]({}))
+    status = json.loads(ctx.handlers["hun_daemon_status"]({}))
     diagnostics = json.loads(
-        ctx.handlers["kan_compatibility_diagnostics"]({"session_id": "sess-int"})
+        ctx.handlers["hun_compatibility_diagnostics"]({"session_id": "sess-int"})
     )
     stream_tail = json.loads(
-        ctx.handlers["kan_stream_tail"](
+        ctx.handlers["hun_stream_tail"](
             {"session_id": "sess-int", "member": "agent-1", "since_cursor": "cur_prev"}
         )
     )

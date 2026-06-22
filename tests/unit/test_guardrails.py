@@ -66,7 +66,7 @@ def write_docs(root: Path, *, include_fail_closed: bool = True) -> None:
                 "Troubleshooting",
                 "registers these read-only plugin-provided skills",
                 "provides_commands: []",
-                "kan_session_status",
+                "hun_session_status",
                 "SKILL-2",
             ]
         ),

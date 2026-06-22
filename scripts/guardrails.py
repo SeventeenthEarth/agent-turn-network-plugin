@@ -35,7 +35,7 @@ REQUIRED_OPERATOR_PHRASES = [
     "No-live defaults",
     "registers these read-only plugin-provided skills",
     "provides_commands: []",
-    "kan_session_status",
+    "hun_session_status",
     "SKILL-2",
 ]
 FORBIDDEN_OPERATOR_CLAIMS = [
@@ -44,7 +44,7 @@ FORBIDDEN_OPERATOR_CLAIMS = [
     "production activation is supported",
     "live plugin readiness is supported",
     "KAB readiness is supported",
-    "kan_session_status is supported",
+    "hun_session_status is supported",
     "provides_commands: [kan",
 ]
 BUNDLED_SKILL = "src/hermes_unified_network_plugin/bundled_skills/kan-plugin/SKILL.md"

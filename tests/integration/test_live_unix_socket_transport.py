@@ -78,7 +78,7 @@ def test_configured_register_time_factory_powers_status_only(
         ctx,
         config={"live_transport": {"unix_socket_path": socket_path}},
     )
-    status = json.loads(ctx.handler("kan_daemon_status")({}))
+    status = json.loads(ctx.handler("hun_daemon_status")({}))
 
     assert status["ok"] is True
     assert status["data"]["status"] == "registered-live-smoke"

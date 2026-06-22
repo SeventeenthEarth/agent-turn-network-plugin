@@ -33,7 +33,7 @@ KAN is independent of KAS. KAS does not install, own, or activate KAN control, K
 - Hermes participant-agent tool schemas and handlers;
 - daemon-client submission of typed council command envelopes;
 - local argument-graph argument validation before a command is submitted, where the validation can be performed from caller-provided selected-event/projection context;
-- selected participant response framing for `kan_selected_participant_response`;
+- selected participant response framing for `hun_selected_participant_response`;
 - fail-closed filtering of runtime warning/noise before it becomes visible `speech` text;
 - visible surface rendering of daemon-provided relation evidence;
 - packaged KAN operator guidance bundled in this plugin package.
@@ -179,9 +179,9 @@ In compatibility/default paths, the plugin may submit orphan speech if the daemo
 
 ## 5. Plugin schema requirements
 
-### 5.1 `kan_council_command`
+### 5.1 `hun_council_command`
 
-`kan_council_command` must allow ARGUE-capable `council.hand_raise` and `council.speak` payloads without weakening existing command-envelope rules.
+`hun_council_command` must allow ARGUE-capable `council.hand_raise` and `council.speak` payloads without weakening existing command-envelope rules.
 
 For `council.speak`, the plugin must accept and preserve these additive speech fields:
 
@@ -228,9 +228,9 @@ For `council.hand_raise`, the plugin must accept and preserve preferred ARGUE ta
 
 `target_event_ids[]` and `target_claim_ids[]`, if present for compatibility, are display hints only and must not be treated as independent parallel arrays for validation.
 
-### 5.2 `kan_selected_participant_response`
+### 5.2 `hun_selected_participant_response`
 
-`kan_selected_participant_response` is the most important plugin-side ARGUE surface because it turns participant-agent output into a daemon `council.speak` command.
+`hun_selected_participant_response` is the most important plugin-side ARGUE surface because it turns participant-agent output into a daemon `council.speak` command.
 
 The tool must require or receive enough context to prove:
 
@@ -279,7 +279,7 @@ The participant prompt must not pre-script a full round-robin `TURN_PLAN` for al
 
 ## 7. Visible rendering requirements
 
-`kan_surface_render_projection` must render daemon/control projection data without becoming lifecycle authority.
+`hun_surface_render_projection` must render daemon/control projection data without becoming lifecycle authority.
 
 Minimum human rendering for an ARGUE speech row:
 
@@ -380,7 +380,7 @@ Acceptance requires:
 
 Acceptance requires:
 
-- `kan_selected_participant_response` frames selected participant output into structured ARGUE fields;
+- `hun_selected_participant_response` frames selected participant output into structured ARGUE fields;
 - selected participant identity/provenance is checked against caller-provided selection context;
 - runtime warning/noise text fails closed before visible speech submission;
 - quality-required orphan speech fails closed when local context is sufficient;
@@ -391,7 +391,7 @@ Acceptance requires:
 
 Acceptance requires:
 
-- `kan_surface_render_projection` renders human-readable relation summaries;
+- `hun_surface_render_projection` renders human-readable relation summaries;
 - audit output preserves machine-readable relation fields;
 - daemon-supplied quality diagnostics are shown without rewriting speech;
 - renderer remains pure/local and uses daemon cursor/order authority only;
@@ -438,7 +438,7 @@ This SOT does not:
 These are later ARGUE task decisions, not blockers for this SOT:
 
 - exact JSON schema nesting for selected participant response context;
-- whether `kan_council_command` and `kan_selected_participant_response` share one ARGUE validator module or separate command-specific validators;
+- whether `hun_council_command` and `hun_selected_participant_response` share one ARGUE validator module or separate command-specific validators;
 - exact renderer compactness controls for long multi-claim discussions;
 - whether local fake fixtures live under plugin tests or a copied control conformance-fixture mirror until `control/ARGUE-002` lands;
 - exact operator-guide examples for Korean/English mixed participant responses.

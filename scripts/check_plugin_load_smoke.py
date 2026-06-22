@@ -106,9 +106,9 @@ def require_package_and_bundled_skill(plugin_home: Path) -> None:
 
     bundled_root = plugin_home / "src" / PACKAGE_MODULE / "bundled_skills"
     expected_skills = {
-        "kan-plugin": ("name: kan-plugin", "provides_commands: []", "hun_session_status"),
-        "kan-moderator": ("name: kan-moderator", "hun_discussion_activation_plan", "tools_visible"),
-        "kan-participant": ("name: kan-participant", "selected-speaker", "stance_links"),
+        "hun-plugin": ("name: hun-plugin", "provides_commands: []", "hun_session_status"),
+        "hun-moderator": ("name: hun-moderator", "hun_discussion_activation_plan", "tools_visible"),
+        "hun-participant": ("name: hun-participant", "selected-speaker", "stance_links"),
     }
     for skill_name, phrases in expected_skills.items():
         skill = bundled_root / skill_name / "SKILL.md"
@@ -212,7 +212,7 @@ def require_entrypoint_load(plugin_home: Path) -> FakeHermesContext:
     if context.registered_commands:
         raise SystemExit("plugin-load smoke registered unsupported commands")
     registered_skill_names = [skill.get("name") for skill in context.registered_skills]
-    if registered_skill_names != ["kan-plugin", "kan-moderator", "kan-participant"]:
+    if registered_skill_names != ["hun-plugin", "hun-moderator", "hun-participant"]:
         raise SystemExit(
             "plugin-load smoke bundled skill registration mismatch: "
             f"{registered_skill_names!r}"
@@ -509,7 +509,7 @@ class FakeHermesContext:
 
 def main(*, root: Path = ROOT) -> None:
     root = root.resolve()
-    with tempfile.TemporaryDirectory(prefix="kan-plugin-load-smoke-") as temp:
+    with tempfile.TemporaryDirectory(prefix="hun-plugin-load-smoke-") as temp:
         plugin_home = make_isolated_plugin_home(root, Path(temp))
         require_manifest(plugin_home)
         require_python311_syntax(plugin_home)

@@ -16,10 +16,11 @@ from hermes_unified_network_plugin.bundled_skills import (
 ROOT = Path(__file__).resolve().parents[2]
 
 
-def test_bundled_kan_skill_resource_is_import_safe_and_readable() -> None:
-    assert bundled_skill_names() == ("kan-plugin", "kan-moderator", "kan-participant")
-    assert BUNDLED_SKILL_NAME == "kan-plugin"
+def test_bundled_hun_skill_resource_is_import_safe_and_readable() -> None:
+    assert bundled_skill_names() == ("hun-plugin", "hun-moderator", "hun-participant")
+    assert BUNDLED_SKILL_NAME == "hun-plugin"
     assert bundled_skill_names() == BUNDLED_SKILL_NAMES
+    assert not {"kan-plugin", "kan-moderator", "kan-participant"} & set(bundled_skill_names())
 
     for name in bundled_skill_names():
         resource = bundled_skill_resource(name)
@@ -27,8 +28,8 @@ def test_bundled_kan_skill_resource_is_import_safe_and_readable() -> None:
         assert resource.name == "SKILL.md"
         assert f"name: {name}" in text
 
-    text = read_bundled_skill_text("kan-plugin")
-    assert "# KAN Plugin Operator Skill" in text
+    text = read_bundled_skill_text("hun-plugin")
+    assert "# HUN Plugin Operator Skill" in text
     assert "does not install itself into a Hermes profile" in text
     assert "provides_commands: []" in text
     assert "hun_session_status" in text
@@ -41,11 +42,18 @@ def test_bundled_kan_skill_resource_is_import_safe_and_readable() -> None:
     assert "SKILL-2" in text
 
 
-def test_bundled_kan_skill_ships_council_moderation_hard_rules() -> None:
-    skill_text = read_bundled_skill_text("kan-plugin")
+def test_bundled_hun_moderator_skill_ships_council_moderation_hard_rules() -> None:
+    plugin_text = read_bundled_skill_text("hun-plugin")
+    moderator_text = read_bundled_skill_text("hun-moderator")
     guide_text = (ROOT / "docs" / "09-skill-and-operator-guide.md").read_text(encoding="utf-8")
 
-    for text in [skill_text, guide_text]:
+    assert (
+        "The packaged HUN moderator role skill owns the council moderation hard rules"
+        in plugin_text
+    )
+    assert "Do not predeclare or hard-code a complete live speaker order" not in plugin_text
+
+    for text in [moderator_text, guide_text]:
         normalized = " ".join(text.split())
         assert "KAN council moderation hard rules" in normalized
         assert "Do not predeclare or hard-code a complete live speaker order" in normalized
@@ -69,16 +77,16 @@ def test_bundled_kan_skill_ships_council_moderation_hard_rules() -> None:
         assert "repair forward with a moderator intervention" in normalized
 
 
-def test_bundled_kan_skills_split_start_blockers_from_runtime_evidence() -> None:
-    plugin_text = read_bundled_skill_text("kan-plugin")
-    moderator_text = read_bundled_skill_text("kan-moderator")
+def test_bundled_hun_skills_split_start_blockers_from_runtime_evidence() -> None:
+    plugin_text = read_bundled_skill_text("hun-plugin")
+    moderator_text = read_bundled_skill_text("hun-moderator")
     guide_text = (ROOT / "docs" / "09-skill-and-operator-guide.md").read_text(encoding="utf-8")
     live_reference = (
         ROOT
         / "src"
         / "hermes_unified_network_plugin"
         / "bundled_skills"
-        / "kan-moderator"
+        / "hun-moderator"
         / "references"
         / "live-visible-preflight-and-council-new.md"
     ).read_text(encoding="utf-8")
@@ -87,7 +95,7 @@ def test_bundled_kan_skills_split_start_blockers_from_runtime_evidence() -> None
         / "src"
         / "hermes_unified_network_plugin"
         / "bundled_skills"
-        / "kan-moderator"
+        / "hun-moderator"
         / "references"
         / "cross-team-participant-preflight-evidence.md"
     ).read_text(encoding="utf-8")
@@ -117,10 +125,10 @@ def test_bundled_kan_skills_split_start_blockers_from_runtime_evidence() -> None
     assert "`ready_for_approval` is not the live-visible discussion start signal" in normalized
 
 
-def test_bundled_kan_skills_define_runner_jsonl_framing_contract() -> None:
-    plugin_text = read_bundled_skill_text("kan-plugin")
-    moderator_text = read_bundled_skill_text("kan-moderator")
-    participant_text = read_bundled_skill_text("kan-participant")
+def test_bundled_hun_skills_define_runner_jsonl_framing_contract() -> None:
+    plugin_text = read_bundled_skill_text("hun-plugin")
+    moderator_text = read_bundled_skill_text("hun-moderator")
+    participant_text = read_bundled_skill_text("hun-participant")
     guide_text = (ROOT / "docs" / "09-skill-and-operator-guide.md").read_text(encoding="utf-8")
     combined = "\n".join([plugin_text, moderator_text, participant_text, guide_text])
     normalized = " ".join(combined.split())
@@ -134,7 +142,7 @@ def test_bundled_kan_skills_define_runner_jsonl_framing_contract() -> None:
     assert "malformed JSON remains malformed_or_missing_response" in normalized
 
 
-def test_bundled_kan_skill_has_valid_hermes_frontmatter() -> None:
+def test_bundled_hun_skill_has_valid_hermes_frontmatter() -> None:
     for name in bundled_skill_names():
         text = read_bundled_skill_text(name)
         assert text.startswith("---\n")
@@ -151,11 +159,14 @@ def test_bundled_kan_skill_has_valid_hermes_frontmatter() -> None:
 
 def test_bundled_skill_reader_rejects_unknown_names() -> None:
     with pytest.raises(ValueError, match="unknown bundled skill"):
-        read_bundled_skill_text("../kan-plugin")
+        read_bundled_skill_text("../hun-plugin")
+    for stale_name in ["kan-plugin", "kan-moderator", "kan-participant"]:
+        with pytest.raises(ValueError, match="unknown bundled skill"):
+            read_bundled_skill_text(stale_name)
 
 
 def test_bundled_skill_and_operator_docs_do_not_overclaim_unsupported_surfaces() -> None:
-    skill_text = read_bundled_skill_text("kan-plugin")
+    skill_text = read_bundled_skill_text("hun-plugin")
     guide_text = (ROOT / "docs" / "09-skill-and-operator-guide.md").read_text(encoding="utf-8")
     combined = f"{skill_text}\n{guide_text}"
 

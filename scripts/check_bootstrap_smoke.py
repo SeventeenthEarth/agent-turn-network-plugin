@@ -206,9 +206,9 @@ def require_entrypoint(root: Path) -> None:
         raise SystemExit("entrypoint registered HPLUG/DELRV-1-forbidden commands")
     registered_skill_names = [skill.get("name") for skill in context.registered_skills]
     if registered_skill_names and registered_skill_names != [
-        "kan-plugin",
-        "kan-moderator",
-        "kan-participant",
+        "hun-plugin",
+        "hun-moderator",
+        "hun-participant",
     ]:
         raise SystemExit(
             "entrypoint bundled skill registration mismatch: "

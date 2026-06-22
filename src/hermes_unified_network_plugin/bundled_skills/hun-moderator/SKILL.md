@@ -1,5 +1,5 @@
 ---
-name: kan-moderator
+name: hun-moderator
 description: "Use when acting as a KAN council moderator/operator: create and advance daemon-owned council lifecycle, select speakers, enforce visible-surface and ARGUE quality gates, and report evidence without substituting Discord/Hermes chat for council state."
 version: 0.1.0
 author: 17번째 지구 Kkachi
@@ -7,16 +7,16 @@ license: MIT
 metadata:
   hermes:
     tags: [kan, Hermes Unified Network, moderator, council, live-visible, argue]
-    related_skills: [kan-plugin]
+    related_skills: [hun-plugin]
 ---
 
-# KAN Moderator Skill
+# HUN Moderator Skill
 
-Use this skill when you are the moderator/operator for a KAN council or live-visible discussion. This is a role-focused companion to the canonical KAN discussion/operator skill `kan-plugin`.
+Use this skill when you are the moderator/operator for a KAN council or live-visible discussion. This is the packaged HUN moderator role companion to the canonical HUN discussion/operator skill `hun-plugin`.
 
 ## Authority and boundary
 
-- Canonical KAN discussion/operator source: `hermes-unified-network-plugin/src/hermes_unified_network_plugin/bundled_skills/kan-plugin/SKILL.md`.
+- Canonical KAN discussion/operator source: `hermes-unified-network-plugin/src/hermes_unified_network_plugin/bundled_skills/hun-plugin/SKILL.md`.
 - KAN control daemon remains lifecycle, event, stream, cursor, lock, and state authority.
 - Plugin tools are typed client surfaces. They must not own lifecycle state, logs, locks, consensus, cursors, idempotency, Discord state, or fallback discovery.
 - Discord/Hermes messages are visible/evidence surfaces only. They become council state only when backed by daemon-owned typed events.
@@ -66,6 +66,33 @@ For cross-team KLM/KAN participant onboarding and the evidence package needed be
 ## Council lifecycle spine
 
 Use daemon-owned `hun_council_command` commands with caller-supplied `command_id`, `request_id`, and `idempotency_key`.
+
+## KAN council moderation hard rules
+
+For any live KAN council, the moderator must preserve the daemon-governed
+council loop. These rules are hard guardrails for HUN moderator guidance; they
+do not authorize live daemon/runtime activation by themselves.
+
+1. Do not predeclare or hard-code a complete live speaker order. A visible
+   discussion must not become a fixed-order Discord/Hermes debate transcript.
+2. Complete lifecycle prerequisites before turn discussion: `council.new`,
+   `request_attendance`, terminal attendance records for required participants,
+   `lock_agenda`, `prepare`, then `ready` or `prepared_partial` evidence.
+3. For each turn, open a `poll` or hand-raise evaluation, evaluate the current
+   hand raises, and record a justified daemon `speaker_selected` event before
+   any participant speech.
+4. Use `relevance` as the default selection mode. `targeted`, `random`,
+   `moderator_direct`, and `role_order` remain valid only as per-turn
+   `speaker_selected` selection modes with a reason; `role_order` also needs
+   bounded round evidence. Do not ban `role_order`, but never use it as a
+   predeclared full live debate order.
+5. Discord/Hermes replies are not council state. They become council speech only
+   when backed by typed daemon `speech` events.
+6. If the moderator has a substantive opinion, record it as a participant-style
+   turn rather than hiding it inside moderation text.
+7. If a fixed-order flow starts by mistake before any `speech` event exists,
+   cancel and restart. If `speech` already exists, repair forward with a
+   moderator intervention and do not rewrite history.
 
 Minimum lifecycle before discussion turns:
 

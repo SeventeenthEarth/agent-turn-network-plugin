@@ -33,9 +33,9 @@ EXPECTED_TOOLS = [
 ]
 
 EXPECTED_BUNDLED_SKILLS = [
-    "kan-plugin",
-    "kan-moderator",
-    "kan-participant",
+    "hun-plugin",
+    "hun-moderator",
+    "hun-participant",
 ]
 
 LEGACY_TOOL_NAMES = [name.replace("hun_", "kan_", 1) for name in EXPECTED_TOOLS]
@@ -75,6 +75,9 @@ def test_root_entrypoint_matches_hermes_directory_plugin_contract() -> None:
     assert not set(LEGACY_TOOL_NAMES) & {tool["name"] for tool in fake_ctx.registered_tools}
     assert all(callable(tool["handler"]) for tool in fake_ctx.registered_tools)
     assert [skill["name"] for skill in fake_ctx.registered_skills] == EXPECTED_BUNDLED_SKILLS
+    assert not {"kan-plugin", "kan-moderator", "kan-participant"} & {
+        skill["name"] for skill in fake_ctx.registered_skills
+    }
     assert all(skill["path"].name == "SKILL.md" for skill in fake_ctx.registered_skills)
     assert all(skill["path"].exists() for skill in fake_ctx.registered_skills)
     assert fake_ctx.registered_hooks == []

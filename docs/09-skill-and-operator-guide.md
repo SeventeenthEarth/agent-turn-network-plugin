@@ -1,18 +1,18 @@
-# KAN Skill and Operator Guide
+# HUN Skill and Operator Guide
 
 ## Scope
 
-The packaged KAN operator skills and local compatibility matrix remain the
-operator-facing guide for `kkachi-agent-network-plugin`. The bundled skills live
+The packaged HUN operator skills and local compatibility matrix remain the
+operator-facing guide for `hermes-unified-network-plugin`. The bundled skills live
 inside the Python package:
 
 ```text
-src/kkachi_agent_network_plugin/bundled_skills/kan-plugin/SKILL.md
-src/kkachi_agent_network_plugin/bundled_skills/kan-moderator/SKILL.md
-src/kkachi_agent_network_plugin/bundled_skills/kan-participant/SKILL.md
+src/hermes_unified_network_plugin/bundled_skills/hun-plugin/SKILL.md
+src/hermes_unified_network_plugin/bundled_skills/hun-moderator/SKILL.md
+src/hermes_unified_network_plugin/bundled_skills/hun-participant/SKILL.md
 ```
 
-The package exposes import-safe resource helpers and registers these read-only plugin-provided skills when Hermes loads the plugin. Canonical activation loads them by plugin-qualified names such as `kkachi-agent-network-plugin:kan-plugin`, `kkachi-agent-network-plugin:kan-moderator`, and `kkachi-agent-network-plugin:kan-participant`; it must not require profile-local flat copies. The bundled source remains canonical; ops external skill directories are not required for KAN plugin use.
+The package exposes import-safe resource helpers and registers these read-only plugin-provided skills when Hermes loads the plugin. Canonical activation loads them by plugin-qualified names such as `hermes-unified-network-plugin:hun-plugin`, `hermes-unified-network-plugin:hun-moderator`, and `hermes-unified-network-plugin:hun-participant`; it must not require profile-local flat copies. The bundled source remains canonical; ops external skill directories are not required for HUN plugin use.
 
 This guide does not enable a live plugin, contact a daemon, modify the sibling
 control repo, or prove production activation, live plugin readiness, or live
@@ -336,15 +336,15 @@ fixture. It is not a live profile mutation.
 Recommended inspection path:
 
 ```python
-from kkachi_agent_network_plugin.bundled_skills import read_bundled_skill_text
+from hermes_unified_network_plugin.bundled_skills import read_bundled_skill_text
 
-skill_text = read_bundled_skill_text("kan-plugin")
+skill_text = read_bundled_skill_text("hun-plugin")
 ```
 
 Manual operator install, when a later approved workflow allows profile writes:
 
 1. Build or install the Python package from the reviewed plugin revision.
-2. Read the packaged `kan-plugin/SKILL.md` with the import-safe helper.
+2. Read the packaged `hun-plugin/SKILL.md` with the import-safe helper.
 3. Copy that exact text into the approved Hermes profile skill location.
 4. Record the source package version and git revision in the operator change log.
 5. Run local verification before making any operator-readiness claim.
@@ -363,7 +363,7 @@ Before enabling, confirm:
 - the package imports without runtime integrations;
 - the root directory-plugin entrypoint loads from the staged repository without
   external `PYTHONPATH=<plugin>/src` help;
-- `read_bundled_skill_text("kan-plugin")` returns the bundled `SKILL.md`;
+- `read_bundled_skill_text("hun-plugin")` returns the bundled `SKILL.md`;
 - `plugin.yaml` still lists only the supported tool names and
   `provides_commands: []`;
 - the operator guide and unsupported-surfaces docs still say fake/injected only;
@@ -387,14 +387,14 @@ gateway config, sockets, or localhost services as part of SKILL-2 rollback.
 
 | Symptom | Likely cause | Safe response |
 | --- | --- | --- |
-| Bundled skill cannot be found | Package data missing or wrong resource name | Use `bundled_skill_names()` and `read_bundled_skill_text("kan-plugin")`; verify the package contains `bundled_skills/kan-plugin/SKILL.md`. |
+| Bundled skill cannot be found | Package data missing or wrong resource name | Use `bundled_skill_names()` and `read_bundled_skill_text("hun-plugin")`; verify the package contains `bundled_skills/hun-plugin/SKILL.md`. |
 | Skill claims live readiness | Overclaiming docs or stale bundled skill text | Restore the bundled skill text from the package source; SKILL-2 is fake/injected plus local isolated plugin-load smoke only. |
 | Slash commands appear | Manifest or entrypoint drift | Restore `provides_commands: []` and verify the root entrypoint registers no commands. |
 | `hun_session_status` appears | Unsupported session-status drift | Remove the surface until `session.status.read` fixture/protocol authority exists. |
 | ARGUE fields are dropped or inferred from legacy pointers | Contract drift or hidden state inference | Preserve explicit argument-graph fields verbatim and treat `responds_to_event_id` as display-only; do not infer state from Discord/Hermes order. |
 | ARGUE support is described as runtime scoring or live pilot readiness | Scope overclaim | Keep local ARGUE schema/tool coverage and local visible relation rendering bounded to fake/injected fixtures and evidence display; runtime validation/scoring, live Discord, production activation, and live-local pilot readiness require separate explicit approval and evidence. |
 | A handler tries localhost, a socket, CLI, gateway, auth, token, Discord, or KAB | No-live boundary violation | Fail closed and remove the fallback; default checks must use explicit fake/injected dependencies only. |
-| Root plugin load fails with `No module named 'kkachi_agent_network_plugin'` | The directory entrypoint is not bootstrapping its bundled `src/` package path | Restore the root entrypoint path bootstrap and rerun `make check-plugin-load-smoke`; do not require operators to supply external `PYTHONPATH`. |
+| Root plugin load fails with `No module named 'hermes_unified_network_plugin'` | The directory entrypoint is not bootstrapping its bundled `src/` package path | Restore the root entrypoint path bootstrap and rerun `make check-plugin-load-smoke`; do not require operators to supply external `PYTHONPATH`. |
 | Hermes Python 3.11 reports `invalid syntax` in package modules | Python 3.12-only syntax drift | Keep package/tooling metadata at Python `>=3.11`, avoid PEP 695 `type` aliases, and rerun the Python 3.11 syntax compatibility unit test. |
 | Local isolated plugin-load smoke fails | Manifest, entrypoint, packaging, bundled skill, or fail-closed handler drift | Run `make check-plugin-load-smoke`, inspect the first mismatch, and restore exact tool order, zero hooks, zero commands, package inclusion, or handler JSON-string fail-closed behavior. |
 | Live plugin-load readiness is requested | Out of SKILL-2 scope | Do not upgrade local isolated plugin-load smoke into a live Hermes/plugin/KAB readiness claim. |

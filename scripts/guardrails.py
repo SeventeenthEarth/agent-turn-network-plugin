@@ -47,7 +47,7 @@ FORBIDDEN_OPERATOR_CLAIMS = [
     "hun_session_status is supported",
     "provides_commands: [kan",
 ]
-BUNDLED_SKILL = "src/hermes_unified_network_plugin/bundled_skills/kan-plugin/SKILL.md"
+BUNDLED_SKILL = "src/hermes_unified_network_plugin/bundled_skills/hun-plugin/SKILL.md"
 
 
 def read_required_docs(root: Path) -> str:
@@ -77,7 +77,7 @@ def require_bundled_skill_frontmatter(root: Path) -> None:
     if not isinstance(frontmatter, dict):
         raise SystemExit("bundled skill frontmatter must be a YAML mapping")
     name = frontmatter.get("name")
-    if name != "kan-plugin":
+    if name != "hun-plugin":
         raise SystemExit(f"bundled skill name mismatch: {name!r}")
     description = frontmatter.get("description")
     if not isinstance(description, str) or not description or len(description) > 1024:

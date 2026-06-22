@@ -6,7 +6,7 @@ Use this when 주군 asks non-KAN lane members, such as KLM 장수 profiles, to 
 
 Do not equate these three states:
 
-1. A profile can see `kan-plugin` / `kan-moderator` / `kan-participant` skills.
+1. A profile can see `hun-plugin` / `hun-moderator` / `hun-participant` skills.
 2. A profile has the `hermes-unified-network-plugin` installed and tool-visible.
 3. A profile is ready for a live-visible KAN council in a specific Discord thread.
 
@@ -22,7 +22,7 @@ For each participant profile, collect **and then copy these facts into the `hun_
 
 - `hermes --profile <profile> plugins list` shows `hermes-unified-network-plugin` enabled. Map this into `participant_profiles[].effective_discord.tools_visible: true` and include the command/session evidence in `proof_ref` or a sibling evidence field.
 - Fresh profile smoke proves `hun_daemon_status ok=true` and current `live_readiness` value. Map this into the participant profile evidence, not just the final report.
-- `hermes --profile <profile> chat -Q --max-turns 3 -s hermes-unified-network-plugin:kan-plugin -q '...'` or the corresponding `hermes-unified-network-plugin:kan-moderator` / `hermes-unified-network-plugin:kan-participant` load succeeds when role behavior depends on bundled guidance. Plugin-provided skills are read-only and plugin-qualified; do not require flat profile-local `kan-plugin` copies for the canonical path.
+- `hermes --profile <profile> chat -Q --max-turns 3 -s hermes-unified-network-plugin:hun-plugin -q '...'` or the corresponding `hermes-unified-network-plugin:hun-moderator` / `hermes-unified-network-plugin:hun-participant` load succeeds when role behavior depends on bundled guidance. Plugin-provided skills are read-only and plugin-qualified; do not require flat profile-local `hun-plugin` copies for the canonical path.
 - `DISCORD_ALLOW_BOTS=none` or equivalent effective gateway proof is present unless 주군 explicitly approved bot-to-bot behavior for the pilot. Map this into `participant_profiles[].effective_discord.bot_to_bot_enabled: false`.
 - The target Discord parent channel id, not only the thread id, is in `discord.allowed_channels` for every participant. If thread id is also known, include it too, but do not mistake a thread-only id for parent allow-list inheritance proof. Map this into `discord_parent_channel.parent_channel_id`, participant `allowed_channels`, and `discord_parent_channel.allow_list_inheritance_proven: true` only when parent-channel inheritance proof exists.
 - Gateway was restarted after config/plugin changes, and logs show `Connected as <expected bot>` plus `✓ discord connected`.
@@ -75,7 +75,7 @@ After plugin install/enable and gateway restart, a minimal evidence package can 
 
 ```bash
 # Tool visibility / daemon smoke
-hermes --profile <profile> chat -Q --max-turns 3 -s hermes-unified-network-plugin:kan-plugin -q \
+hermes --profile <profile> chat -Q --max-turns 3 -s hermes-unified-network-plugin:hun-plugin -q \
   'Call hun_daemon_status exactly once. Then print only ok=<ok field> live_readiness=<live_readiness field if present> error=<error field if present>.'
 
 # Visible author proof for Discord parent + thread

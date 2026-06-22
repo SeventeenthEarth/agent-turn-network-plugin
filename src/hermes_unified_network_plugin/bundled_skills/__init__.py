@@ -10,8 +10,8 @@ from __future__ import annotations
 from importlib import resources
 from importlib.resources.abc import Traversable
 
-BUNDLED_SKILL_NAME = "kan-plugin"
-BUNDLED_SKILL_NAMES = ("kan-plugin", "kan-moderator", "kan-participant")
+BUNDLED_SKILL_NAME = "hun-plugin"
+BUNDLED_SKILL_NAMES = ("hun-plugin", "hun-moderator", "hun-participant")
 
 
 def bundled_skill_names() -> tuple[str, ...]:

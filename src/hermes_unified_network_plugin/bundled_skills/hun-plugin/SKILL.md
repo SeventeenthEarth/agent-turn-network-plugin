@@ -1,16 +1,16 @@
 ---
-name: kan-plugin
+name: hun-plugin
 description: Use when operating the packaged hermes-unified-network-plugin Hermes adapter, explaining its current fake/injected tool surface, or preparing a non-live install/enable/rollback plan.
 version: 0.1.0
 author: 17번째 지구 Kkachi
 license: MIT
 metadata:
   hermes:
-    tags: [kan-plugin, kkachi, hermes-plugin, operator-guide, no-live]
+    tags: [hun-plugin, kkachi, hermes-plugin, operator-guide, no-live]
     related_skills: []
 ---
 
-# KAN Plugin Operator Skill
+# HUN Plugin Operator Skill
 
 Use this skill when an operator or agent needs to work with the packaged
 `hermes-unified-network-plugin` Hermes adapter, explain its current safe surface,
@@ -84,32 +84,12 @@ Before any `council.new` for a live-visible or cross-team council, operator evid
 
 Accepted planned reconcile evidence needs at least: `principal`, `in_loaded_registry: false`, `planned_reconcile: true`, `mapping_unambiguous: true`, and `wrapper_resolves: true`. Ambiguous mapping, disabled existing principals, unresolved wrappers, or missing loaded-registry evidence block before `council.new`; the control-owned reconcile also validates invalid/reserved principal ids before registry mutation. Do not downgrade to artifact-only or daemon CLI actor speech unless the operator explicitly approves that different mode before session creation. Registry membership persists across council sessions; subscription, heartbeat, cursor ack, attendance/preparation, and selected-runner readiness remain session-scoped runtime gates.
 
-## KAN council moderation hard rules
+## Moderator hard-rules location
 
-For any live KAN council, the moderator must preserve the daemon-governed
-council loop. These rules are hard guardrails for operator guidance; they do not
-authorize live daemon/runtime activation by themselves.
-
-1. Do not predeclare or hard-code a complete live speaker order. A visible
-   discussion must not become a fixed-order Discord/Hermes debate transcript.
-2. Complete lifecycle prerequisites before turn discussion: `council.new`,
-   `request_attendance`, terminal attendance records for required participants,
-   `lock_agenda`, `prepare`, then `ready` or `prepared_partial` evidence.
-3. For each turn, open a `poll` or hand-raise evaluation, evaluate the current
-   hand raises, and record a justified daemon `speaker_selected` event before
-   any participant speech.
-4. Use `relevance` as the default selection mode. `targeted`, `random`,
-   `moderator_direct`, and `role_order` remain valid only as per-turn
-   `speaker_selected` selection modes with a reason; `role_order` also needs
-   bounded round evidence. Do not ban `role_order`, but never use it as a
-   predeclared full live debate order.
-5. Discord/Hermes replies are not council state. They become council speech only
-   when backed by typed daemon `speech` events.
-6. If the moderator has a substantive opinion, record it as a participant-style
-   turn rather than hiding it inside moderation text.
-7. If a fixed-order flow starts by mistake before any `speech` event exists,
-   cancel and restart. If `speech` already exists, repair forward with a
-   moderator intervention and do not rewrite history.
+The packaged HUN moderator role skill owns the council moderation hard rules.
+Load `hermes-unified-network-plugin:hun-moderator` before moderating a live or
+live-visible KAN council. Do not create or require a fourth packaged moderation
+skill, external profile-local flat skill, or legacy `kan-*` bundled skill alias.
 
 ## ARGUE relation-aware response guidance
 
@@ -231,7 +211,7 @@ relevant, and no runtime noise in visible speech.
 
 Final reports must keep these fields separate: `lifecycle_pass`, `selected_runner_pass`, `visible_surface_pass`, `fallback_profile_pass`, `discussion_quality_pass`, `orphan_speech_count`, `linked_speech_count`, `stance_link_count`, `new_axis_count`, Discord visible turns posted, real profile/gateway replies, and shared/default author fallback status.
 
-## Required KAN companion skills
+## Required HUN companion skills
 
 `hermes-unified-network-plugin` must ship the operator guidance needed to use its
 tool surface. Do not leave KAN runtime/operator guidance as ops-only,
@@ -239,14 +219,14 @@ profile-local, or external-directory-only skills. The plugin package owns and
 registers these bundled companion skills together as read-only, plugin-qualified
 skills:
 
-- `kan-plugin`: plugin/operator surface and hard boundaries;
-- `kan-moderator`: council preflight, activation planning, lifecycle, visible-surface, and closeout duties;
-- `kan-participant`: selected-speaker and participant response duties.
+- `hun-plugin`: plugin/operator surface and hard boundaries;
+- `hun-moderator`: council preflight, activation planning, lifecycle, visible-surface, and closeout duties;
+- `hun-participant`: selected-speaker and participant response duties.
 
 Canonical Hermes loads use the qualified names
-`hermes-unified-network-plugin:kan-plugin`,
-`hermes-unified-network-plugin:kan-moderator`, and
-`hermes-unified-network-plugin:kan-participant`. Do not require flat
+`hermes-unified-network-plugin:hun-plugin`,
+`hermes-unified-network-plugin:hun-moderator`, and
+`hermes-unified-network-plugin:hun-participant`. Do not require flat
 profile-local copies for the normal KAN plugin path.
 
 Treat a profile where plugin tools are enabled but these companion skills cannot
@@ -379,8 +359,6 @@ text is diagnostic-only and never full KAN success.
 
 ## Operator workflow
 
-HUN-004 caveat: the package and manifest now use `hermes-unified-network-plugin` / `hermes_unified_network_plugin`, but `docs/09-skill-and-operator-guide.md` is still a pre-HUN operator guide until HUN-010. Treat stale package-qualified examples in that guide as HUN-010 follow-up material; for package/manifest identity, prefer this bundled skill plus `docs/12-hermes-unified-network-plugin-naming-sot.md`.
-
 1. Inspect `plugin.yaml` and confirm the tool list plus
    `provides_commands: []`.
 2. Read `docs/09-skill-and-operator-guide.md` for install, enable, rollback,
@@ -401,7 +379,7 @@ HUN-004 caveat: the package and manifest now use `hermes-unified-network-plugin`
 ## Troubleshooting prompts
 
 - Missing bundled skill: verify package data under
-  `hermes_unified_network_plugin/bundled_skills/kan-plugin/SKILL.md` and use the
+  `hermes_unified_network_plugin/bundled_skills/hun-plugin/SKILL.md` and use the
   import-safe resource helper instead of profile writes.
 - Unexpected slash commands: inspect the manifest and root entrypoint; the
   expected command surface is empty.

@@ -35,14 +35,14 @@ def load_guardrails() -> ModuleType:
 def write_docs(root: Path, *, include_fail_closed: bool = True) -> None:
     docs = root / "docs"
     docs.mkdir()
-    skill = root / "src" / "hermes_unified_network_plugin" / "bundled_skills" / "kan-plugin"
+    skill = root / "src" / "hermes_unified_network_plugin" / "bundled_skills" / "hun-plugin"
     skill.mkdir(parents=True)
     (skill / "SKILL.md").write_text(
         "---\n"
-        "name: kan-plugin\n"
+        "name: hun-plugin\n"
         "description: Use when testing bundled skill frontmatter.\n"
         "---\n"
-        "# KAN Plugin Operator Skill\n",
+        "# HUN Plugin Operator Skill\n",
         encoding="utf-8",
     )
     for name in REQUIRED_DOCS:
@@ -132,10 +132,10 @@ def test_docs_guardrails_reject_bundled_skill_without_frontmatter(tmp_path: Path
         / "src"
         / "hermes_unified_network_plugin"
         / "bundled_skills"
-        / "kan-plugin"
+        / "hun-plugin"
         / "SKILL.md"
     )
-    skill.write_text("# KAN Plugin Operator Skill\n", encoding="utf-8")
+    skill.write_text("# HUN Plugin Operator Skill\n", encoding="utf-8")
 
     with pytest.raises(SystemExit, match="bundled skill must start with YAML frontmatter"):
         guardrails.main(root=tmp_path)

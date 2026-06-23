@@ -1,11 +1,11 @@
 # Live-visible preflight and `council.new` pitfalls
 
-This reference captures a reusable KAN moderator pattern from a Discord-origin request: “run live KAN preflight first, and only execute the discussion if it passes.”
+This reference captures a reusable HUN moderator pattern from a Discord-origin request: “run live HUN preflight first, and only execute the discussion if it passes.”
 
 ## Correct operator sequence
 
 1. Load `hun-moderator` and `hun-plugin` guidance before acting.
-2. Confirm the requested output mode. Discord-origin “discuss / council” requests default to `live_visible_thread` unless the user explicitly approves `artifact_only` or `daemon_cli_actor_speech` before session creation. If the user already asked for the KAN discussion and the live-visible start gate passes, do not ask for another approval; start the council.
+2. Confirm the requested output mode. Discord-origin “discuss / council” requests default to `live_visible_thread` unless the user explicitly approves `artifact_only` or `daemon_cli_actor_speech` before session creation. If the user already asked for the HUN discussion and the live-visible start gate passes, do not ask for another approval; start the council.
 3. Run daemon/tool health checks, but do not treat `hun_daemon_status ok=true` as sufficient live-discussion readiness. It proves daemon/protocol visibility only.
 4. Run `hun_discussion_activation_plan` with the relevant RUNFIX planning mode:
    - `plugin/RUNFIX-010` for live visible surface readiness: surface binding, turn-posting probe, visible closeout probe, real profile/gateway replies, and `cli_actor_speech_only=false`.
@@ -23,7 +23,7 @@ This reference captures a reusable KAN moderator pattern from a Discord-origin r
 
 Discord config snippets such as `allowed_channels`, `free_response_channels`, `auto_thread`, and `history_backfill` can support “the profile is Discord-enabled for that channel,” but they do not by themselves prove:
 
-- KAN plugin/tool visibility in that profile;
+- HUN plugin/tool visibility in that profile;
 - bot-to-bot disabled eligibility;
 - selected-runner readiness;
 - same-path visible author identity;

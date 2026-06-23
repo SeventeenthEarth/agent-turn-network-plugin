@@ -3,9 +3,9 @@
 ## Components
 
 ```text
-kkachi-agent-network-plugin/
+hermes-unified-network-plugin/
   plugin.yaml or equivalent manifest
-  src/kkachi_agent_network_plugin/
+  src/hermes_unified_network_plugin/
     protocol.py          # protocol constants, models, canonical envelopes
     errors.py            # structured daemon error decoding/redaction
     conformance.py       # conformance manifest guard
@@ -15,7 +15,7 @@ kkachi-agent-network-plugin/
     schemas.py           # fake/injected Hermes tool schemas
     tools.py             # JSON-string tool handlers
     discord_surface.py   # injected-only Discord target/send_message boundary
-    slash_commands/      # future optional KAN slash-command wiring; unsupported
+    slash_commands/      # future optional HUN slash-command wiring; unsupported
     health.py            # future live daemon compatibility checks
   tests/
     unit/
@@ -29,28 +29,28 @@ kkachi-agent-network-plugin/
 
 ```text
 DAEMN-2 fake/injected transport
-  -> Python KAN daemon client
+  -> Python HUN daemon client
     -> status/version parser, command envelope serializer,
        stream tail parser, or diagnostics decoder
     <- structured success/error/stream/diagnostics fixture
 
 HPLUG-2 Hermes read-only tool
   -> plugin handler
-    -> explicit fake/injected Python KAN daemon client
+    -> explicit fake/injected Python HUN daemon client
       -> status.read, diagnostics.read, or version.read + stream.tail fake transport operation
       <- structured success/error/diagnostics/stream fixture
     -> plugin renders JSON-string success or fail-closed error
 
 DELRV-1 Hermes command-envelope tool
   -> plugin handler
-    -> explicit fake/injected Python KAN daemon client
+    -> explicit fake/injected Python HUN daemon client
       -> command.submit fake transport operation
       <- structured success/error
     -> plugin renders JSON-string success or fail-closed error
 
 CNDIS-1 Hermes command-envelope tool
   -> plugin handler
-    -> explicit fake/injected Python KAN daemon client
+    -> explicit fake/injected Python HUN daemon client
       -> version.read feature probe for council.lifecycle or delivery_evidence
       -> command.submit fake transport operation
       <- structured success/error
@@ -77,7 +77,7 @@ CNDIS-2 injected Discord helper
 
 ## Hermes plugin surface
 
-The plugin currently registers the manifest-declared fake/injected Hermes tools and no hooks or KAN slash commands:
+The plugin currently registers the manifest-declared fake/injected Hermes tools and no hooks or HUN slash commands:
 
 - `hun_daemon_status` — fake/injected daemon status read;
 - `hun_compatibility_diagnostics` — fake/injected diagnostics read with redaction;
@@ -100,8 +100,8 @@ Later tasks may provide:
 - `hun_session_status` after control `session.status.read` fixture/protocol authority exists;
 - cursor/session diagnostic tools;
 - transcript/export tools;
-- live transport according to `docs/10-live-transport-sot.md`, where the CLI is the main-agent control plane, the plugin is the participant-agent KAN client surface, member runtimes invoke real participant profiles, the daemon remains the only event/state authority, and companion control `LTRAN` / `MEMBR` / `SURFD` epics must complete before the matching plugin epics start;
-- KAN slash commands for common operations after control command contracts, conformance fixtures, safe handlers, manifest entries, and isolated Hermes/gateway smoke tests exist;
+- live transport according to `docs/10-live-transport-sot.md`, where the CLI is the main-agent control plane, the plugin is the participant-agent HUN client surface, member runtimes invoke real participant profiles, the daemon remains the only event/state authority, and companion control `LTRAN` / `MEMBR` / `SURFD` epics must complete before the matching plugin epics start;
+- HUN slash commands for common operations after control command contracts, conformance fixtures, safe handlers, manifest entries, and isolated Hermes/gateway smoke tests exist;
 - bundled skill guidance;
 - live Discord helper wiring that posts visible messages through a dedicated Hermes
   gateway/send_message configuration and separately records delivery evidence through

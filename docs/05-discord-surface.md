@@ -2,7 +2,7 @@
 
 ## Purpose
 
-The plugin may provide a Discord visible surface for KAN council sessions through an
+The plugin may provide a Discord visible surface for HUN council sessions through an
 injected Hermes gateway/send_message boundary. Discord is for human-visible
 discussion/evidence, not canonical state.
 
@@ -20,13 +20,13 @@ discussion/evidence, not canonical state.
   thread IDs remain evidence pointers; they are not daemon state.
 - The daemon must not require raw Discord tokens.
 - Free-form Discord replies are never parsed as authoritative lifecycle transitions.
-- KAN slash-command invocations are not supported in HPLUG-3/CNDIS-1. Native Discord slash commands may only become supported after a later task proves the Hermes command binding, KAN daemon command contract, delivery-evidence path, and isolated Discord test target.
+- HUN slash-command invocations are not supported in HPLUG-3/CNDIS-1. Native Discord slash commands may only become supported after a later task proves the Hermes command binding, HUN daemon command contract, delivery-evidence path, and isolated Discord test target.
 
 CNDIS-1 supports council and delivery-evidence command tools through explicit fake/injected daemon clients only. It does not post to Discord, call Hermes gateway/send_message, or infer delivery evidence from live Discord state.
 
 CNDIS-2 adds only the injected helper boundary. It still does not claim live Discord
 readiness, active Hermes session delivery, gateway configuration, daemon-recorded evidence,
-or KAN/KAB slash-command support.
+or HUN/KAB slash-command support.
 
 ## Testing
 

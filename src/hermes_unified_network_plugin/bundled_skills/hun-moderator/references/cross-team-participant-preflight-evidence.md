@@ -1,6 +1,6 @@
 # Cross-team participant preflight evidence
 
-Use this when 주군 asks non-KAN lane members, such as KLM 장수 profiles, to use KAN for discussion without becoming KAN developers.
+Use this when 주군 asks non-HUN lane members, such as KLM 장수 profiles, to use HUN for discussion without becoming HUN developers.
 
 ## Core lesson
 
@@ -8,13 +8,13 @@ Do not equate these three states:
 
 1. A profile can see `hun-plugin` / `hun-moderator` / `hun-participant` skills.
 2. A profile has the `hermes-unified-network-plugin` installed and tool-visible.
-3. A profile is ready for a live-visible KAN council in a specific Discord thread.
+3. A profile is ready for a live-visible HUN council in a specific Discord thread.
 
-A live-visible KAN discussion preflight needs explicit evidence for all relevant layers. `hun_discussion_activation_plan` is pure/local and does not discover the environment by itself; if tool visibility, bot-to-bot state, allow-list inheritance, or visible author proof is not supplied as evidence, the correct planner result is `blocked` / `unknown`, even when the local operator has already verified those facts elsewhere.
+A live-visible HUN discussion preflight needs explicit evidence for all relevant layers. `hun_discussion_activation_plan` is pure/local and does not discover the environment by itself; if tool visibility, bot-to-bot state, allow-list inheritance, or visible author proof is not supplied as evidence, the correct planner result is `blocked` / `unknown`, even when the local operator has already verified those facts elsewhere.
 
 Cross-team participants do not need full pilot-acceptance proof before the first discussion attempt. They need a minimal start gate: valid roster/registry or unambiguous reconcile, profile/plugin surface, bot-to-bot-safe Discord posture, and a target visible surface. Runtime readiness, selected-runner proof, visible author linkage, visible turn counts, and final acceptance labels are collected during and after the discussion unless one of them exposes a true `start_blocker`.
 
-When 주군 or another user has already asked for the cross-team KAN discussion and the minimal start gate passes, do not ask for another approval; start the council. `ready_to_start` means the moderator should proceed to `council.new`; `ready_for_approval` is not the live-visible discussion start signal.
+When 주군 or another user has already asked for the cross-team HUN discussion and the minimal start gate passes, do not ask for another approval; start the council. `ready_to_start` means the moderator should proceed to `council.new`; `ready_for_approval` is not the live-visible discussion start signal.
 
 ## Evidence to collect before rerunning the planner
 
@@ -91,4 +91,4 @@ Record each returned Discord `message_id` as author proof. If the send succeeds 
 
 If a moderator reports `HAN_BLOCK` because these evidence classes were missing, treat it as a correct fail-closed preflight result, not as proof the plugin is unusable. Fix the missing evidence, restart affected gateways, rerun fresh smoke/probes, then tell the moderator to start a new session or `/reset` before rerunning preflight so the old blocked context does not anchor the next attempt.
 
-Keep KAN development authority separate from KAN usage: cross-team KLM members may use KAN as discussion participants without becoming owners of `kkachi-agent-network-control` or `hermes-unified-network-plugin`.
+Keep HUN development authority separate from HUN usage: cross-team KLM members may use HUN as discussion participants without becoming owners of `hun-control` or `hermes-unified-network-plugin`.

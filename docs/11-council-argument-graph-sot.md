@@ -1,14 +1,14 @@
 # Plugin Council Argument Graph SOT
 
-Status: Blue-authored plugin SOT draft for `ARGUE` implementation planning. This document is the plugin-side durable source of truth for KAN council discussion-quality surfaces. It is not an implementation-complete claim and does not enable live/default/production runtime behavior by itself.
+Status: Blue-authored plugin SOT draft for `ARGUE` implementation planning. This document is the plugin-side durable source of truth for HUN council discussion-quality surfaces. It is not an implementation-complete claim and does not enable live/default/production runtime behavior by itself.
 
 Date: 2026-06-15
-Owner: 마초 / `macho` for the bounded KAN plugin lane
+Owner: 마초 / `macho` for the bounded HUN plugin lane
 Companion control SOT: `../../kkachi-agent-network-control/docs/25-council-argument-graph-sot.md`
 
 ## 1. Purpose
 
-KAN council discussions must preserve evidence that participants engage each other's claims rather than only producing valid-looking turn logs. The control daemon owns event/state authority and validation, but the plugin owns the Hermes participant-agent tool surface that receives selected participant responses, submits council writes, and renders visible discussion evidence.
+HUN council discussions must preserve evidence that participants engage each other's claims rather than only producing valid-looking turn logs. The control daemon owns event/state authority and validation, but the plugin owns the Hermes participant-agent tool surface that receives selected participant responses, submits council writes, and renders visible discussion evidence.
 
 This plugin SOT makes the plugin side independently complete for `ARGUE` work. A reader should be able to implement or review the plugin tasks from this document without opening the control SOT first, while still treating the control SOT and fixtures as the authority for daemon protocol semantics.
 
@@ -22,13 +22,13 @@ how each speech supports, challenges, refines, extends, questions, or synthesize
 
 ## 2. Authority and boundary
 
-### 2.1 KAN independence
+### 2.1 HUN independence
 
-KAN is independent of KAS. KAS does not install, own, or activate KAN control, KAN plugin, KAN bundled operator guidance, or KAN participant profile state.
+HUN is independent of KAS. KAS does not install, own, or activate HUN control, HUN plugin, HUN bundled operator guidance, or HUN participant profile state.
 
 ### 2.2 Plugin authority
 
-`kkachi-agent-network-plugin` owns:
+`hermes-unified-network-plugin` owns:
 
 - Hermes participant-agent tool schemas and handlers;
 - daemon-client submission of typed council command envelopes;
@@ -36,7 +36,7 @@ KAN is independent of KAS. KAS does not install, own, or activate KAN control, K
 - selected participant response framing for `hun_selected_participant_response`;
 - fail-closed filtering of runtime warning/noise before it becomes visible `speech` text;
 - visible surface rendering of daemon-provided relation evidence;
-- packaged KAN operator guidance bundled in this plugin package.
+- packaged HUN operator guidance bundled in this plugin package.
 
 The plugin must not become a second lifecycle state authority, must not infer council state from Discord order, and must not hide CLI/daemon fallback behavior.
 
@@ -320,7 +320,7 @@ The bundled plugin operator guidance must explain:
 - that plugin rendering is a visible surface and evidence pointer, not lifecycle state;
 - that profile activation and live Discord pilots remain separate approval-gated flows.
 
-Guidance must not say KAS installs, owns, or activates KAN artifacts.
+Guidance must not say KAS installs, owns, or activates HUN artifacts.
 
 ## 9. Conformance fixture dependency
 
@@ -410,7 +410,7 @@ Acceptance requires:
 
 A future visible live-local pilot may claim discussion-quality success only when evidence shows:
 
-- actual named participant profiles had KAN plugin/tool visibility before the run;
+- actual named participant profiles had HUN plugin/tool visibility before the run;
 - daemon/CLI event stream is authoritative and replayable;
 - each non-opening speech in quality-required mode has valid relation evidence or justified `new_axis`;
 - at least one relation targets a claim more than one turn earlier;
@@ -427,7 +427,7 @@ This SOT does not:
 
 - enable production/live readiness;
 - authorize gateway, provider, token, profile, Discord, daemon runtime, or plugin activation mutation;
-- require KAS to install or own KAN artifacts;
+- require KAS to install or own HUN artifacts;
 - force direct reply to the immediately previous turn;
 - require automatic natural-language claim extraction in the first implementation slice;
 - authorize hidden fallback from plugin to CLI or from visible surface to lifecycle state;

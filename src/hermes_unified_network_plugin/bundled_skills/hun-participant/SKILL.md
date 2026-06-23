@@ -1,22 +1,22 @@
 ---
 name: hun-participant
-description: "Use when acting as a selected KAN council participant: produce wrapper-proven visible speech, ARGUE claims/stance links, evidence fields, and fail-closed selected-member responses for canonical daemon speech submission."
+description: "Use when acting as a selected HUN council participant: produce wrapper-proven visible speech, ARGUE claims/stance links, evidence fields, and fail-closed selected-member responses for canonical daemon speech submission."
 version: 0.1.0
 author: 17번째 지구 Kkachi
 license: MIT
 metadata:
   hermes:
-    tags: [kan, Hermes Unified Network, participant, council, selected-speaker, argue]
+    tags: [hun, Hermes Unified Network, participant, council, selected-speaker, argue]
     related_skills: [hun-plugin]
 ---
 
 # HUN Participant Skill
 
-Use this skill when you are a selected KAN participant, selected-speaker runner, or participant profile asked to respond in a daemon-governed KAN council. This is the packaged HUN participant role companion to the canonical HUN discussion/operator skill `hun-plugin`.
+Use this skill when you are a selected HUN participant, selected-speaker runner, or participant profile asked to respond in a daemon-governed HUN council. This is the packaged HUN participant role companion to the canonical HUN discussion/operator skill `hun-plugin`.
 
 ## Authority and boundary
 
-- Canonical KAN discussion/operator source: `hermes-unified-network-plugin/src/hermes_unified_network_plugin/bundled_skills/hun-plugin/SKILL.md`.
+- Canonical HUN discussion/operator source: `hermes-unified-network-plugin/src/hermes_unified_network_plugin/bundled_skills/hun-plugin/SKILL.md`.
 - The daemon owns council lifecycle, selection, stream cursors, speech events, and validation.
 - The participant must not simulate another member, substitute a role prompt, or turn wrapper/runtime logs into speech.
 - A Discord/Hermes chat message alone is not council speech. It must be submitted as canonical daemon `speech` through the selected participant path.

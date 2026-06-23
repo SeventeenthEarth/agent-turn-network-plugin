@@ -8,7 +8,7 @@
 | Minimum Python | `>=3.11` to match Hermes Python 3.11 runtime compatibility |
 | Package manager | `uv` preferred for development |
 | Build backend | `hatchling` or current Hermes-compatible Python packaging |
-| Source layout | `src/kkachi_agent_network_plugin/` |
+| Source layout | `src/hermes_unified_network_plugin/` |
 | Test runner | `pytest` |
 | Async tests | `pytest-asyncio` when stream/client async is introduced |
 | Lint/format | `ruff check`, `ruff format` |
@@ -18,10 +18,10 @@
 ## Target layout
 
 ```text
-kkachi-agent-network-plugin/
+hermes-unified-network-plugin/
   pyproject.toml
   plugin.yaml
-  src/kkachi_agent_network_plugin/
+  src/hermes_unified_network_plugin/
   tests/unit/
   tests/integration/
   tests/e2e/
@@ -31,7 +31,7 @@ kkachi-agent-network-plugin/
 
 ## KAS / KAH workflow hygiene
 
-Kan-plugin KAS workflow guidance is maintained in the installed Hermes profile KAS reference, not in a project-local `skills/` directory:
+Historical KAS workflow guidance for this plugin lane is maintained in the installed Hermes profile KAS reference, not in a project-local `skills/` directory:
 
 ```text
 /Users/draccoon/.hermes/profiles/hwangchung/skills/kkachi-orchestrate/references/kan-plugin-readiness-and-activation.md
@@ -47,7 +47,7 @@ The project `.gitignore` must include `.kkachi/`, `.codegraph/`, `.omx/`, `.omc/
 
 `make check-make-contract` verifies required single-line target declarations, `.PHONY` coverage, `make test` dependencies, preparation-gate dependencies, scoped tool commands, offline integration defaults, and isolated E2E environment variables.
 
-`make check-bootstrap-smoke` verifies the package import/metadata, fake/injected plugin manifest shape, exact tool registrations, callable handler presence, and root directory-plugin entrypoint availability without registering hooks or KAN slash commands.
+`make check-bootstrap-smoke` verifies the package import/metadata, fake/injected plugin manifest shape, exact tool registrations, callable handler presence, and root directory-plugin entrypoint availability without registering hooks or HUN slash commands.
 
 `make check-plugin-load-smoke` verifies local isolated plugin-load smoke. It creates a temporary plugin home from repository-local files, loads the root entrypoint through a fake Hermes registration context without externally adding `<plugin>/src` to `PYTHONPATH`, checks exact tool order, zero hooks, zero commands, handler JSON-string fail-closed behavior without injected clients/senders, live-looking environment inertness, negative command-overclaim fixtures, wheel package inclusion, Python 3.11 syntax compatibility, and bundled skill compatibility. It does not inspect or mutate the user's Hermes profile and does not contact daemon, Discord, KAB, gateway, auth, token, provider, localhost, socket, CLI, or network resources.
 
@@ -69,11 +69,13 @@ After the Python scaffold exists, `uv` and `pyproject.toml` are required for cod
 
 ## Bundled skill resources
 
-SKILL-1 packaged the `kan-plugin` operator skill under
-`src/kkachi_agent_network_plugin/bundled_skills/kan-plugin/SKILL.md` and exposes
-`kkachi_agent_network_plugin.bundled_skills.read_bundled_skill_text(...)` for
-tests and installer checks. SKILL-2 verifies that resource in the local
-isolated plugin-load smoke gate.
+SKILL-1 originally packaged the historical `kan-plugin` operator skill. HUN-009
+renamed the public package resources to `hun-plugin`, `hun-moderator`, and
+`hun-participant` under
+`src/hermes_unified_network_plugin/bundled_skills/`, with
+`hermes_unified_network_plugin.bundled_skills.read_bundled_skill_text(...)` as
+the import-safe reader used by tests and installer checks. SKILL-2 verifies
+those resources in the local isolated plugin-load smoke gate.
 
 The helper reads package resources only. It does not install into a Hermes
 profile, discover current-session state, contact live Hermes/Discord/daemon
@@ -88,7 +90,7 @@ SCAFF-5 delivers a scaffold smoke gate for the first plugin scaffold PR. It prov
 - the plugin package imports through the `src/` layout and exposes stable metadata;
 - the plugin manifest is a YAML mapping with the expected name, version, standalone kind, exact `provides_tools: [hun_daemon_status, hun_compatibility_diagnostics, hun_stream_tail, hun_stream_ack, hun_delegate_new, hun_delegate_action, hun_council_command, hun_selected_participant_response, hun_delivery_evidence, hun_surface_render_projection, hun_discussion_activation_plan, hun_discord_send_message]`, and explicit empty `provides_hooks: []` / `provides_commands: []` declarations;
 - the root directory-plugin entrypoint exposes `register(ctx)`;
-- the entrypoint registers callable fake/injected JSON-string handlers and does not register hooks or KAN slash commands;
+- the entrypoint registers callable fake/injected JSON-string handlers and does not register hooks or HUN slash commands;
 - `make test` succeeds without live Hermes, Discord, daemon, or network resources.
 
 DAEMN-1 added fake daemon compatibility probes for the client foundation only. At that stage, full plugin-bootstrap checks that required real declared tool handlers and handler JSON-string return contracts were deferred. HPLUG-2 now enables those checks for the three read-only JSON-string handlers.
@@ -169,5 +171,5 @@ without adding dependencies:
   while preserving `provides_hooks: []` and `provides_commands: []`.
 
 No environment read, live Discord discovery, Hermes current-session lookup, gateway/auth
-token usage, native Discord slash command, KAN slash command, or daemon delivery-evidence
+token usage, native Discord slash command, HUN slash command, or daemon delivery-evidence
 transition is introduced.

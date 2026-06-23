@@ -2,11 +2,11 @@
 
 ## Purpose
 
-This document records the current unsupported Hermes surfaces for `kkachi-agent-network-plugin` so operators do not confuse host capability with KAN plugin readiness.
+This document records the current unsupported Hermes surfaces for `hermes-unified-network-plugin` so operators do not confuse host capability with HUN plugin readiness.
 
-Hermes currently provides a real plugin slash-command host API through `PluginContext.register_command(name, handler, description, args_hint)`. The KAN plugin still exposes no KAN slash commands. Its manifest must continue to declare `provides_commands: []` until a later task implements and verifies concrete slash-command handlers.
+Hermes currently provides a real plugin slash-command host API through `PluginContext.register_command(name, handler, description, args_hint)`. The HUN plugin still exposes no HUN slash commands. Its manifest must continue to declare `provides_commands: []` until a later task implements and verifies concrete slash-command handlers.
 
-## Current KAN plugin exposure
+## Current HUN plugin exposure
 
 Supported now:
 
@@ -23,9 +23,9 @@ Supported now:
 
 Unsupported now:
 
-- KAN slash commands through `ctx.register_command`.
-- Native Discord slash-command registration for KAN operations.
-- Additional write-capable KAN tools beyond the DELRV-1/CNDIS-1 fake/injected command-envelope tools and the CNDIS-2 injected-only Discord helper.
+- HUN slash commands through `ctx.register_command`.
+- Native Discord slash-command registration for HUN operations.
+- Additional write-capable HUN tools beyond the DELRV-1/CNDIS-1 fake/injected command-envelope tools and the CNDIS-2 injected-only Discord helper.
 - `hun_session_status` and any `session.status.read` surface.
 - Live daemon discovery, localhost/socket/SSE/WebSocket transport, or CLI fallback.
 - Default/live Hermes gateway/send_message delivery helpers, current-session/current-thread
@@ -43,7 +43,7 @@ Hermes host evidence:
 - Plugin command names are normalized, built-in command conflicts are rejected, and handlers receive raw argument strings.
 - `hermes_cli/commands.py::COMMAND_REGISTRY` remains the built-in slash-command SOT.
 
-KAN plugin readiness boundary:
+HUN plugin readiness boundary:
 
 - The plugin does not register slash commands; DELRV-1/CNDIS-1 command-envelope tools are Hermes tools, not slash-command bindings.
 - The plugin is not installed/enabled as a live Hermes plugin in the active environment, so no live plugin command claim is valid.
@@ -53,10 +53,10 @@ KAN plugin readiness boundary:
 
 ## Future binding requirements
 
-Before a KAN slash command can be added, a later task must provide all of the following evidence:
+Before a HUN slash command can be added, a later task must provide all of the following evidence:
 
 1. A concrete command name and no-conflict mapping against Hermes built-ins.
-2. A daemon-owned operation or CLI-equivalent command in the control KAN contract.
+2. A daemon-owned operation or CLI-equivalent command in the control HUN contract.
 3. Fake or conformance fixtures for success, validation failure, duplicate/idempotent request, permission or compatibility failure, and malformed daemon payloads.
 4. A fail-closed handler that returns a safe string/JSON response and never turns daemon failure into success.
 5. No live daemon, Hermes, Discord, gateway, auth, token, localhost, socket, or CLI fallback unless that fallback is explicitly designed, approved, and tested.
@@ -66,4 +66,4 @@ Before a KAN slash command can be added, a later task must provide all of the fo
 
 ## Non-goals for HPLUG-3
 
-HPLUG-3 is documentation only. It does not add command handlers, alter plugin registration code, change Hermes core, change KAN daemon/control behavior, or claim live install readiness.
+HPLUG-3 is documentation only. It does not add command handlers, alter plugin registration code, change Hermes core, change HUN daemon/control behavior, or claim live install readiness.

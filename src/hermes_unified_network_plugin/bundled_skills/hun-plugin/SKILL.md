@@ -37,7 +37,7 @@ Supported plugin surfaces in the current package are fake/injected Hermes tools:
 - `hun_discussion_activation_plan`
 - `hun_discord_send_message`
 
-The plugin manifest must continue to declare `provides_commands: []`. KAN slash
+The plugin manifest must continue to declare `provides_commands: []`. HUN slash
 commands, native Discord slash commands, `hun_session_status`, live daemon
 discovery, localhost/socket/SSE/WebSocket transports, CLI fallback, gateway auth,
 token access, current-session lookup, production activation, KAB readiness, and
@@ -88,7 +88,7 @@ Accepted planned reconcile evidence needs at least: `principal`, `in_loaded_regi
 
 The packaged HUN moderator role skill owns the council moderation hard rules.
 Load `hermes-unified-network-plugin:hun-moderator` before moderating a live or
-live-visible KAN council. Do not create or require a fourth packaged moderation
+live-visible HUN council. Do not create or require a fourth packaged moderation
 skill, external profile-local flat skill, or legacy `kan-*` bundled skill alias.
 
 ## ARGUE relation-aware response guidance
@@ -214,7 +214,7 @@ Final reports must keep these fields separate: `lifecycle_pass`, `selected_runne
 ## Required HUN companion skills
 
 `hermes-unified-network-plugin` must ship the operator guidance needed to use its
-tool surface. Do not leave KAN runtime/operator guidance as ops-only,
+tool surface. Do not leave HUN runtime/operator guidance as ops-only,
 profile-local, or external-directory-only skills. The plugin package owns and
 registers these bundled companion skills together as read-only, plugin-qualified
 skills:
@@ -227,11 +227,11 @@ Canonical Hermes loads use the qualified names
 `hermes-unified-network-plugin:hun-plugin`,
 `hermes-unified-network-plugin:hun-moderator`, and
 `hermes-unified-network-plugin:hun-participant`. Do not require flat
-profile-local copies for the normal KAN plugin path.
+profile-local copies for the normal HUN plugin path.
 
 Treat a profile where plugin tools are enabled but these companion skills cannot
 be loaded by plugin-qualified name, are stale, or are available only from an
-unrelated external skill directory as incomplete KAN plugin activation. Fix the
+unrelated external skill directory as incomplete HUN plugin activation. Fix the
 plugin bundled-skill registration or package data instead of asking 주군 to
 provide extra manual field-mapping instructions.
 
@@ -259,7 +259,7 @@ distinguish the mode in the task brief:
 
 For `live_visible_thread`, do not silently satisfy the request with artifact-only
 or daemon CLI actor speech. Also do not require final pilot-acceptance evidence
-before `council.new`. If the user has already asked for the KAN discussion and
+before `council.new`. If the user has already asked for the HUN discussion and
 the start gate passes, do not ask for another approval; start the council.
 Classify findings into:
 
@@ -289,7 +289,7 @@ can be collected without profile/provider/gateway/auth/token mutation, collect
 the probe before asking the user.
 
 Final reports must not equate transcript/export success with a visible Discord
-discussion. Report these fields separately: `KAN lifecycle finalized`,
+discussion. Report these fields separately: `HUN lifecycle finalized`,
 `Discord visible turns posted: N/expected`, `real profile/gateway replies`, and
 `CLI actor speech only`.
 
@@ -298,12 +298,12 @@ discussion. Report these fields separately: `KAN lifecycle finalized`,
 Control/daemon fixtures and validation remain authoritative. Plugin rendering is
 a local visible surface and evidence pointer, not lifecycle state. Live-local
 pilots still require explicit profile/plugin/daemon/gateway/Discord approval and
-evidence. KAS does not install, own, or activate KAN runtime/plugin/bundled-skill
+evidence. KAS does not install, own, or activate HUN runtime/plugin/bundled-skill
 artifacts.
 
 ## RUNFIX discussion activation guidance
 
-`RUNFIX` work separates plugin install/load from KAN discussion activation. A plugin
+`RUNFIX` work separates plugin install/load from HUN discussion activation. A plugin
 install does not prove live council readiness. Before any live-local discussion
 apply step, produce a dry-run activation plan with: explicit control daemon/socket
 or config evidence, participant profiles, selected Discord parent channel,
@@ -329,18 +329,18 @@ alone, and manual/fallback profile text are diagnostic only; they are not
 participant runtime readiness, selected-runner success, live readiness, or
 production readiness.
 
-KAN discussion channels are bot-to-bot-free by default. Profiles with effective
-bot-to-bot enabled Discord behavior are excluded from KAN discussion allow-lists
+HUN discussion channels are bot-to-bot-free by default. Profiles with effective
+bot-to-bot enabled Discord behavior are excluded from HUN discussion allow-lists
 unless a later explicit policy approves otherwise. Visible-pilot surface policy
 is thread-preferred and parent-channel fallback allowed: first create or use a
 dedicated thread under the approved parent channel, then fall back to the parent
 channel only when thread creation/posting is unsupported. If the fallback is
-used, record the fallback reason in the task brief, KAN surface metadata,
+used, record the fallback reason in the task brief, HUN surface metadata,
 visible closeout, and final report; do not silently normalize channel-only
 operation or treat it as no-restart thread readiness.
 
 Reports must label fallback/manual profile evidence as `fallback_profile_pass`.
-That evidence never equals selected-speaker runner success or KAN live discussion
+That evidence never equals selected-speaker runner success or HUN live discussion
 readiness. Minimum acceptance/live-readiness evidence remains evidence-gated, not
 start-approval-gated: selected-runner
 invocation from `speaker_selected`, selected-runner submitted canonical `speech`
@@ -355,7 +355,7 @@ only. The report includes runner evidence, canonical
 `speaker_selected -> speech linkage`, participant response fields, ARGUE counts,
 RUNFIX labels, and fallback disclosure. Missing or ambiguous runner, ARGUE, or
 canonical-link evidence remains `unproven`/`blocked`; fallback/manual profile
-text is diagnostic-only and never full KAN success.
+text is diagnostic-only and never full HUN success.
 
 ## Operator workflow
 

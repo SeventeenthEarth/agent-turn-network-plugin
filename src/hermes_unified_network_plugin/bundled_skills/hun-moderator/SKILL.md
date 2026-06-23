@@ -1,23 +1,23 @@
 ---
 name: hun-moderator
-description: "Use when acting as a KAN council moderator/operator: create and advance daemon-owned council lifecycle, select speakers, enforce visible-surface and ARGUE quality gates, and report evidence without substituting Discord/Hermes chat for council state."
+description: "Use when acting as a HUN council moderator/operator: create and advance daemon-owned council lifecycle, select speakers, enforce visible-surface and ARGUE quality gates, and report evidence without substituting Discord/Hermes chat for council state."
 version: 0.1.0
 author: 17번째 지구 Kkachi
 license: MIT
 metadata:
   hermes:
-    tags: [kan, Hermes Unified Network, moderator, council, live-visible, argue]
+    tags: [hun, Hermes Unified Network, moderator, council, live-visible, argue]
     related_skills: [hun-plugin]
 ---
 
 # HUN Moderator Skill
 
-Use this skill when you are the moderator/operator for a KAN council or live-visible discussion. This is the packaged HUN moderator role companion to the canonical HUN discussion/operator skill `hun-plugin`.
+Use this skill when you are the moderator/operator for a HUN council or live-visible discussion. This is the packaged HUN moderator role companion to the canonical HUN discussion/operator skill `hun-plugin`.
 
 ## Authority and boundary
 
-- Canonical KAN discussion/operator source: `hermes-unified-network-plugin/src/hermes_unified_network_plugin/bundled_skills/hun-plugin/SKILL.md`.
-- KAN control daemon remains lifecycle, event, stream, cursor, lock, and state authority.
+- Canonical HUN discussion/operator source: `hermes-unified-network-plugin/src/hermes_unified_network_plugin/bundled_skills/hun-plugin/SKILL.md`.
+- HUN control daemon remains lifecycle, event, stream, cursor, lock, and state authority.
 - Plugin tools are typed client surfaces. They must not own lifecycle state, logs, locks, consensus, cursors, idempotency, Discord state, or fallback discovery.
 - Discord/Hermes messages are visible/evidence surfaces only. They become council state only when backed by daemon-owned typed events.
 - Do not claim production readiness, broad rollout, provider/profile/gateway/auth/token mutation, or live Discord readiness unless the current task explicitly approves that exact scope and evidence exists.
@@ -30,7 +30,7 @@ Before `council.new` or any visible council run, separate preflight findings int
 2. `runtime_evidence_pending`: does not block `council.new`; collect it during attendance, preparation, poll/hand-raise, selected-runner, speech, visible delivery, and closeout.
 3. `final_acceptance_unproven`: does not block `council.new`; report it as a separated closeout label after the run.
 
-Discord-origin discussion requests default to `live_visible_thread`; artifact-only, transcript-only, export-only, or daemon CLI actor speech still requires explicit pre-session confirmation. If the user has asked for a KAN discussion and the live-visible start gate passes, do not ask for another approval; start the council. Do not silently downgrade a Discord request, but do not require final pilot-acceptance proof before starting the council. `ready_to_start` means the moderator should proceed to `council.new`; `ready_for_approval` is not the live-visible discussion start signal.
+Discord-origin discussion requests default to `live_visible_thread`; artifact-only, transcript-only, export-only, or daemon CLI actor speech still requires explicit pre-session confirmation. If the user has asked for a HUN discussion and the live-visible start gate passes, do not ask for another approval; start the council. Do not silently downgrade a Discord request, but do not require final pilot-acceptance proof before starting the council. `ready_to_start` means the moderator should proceed to `council.new`; `ready_for_approval` is not the live-visible discussion start signal.
 
 Only `start_blocker` findings block `council.new`. Treat these as start blockers:
 
@@ -60,16 +60,18 @@ When using `hun_discussion_activation_plan`, materialize collected evidence into
 
 If evidence is missing but can be collected without mutating profile/provider/gateway/auth/token state, collect the probe before asking the user. If collecting evidence requires mutation, credentials, or unavailable external permissions, stop and ask for approval.
 
-For exact preflight and `council.new` schema pitfalls observed in live-visible KAN operation, see `references/live-visible-preflight-and-council-new.md`.
-For cross-team KLM/KAN participant onboarding and the evidence package needed before a live-visible run, see `references/cross-team-participant-preflight-evidence.md`.
+For exact preflight and `council.new` schema pitfalls observed in live-visible HUN operation, see `references/live-visible-preflight-and-council-new.md`.
+For cross-team KLM/HUN participant onboarding and the evidence package needed before a live-visible run, see `references/cross-team-participant-preflight-evidence.md`.
 
 ## Council lifecycle spine
 
 Use daemon-owned `hun_council_command` commands with caller-supplied `command_id`, `request_id`, and `idempotency_key`.
 
-## KAN council moderation hard rules
+## HUN council moderation hard rules
 
-For any live KAN council, the moderator must preserve the daemon-governed
+Historical label: KAN council moderation hard rules.
+
+For any live HUN council, the moderator must preserve the daemon-governed
 council loop. These rules are hard guardrails for HUN moderator guidance; they
 do not authorize live daemon/runtime activation by themselves.
 

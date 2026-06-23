@@ -37,12 +37,12 @@ The current plugin surface is fake/injected Hermes tools only:
 - `hun_discord_send_message`
 
 `plugin.yaml` must continue to declare `provides_commands: []`. The root
-entrypoint must not register KAN slash commands.
+entrypoint must not register HUN slash commands.
 
 Unsupported in SKILL-2:
 
 - `hun_session_status` or `session.status.read`;
-- KAN slash commands through Hermes `register_command`;
+- HUN slash commands through Hermes `register_command`;
 - native Discord slash-command registration;
 - live daemon discovery or localhost/socket/SSE/WebSocket transport;
 - CLI fallback;
@@ -85,9 +85,11 @@ Before any `council.new` for a live-visible or cross-team council, operator evid
 
 Accepted planned reconcile evidence needs at least: `principal`, `in_loaded_registry: false`, `planned_reconcile: true`, `mapping_unambiguous: true`, and `wrapper_resolves: true`. Ambiguous mapping, disabled existing principals, unresolved wrappers, or missing loaded-registry evidence block before `council.new`; the control-owned reconcile also validates invalid/reserved principal ids before registry mutation. Do not downgrade to artifact-only or daemon CLI actor speech unless the operator explicitly approves that different mode before session creation. Registry membership persists across council sessions; subscription, heartbeat, cursor ack, attendance/preparation, and selected-runner readiness remain session-scoped runtime gates.
 
-## KAN council moderation hard rules
+## HUN council moderation hard rules
 
-For any live KAN council, operator guidance must keep the discussion
+Historical label: KAN council moderation hard rules.
+
+For any live HUN council, operator guidance must keep the discussion
 lifecycle-first, per-turn selected, and daemon-event authoritative. These rules
 do not authorize live daemon/runtime activation, Discord delivery, profile
 mutation, or live readiness by themselves.
@@ -233,9 +235,9 @@ profiles, plugin enablement, daemon/CLI path, gateway/tool visibility, and any
 visible Discord surface. Do not treat this operator guide, local isolated
 plugin-load smoke, or fake/injected fixture harness as live readiness.
 
-KAS does not install, own, activate, or gate KAN runtime/plugin/bundled-skill artifacts.
-The KAN plugin package owns the bundled guidance source and exposes it through
-Hermes plugin-qualified skills. KAN development and KAN use must not depend on
+KAS does not install, own, activate, or gate HUN runtime/plugin/bundled-skill artifacts.
+The HUN plugin package owns the bundled guidance source and exposes it through
+Hermes plugin-qualified skills. HUN development and HUN use must not depend on
 profile-local flat copies or profile-local KAS development phase skills being
 present.
 
@@ -253,20 +255,20 @@ Final reports must keep these fields separate: `lifecycle_pass`, `selected_runne
 
 ## RUNFIX activation guidance
 
-`RUNFIX` distinguishes plugin installation from live-local KAN discussion activation.
+`RUNFIX` distinguishes plugin installation from live-local HUN discussion activation.
 
 - Plugin install/load proves only that the packaged plugin surface can be discovered and its declared tools can be used in the approved Hermes profile.
 - Discussion activation requires an explicit dry-run plan before any apply step. The `hun_discussion_activation_plan` tool can build the planner/doctor report from caller-provided evidence: control daemon/socket/config evidence, participant profile list, selected Discord parent channel, effective Discord profile eligibility, planned allow-list/config changes, rollback, smoke commands, and approval boundary.
-- Profiles with effective bot-to-bot enabled Discord behavior are excluded from KAN discussion allow-lists by default. Report every excluded profile and reason/remediation; `allow_list_targets` must include eligible profiles only.
-- Visible-pilot surface policy is thread-preferred and parent-channel fallback allowed. Create or use a dedicated thread under the approved parent channel first. If thread creation/posting is unsupported, use the approved parent channel directly as a fallback, but record `fallback_reason` in the task brief, KAN surface metadata, visible closeout, and final report. Parent-channel fallback is not no-restart thread readiness, and manual participant messages remain diagnostic-only unless canonical KAN event linkage is also proven.
-- Discord-origin council requests default to `live_visible_thread` output. Do not silently satisfy a Discord thread request with artifact-only daemon CLI actor speech. If the operator explicitly asks for `artifact_only`, `daemon_cli_actor_speech`, or transcript/export-only output, record that confirmation before `council.new`; otherwise classify preflight findings before session creation. When the user has already asked for the KAN discussion and the start gate passes, do not ask for another approval; start the council.
+- Profiles with effective bot-to-bot enabled Discord behavior are excluded from HUN discussion allow-lists by default. Report every excluded profile and reason/remediation; `allow_list_targets` must include eligible profiles only.
+- Visible-pilot surface policy is thread-preferred and parent-channel fallback allowed. Create or use a dedicated thread under the approved parent channel first. If thread creation/posting is unsupported, use the approved parent channel directly as a fallback, but record `fallback_reason` in the task brief, HUN surface metadata, visible closeout, and final report. Parent-channel fallback is not no-restart thread readiness, and manual participant messages remain diagnostic-only unless canonical HUN event linkage is also proven.
+- Discord-origin council requests default to `live_visible_thread` output. Do not silently satisfy a Discord thread request with artifact-only daemon CLI actor speech. If the operator explicitly asks for `artifact_only`, `daemon_cli_actor_speech`, or transcript/export-only output, record that confirmation before `council.new`; otherwise classify preflight findings before session creation. When the user has already asked for the HUN discussion and the start gate passes, do not ask for another approval; start the council.
 - Use three preflight categories. `start_blocker` blocks `council.new`; `runtime_evidence_pending` is collected during attendance, preparation, selected-runner, speech, delivery, and closeout; `final_acceptance_unproven` is reported as separated closeout labels. Only `start_blocker` findings block `council.new`.
 - `start_blocker` findings are unavailable daemon/protocol/tool surface, missing or invalid roster, unresolved registry principals with no unambiguous control-owned reconcile, explicitly unavailable profile/plugin tool surface, missing target Discord surface, positively detected bot-to-bot or shared/default-author risk without approval, or unapproved provider/profile/gateway/auth/token mutation.
 - Missing selected-runner proof, participant runtime freshness, same-path per-turn author linkage, visible turn counts, ARGUE relation counts, and discussion-quality proof are not automatic start blockers. Track them as `runtime_evidence_pending` or `final_acceptance_unproven`, then report them separately at closeout.
 - Before starting a live visible council, collect non-mutating probes when feasible: bound thread or approved parent-channel fallback with `fallback_reason`, turn-posting probe for the selected-speaker/profile-send path or approved fallback poster, visible closeout probe, `real_profile_gateway_replies: true`, and `cli_actor_speech_only: false`. If these are missing because no probe has been run yet, collect the probe before asking the user; if collecting it requires profile/provider/gateway/auth/token mutation, stop for approval.
 - For `plugin/RUNFIX-012`, `participant_runtime_readiness` from `control/RUNFIX-011` diagnostics remains explicit evidence. Required classes are control task/status/evidence ref, subscriber presence, cursor ack freshness, heartbeat freshness, attendance and preparation terminal evidence, selected-runner readiness/prerequisites, and visible-surface proof as a separate evidence class; missing classes are runtime/acceptance evidence gaps unless they also prove a `start_blocker`.
 - Gateway liveness, transcript/export artifacts, parent-channel fallback alone, and manual/fallback profile text are diagnostics only. They must not be substituted for participant runtime readiness, selected-runner proof, visible-surface proof, `live_readiness`, or production readiness.
-- Fallback/manual participant messages may be useful diagnostic evidence, but they must be labeled `fallback_profile_pass` and must not be reported as selected-speaker runner success or KAN live discussion readiness.
+- Fallback/manual participant messages may be useful diagnostic evidence, but they must be labeled `fallback_profile_pass` and must not be reported as selected-speaker runner success or HUN live discussion readiness.
 - `hun_discussion_activation_plan` always keeps `live_readiness: false`; it must not read env vars, inspect current Hermes/Discord/profile/gateway state, open sockets, shell out, start daemons, mutate profiles/gateway/Discord/auth/token/provider/model settings, or infer readiness from missing evidence. Do not treat `hun_discussion_activation_plan.live_readiness=false` as a `council.new` blocker by itself. If the planner returns `status: blocked`, do not automatically stop before `council.new`; classify each blocker first.
 
 Minimum live-local acceptance evidence remains evidence-gated and includes: `runner_invocation_started` from `speaker_selected`, selected-runner submitted canonical `speech` linkage, visible-surface evidence, ARGUE relation counts/diagnostics, eligible-profile-only allow-list evidence, and explicit no-claim language for production activation. These labels gate acceptance/live-readiness claims, not the basic `council.new` start gate or a second approval prompt. Durable runner failure is a terminal-failure diagnostic and blocks `selected_runner_pass` / live-readiness claims unless a later task explicitly proves a new selected-runner success path.
@@ -296,7 +298,7 @@ evidence:
   visible closeout probe, real profile/gateway replies, CLI-actor-only status,
   and expected/posted turn counts;
 - `final_report_contract`: final reports must separately state
-  `KAN lifecycle finalized`, `Discord visible turns posted: N/expected`,
+  `HUN lifecycle finalized`, `Discord visible turns posted: N/expected`,
   `real profile/gateway replies`, and `CLI actor speech only`.
 
 Missing or ambiguous runner, ARGUE, or canonical-link evidence remains

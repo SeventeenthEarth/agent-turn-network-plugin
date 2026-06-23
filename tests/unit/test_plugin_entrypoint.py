@@ -51,7 +51,7 @@ def test_plugin_manifest_declares_fake_injected_tool_surface() -> None:
             "Hermes plugin adapter for Hermes Unified Network; exposes fake/injected "
             "read-only tools, delegation/review command-envelope tools, CNDIS "
             "council/delivery-evidence tools, selected participant response proof, "
-            "pure visible-surface projection rendering, a pure RUNFIX discussion "
+            "pure visible-surface projection rendering, a pure HUN discussion "
             "activation planner/doctor, and an injected-only Discord helper without "
             "slash-command bindings."
         ),

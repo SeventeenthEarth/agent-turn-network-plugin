@@ -19,6 +19,8 @@ import yaml
 ROOT = Path(__file__).resolve().parents[1]
 PACKAGE_MODULE = "hermes_unified_network_plugin"
 PACKAGE_NAME = "hermes-unified-network-plugin"
+# HUN-013: this remains a Hermes host compatibility toolset identifier, not a
+# public package/tool/skill alias. HUN-014 owns any cross-repo compatibility rename.
 TOOLSET = "kkachi_agent_network"
 EXPECTED_TOOLS = [
     "hun_daemon_status",
@@ -34,6 +36,27 @@ EXPECTED_TOOLS = [
     "hun_discussion_activation_plan",
     "hun_discord_send_message",
 ]
+EXPECTED_SKILLS = ["hun-plugin", "hun-moderator", "hun-participant"]
+LEGACY_PUBLIC_IDENTIFIERS = (
+    "kkachi_agent_network_plugin",
+    "kkachi-agent-network-plugin",
+    "kan-plugin",
+    "kan-moderator",
+    "kan-participant",
+    "kan_daemon_status",
+    "kan_compatibility_diagnostics",
+    "kan_stream_tail",
+    "kan_stream_ack",
+    "kan_delegate_new",
+    "kan_delegate_action",
+    "kan_council_command",
+    "kan_selected_participant_response",
+    "kan_delivery_evidence",
+    "kan_surface_render_projection",
+    "kan_discussion_activation_plan",
+    "kan_discord_send_message",
+    "kan_session_status",
+)
 LIVE_LOOKING_ENV = {
     "HERMES_HOME": "/live/hermes/home",
     "KAN_DAEMON_SOCKET": "/live/kan.sock",
@@ -43,6 +66,25 @@ LIVE_LOOKING_ENV = {
     "DISCORD_TEST_TARGET": "active-discord-thread",
     "KAN_PROVIDER": "live-provider",
 }
+
+
+def require_no_legacy_public_identifier(label: str, value: object) -> None:
+    text = str(value)
+    for token in LEGACY_PUBLIC_IDENTIFIERS:
+        if token in text:
+            raise SystemExit(f"plugin-load smoke {label} contains legacy identifier: {token}")
+
+
+def require_hun_tool_name(label: str, value: object) -> None:
+    if not isinstance(value, str) or not value.startswith("hun_"):
+        raise SystemExit(f"plugin-load smoke {label} must use hun_ tool name: {value!r}")
+    require_no_legacy_public_identifier(label, value)
+
+
+def require_hun_skill_name(label: str, value: object) -> None:
+    if value not in EXPECTED_SKILLS:
+        raise SystemExit(f"plugin-load smoke {label} must use HUN bundled skill: {value!r}")
+    require_no_legacy_public_identifier(label, value)
 
 
 def load_module(path: Path, name: str, *, package_root: bool = False) -> ModuleType:
@@ -72,7 +114,11 @@ def make_isolated_plugin_home(root: Path, destination: Path) -> Path:
 
 
 def require_manifest(plugin_home: Path) -> None:
-    manifest = yaml.safe_load((plugin_home / "plugin.yaml").read_text(encoding="utf-8"))
+    manifest_text = (plugin_home / "plugin.yaml").read_text(encoding="utf-8")
+    require_no_legacy_public_identifier("manifest", manifest_text)
+    if "pure RUNFIX discussion activation planner/doctor" in manifest_text:
+        raise SystemExit("plugin-load smoke manifest contains stale RUNFIX public wording")
+    manifest = yaml.safe_load(manifest_text)
     if not isinstance(manifest, dict):
         raise SystemExit("plugin-load smoke manifest must be a YAML mapping")
     if manifest.get("name") != PACKAGE_NAME:
@@ -82,6 +128,8 @@ def require_manifest(plugin_home: Path) -> None:
             "plugin-load smoke manifest provides_tools mismatch: "
             f"{manifest.get('provides_tools')!r}"
         )
+    for tool_name in manifest["provides_tools"]:
+        require_hun_tool_name("manifest provides_tools", tool_name)
     if manifest.get("provides_hooks") != []:
         raise SystemExit(
             "plugin-load smoke manifest provides_hooks must remain explicit empty list"
@@ -94,6 +142,12 @@ def require_manifest(plugin_home: Path) -> None:
 
 def require_package_and_bundled_skill(plugin_home: Path) -> None:
     pyproject = tomllib.loads((plugin_home / "pyproject.toml").read_text(encoding="utf-8"))
+    project = pyproject.get("project", {})
+    if not isinstance(project, dict) or project.get("name") != PACKAGE_NAME:
+        raise SystemExit(
+            f"plugin-load smoke pyproject package name mismatch: {project.get('name')!r}"
+        )
+    require_no_legacy_public_identifier("pyproject package name", project.get("name"))
     wheel = (
         pyproject.get("tool", {})
         .get("hatch", {})
@@ -103,6 +157,7 @@ def require_package_and_bundled_skill(plugin_home: Path) -> None:
     )
     if wheel.get("packages") != ["src/hermes_unified_network_plugin"]:
         raise SystemExit("plugin-load smoke wheel package inclusion mismatch")
+    require_no_legacy_public_identifier("wheel package inclusion", wheel.get("packages"))
 
     bundled_root = plugin_home / "src" / PACKAGE_MODULE / "bundled_skills"
     expected_skills = {
@@ -111,10 +166,12 @@ def require_package_and_bundled_skill(plugin_home: Path) -> None:
         "hun-participant": ("name: hun-participant", "selected-speaker", "stance_links"),
     }
     for skill_name, phrases in expected_skills.items():
+        require_hun_skill_name("bundled skill directory", skill_name)
         skill = bundled_root / skill_name / "SKILL.md"
         if not skill.exists():
             raise SystemExit(f"plugin-load smoke missing bundled skill: {skill_name}")
         text = skill.read_text(encoding="utf-8")
+        require_no_legacy_public_identifier(f"bundled skill {skill_name}", text)
         for phrase in phrases:
             if phrase not in text:
                 raise SystemExit(
@@ -128,8 +185,12 @@ def require_package_and_bundled_skill(plugin_home: Path) -> None:
     metadata = getattr(package, "package_metadata", None)
     if not callable(metadata):
         raise SystemExit("plugin-load smoke package_metadata is not callable")
-    if metadata().get("name") != PACKAGE_NAME:
-        raise SystemExit(f"plugin-load smoke package metadata mismatch: {metadata()!r}")
+    metadata_body = metadata()
+    if metadata_body.get("name") != PACKAGE_NAME:
+        raise SystemExit(f"plugin-load smoke package metadata mismatch: {metadata_body!r}")
+    if metadata_body.get("module") != PACKAGE_MODULE:
+        raise SystemExit(f"plugin-load smoke package module mismatch: {metadata_body!r}")
+    require_no_legacy_public_identifier("package metadata", metadata_body)
 
 
 def require_python311_syntax(plugin_home: Path) -> None:
@@ -207,22 +268,28 @@ def require_entrypoint_load(plugin_home: Path) -> FakeHermesContext:
             "plugin-load smoke tool registration mismatch: "
             f"{registered_tool_names!r} != {EXPECTED_TOOLS!r}"
         )
+    for tool_name in registered_tool_names:
+        require_hun_tool_name("registered tool", tool_name)
     if context.registered_hooks:
         raise SystemExit("plugin-load smoke registered unsupported hooks")
     if context.registered_commands:
         raise SystemExit("plugin-load smoke registered unsupported commands")
+    if context.registered_resources:
+        raise SystemExit("plugin-load smoke registered unsupported resources")
     registered_skill_names = [skill.get("name") for skill in context.registered_skills]
-    if registered_skill_names != ["hun-plugin", "hun-moderator", "hun-participant"]:
+    if registered_skill_names != EXPECTED_SKILLS:
         raise SystemExit(
-            "plugin-load smoke bundled skill registration mismatch: "
-            f"{registered_skill_names!r}"
+            f"plugin-load smoke bundled skill registration mismatch: {registered_skill_names!r}"
         )
+    for skill_name in registered_skill_names:
+        require_hun_skill_name("registered skill", skill_name)
     for skill in context.registered_skills:
         if not Path(str(skill.get("path"))).exists():
             raise SystemExit(f"plugin-load smoke registered skill path missing: {skill!r}")
     for tool in context.registered_tools:
         if tool.get("toolset") != TOOLSET:
             raise SystemExit(f"plugin-load smoke toolset mismatch: {tool!r}")
+        require_no_legacy_public_identifier("registered tool schema", tool.get("schema"))
         if not isinstance(tool.get("schema"), dict):
             raise SystemExit(f"plugin-load smoke tool schema must be a mapping: {tool!r}")
         if not callable(tool.get("handler")):
@@ -242,8 +309,7 @@ def require_handler_fail_closed(context: FakeHermesContext) -> dict[str, str]:
         if name in {"hun_surface_render_projection", "hun_discussion_activation_plan"}:
             if body.get("ok") is not True or body.get("live_readiness") is not False:
                 raise SystemExit(
-                    "plugin-load smoke pure local handler must succeed locally: "
-                    f"{body}"
+                    f"plugin-load smoke pure local handler must succeed locally: {body}"
                 )
             outputs[str(name)] = result
             continue
@@ -493,6 +559,7 @@ class FakeHermesContext:
         self.registered_hooks: list[tuple[str, Any]] = []
         self.registered_commands: list[dict[str, Any]] = []
         self.registered_skills: list[dict[str, Any]] = []
+        self.registered_resources: list[dict[str, Any]] = []
 
     def register_tool(self, **kwargs: Any) -> None:
         self.registered_tools.append(kwargs)
@@ -505,6 +572,9 @@ class FakeHermesContext:
 
     def register_skill(self, **kwargs: Any) -> None:
         self.registered_skills.append(kwargs)
+
+    def register_resource(self, **kwargs: Any) -> None:
+        self.registered_resources.append(kwargs)
 
 
 def main(*, root: Path = ROOT) -> None:

@@ -35,8 +35,30 @@ def load_guardrails() -> ModuleType:
 def write_docs(root: Path, *, include_fail_closed: bool = True) -> None:
     docs = root / "docs"
     docs.mkdir()
+    (root / "plugin.yaml").write_text(
+        "name: hermes-unified-network-plugin\n"
+        "description: Hermes Unified Network plugin fixture.\n"
+        "provides_tools:\n"
+        "  - hun_daemon_status\n"
+        "provides_hooks: []\n"
+        "provides_commands: []\n",
+        encoding="utf-8",
+    )
+    (root / "pyproject.toml").write_text(
+        '[project]\nname = "hermes-unified-network-plugin"\n',
+        encoding="utf-8",
+    )
+    (root / "__init__.py").write_text(
+        '"""Hermes directory plugin entrypoint for hermes-unified-network-plugin."""\n',
+        encoding="utf-8",
+    )
     skill = root / "src" / "hermes_unified_network_plugin" / "bundled_skills" / "hun-plugin"
     skill.mkdir(parents=True)
+    package = root / "src" / "hermes_unified_network_plugin"
+    (package / "__init__.py").write_text(
+        '"""HUN plugin package fixture."""\n',
+        encoding="utf-8",
+    )
     (skill / "SKILL.md").write_text(
         "---\n"
         "name: hun-plugin\n"
@@ -138,4 +160,95 @@ def test_docs_guardrails_reject_bundled_skill_without_frontmatter(tmp_path: Path
     skill.write_text("# HUN Plugin Operator Skill\n", encoding="utf-8")
 
     with pytest.raises(SystemExit, match="bundled skill must start with YAML frontmatter"):
+        guardrails.main(root=tmp_path)
+
+
+@pytest.mark.parametrize(
+    ("path", "text", "token"),
+    [
+        (
+            "README.md",
+            "Install kkachi_agent_network_plugin as a public import.\n",
+            "kkachi_agent_network_plugin",
+        ),
+        (
+            "__init__.py",
+            '"""Registers legacy kan_stream_tail in the root packaged entrypoint."""\n',
+            "kan_stream_tail",
+        ),
+        (
+            "src/hermes_unified_network_plugin/schemas.py",
+            '"""Hermes tool schemas for fake/injected KAN plugin surfaces."""\n',
+            "KAN plugin",
+        ),
+        (
+            "src/hermes_unified_network_plugin/schemas.py",
+            'TOOL = {"name": "kan_stream_tail"}\n',
+            "kan_stream_tail",
+        ),
+        (
+            "src/hermes_unified_network_plugin/bundled_skills/hun-plugin/SKILL.md",
+            "---\nname: hun-plugin\ndescription: stale\n---\nUse kan-plugin as an alias.\n",
+            "kan-plugin",
+        ),
+        ("plugin.yaml", "provides_commands: [kan]\n", "provides_commands"),
+        (
+            "plugin.yaml",
+            "description: pure RUNFIX discussion activation planner/doctor\n",
+            "pure RUNFIX discussion activation planner/doctor",
+        ),
+        (
+            "docs/00-overview.md",
+            "The package keeps a legacy wrapper for compatibility.\n",
+            "legacy wrapper",
+        ),
+        (
+            "docs/00-overview.md",
+            "gateway/auth/token/provider mutation is supported for operators.\n",
+            "gateway/auth/token/provider mutation is supported",
+        ),
+    ],
+)
+def test_docs_guardrails_reject_stale_hun_public_terms(
+    tmp_path: Path, path: str, text: str, token: str
+) -> None:
+    guardrails = load_guardrails()
+    write_docs(tmp_path)
+    target = tmp_path / path
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(text, encoding="utf-8")
+
+    with pytest.raises(SystemExit, match="stale HUN public term found") as exc:
+        guardrails.main(root=tmp_path)
+
+    assert token in str(exc.value)
+
+
+def test_docs_guardrails_allow_occurrence_specific_historical_provenance(
+    tmp_path: Path,
+) -> None:
+    guardrails = load_guardrails()
+    write_docs(tmp_path)
+    roadmap = tmp_path / "docs" / "06-implementation-epics-tasks.md"
+    roadmap.write_text(
+        "| HPLUG-2 | completed | Implemented the fake/injected "
+        "`kan_stream_tail` read-only plugin tool with stream-frame compatibility. |\n",
+        encoding="utf-8",
+    )
+
+    guardrails.main(root=tmp_path)
+
+
+def test_docs_guardrails_reject_same_token_outside_allowed_occurrence(
+    tmp_path: Path,
+) -> None:
+    guardrails = load_guardrails()
+    write_docs(tmp_path)
+    roadmap = tmp_path / "docs" / "06-implementation-epics-tasks.md"
+    roadmap.write_text(
+        "New public docs should call `kan_stream_tail` directly.\n",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(SystemExit, match="kan_stream_tail"):
         guardrails.main(root=tmp_path)

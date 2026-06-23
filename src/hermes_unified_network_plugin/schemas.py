@@ -1,4 +1,4 @@
-"""Hermes tool schemas for fake/injected KAN plugin surfaces."""
+"""Hermes tool schemas for fake/injected HUN plugin surfaces."""
 
 from __future__ import annotations
 
@@ -142,7 +142,7 @@ DELIVERY_EVIDENCE_COMMANDS: Final[tuple[str, ...]] = (
 HUN_DAEMON_STATUS: Final[dict[str, object]] = {
     "name": "hun_daemon_status",
     "description": (
-        "Read-only KAN daemon status through an explicit fake/injected daemon client. "
+        "Read-only HUN daemon status through an explicit fake/injected daemon client. "
         "Fails closed when no client is injected; performs no write, live daemon discovery, "
         "Hermes, Discord, auth, token, or gateway fallback."
     ),
@@ -156,7 +156,7 @@ HUN_DAEMON_STATUS: Final[dict[str, object]] = {
 HUN_COMPATIBILITY_DIAGNOSTICS: Final[dict[str, object]] = {
     "name": "hun_compatibility_diagnostics",
     "description": (
-        "Read-only KAN compatibility diagnostics through an explicit fake/injected daemon "
+        "Read-only HUN compatibility diagnostics through an explicit fake/injected daemon "
         "client. Returns redacted diagnostic checks and fails closed without live fallback."
     ),
     "parameters": {
@@ -165,7 +165,7 @@ HUN_COMPATIBILITY_DIAGNOSTICS: Final[dict[str, object]] = {
             "session_id": {
                 "type": "string",
                 "minLength": 1,
-                "description": "Optional KAN session identifier for scoped diagnostics.",
+                "description": "Optional HUN session identifier for scoped diagnostics.",
             }
         },
         "additionalProperties": False,
@@ -175,7 +175,7 @@ HUN_COMPATIBILITY_DIAGNOSTICS: Final[dict[str, object]] = {
 HUN_STREAM_TAIL: Final[dict[str, object]] = {
     "name": "hun_stream_tail",
     "description": (
-        "Read-only KAN stream tail through an explicit fake/injected daemon client. "
+        "Read-only HUN stream tail through an explicit fake/injected daemon client. "
         "Requires stream_frame compatibility from the injected transport and fails closed "
         "without live daemon, Hermes, Discord, auth, token, gateway, socket, or CLI fallback."
     ),
@@ -185,7 +185,7 @@ HUN_STREAM_TAIL: Final[dict[str, object]] = {
             "session_id": {
                 "type": "string",
                 "minLength": 1,
-                "description": "KAN session identifier whose retained stream tail should be read.",
+                "description": "HUN session identifier whose retained stream tail should be read.",
             },
             "member": {
                 "type": "string",
@@ -213,7 +213,7 @@ HUN_STREAM_TAIL: Final[dict[str, object]] = {
 HUN_STREAM_ACK: Final[dict[str, object]] = {
     "name": "hun_stream_ack",
     "description": (
-        "Submit a KAN stream ack through an explicit fake/injected daemon client. "
+        "Submit a HUN stream ack through an explicit fake/injected daemon client. "
         "The caller supplies command_id as the daemon idempotency key; the plugin "
         "does not dedupe locally or fall back to live daemon discovery, Hermes, "
         "Discord, auth, token, gateway, localhost/TCP, socket discovery, or CLI."
@@ -224,7 +224,7 @@ HUN_STREAM_ACK: Final[dict[str, object]] = {
             "session_id": {
                 "type": "string",
                 "minLength": 1,
-                "description": "KAN session identifier whose stream cursor should be acknowledged.",
+                "description": "HUN session identifier whose stream cursor should be acknowledged.",
             },
             "member": {
                 "type": "string",
@@ -261,7 +261,7 @@ HUN_DELEGATE_NEW: Final[dict[str, object]] = {
             "session_id": {
                 "type": "string",
                 "minLength": 1,
-                "description": "KAN session identifier for the delegation.",
+                "description": "HUN session identifier for the delegation.",
             },
             "moderator": {
                 "type": "string",
@@ -349,7 +349,7 @@ HUN_DELEGATE_ACTION: Final[dict[str, object]] = {
                 "type": "string",
                 "minLength": 1,
                 "description": (
-                    "KAN session identifier; overrides/sets payload.session_id before submit."
+                    "HUN session identifier; overrides/sets payload.session_id before submit."
                 ),
             },
             "command": {

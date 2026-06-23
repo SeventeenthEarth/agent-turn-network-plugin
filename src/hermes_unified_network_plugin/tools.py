@@ -1,4 +1,4 @@
-"""JSON-string Hermes handlers for fake/injected KAN plugin tools."""
+"""JSON-string Hermes handlers for fake/injected HUN plugin tools."""
 
 from __future__ import annotations
 
@@ -537,7 +537,7 @@ def register_tools(
     config: Mapping[str, object] | None = None,
     send_message: SendMessageFn | None = None,
 ) -> None:
-    """Register KAN tools with an explicit injected or configured client factory."""
+    """Register HUN tools with an explicit injected or configured client factory."""
 
     if client_factory is None:
         try:

@@ -49,7 +49,7 @@ def test_compatibility_diagnostics_schema_accepts_optional_session_id_only() -> 
             "session_id": {
                 "type": "string",
                 "minLength": 1,
-                "description": "Optional KAN session identifier for scoped diagnostics.",
+                "description": "Optional HUN session identifier for scoped diagnostics.",
             }
         },
         "additionalProperties": False,
@@ -67,7 +67,7 @@ def test_stream_tail_schema_requires_session_and_member_with_bounded_optional_cu
             "session_id": {
                 "type": "string",
                 "minLength": 1,
-                "description": "KAN session identifier whose retained stream tail should be read.",
+                "description": "HUN session identifier whose retained stream tail should be read.",
             },
             "member": {
                 "type": "string",
@@ -103,7 +103,7 @@ def test_stream_ack_schema_requires_cursor_and_command_id() -> None:
             "session_id": {
                 "type": "string",
                 "minLength": 1,
-                "description": "KAN session identifier whose stream cursor should be acknowledged.",
+                "description": "HUN session identifier whose stream cursor should be acknowledged.",
             },
             "member": {
                 "type": "string",
@@ -376,7 +376,7 @@ def test_delegate_new_schema_requires_explicit_metadata_and_creation_fields() ->
             "session_id": {
                 "type": "string",
                 "minLength": 1,
-                "description": "KAN session identifier for the delegation.",
+                "description": "HUN session identifier for the delegation.",
             },
             "moderator": {
                 "type": "string",
@@ -460,7 +460,7 @@ def test_delegate_action_schema_uses_closed_implemented_delegate_enum() -> None:
                 "type": "string",
                 "minLength": 1,
                 "description": (
-                    "KAN session identifier; overrides/sets payload.session_id before submit."
+                    "HUN session identifier; overrides/sets payload.session_id before submit."
                 ),
             },
             "command": {

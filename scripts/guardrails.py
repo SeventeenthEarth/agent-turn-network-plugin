@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from pathlib import Path
 from typing import NamedTuple
 
@@ -64,6 +65,11 @@ class AllowedOccurrence(NamedTuple):
     reason: str
 
 
+class ForbiddenInvariantClaim(NamedTuple):
+    token: str
+    category: str
+
+
 FORBIDDEN_PUBLIC_TERMS = [
     ForbiddenTerm("KAN plugin", "legacy public plugin identity"),
     ForbiddenTerm("KAN tools", "legacy public tool identity"),
@@ -102,6 +108,53 @@ FORBIDDEN_PUBLIC_TERMS = [
         "gateway/auth/token/provider mutation is supported", "unsupported private config claim"
     ),
 ]
+
+RUNFIX3_INVARIANT_CLAIMS = [
+    ForbiddenInvariantClaim(
+        "display-name labels satisfy exact-origin proof",
+        "display-name labels do not satisfy exact-origin proof",
+    ),
+    ForbiddenInvariantClaim(
+        "channel-name labels satisfy exact-origin proof",
+        "channel-name labels do not satisfy exact-origin proof",
+    ),
+    ForbiddenInvariantClaim(
+        "display-name labels prove origin",
+        "display-name labels do not prove exact origin",
+    ),
+    ForbiddenInvariantClaim(
+        "channel-name labels prove origin",
+        "channel-name labels do not prove exact origin",
+    ),
+    ForbiddenInvariantClaim(
+        "`selected_runner_pass` is a selection mode",
+        "selected_runner_pass must remain evidence-derived",
+    ),
+    ForbiddenInvariantClaim(
+        "`selected_runner_pass` is satisfied by fallback/manual speech",
+        "fallback/manual speech must not satisfy selected_runner_pass",
+    ),
+    ForbiddenInvariantClaim(
+        "`live_readiness=true` proves live-visible council readiness",
+        "live_readiness must not be treated as live-visible readiness proof",
+    ),
+]
+
+RUNFIX3_OWNER_MARKERS = {
+    "docs/09-skill-and-operator-guide.md": "For RUNFIX3 live-thread semantics, this guide and `src/atn_plugin/bundled_skills/atn-moderator/SKILL.md` are the normative procedure owners.",
+    "src/atn_plugin/bundled_skills/atn-moderator/SKILL.md": "Canonical live-thread procedure owners for this topic:",
+    "src/atn_plugin/bundled_skills/atn-plugin/SKILL.md": "This skill is boundary/cross-link only for RUNFIX3 live-thread semantics.",
+    "docs/06-implementation-epics-tasks.md": "Mirror-only status row",
+    "docs/10-live-transport-sot.md": "this SOT section remains traceability/status only and must not become another procedure owner.",
+}
+RUNFIX3_NORMATIVE_OWNER_PATHS = (
+    "src/atn_plugin/bundled_skills/atn-moderator/SKILL.md",
+    "docs/09-skill-and-operator-guide.md",
+)
+RUNFIX3_RULE_OWNER_ONLY_PATHS = RUNFIX3_NORMATIVE_OWNER_PATHS
+RUNFIX3_RULE_IDS = tuple(f"RUNFIX3-R{index:02d}" for index in range(1, 11))
+RUNFIX3_RULE_HEADING = "## ATN council moderation hard rules"
+RUNFIX3_RULE_RE = re.compile(r"^\d+\. \[(RUNFIX3-R\d{2})\] (.+\S)$")
 
 
 ALLOWED_PUBLIC_OCCURRENCES = [
@@ -301,6 +354,27 @@ def read_all_docs(root: Path) -> str:
     return "\n".join(path.read_text(encoding="utf-8") for path in sorted(docs.glob("*.md")))
 
 
+def normalize_markdown(text: str) -> str:
+    return " ".join(text.split()).lower()
+
+
+def extract_runfix3_hard_rules(text: str) -> dict[str, str]:
+    rules: dict[str, str] = {}
+    in_section = False
+    for raw_line in text.splitlines():
+        stripped = raw_line.strip()
+        if stripped == RUNFIX3_RULE_HEADING:
+            in_section = True
+            continue
+        if in_section and stripped.startswith("## "):
+            break
+        match = RUNFIX3_RULE_RE.match(stripped)
+        if match:
+            rule_id, body = match.groups()
+            rules[rule_id] = normalize_markdown(body)
+    return rules
+
+
 def public_scan_paths(root: Path) -> list[Path]:
     paths = [
         root / "README.md",
@@ -308,7 +382,7 @@ def public_scan_paths(root: Path) -> list[Path]:
         root / "plugin.yaml",
         root / "pyproject.toml",
     ]
-    paths.extend(sorted((root / "docs").glob("*.md")))
+    paths.extend(sorted((root / "docs").rglob("*.md")))
     source_root = root / "src" / "atn_plugin"
     paths.extend(
         path
@@ -345,6 +419,70 @@ def require_atn_public_terms(root: Path) -> None:
                 raise SystemExit(
                     "stale ATN public term found: "
                     f"{relative_path}:{line_number}: {term.token!r} ({term.category})"
+                )
+
+
+def require_runfix3_invariants(root: Path) -> None:
+    for path in public_scan_paths(root):
+        if not path.exists():
+            continue
+        relative_path = path.relative_to(root).as_posix()
+        text = path.read_text(encoding="utf-8")
+        for line_number, line in enumerate(text.splitlines(), start=1):
+            for claim in RUNFIX3_INVARIANT_CLAIMS:
+                if claim.token not in line:
+                    continue
+                raise SystemExit(
+                    "RUNFIX3 invariant violation: "
+                    f"{relative_path}:{line_number}: {claim.token!r} ({claim.category})"
+                )
+
+
+def require_runfix3_owner_markers(root: Path) -> None:
+    for relative_path, phrase in RUNFIX3_OWNER_MARKERS.items():
+        path = root / relative_path
+        if not path.exists():
+            raise SystemExit(f"missing RUNFIX3 owner marker file: {relative_path}")
+        text = path.read_text(encoding="utf-8")
+        if phrase not in text:
+            raise SystemExit(f"missing RUNFIX3 owner marker: {relative_path}: {phrase!r}")
+
+
+def require_runfix3_hard_rule_parity(root: Path) -> None:
+    owner_rules: dict[str, dict[str, str]] = {}
+    for relative_path in RUNFIX3_NORMATIVE_OWNER_PATHS:
+        text = (root / relative_path).read_text(encoding="utf-8")
+        rules = extract_runfix3_hard_rules(text)
+        if tuple(rules) != RUNFIX3_RULE_IDS:
+            raise SystemExit(
+                f"RUNFIX3 hard-rule set mismatch: {relative_path}: expected {RUNFIX3_RULE_IDS}, found {tuple(rules)}"
+            )
+        owner_rules[relative_path] = rules
+
+    baseline_path = RUNFIX3_NORMATIVE_OWNER_PATHS[0]
+    baseline_rules = owner_rules[baseline_path]
+    for relative_path in RUNFIX3_NORMATIVE_OWNER_PATHS[1:]:
+        rules = owner_rules[relative_path]
+        if rules != baseline_rules:
+            for rule_id in RUNFIX3_RULE_IDS:
+                if rules.get(rule_id) != baseline_rules.get(rule_id):
+                    raise SystemExit(
+                        "RUNFIX3 hard-rule parity drift: "
+                        f"{relative_path}:{rule_id}: {rules.get(rule_id)!r} != {baseline_path}:{rule_id}: {baseline_rules.get(rule_id)!r}"
+                    )
+            raise SystemExit(f"RUNFIX3 hard-rule parity drift: {relative_path}")
+
+    for path in public_scan_paths(root):
+        if not path.exists():
+            continue
+        relative_path = path.relative_to(root).as_posix()
+        if relative_path in RUNFIX3_RULE_OWNER_ONLY_PATHS:
+            continue
+        text = path.read_text(encoding="utf-8")
+        for rule_id in RUNFIX3_RULE_IDS:
+            if rule_id in text:
+                raise SystemExit(
+                    f"RUNFIX3 rule id escaped owner surface: {relative_path}: {rule_id}"
                 )
 
 
@@ -394,6 +532,9 @@ def main(*, root: Path = ROOT) -> None:
 
     require_bundled_skill_frontmatter(root)
     require_atn_public_terms(root)
+    require_runfix3_invariants(root)
+    require_runfix3_owner_markers(root)
+    require_runfix3_hard_rule_parity(root)
 
     print("docs-guardrails: ok")
 

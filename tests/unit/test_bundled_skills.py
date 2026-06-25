@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 import pytest
@@ -14,6 +15,77 @@ from atn_plugin.bundled_skills import (
 )
 
 ROOT = Path(__file__).resolve().parents[2]
+RUNFIX3_RULE_IDS = tuple(f"RUNFIX3-R{index:02d}" for index in range(1, 11))
+RUNFIX3_RULE_RE = re.compile(r"^\d+\. \[(RUNFIX3-R\d{2})\] (.+\S)$")
+
+
+def normalize_markdown(text: str) -> str:
+    return " ".join(text.split()).lower()
+
+
+def extract_runfix3_hard_rules(text: str) -> dict[str, str]:
+    rules: dict[str, str] = {}
+    in_section = False
+    for raw_line in text.splitlines():
+        stripped = raw_line.strip()
+        if stripped == "## ATN council moderation hard rules":
+            in_section = True
+            continue
+        if in_section and stripped.startswith("## "):
+            break
+        match = RUNFIX3_RULE_RE.match(stripped)
+        if match:
+            rule_id, body = match.groups()
+            rules[rule_id] = normalize_markdown(body)
+    return rules
+
+
+def bundled_skill_text(name: str) -> str:
+    return read_bundled_skill_text(name)
+
+
+def test_bundled_hun_runfix3_002_normative_procedure_has_correct_owners() -> None:
+    moderator_text = bundled_skill_text("atn-moderator")
+    guide_text = (ROOT / "docs" / "09-skill-and-operator-guide.md").read_text(encoding="utf-8")
+    plugin_text = bundled_skill_text("atn-plugin")
+
+    assert "Canonical live-thread procedure owners for this topic:" in moderator_text
+    assert (
+        "For RUNFIX3 live-thread semantics, this guide and "
+        "`src/atn_plugin/bundled_skills/atn-moderator/SKILL.md` "
+        "are the normative procedure owners." in guide_text
+    )
+
+    moderator_rules = extract_runfix3_hard_rules(moderator_text)
+    guide_rules = extract_runfix3_hard_rules(guide_text)
+    assert tuple(moderator_rules) == RUNFIX3_RULE_IDS
+    assert tuple(guide_rules) == RUNFIX3_RULE_IDS
+    assert moderator_rules == guide_rules
+
+    assert (
+        "This skill is boundary/cross-link only for RUNFIX3 live-thread semantics." in plugin_text
+    )
+    mirror_epics = (ROOT / "docs" / "06-implementation-epics-tasks.md").read_text(encoding="utf-8")
+    mirror_sot = (ROOT / "docs" / "10-live-transport-sot.md").read_text(encoding="utf-8")
+    assert "Mirror-only status row" in mirror_epics
+    assert (
+        "this SOT section remains traceability/status only and must not become another "
+        "procedure owner." in mirror_sot
+    )
+
+    for rule_id in RUNFIX3_RULE_IDS:
+        assert rule_id not in plugin_text
+        assert rule_id not in mirror_epics
+        assert rule_id not in mirror_sot
+
+    for reference_path in sorted(
+        (ROOT / "src" / "atn_plugin" / "bundled_skills" / "atn-moderator" / "references").glob(
+            "*.md"
+        )
+    ):
+        reference_text = reference_path.read_text(encoding="utf-8")
+        assert "normative procedure owners" not in reference_text.lower()
+        assert not any(rule_id in reference_text for rule_id in RUNFIX3_RULE_IDS)
 
 
 def test_bundled_hun_skill_resource_is_import_safe_and_readable() -> None:
@@ -35,10 +107,10 @@ def test_bundled_hun_skill_resource_is_import_safe_and_readable() -> None:
     assert "atn_session_status" in text
     assert "ARGUE argument-graph support as static/fake/injected" in text
     assert "Participant response template" in text
-    assert "speaker_selected -> speech linkage" in text
-    assert "live_visible_thread" in text
-    assert "CLI actor speech only" in text
-    assert "Discord visible turns posted: N/expected" in text
+    assert "boundary/cross-link only" in text
+    assert "atn-moderator/SKILL.md" in text
+    assert "dry-run planner/doctor report only" in text
+    assert "selected_runner_pass` remains an evidence-derived label" in text
     assert "SKILL-2" in text
 
 
@@ -47,82 +119,37 @@ def test_bundled_hun_moderator_skill_ships_council_moderation_hard_rules() -> No
     moderator_text = read_bundled_skill_text("atn-moderator")
     guide_text = (ROOT / "docs" / "09-skill-and-operator-guide.md").read_text(encoding="utf-8")
 
-    assert (
-        "The packaged ATN moderator role skill owns the council moderation hard rules"
-        in plugin_text
-    )
+    assert "For RUNFIX3 live-thread semantics, the normative procedure owners are" in plugin_text
     assert "Do not predeclare or hard-code a complete live speaker order" not in plugin_text
 
     for text in [moderator_text, guide_text]:
         normalized = " ".join(text.split())
         assert "ATN council moderation hard rules" in normalized
-        assert "Do not predeclare or hard-code a complete live speaker order" in normalized
-        assert "`council.new`" in normalized
-        assert "`request_attendance`" in normalized
-        assert "terminal attendance records" in normalized
-        assert "`lock_agenda`" in normalized
-        assert "`prepare`" in normalized
-        assert "`ready` or `prepared_partial`" in normalized
-        assert "poll" in normalized
-        assert "hand-raise evaluation" in normalized
-        assert "justified daemon `speaker_selected` event" in normalized
-        assert "`relevance` as the default selection mode" in normalized
-        for selection_mode in ["`targeted`", "`random`", "`moderator_direct`", "`role_order`"]:
-            assert selection_mode in normalized
-        assert "Do not ban `role_order`" in normalized
-        assert "Discord/Hermes replies are not council state" in normalized
-        assert "typed daemon `speech` events" in normalized
-        assert "participant-style turn" in normalized
-        assert "cancel and restart" in normalized
-        assert "repair forward with a moderator intervention" in normalized
+        assert "[RUNFIX3-R##]" in normalized
 
-
-def test_bundled_hun_skills_split_start_blockers_from_runtime_evidence() -> None:
-    plugin_text = read_bundled_skill_text("atn-plugin")
-    moderator_text = read_bundled_skill_text("atn-moderator")
-    guide_text = (ROOT / "docs" / "09-skill-and-operator-guide.md").read_text(encoding="utf-8")
-    live_reference = (
-        ROOT
-        / "src"
-        / "atn_plugin"
-        / "bundled_skills"
-        / "atn-moderator"
-        / "references"
-        / "live-visible-preflight-and-council-new.md"
-    ).read_text(encoding="utf-8")
-    cross_team_reference = (
-        ROOT
-        / "src"
-        / "atn_plugin"
-        / "bundled_skills"
-        / "atn-moderator"
-        / "references"
-        / "cross-team-participant-preflight-evidence.md"
-    ).read_text(encoding="utf-8")
-
-    combined = "\n".join(
-        [plugin_text, moderator_text, guide_text, live_reference, cross_team_reference]
+    hard_rules = extract_runfix3_hard_rules(moderator_text)
+    assert tuple(hard_rules) == RUNFIX3_RULE_IDS
+    assert (
+        "do not predeclare or hard-code a complete live speaker order" in hard_rules["RUNFIX3-R01"]
     )
-    normalized = " ".join(combined.split())
-
-    for label in [
-        "`start_blocker`",
-        "`runtime_evidence_pending`",
-        "`final_acceptance_unproven`",
-    ]:
-        assert label in normalized
-
-    assert "Only `start_blocker` findings block `council.new`" in normalized
-    assert "do not automatically stop before `council.new`" in normalized
-    assert "Do not treat `atn_discussion_activation_plan.live_readiness=false`" in normalized
-    assert "selected-runner proof" in normalized
-    assert "participant runtime freshness" in normalized
-    assert "ARGUE relation counts" in normalized
-    assert "collect the probe before asking the user" in normalized
-    assert "Cross-team participants do not need full pilot-acceptance proof" in normalized
-    assert "do not ask for another approval; start the council" in normalized
-    assert "`ready_to_start` means the moderator should proceed to `council.new`" in normalized
-    assert "`ready_for_approval` is not the live-visible discussion start signal" in normalized
+    assert "`council.new`" in hard_rules["RUNFIX3-R02"]
+    assert "`request_attendance`" in hard_rules["RUNFIX3-R02"]
+    assert "justified daemon `speaker_selected` event" in hard_rules["RUNFIX3-R03"]
+    assert "`relevance` as the default selection mode" in hard_rules["RUNFIX3-R04"]
+    for selection_mode in ["`targeted`", "`random`", "`moderator_direct`", "`role_order`"]:
+        assert selection_mode in hard_rules["RUNFIX3-R04"]
+    assert "`chat_id:thread_id`" in hard_rules["RUNFIX3-R05"]
+    assert "operator hints only and never origin proof" in hard_rules["RUNFIX3-R05"]
+    assert "`max_discussion_turns + participant_count + 2`" in hard_rules["RUNFIX3-R06"]
+    assert "participant-to-participant dialogue" in hard_rules["RUNFIX3-R07"]
+    assert "operator-report summaries" in hard_rules["RUNFIX3-R07"]
+    assert "content and audit separate" in hard_rules["RUNFIX3-R08"]
+    assert (
+        "`selected_runner_pass` remains an evidence-derived label and stays false"
+        in hard_rules["RUNFIX3-R09"]
+    )
+    assert "repair forward" in hard_rules["RUNFIX3-R10"]
+    assert "close unresolved" in hard_rules["RUNFIX3-R10"]
 
 
 def test_bundled_hun_skills_define_runner_jsonl_framing_contract() -> None:

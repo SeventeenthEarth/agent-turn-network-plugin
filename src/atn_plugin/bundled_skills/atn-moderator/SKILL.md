@@ -16,7 +16,7 @@ Use this skill when you are the moderator/operator for an ATN council or live-vi
 
 ## Authority and boundary
 
-- Canonical ATN discussion/operator source: `atn-plugin/src/atn_plugin/bundled_skills/atn-plugin/SKILL.md`.
+- Canonical live-thread procedure owners for this topic: this skill and `agent-turn-network-plugin/docs/09-skill-and-operator-guide.md`. `src/atn_plugin/bundled_skills/atn-plugin/SKILL.md` is boundary/cross-link only for these live-thread semantics.
 - ATN control daemon remains lifecycle, event, stream, cursor, lock, and state authority.
 - Plugin tools are typed client surfaces. They must not own lifecycle state, logs, locks, consensus, cursors, idempotency, Discord state, or fallback discovery.
 - Discord/Hermes messages are visible/evidence surfaces only. They become council state only when backed by daemon-owned typed events.
@@ -30,31 +30,28 @@ Before `council.new` or any visible council run, separate preflight findings int
 2. `runtime_evidence_pending`: does not block `council.new`; collect it during attendance, preparation, poll/hand-raise, selected-runner, speech, visible delivery, and closeout.
 3. `final_acceptance_unproven`: does not block `council.new`; report it as a separated closeout label after the run.
 
-Discord-origin discussion requests default to `live_visible_thread`; artifact-only, transcript-only, export-only, or daemon CLI actor speech still requires explicit pre-session confirmation. If the user has asked for an ATN discussion and the live-visible start gate passes, do not ask for another approval; start the council. Do not silently downgrade a Discord request, but do not require final pilot-acceptance proof before starting the council. `ready_to_start` means the moderator should proceed to `council.new`; `ready_for_approval` is not the live-visible discussion start signal.
+Discord-origin discussion requests default to `live_visible_thread`; artifact-only, transcript-only, export-only, or daemon CLI actor speech still requires explicit pre-session confirmation. If the user has asked for an ATN discussion and the live-visible start gate passes, do not ask for another approval; start the council. For any Discord-origin live-visible run, bind the requested origin to the exact Discord target `chat_id:thread_id` before `council.new`. Display names, thread titles, channel labels, or prose references such as “the KLM thread” are operator hints only and never satisfy origin proof. Do not silently downgrade a Discord request, but do not require final pilot-acceptance proof before starting the council. `ready_to_start` means the moderator should proceed to `council.new`; `ready_for_approval` is not the live-visible discussion start signal.
 
 Only `start_blocker` findings block `council.new`. Treat these as start blockers:
-
 - daemon/protocol/tool surface is unavailable;
 - approved roster is missing, invalid, or has unresolved principals;
 - the selected moderator or required participants are absent from the loaded daemon registry and no unambiguous control-owned reconcile is available;
 - participant profile/plugin tool surface is explicitly unavailable;
-- target Discord surface is unspecified;
+- target Discord origin is unspecified or not proven as the exact requested `chat_id:thread_id`;
 - effective bot-to-bot or shared/default-author risk is positively detected and not approved;
 - proceeding requires provider/profile/gateway/auth/token mutation without explicit approval.
 
 Treat these as `runtime_evidence_pending`, not automatic start blockers, when the start gate otherwise passes:
-
 - subscriber presence, cursor ack freshness, heartbeat freshness;
 - attendance/preparation terminal evidence;
 - selected-runner readiness/prerequisites and selected-runner proof;
-- same-path per-turn visible author proof;
+- same-path per-turn visible author proof and per-turn delivery target match;
 - turn-posting and visible closeout proof when a non-mutating probe has not yet run.
 
 Treat these as `final_acceptance_unproven`, not start blockers:
-
 - `selected_runner_pass`, `visible_surface_pass`, `discussion_quality_pass`, and `fallback_profile_pass`;
 - ARGUE relation counts and discussion-quality proof;
-- visible turn count and real profile/gateway reply count.
+- expected visible turn count, participant closeout coverage, moderator synthesis coverage, and real profile/gateway reply count.
 
 When using `atn_discussion_activation_plan`, materialize collected evidence into planner input fields such as `participant_profiles[].effective_discord.tools_visible`, `participant_profiles[].effective_discord.bot_to_bot_enabled`, `discord_parent_channel.allow_list_inheritance_proven`, and `visible_surface_readiness`; prose notes or prior human knowledge do not count. If the planner returns `status: blocked`, classify each blocker before acting: only `start_blocker` blocks `council.new`; runtime and final-acceptance evidence gaps remain tracked evidence. Do not treat `atn_discussion_activation_plan.live_readiness=false` as a start blocker by itself because the planner is pure/local and never proves live readiness.
 
@@ -69,32 +66,18 @@ Use daemon-owned `atn_council_command` commands with caller-supplied `command_id
 
 ## ATN council moderation hard rules
 
-Council moderation hard rules.
+For any live ATN council, the moderator must preserve the daemon-governed council loop and the live-thread contract. These rules are hard guardrails for ATN moderator guidance; they do not authorize live daemon/runtime activation by themselves. The numbered `[RUNFIX3-R##]` rule set below must stay text-identical with `agent-turn-network-plugin/docs/09-skill-and-operator-guide.md`.
 
-For any live ATN council, the moderator must preserve the daemon-governed
-council loop. These rules are hard guardrails for ATN moderator guidance; they
-do not authorize live daemon/runtime activation by themselves.
-
-1. Do not predeclare or hard-code a complete live speaker order. A visible
-   discussion must not become a fixed-order Discord/Hermes debate transcript.
-2. Complete lifecycle prerequisites before turn discussion: `council.new`,
-   `request_attendance`, terminal attendance records for required participants,
-   `lock_agenda`, `prepare`, then `ready` or `prepared_partial` evidence.
-3. For each turn, open a `poll` or hand-raise evaluation, evaluate the current
-   hand raises, and record a justified daemon `speaker_selected` event before
-   any participant speech.
-4. Use `relevance` as the default selection mode. `targeted`, `random`,
-   `moderator_direct`, and `role_order` remain valid only as per-turn
-   `speaker_selected` selection modes with a reason; `role_order` also needs
-   bounded round evidence. Do not ban `role_order`, but never use it as a
-   predeclared full live debate order.
-5. Discord/Hermes replies are not council state. They become council speech only
-   when backed by typed daemon `speech` events.
-6. If the moderator has a substantive opinion, record it as a participant-style
-   turn rather than hiding it inside moderation text.
-7. If a fixed-order flow starts by mistake before any `speech` event exists,
-   cancel and restart. If `speech` already exists, repair forward with a
-   moderator intervention and do not rewrite history.
+1. [RUNFIX3-R01] Do not predeclare or hard-code a complete live speaker order. A visible discussion must not become a fixed-order Discord/Hermes debate transcript.
+2. [RUNFIX3-R02] Complete lifecycle prerequisites before turn discussion: `council.new`, `request_attendance`, terminal attendance records for required participants, `lock_agenda`, `prepare`, then `ready` or `prepared_partial` evidence.
+3. [RUNFIX3-R03] For each discussion turn, open a `poll` or hand-raise evaluation, evaluate the current hand raises, and record a justified daemon `speaker_selected` event before any participant speech.
+4. [RUNFIX3-R04] Use `relevance` as the default selection mode. `targeted`, `random`, `moderator_direct`, and `role_order` remain valid only as per-turn `speaker_selected` selection modes with a reason; `role_order` also needs bounded round evidence. Do not ban `role_order`, but never use it as a predeclared full live debate order.
+5. [RUNFIX3-R05] For a Discord-origin live-visible run, visible delivery must stay bound to the exact requested origin `chat_id:thread_id`. Display names, thread titles, channel labels, or prose such as “the KLM thread” are operator hints only and never origin proof.
+6. [RUNFIX3-R06] Expected visible turn count is `max_discussion_turns + participant_count + 2`: one moderator opening, `max_discussion_turns` selected participant discussion turns, one selected closeout turn per participant, and one moderator synthesis. Missing participant closeouts or a missing moderator synthesis are closeout failures/diagnostics, not permission to reinterpret the formula.
+7. [RUNFIX3-R07] Run the discussion as participant-to-participant dialogue. Moderator prompts should elicit direct participant engagement with prior claims rather than operator-report summaries or moderator-authored substitute turns.
+8. [RUNFIX3-R08] Keep content and audit separate. Visible prompt/speech text is discussion content only; event ids, delivery ids, cursors, runner ids, control metadata, and audit commentary stay in audit/evidence surfaces.
+9. [RUNFIX3-R09] `selected_runner_pass` remains an evidence-derived label and stays false when the selected runner fails and the session continues through `moderator_direct`, manual profile text, fallback profile text, or moderator reposting. Treat that downgrade as lifecycle/fallback evidence only until a later selected-runner success produces canonical linked speech.
+10. [RUNFIX3-R10] If fixed-order flow, topic drift, wrong-thread delivery, or control-metadata leakage is detected before any affected `speech`, cancel/restart the affected step or session. If canonical `speech` already exists, repair forward with an explicit moderator intervention when possible; if the contract cannot be restored, close unresolved rather than overclaim success.
 
 Minimum lifecycle before discussion turns:
 
@@ -105,16 +88,16 @@ Minimum lifecycle before discussion turns:
 5. `council.prepare`
 6. `council.ready` or `council.prepared_partial`
 
-For each turn:
+For each visible turn:
 
 1. Open a `council.poll` or evaluate explicit `council.hand_raise` entries.
 2. Select exactly one next speaker through daemon-controlled selection/grant path, preserving the `speaker_selected` event and cursor evidence.
-3. Do not predeclare or hard-code a complete live speaker order.
-4. Use `relevance` as the default speaker-selection mode. `targeted`, `random`, `moderator_direct`, and `role_order` are allowed only as per-turn choices with reasons; `role_order` also needs bounded round evidence and must never become a predeclared debate transcript.
-5. Ensure participant visible speech is submitted as canonical daemon `speech` using the selected participant path, then acknowledge the selected cursor only after successful submit.
-6. If the moderator has a substantive opinion, submit it as a participant-style speech turn rather than hiding it inside moderation prose.
-
-If a fixed-order flow starts by mistake before any `speech` event exists, cancel and restart. If `speech` already exists, repair forward with a moderator intervention and never rewrite history.
+3. Keep visible delivery bound to the exact approved `chat_id:thread_id` and the selected participant path when applicable.
+4. Do not predeclare or hard-code a complete live speaker order.
+5. Use `relevance` as the default speaker-selection mode. `targeted`, `random`, `moderator_direct`, and `role_order` are allowed only as per-turn choices with reasons; `role_order` also needs bounded round evidence and must never become a predeclared debate transcript.
+6. Ensure participant visible speech is submitted as canonical daemon `speech` using the selected participant path, then acknowledge the selected cursor only after successful submit.
+7. Keep visible message content free of audit/control ids and other non-content metadata.
+8. If the moderator has a substantive opinion, submit it as a participant-style speech turn rather than hiding it inside moderation prose.
 
 ## Runner stdout semantic framing contract
 
@@ -159,9 +142,13 @@ Final moderator closeout must separate:
 - `linked_speech_count`;
 - `stance_link_count`;
 - `new_axis_count`;
+- exact origin binding result for `chat_id:thread_id`;
+- expected versus posted visible turns using `max_discussion_turns + participant_count + 2`;
+- participant closeout coverage and moderator synthesis coverage;
 - Discord visible turns posted;
 - real profile/gateway replies;
 - shared/default author fallback status;
+- repair-forward actions taken, or the explicit unresolved closeout reason;
 - explicit non-scope such as production readiness or broad rollout.
 
-Do not equate transcript/export success with a visible Discord discussion. Use `atn_surface_render_projection` only to render explicit daemon/control projection rows into visible transcript and audit evidence; it is not lifecycle authority.
+Do not equate transcript/export success with a visible Discord discussion. If the selected runner failed and visible speech continued through fallback/manual/moderator paths, report lifecycle/fallback evidence only and leave `selected_runner_pass=false`. Use `atn_surface_render_projection` only to render explicit daemon/control projection rows into visible transcript and audit evidence; it is not lifecycle authority.

@@ -77,7 +77,7 @@ RUNFIX separates package installation from ATN discussion activation:
 
 1. **Plugin install/load** means the repository or package can be loaded by Hermes and its declared tools are visible in an approved profile. It does not prove daemon compatibility, participant runtime operation, visible Discord delivery, or live council readiness.
 2. **Discussion activation planning** means an operator has a dry-run plan that names the explicit control daemon/socket/config, participant profiles, selected Discord parent channel, eligible/excluded profiles, loaded daemon registry membership for the selected moderator/participants, any planned registry reconcile, planned config or allow-list changes, rollback, verification commands, and approval gates for mutation/apply scope.
-3. **Discussion activation apply** may occur only after explicit approval for the exact live-local mutation scope. It must not mutate provider/gateway/auth/token/profile/Discord state outside the approved plan. A Discord-origin user request to run an ATN discussion on an already approved/configured surface is the discussion-start authority; when the start gate passes, the planner status is `ready_to_start` and the moderator must not ask for a second approval before `council.new`.
+3. **Discussion activation apply** may occur only after explicit approval for the exact live-local mutation scope. It must not mutate provider/gateway/auth/token/profile/Discord state outside the approved plan. The RUNFIX3 live-thread start gate, output-mode handling, and second-approval policy are owned by `docs/09-skill-and-operator-guide.md` and `src/atn_plugin/bundled_skills/atn-moderator/SKILL.md`; this SOT records only the boundary that the surface must already be approved/configured before apply begins.
 4. **Live-local pilot acceptance** requires selected-speaker runner evidence, canonical `speech` linkage, visible-surface evidence, ARGUE quality diagnostics, and fallback disclosure. Lifecycle-only or manual profile fallback evidence is not enough. The visible surface is thread-preferred under the approved parent channel; if thread creation/posting is unsupported, the approved parent channel may be used directly only with an explicit `fallback_reason` in task brief, surface metadata, visible closeout, and final report.
 
 RUNFIX evidence labels are mandatory in operator reports:
@@ -139,23 +139,21 @@ RUNFIX2 cross-repo sequence and current local-proof status:
 
 RUNFIX3 records the 2026-06-25 KLM live Discord thread postmortem. The SOT is `17thHermes:40_outputs/team/macho/atn/2026-06-25-atn-live-visible-council-contract-hardening-sot.md`. The failed session `sess_klm_selected_runner_20260625T085557Z` is diagnostic-only evidence and must not be counted as a successful live-visible council.
 
-Plugin-owned RUNFIX3 work must harden operator guidance and evidence reporting for:
+Plugin-owned RUNFIX3 mirror tracks the ownership split and frozen contract only:
+- normative live-thread procedure ownership now lives in `src/atn_plugin/bundled_skills/atn-moderator/SKILL.md` and `docs/09-skill-and-operator-guide.md`;
+- `atn-plugin` remains boundary/cross-link only for this topic;
+- this SOT section remains traceability/status only and must not become another procedure owner.
 
-- exact origin Discord `chat_id:thread_id` binding rather than display-name target labels;
-- the lifecycle formula `max_discussion_turns + participant_count + 2` with moderator opening, selected participant discussion, participant closeouts, and moderator synthesis separated;
-- selected-runner proof versus `moderator_direct`, manual profile text, fallback profile text, or moderator reposting;
-- content-plane prompts separated from audit/control identifiers;
-- participant-to-participant dialogue mode instead of operator-report-style turns;
-- drift repair, intervention, or unresolved closeout when visible turns leave the requested topic or control-plane metadata leaks into speeches.
+Frozen contract reminder: `selected_runner_pass` remains an evidence-derived label, not a daemon `selection_mode`, selection policy, or feature toggle. Plugin guidance/schema work must consume the control-owned evidence contract rather than inventing control semantics. RUNFIX3-wide completion still requires the final closeout artifact `40_outputs/team/macho/atn/<date>-runfix3-final-live-visible-council-closeout.md` with bound-thread proof, per-turn daemon/runner/speech/delivery linkage, negative matrix results, Red/Orange/Gray review, 마초 Blue synthesis, and 주군 approval.
 
 RUNFIX3 task order and current status:
 
 | Global Order | Repo | Task ID | Status | Plugin-owned acceptance |
 |---:|---|---|---|---|
 | 1 | cross-repo | RUNFIX3-001 | completed | Docs-only SOT and roadmap lock accepted after Red/Orange/Gray review and Blue synthesis. It records the KLM live-thread failure as diagnostic-only and defines the follow-up task split; no runtime mutation or live readiness claim. |
-| 2 | plugin | RUNFIX3-002 | planned | Harden packaged moderator/operator guidance for exact thread binding, lifecycle turn formula, selected-runner downgrade approval, dialogue mode, content/audit separation, and drift repair/unresolved closeout. |
-| 3 | plugin | RUNFIX3-003 | planned | Add planner/schema/operator-evidence axes for origin binding equality, visible-turn counts, participant closeouts, moderator synthesis, delivery target match, prompt envelope, dialogue-mode diagnostics, and drift diagnostics. |
-| 4 | control | RUNFIX3-004 | planned | Control-owned diagnostics/enforcement follow-up. Plugin records dependency only. |
+| 2 | plugin | RUNFIX3-002 | implementation_complete/review_pending | Mirror-only status row for the current RUNFIX3-002 implementation: normative live-thread procedure ownership stays in `src/atn_plugin/bundled_skills/atn-moderator/SKILL.md` and `docs/09-skill-and-operator-guide.md`, while `atn-plugin` stays boundary/cross-link only and this SOT row stays traceability-only. Verification, tests/guardrails, and evidence remain bounded to plugin-owned guidance work without adding planner/schema/runtime fields or control enforcement semantics. Fixed minimum plugin gates have passed, and cross-repo status mirrors now align on implementation-complete / re-review-pending state pending focused reviewer acceptance. |
+| 3 | plugin | RUNFIX3-003 | planned | Add planner/schema/operator-evidence axes against the frozen control evidence contract for origin binding equality, visible-turn counts, participant closeouts, moderator synthesis, delivery target match, prompt envelope, dialogue-mode diagnostics, drift diagnostics, and negative fail-closed reporting. Fixed minimum gates include plugin docs guardrails, core contract, test-prepare, test-unit unless explicitly waived, focused planner/schema/handler/core/diagnostic/surface tests, Red/Orange/Gray review, and Blue synthesis. |
+| 4 | control | RUNFIX3-004 | planned | Control-owned diagnostics/enforcement follow-up against the frozen evidence-label policy. Plugin records dependency only and must not treat control diagnostics as plugin-owned readiness proof. |
 
 
 ### Profile and Discord eligibility policy
@@ -164,11 +162,7 @@ ATN discussion channels are bot-to-bot-free by default. A profile whose effectiv
 
 A parent-channel allow-list is preferred so new discussion threads do not require per-thread reconfiguration or gateway restart. Visible pilots should use a dedicated thread under the approved parent channel first. If thread creation or thread posting is unsupported, 주군 approves direct parent-channel use as the fallback surface, but the fallback must be explicit in the task brief, ATN surface metadata, visible closeout, and final report. Parent-channel fallback must not be reported as no-restart thread readiness, selected-speaker runner success, or live readiness by itself.
 
-Discord-origin council requests default to live visible thread output. Unless the operator explicitly confirms `artifact_only`, `daemon_cli_actor_speech`, transcript-only, or export-only mode before `council.new`, bootstrap/preflight must classify findings before session creation. If the user has asked for the ATN discussion and the start gate passes, do not ask for another approval; start the council. Only true start blockers stop `council.new`: unavailable daemon/protocol/tool surface, invalid or unresolved roster/registry principals without unambiguous reconcile, explicitly unavailable profile/plugin tool surface, missing target Discord surface, positively detected unapproved bot-to-bot/shared-default-author risk, or required profile/provider/gateway/auth/token mutation without approval. Missing selected-runner proof, participant runtime freshness, same-path per-turn author linkage, visible turn counts, ARGUE relation counts, or discussion-quality proof are runtime/final-acceptance evidence gaps, not automatic start blockers; they must be tracked and reported separately instead of silently running daemon CLI actor speech and later reporting transcript/export artifacts as a visible discussion.
-
-Daemon registry membership is separate from profile and Discord eligibility. Before `council.new`, the selected moderator and every participant must be present/enabled in the loaded daemon registry, or the activation plan must identify an unambiguous control-owned registry reconcile for the exact approved roster. Discord allow-list membership, visible-author probes, profile gateway status, and plugin tool visibility do not imply daemon principal authority. Registry membership persists after the council; subscription, heartbeat, cursor ack, attendance, preparation, and selected-runner readiness remain session-scoped runtime gates.
-
-Final council reports must separate lifecycle success from visible UX: `ATN lifecycle finalized`, `Discord visible turns posted: N/expected`, `real profile/gateway replies`, and `CLI actor speech only` are separate fields. Transcript/export success alone is artifact evidence, not proof that the Discord thread saw the turn-by-turn discussion.
+Current RUNFIX3 live-thread operator procedure lives in `docs/09-skill-and-operator-guide.md` and `src/atn_plugin/bundled_skills/atn-moderator/SKILL.md`. This SOT records only the mirrored boundary outcome: the surface must already be approved/configured, daemon registry membership remains separate from profile/Discord readiness, and final reports must still separate lifecycle success from visible UX (`ATN lifecycle finalized`, `Discord visible turns posted: N/expected`, `real profile/gateway replies`, `CLI actor speech only`). Transcript/export success alone is artifact evidence, not proof that the Discord thread saw the turn-by-turn discussion.
 
 ### Fallback disclosure policy
 
@@ -403,7 +397,7 @@ atn-control council new "<topic>" \
   --moderator <main-agent-id> \
   --surface discord-thread \
   --thread-id <surface-thread-id> \
-  --turn-mode role_order
+  --turn-mode relevance
 ```
 
 3. Announce `session_id`, topic, participants, and control policy to the visible surface.
@@ -454,8 +448,7 @@ Main agent grants floor:
 ```bash
 atn-control council grant <session_id> \
   --to <participant-id> \
-  --mode role_order \
-  --round <round-number> \
+  --mode relevance \
   --reason "<why this participant should speak now>"
 ```
 

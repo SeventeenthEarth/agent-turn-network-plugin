@@ -85,34 +85,18 @@ Accepted planned reconcile evidence needs at least: `principal`, `in_loaded_regi
 
 ## ATN council moderation hard rules
 
-Council moderation hard rules.
+For RUNFIX3 live-thread semantics, this guide and `src/atn_plugin/bundled_skills/atn-moderator/SKILL.md` are the normative procedure owners. `src/atn_plugin/bundled_skills/atn-plugin/SKILL.md`, `docs/06-implementation-epics-tasks.md`, and `docs/10-live-transport-sot.md` remain boundary/mirror surfaces for this topic. For any live ATN council, operator guidance must keep the discussion lifecycle-first, per-turn selected, daemon-event authoritative, and bound to the requested live thread. These rules do not authorize live daemon/runtime activation, Discord delivery, profile mutation, or live readiness by themselves. The numbered `[RUNFIX3-R##]` rule set below must stay text-identical with `src/atn_plugin/bundled_skills/atn-moderator/SKILL.md`.
 
-For any live ATN council, operator guidance must keep the discussion
-lifecycle-first, per-turn selected, and daemon-event authoritative. These rules
-do not authorize live daemon/runtime activation, Discord delivery, profile
-mutation, or live readiness by themselves.
-
-1. Do not predeclare or hard-code a complete live speaker order. A Discord or
-   Hermes-visible council must not be run as a fixed-order simulated debate.
-2. Complete lifecycle prerequisites before turn discussion: `council.new`,
-   `request_attendance`, terminal attendance records for required participants,
-   `lock_agenda`, `prepare`, then `ready` or `prepared_partial` evidence.
-3. For each turn, open a `poll` or hand-raise evaluation, evaluate current hand
-   raises, and record a justified daemon `speaker_selected` event before
-   participant speech.
-4. Use `relevance` as the default selection mode. `targeted`, `random`,
-   `moderator_direct`, and `role_order` are allowed only as per-turn
-   `speaker_selected` modes with a reason; `role_order` also needs bounded round
-   evidence. Do not ban `role_order`, but never use it as a predeclared full
-   live debate order.
-5. Discord/Hermes replies are not council state. They become council speech only
-   when backed by typed daemon `speech` events.
-6. Moderator substantive opinions must be recorded as participant-style turns,
-   not hidden in moderation text.
-7. If a fixed-order flow starts by mistake before any `speech` event exists,
-   cancel and restart. If `speech` already exists, repair forward with a
-   moderator intervention and do not rewrite history.
-
+1. [RUNFIX3-R01] Do not predeclare or hard-code a complete live speaker order. A visible discussion must not become a fixed-order Discord/Hermes debate transcript.
+2. [RUNFIX3-R02] Complete lifecycle prerequisites before turn discussion: `council.new`, `request_attendance`, terminal attendance records for required participants, `lock_agenda`, `prepare`, then `ready` or `prepared_partial` evidence.
+3. [RUNFIX3-R03] For each discussion turn, open a `poll` or hand-raise evaluation, evaluate the current hand raises, and record a justified daemon `speaker_selected` event before any participant speech.
+4. [RUNFIX3-R04] Use `relevance` as the default selection mode. `targeted`, `random`, `moderator_direct`, and `role_order` remain valid only as per-turn `speaker_selected` selection modes with a reason; `role_order` also needs bounded round evidence. Do not ban `role_order`, but never use it as a predeclared full live debate order.
+5. [RUNFIX3-R05] For a Discord-origin live-visible run, visible delivery must stay bound to the exact requested origin `chat_id:thread_id`. Display names, thread titles, channel labels, or prose such as “the KLM thread” are operator hints only and never origin proof.
+6. [RUNFIX3-R06] Expected visible turn count is `max_discussion_turns + participant_count + 2`: one moderator opening, `max_discussion_turns` selected participant discussion turns, one selected closeout turn per participant, and one moderator synthesis. Missing participant closeouts or a missing moderator synthesis are closeout failures/diagnostics, not permission to reinterpret the formula.
+7. [RUNFIX3-R07] Run the discussion as participant-to-participant dialogue. Moderator prompts should elicit direct participant engagement with prior claims rather than operator-report summaries or moderator-authored substitute turns.
+8. [RUNFIX3-R08] Keep content and audit separate. Visible prompt/speech text is discussion content only; event ids, delivery ids, cursors, runner ids, control metadata, and audit commentary stay in audit/evidence surfaces.
+9. [RUNFIX3-R09] `selected_runner_pass` remains an evidence-derived label and stays false when the selected runner fails and the session continues through `moderator_direct`, manual profile text, fallback profile text, or moderator reposting. Treat that downgrade as lifecycle/fallback evidence only until a later selected-runner success produces canonical linked speech.
+10. [RUNFIX3-R10] If fixed-order flow, topic drift, wrong-thread delivery, or control-metadata leakage is detected before any affected `speech`, cancel/restart the affected step or session. If canonical `speech` already exists, repair forward with an explicit moderator intervention when possible; if the contract cannot be restored, close unresolved rather than overclaim success.
 ## ARGUE relation-aware response guidance
 
 ARGUE relation evidence is the structured link between visible participant speech
@@ -245,11 +229,11 @@ present.
 주유's 2026-06-19 rename-council handoff is registered as `RUNFIX-014` through `RUNFIX-017`. `control/RUNFIX-014` and `plugin/RUNFIX-015` have local implementation proof. `control/RUNFIX-016` has local implementation proof under KAH run `run-20260619T083649Z-d10e1f5cc20b` and local commit `9c15d22`. `plugin/RUNFIX-017` has local implementation proof under KAH run `run-20260619T101255Z-189d01ba8b8f` after official color review, Blue synthesis, and final KAH gate. Operators must treat the following as local proof, implementation-candidate evidence, or required planning/acceptance boundaries, not completed runtime capability:
 
 1. `control/RUNFIX-014` selected-runner accounting: control KAH run `run-20260619T051710Z-8e1f6efb61ec` provides local implementation proof that a run with `runner_invocation_failed` followed by later fallback/manual canonical `speech` is lifecycle/fallback evidence, not `selected_runner_pass`. Reports must consume the control accounting labels and expose runner started/succeeded/failed counts plus fallback/manual harness flags.
-2. `plugin/RUNFIX-015` visible author guard: plugin KAH run `run-20260619T071526Z-7d2ba33b07d5` adds local `atn_discussion_activation_plan` proof for pre-`council.new` visible-author validation. Explicit caller-provided same-path probes must prove each selected participant posts as the expected profile author. Evidence includes `profile`, expected author source (`registry_snapshot` or approved profile-author map), observed bot/user, `source_env`, `posting_path`, shared/default negative proof, shared-default-then-profile-local env precedence, per-turn Discord message id, selected member, profile author id, and `speech_event_id`. Shared/default or unexpected authors fail closed; the planner does not perform live Discord delivery or runtime/profile/provider/gateway/auth/token/model mutation.
+2. `plugin/RUNFIX-015` visible author guard: plugin KAH run `run-20260619T071526Z-7d2ba33b07d5` adds local `atn_discussion_activation_plan` proof for pre-`council.new` visible-author validation. Explicit caller-provided same-path probes must prove each selected participant posts as the expected profile author. Evidence includes `profile`, expected author source (`registry_snapshot` or approved profile-author map), observed bot/user, `source_env`, `posting_path`, shared/default negative proof, shared-default-then-profile-local env precedence, per-turn Discord message id, selected member, profile author id, and `speech_event_id`.
 3. `control/RUNFIX-016` summary robustness: KAH run `run-20260619T083649Z-d10e1f5cc20b` has local implementation proof that closeout/summary tooling tolerates `payload.plugin_evidence`, dict/list `payload.evidence`, and missing optional evidence. A finalized lifecycle must not look failed because optional evidence has an alternate shape; this remains fail-closed local proof evidence only, not runtime readiness.
 4. `plugin/RUNFIX-017` ARGUE quality-required prompts: non-opening quality-required speeches with sufficient local context must link to caller-provided prior targets through valid `stance_links[]` or justify `contribution_type: "new_axis"` with `new_axis_reason`; prompts should provide compact prior claim graph targets; explicit `discussion_quality` evidence is required for the quality gate; in `quality_required`, the first orphan non-opening speech blocks `discussion_quality_pass`; warning-only behavior is reserved for `quality_warn`, and repeated-orphan counts remain diagnostic evidence.
 
-Final reports must keep these fields separate: `lifecycle_pass`, `selected_runner_pass`, `visible_surface_pass`, `fallback_profile_pass`, `discussion_quality_pass`, `orphan_speech_count`, `linked_speech_count`, `stance_link_count`, `new_axis_count`, Discord visible turns posted, real profile/gateway replies, and shared/default author fallback status.
+Final reports must keep these fields separate: `lifecycle_pass`, `selected_runner_pass`, `visible_surface_pass`, `fallback_profile_pass`, `discussion_quality_pass`, `orphan_speech_count`, `linked_speech_count`, `stance_link_count`, `new_axis_count`, exact origin `chat_id:thread_id` binding result, expected/posted visible turns by `max_discussion_turns + participant_count + 2`, participant closeout coverage, moderator synthesis coverage, Discord visible turns posted, real profile/gateway replies, shared/default author fallback status, and repair-forward versus unresolved closeout outcome.
 
 ## RUNFIX activation guidance
 
@@ -259,49 +243,32 @@ Final reports must keep these fields separate: `lifecycle_pass`, `selected_runne
 - Discussion activation requires an explicit dry-run plan before any apply step. The `atn_discussion_activation_plan` tool can build the planner/doctor report from caller-provided evidence: control daemon/socket/config evidence, participant profile list, selected Discord parent channel, effective Discord profile eligibility, planned allow-list/config changes, rollback, smoke commands, and approval boundary.
 - Profiles with effective bot-to-bot enabled Discord behavior are excluded from ATN discussion allow-lists by default. Report every excluded profile and reason/remediation; `allow_list_targets` must include eligible profiles only.
 - Visible-pilot surface policy is thread-preferred and parent-channel fallback allowed. Create or use a dedicated thread under the approved parent channel first. If thread creation/posting is unsupported, use the approved parent channel directly as a fallback, but record `fallback_reason` in the task brief, ATN surface metadata, visible closeout, and final report. Parent-channel fallback is not no-restart thread readiness, and manual participant messages remain diagnostic-only unless canonical ATN event linkage is also proven.
-- Discord-origin council requests default to `live_visible_thread` output. Do not silently satisfy a Discord thread request with artifact-only daemon CLI actor speech. If the operator explicitly asks for `artifact_only`, `daemon_cli_actor_speech`, or transcript/export-only output, record that confirmation before `council.new`; otherwise classify preflight findings before session creation. When the user has already asked for the ATN discussion and the start gate passes, do not ask for another approval; start the council.
+- Discord-origin council requests default to `live_visible_thread` output. Bind that request to the exact origin `chat_id:thread_id`; display-name labels do not satisfy proof. If the operator explicitly asks for `artifact_only`, `daemon_cli_actor_speech`, or transcript/export-only output, record that confirmation before `council.new`; otherwise classify preflight findings before session creation. When the user has already asked for the ATN discussion and the start gate passes, do not ask for another approval; start the council.
 - Use three preflight categories. `start_blocker` blocks `council.new`; `runtime_evidence_pending` is collected during attendance, preparation, selected-runner, speech, delivery, and closeout; `final_acceptance_unproven` is reported as separated closeout labels. Only `start_blocker` findings block `council.new`.
-- `start_blocker` findings are unavailable daemon/protocol/tool surface, missing or invalid roster, unresolved registry principals with no unambiguous control-owned reconcile, explicitly unavailable profile/plugin tool surface, missing target Discord surface, positively detected bot-to-bot or shared/default-author risk without approval, or unapproved provider/profile/gateway/auth/token mutation.
-- Missing selected-runner proof, participant runtime freshness, same-path per-turn author linkage, visible turn counts, ARGUE relation counts, and discussion-quality proof are not automatic start blockers. Track them as `runtime_evidence_pending` or `final_acceptance_unproven`, then report them separately at closeout.
-- Before starting a live visible council, collect non-mutating probes when feasible: bound thread or approved parent-channel fallback with `fallback_reason`, turn-posting probe for the selected-speaker/profile-send path or approved fallback poster, visible closeout probe, `real_profile_gateway_replies: true`, and `cli_actor_speech_only: false`. If these are missing because no probe has been run yet, collect the probe before asking the user; if collecting it requires profile/provider/gateway/auth/token mutation, stop for approval.
-- For `plugin/RUNFIX-012`, `participant_runtime_readiness` from `control/RUNFIX-011` diagnostics remains explicit evidence. Required classes are control task/status/evidence ref, subscriber presence, cursor ack freshness, heartbeat freshness, attendance and preparation terminal evidence, selected-runner readiness/prerequisites, and visible-surface proof as a separate evidence class; missing classes are runtime/acceptance evidence gaps unless they also prove a `start_blocker`.
-- Gateway liveness, transcript/export artifacts, parent-channel fallback alone, and manual/fallback profile text are diagnostics only. They must not be substituted for participant runtime readiness, selected-runner proof, visible-surface proof, `live_readiness`, or production readiness.
-- Fallback/manual participant messages may be useful diagnostic evidence, but they must be labeled `fallback_profile_pass` and must not be reported as selected-speaker runner success or ATN live discussion readiness.
+- `start_blocker` findings are unavailable daemon/protocol/tool surface, missing or invalid roster, unresolved registry principals with no unambiguous control-owned reconcile, explicitly unavailable profile/plugin tool surface, missing exact Discord origin proof, positively detected bot-to-bot or shared/default-author risk without approval, or unapproved provider/profile/gateway/auth/token mutation.
+- Missing selected-runner proof, participant runtime freshness, same-path per-turn author linkage, delivery target match, visible turn counts, ARGUE relation counts, participant closeouts, moderator synthesis, or discussion-quality proof are not automatic start blockers. Track them as `runtime_evidence_pending` or `final_acceptance_unproven`, then report them separately at closeout.
+- Before starting a live visible council, collect non-mutating probes when feasible: exact thread binding, or approved parent-channel fallback with `fallback_reason`, turn-posting probe for the selected-speaker/profile-send path or approved fallback poster, visible closeout probe, `real_profile_gateway_replies: true`, and `cli_actor_speech_only: false`. If these are missing because no probe has been run yet, collect the probe before asking the user; if collecting it requires profile/provider/gateway/auth/token mutation, stop for approval.
+- Gateway liveness, transcript/export artifacts, parent-channel fallback alone, and manual/fallback profile text are diagnostics only. They must not be substituted for participant runtime readiness, selected-runner proof, visible-surface proof, exact origin proof, `live_readiness`, or production readiness.
+- Fallback/manual participant messages may be useful diagnostic evidence, but they must be labeled `fallback_profile_pass` and must not be reported as selected-speaker runner success or ATN live discussion readiness. A selected-runner downgrade is diagnostic/fallback only and does not claim `selected_runner_pass`.
 - `atn_discussion_activation_plan` always keeps `live_readiness: false`; it must not read env vars, inspect current Hermes/Discord/profile/gateway state, open sockets, shell out, start daemons, mutate profiles/gateway/Discord/auth/token/provider/model settings, or infer readiness from missing evidence. Do not treat `atn_discussion_activation_plan.live_readiness=false` as a `council.new` blocker by itself. If the planner returns `status: blocked`, do not automatically stop before `council.new`; classify each blocker first.
+- Minimum live-local acceptance evidence remains evidence-gated and includes: `runner_invocation_started` from `speaker_selected`, selected-runner submitted canonical `speech` linkage, visible-surface evidence, ARGUE relation counts/diagnostics, eligible-profile-only allow-list evidence, the exact origin `chat_id:thread_id`, expected/posted visible turns by `max_discussion_turns + participant_count + 2`, participant closeouts, moderator synthesis, and explicit no-claim language for production activation. These labels gate acceptance/live-readiness claims, not the basic `council.new` start gate or a second approval prompt. Durable runner failure is a terminal-failure diagnostic and blocks `selected_runner_pass` / live-readiness claims unless a later task explicitly proves a new selected-runner success path.
+- Visible turns must remain participant-to-participant dialogue, and visible prompt/speech content must stay separated from audit/control identifiers. If drift or metadata leakage cannot be repaired forward after canonical speech exists, close unresolved rather than reporting a normal successful closeout.
 
-Minimum live-local acceptance evidence remains evidence-gated and includes: `runner_invocation_started` from `speaker_selected`, selected-runner submitted canonical `speech` linkage, visible-surface evidence, ARGUE relation counts/diagnostics, eligible-profile-only allow-list evidence, and explicit no-claim language for production activation. These labels gate acceptance/live-readiness claims, not the basic `council.new` start gate or a second approval prompt. Durable runner failure is a terminal-failure diagnostic and blocks `selected_runner_pass` / live-readiness claims unless a later task explicitly proves a new selected-runner success path.
+For `plugin/RUNFIX-008`, `atn_discussion_activation_plan` also exposes an `operator_evidence_report` from explicit caller-provided `operator_evidence` only:
 
-For `plugin/RUNFIX-008`, `atn_discussion_activation_plan` also exposes an
-`operator_evidence_report` from explicit caller-provided `operator_evidence`
-only:
+- `runner_evidence`: selected member, `speaker_selected` event id, `runner_invocation_started_ref`, and any durable runner failure evidence;
+- `canonical_speaker_selected_to_speech`: canonical `speaker_selected -> speech` linkage with matching selected member;
+- `participant_response`: `speech`, `claims[]`, `stance_links[]`, `contribution_type`, `new_axis_reason`, and optional `evidence[]`;
+- `argue_counts`: speech presence plus counts for `claims[]`, `stance_links[]`, `new_axis`, optional `evidence[]`, and contribution types;
+- `fallback_disclosure`: `fallback_profile_pass` is diagnostic-only, `full_atn_success` remains false, and missing evidence must be named.
 
-- `runner_evidence`: selected member, `speaker_selected` event id,
-  `runner_invocation_started_ref`, and any durable runner failure evidence;
-- `canonical_speaker_selected_to_speech`: canonical
-  `speaker_selected -> speech` linkage with matching selected member;
-- `participant_response`: `speech`, `claims[]`, `stance_links[]`,
-  `contribution_type`, `new_axis_reason`, and optional `evidence[]`;
-- `argue_counts`: speech presence plus counts for `claims[]`,
-  `stance_links[]`, `new_axis`, optional `evidence[]`, and contribution types;
-- `fallback_disclosure`: `fallback_profile_pass` is diagnostic-only,
-  `full_kan_success` remains false, and missing evidence must be named.
+For `plugin/RUNFIX-010`, the report also separates live-visible UX from daemon evidence:
 
-For `plugin/RUNFIX-010`, the report also separates live-visible UX from daemon
-evidence:
+- `requested_output_mode`: Discord-origin requests default to `live_visible_thread` unless explicitly confirmed as `artifact_only` or `daemon_cli_actor_speech` before session creation;
+- `visible_surface_readiness_report`: exact origin binding result, surface binding, turn delivery probe, visible closeout probe, real profile/gateway replies, CLI-actor-only status, and expected/posted turn counts;
+- `final_report_contract`: final reports must separately state `ATN lifecycle finalized`, `Discord visible turns posted: N/expected`, `real profile/gateway replies`, `CLI actor speech only`, participant closeout coverage, moderator synthesis coverage, and repair-forward versus unresolved closeout.
 
-- `requested_output_mode`: Discord-origin requests default to
-  `live_visible_thread` unless explicitly confirmed as `artifact_only` or
-  `daemon_cli_actor_speech` before session creation;
-- `visible_surface_readiness_report`: surface binding, turn delivery probe,
-  visible closeout probe, real profile/gateway replies, CLI-actor-only status,
-  and expected/posted turn counts;
-- `final_report_contract`: final reports must separately state
-  `ATN lifecycle finalized`, `Discord visible turns posted: N/expected`,
-  `real profile/gateway replies`, and `CLI actor speech only`.
-
-Missing or ambiguous runner, ARGUE, or canonical-link evidence remains
-`unproven`/`blocked`. Manual/fallback profile text can explain a blocker, but it
-is never selected-runner success, discussion-quality success, or live readiness.
+Missing or ambiguous runner, ARGUE, canonical-link, or origin-binding evidence remains `unproven`/`blocked`. Manual/fallback profile text can explain a blocker, but it is never selected-runner success, discussion-quality success, or live readiness.
 
 For `plugin/RUNFIX-012`, the report adds
 `participant_runtime_readiness_report` from explicit caller-provided

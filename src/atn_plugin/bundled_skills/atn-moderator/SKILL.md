@@ -1,22 +1,22 @@
 ---
-name: hun-moderator
-description: "Use when acting as a HUN council moderator/operator: create and advance daemon-owned council lifecycle, select speakers, enforce visible-surface and ARGUE quality gates, and report evidence without substituting Discord/Hermes chat for council state."
+name: atn-moderator
+description: "Use when acting as a ATN council moderator/operator: create and advance daemon-owned council lifecycle, select speakers, enforce visible-surface and ARGUE quality gates, and report evidence without substituting Discord/Hermes chat for council state."
 version: 0.1.0
 author: 17번째 지구 Kkachi
 license: MIT
 metadata:
   hermes:
-    tags: [hun, Hermes Unified Network, moderator, council, live-visible, argue]
-    related_skills: [hun-plugin]
+    tags: [atn, Agent Turn Network, moderator, council, live-visible, argue]
+    related_skills: [atn-plugin]
 ---
 
 # ATN Moderator Skill
 
-Use this skill when you are the moderator/operator for an ATN council or live-visible discussion. Public docs refer to the ATN skill names `atn-moderator` and `atn-plugin`; ATN-005 still owns the checked-in bundled skill id/path rename, so this packaged resource remains under the current `hun-*` source paths until that task lands.
+Use this skill when you are the moderator/operator for an ATN council or live-visible discussion. Public docs and checked-in bundled skill resources now use the ATN skill names `atn-moderator` and `atn-plugin`.
 
 ## Authority and boundary
 
-- Canonical ATN discussion/operator source: `hermes-unified-network-plugin/src/hermes_unified_network_plugin/bundled_skills/hun-plugin/SKILL.md`.
+- Canonical ATN discussion/operator source: `atn-plugin/src/atn_plugin/bundled_skills/atn-plugin/SKILL.md`.
 - ATN control daemon remains lifecycle, event, stream, cursor, lock, and state authority.
 - Plugin tools are typed client surfaces. They must not own lifecycle state, logs, locks, consensus, cursors, idempotency, Discord state, or fallback discovery.
 - Discord/Hermes messages are visible/evidence surfaces only. They become council state only when backed by daemon-owned typed events.

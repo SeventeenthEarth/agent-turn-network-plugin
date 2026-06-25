@@ -2,15 +2,15 @@
 
 ## Scope
 
-The packaged ATN operator skills and local compatibility matrix remain the operator-facing guide for this repository. Public docs now use the ATN skill names `atn-plugin`, `atn-moderator`, and `atn-participant`, while ATN-005 still owns the checked-in packaged skill id/path rename. Until ATN-005 lands, the bundled source remains inside the Python package:
+The packaged ATN operator skills and local compatibility matrix remain the operator-facing guide for this repository. The bundled source now lives inside the Python package:
 
 ```text
-src/hermes_unified_network_plugin/bundled_skills/hun-plugin/SKILL.md
-src/hermes_unified_network_plugin/bundled_skills/hun-moderator/SKILL.md
-src/hermes_unified_network_plugin/bundled_skills/hun-participant/SKILL.md
+src/atn_plugin/bundled_skills/atn-plugin/SKILL.md
+src/atn_plugin/bundled_skills/atn-moderator/SKILL.md
+src/atn_plugin/bundled_skills/atn-participant/SKILL.md
 ```
 
-The package exposes import-safe resource helpers and the public ATN operator guidance. Canonical plugin-qualified activation and the checked-in bundled resource ids remain aligned by ATN-005; until then, the bundled source remains canonical and profile-local flat copies are not required.
+The package exposes import-safe resource helpers and the public ATN operator guidance. The bundled source is canonical and profile-local flat copies are not required.
 
 This guide does not enable a live plugin, contact a daemon, modify the sibling
 control repo, or prove production activation, live plugin readiness, or live
@@ -336,7 +336,7 @@ fixture. It is not a live profile mutation.
 Recommended inspection path:
 
 ```python
-from hermes_unified_network_plugin.bundled_skills import read_bundled_skill_text
+from atn_plugin.bundled_skills import read_bundled_skill_text
 
 skill_text = read_bundled_skill_text("atn-plugin")
 ```
@@ -394,7 +394,7 @@ gateway config, sockets, or localhost services as part of SKILL-2 rollback.
 | ARGUE fields are dropped or inferred from legacy pointers | Contract drift or hidden state inference | Preserve explicit argument-graph fields verbatim and treat `responds_to_event_id` as display-only; do not infer state from Discord/Hermes order. |
 | ARGUE support is described as runtime scoring or live pilot readiness | Scope overclaim | Keep local ARGUE schema/tool coverage and local visible relation rendering bounded to fake/injected fixtures and evidence display; runtime validation/scoring, live Discord, production activation, and live-local pilot readiness require separate explicit approval and evidence. |
 | A handler tries localhost, a socket, CLI, gateway, auth, token, Discord, or KAB | No-live boundary violation | Fail closed and remove the fallback; default checks must use explicit fake/injected dependencies only. |
-| Root plugin load fails with `No module named 'hermes_unified_network_plugin'` | The directory entrypoint is not bootstrapping its bundled `src/` package path | Restore the root entrypoint path bootstrap and rerun `make check-plugin-load-smoke`; do not require operators to supply external `PYTHONPATH`. |
+| Root plugin load fails with `No module named 'atn_plugin'` | The directory entrypoint is not bootstrapping its bundled `src/` package path | Restore the root entrypoint path bootstrap and rerun `make check-plugin-load-smoke`; do not require operators to supply external `PYTHONPATH`. |
 | Hermes Python 3.11 reports `invalid syntax` in package modules | Python 3.12-only syntax drift | Keep package/tooling metadata at Python `>=3.11`, avoid PEP 695 `type` aliases, and rerun the Python 3.11 syntax compatibility unit test. |
 | Local isolated plugin-load smoke fails | Manifest, entrypoint, packaging, bundled skill, or fail-closed handler drift | Run `make check-plugin-load-smoke`, inspect the first mismatch, and restore exact tool order, zero hooks, zero commands, package inclusion, or handler JSON-string fail-closed behavior. |
 | Live plugin-load readiness is requested | Out of SKILL-2 scope | Do not upgrade local isolated plugin-load smoke into a live Hermes/plugin/KAB readiness claim. |

@@ -5,8 +5,8 @@ import math
 
 import pytest
 
-from hermes_unified_network_plugin.client import DaemonClient, StaticDaemonTransport
-from hermes_unified_network_plugin.protocol import (
+from atn_plugin.client import DaemonClient, StaticDaemonTransport
+from atn_plugin.protocol import (
     COMMAND_ENVELOPE_VERSION,
     SUPPORTED_PROTOCOL_VERSION,
     CommandEnvelope,
@@ -30,17 +30,17 @@ def test_command_envelope_serialization_is_canonical_and_idempotency_ready() -> 
         "request_id": "req-001",
         "idempotency_key": "idem-001",
         "client_metadata": {
-            "name": "hermes-unified-network-plugin",
+            "name": "atn-plugin",
             "version": "0.1.0",
             "transport": "injected",
         },
     }
     assert envelope.canonical_json() == (
-        '{"client_metadata":{"name":"hermes-unified-network-plugin","transport":"injected",'
+        '{"client_metadata":{"name":"atn-plugin","transport":"injected",'
         '"version":"0.1.0"},"command":"session.note",'
         '"envelope_version":"kan-command-envelope-v1alpha0","idempotency_key":"idem-001",'
         '"payload":{"a":{"nested":true},"z":2},'
-        '"protocol_version":"hun-protocol-v1alpha0","request_id":"req-001"}'
+        '"protocol_version":"atn-protocol-v1alpha0","request_id":"req-001"}'
     )
     assert json.loads(envelope.canonical_json())["payload"] == {"a": {"nested": True}, "z": 2}
 

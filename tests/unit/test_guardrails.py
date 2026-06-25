@@ -36,35 +36,35 @@ def write_docs(root: Path, *, include_fail_closed: bool = True) -> None:
     docs = root / "docs"
     docs.mkdir()
     (root / "plugin.yaml").write_text(
-        "name: hermes-unified-network-plugin\n"
-        "description: Hermes Unified Network plugin fixture.\n"
+        "name: atn-plugin\n"
+        "description: Agent Turn Network plugin fixture.\n"
         "provides_tools:\n"
-        "  - hun_daemon_status\n"
+        "  - atn_daemon_status\n"
         "provides_hooks: []\n"
         "provides_commands: []\n",
         encoding="utf-8",
     )
     (root / "pyproject.toml").write_text(
-        '[project]\nname = "hermes-unified-network-plugin"\n',
+        '[project]\nname = "atn-plugin"\n',
         encoding="utf-8",
     )
     (root / "__init__.py").write_text(
-        '"""Hermes directory plugin entrypoint for hermes-unified-network-plugin."""\n',
+        '"""Hermes directory plugin entrypoint for atn-plugin."""\n',
         encoding="utf-8",
     )
-    skill = root / "src" / "hermes_unified_network_plugin" / "bundled_skills" / "hun-plugin"
+    skill = root / "src" / "atn_plugin" / "bundled_skills" / "atn-plugin"
     skill.mkdir(parents=True)
-    package = root / "src" / "hermes_unified_network_plugin"
+    package = root / "src" / "atn_plugin"
     (package / "__init__.py").write_text(
-        '"""HUN plugin package fixture."""\n',
+        '"""ATN plugin package fixture."""\n',
         encoding="utf-8",
     )
     (skill / "SKILL.md").write_text(
         "---\n"
-        "name: hun-plugin\n"
+        "name: atn-plugin\n"
         "description: Use when testing bundled skill frontmatter.\n"
         "---\n"
-        "# HUN Plugin Operator Skill\n",
+        "# ATN Plugin Operator Skill\n",
         encoding="utf-8",
     )
     for name in REQUIRED_DOCS:
@@ -72,7 +72,7 @@ def write_docs(root: Path, *, include_fail_closed: bool = True) -> None:
     required_text = "\n".join(
         [
             "plugin is not the source of truth",
-            "kkachi-agent-networkd",
+            "atn-controld",
             "test-prepare test-unit test-int test-e2e",
             "isolated test environment",
             "local isolated plugin-load smoke",
@@ -86,9 +86,9 @@ def write_docs(root: Path, *, include_fail_closed: bool = True) -> None:
                 "No-live defaults",
                 "Rollback",
                 "Troubleshooting",
-                "registers these read-only plugin-provided skills",
+                "public ATN operator guidance",
                 "provides_commands: []",
-                "hun_session_status",
+                "atn_session_status",
                 "SKILL-2",
             ]
         ),
@@ -149,15 +149,8 @@ def test_docs_guardrails_reject_operator_guide_overclaim(tmp_path: Path) -> None
 def test_docs_guardrails_reject_bundled_skill_without_frontmatter(tmp_path: Path) -> None:
     guardrails = load_guardrails()
     write_docs(tmp_path)
-    skill = (
-        tmp_path
-        / "src"
-        / "hermes_unified_network_plugin"
-        / "bundled_skills"
-        / "hun-plugin"
-        / "SKILL.md"
-    )
-    skill.write_text("# HUN Plugin Operator Skill\n", encoding="utf-8")
+    skill = tmp_path / "src" / "atn_plugin" / "bundled_skills" / "atn-plugin" / "SKILL.md"
+    skill.write_text("# ATN Plugin Operator Skill\n", encoding="utf-8")
 
     with pytest.raises(SystemExit, match="bundled skill must start with YAML frontmatter"):
         guardrails.main(root=tmp_path)
@@ -177,18 +170,18 @@ def test_docs_guardrails_reject_bundled_skill_without_frontmatter(tmp_path: Path
             "kan_stream_tail",
         ),
         (
-            "src/hermes_unified_network_plugin/schemas.py",
+            "src/atn_plugin/schemas.py",
             '"""Hermes tool schemas for fake/injected KAN plugin surfaces."""\n',
             "KAN plugin",
         ),
         (
-            "src/hermes_unified_network_plugin/schemas.py",
+            "src/atn_plugin/schemas.py",
             'TOOL = {"name": "kan_stream_tail"}\n',
             "kan_stream_tail",
         ),
         (
-            "src/hermes_unified_network_plugin/bundled_skills/hun-plugin/SKILL.md",
-            "---\nname: hun-plugin\ndescription: stale\n---\nUse kan-plugin as an alias.\n",
+            "src/atn_plugin/bundled_skills/atn-plugin/SKILL.md",
+            "---\nname: atn-plugin\ndescription: stale\n---\nUse kan-plugin as an alias.\n",
             "kan-plugin",
         ),
         ("plugin.yaml", "provides_commands: [kan]\n", "provides_commands"),
@@ -218,7 +211,7 @@ def test_docs_guardrails_reject_stale_hun_public_terms(
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text(text, encoding="utf-8")
 
-    with pytest.raises(SystemExit, match="stale HUN public term found") as exc:
+    with pytest.raises(SystemExit, match="stale ATN public term found") as exc:
         guardrails.main(root=tmp_path)
 
     assert token in str(exc.value)

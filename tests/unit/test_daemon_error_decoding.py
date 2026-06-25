@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from hermes_unified_network_plugin.errors import (
+from atn_plugin.errors import (
     DaemonProtocolError,
     decode_daemon_error,
     redact_sensitive,

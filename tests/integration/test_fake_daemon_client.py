@@ -2,17 +2,17 @@ from __future__ import annotations
 
 import pytest
 
-from hermes_unified_network_plugin.client import DaemonClient, StaticDaemonTransport
-from hermes_unified_network_plugin.client.daemon import (
+from atn_plugin.client import DaemonClient, StaticDaemonTransport
+from atn_plugin.client.daemon import (
     OP_COMMAND_SUBMIT,
     OP_STATUS_READ,
     OP_VERSION_READ,
 )
-from hermes_unified_network_plugin.errors import DaemonCommandError, DaemonProtocolError
-from hermes_unified_network_plugin.protocol import JsonObject
+from atn_plugin.errors import DaemonCommandError, DaemonProtocolError
+from atn_plugin.protocol import JsonObject
 
 BASE_RESPONSE: JsonObject = {
-    "protocol_version": "hun-protocol-v1alpha0",
+    "protocol_version": "atn-protocol-v1alpha0",
     "daemon_version": "0.0.0-fake",
     "feature_groups": ["version.read", "command_envelope", "structured_error"],
     "live_readiness": False,

@@ -11,21 +11,21 @@ from typing import Any
 import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
-PACKAGE_MODULE = "hermes_unified_network_plugin"
-PACKAGE_NAME = "hermes-unified-network-plugin"
+PACKAGE_MODULE = "atn_plugin"
+PACKAGE_NAME = "atn-plugin"
 EXPECTED_TOOLS = [
-    "hun_daemon_status",
-    "hun_compatibility_diagnostics",
-    "hun_stream_tail",
-    "hun_stream_ack",
-    "hun_delegate_new",
-    "hun_delegate_action",
-    "hun_council_command",
-    "hun_selected_participant_response",
-    "hun_delivery_evidence",
-    "hun_surface_render_projection",
-    "hun_discussion_activation_plan",
-    "hun_discord_send_message",
+    "atn_daemon_status",
+    "atn_compatibility_diagnostics",
+    "atn_stream_tail",
+    "atn_stream_ack",
+    "atn_delegate_new",
+    "atn_delegate_action",
+    "atn_council_command",
+    "atn_selected_participant_response",
+    "atn_delivery_evidence",
+    "atn_surface_render_projection",
+    "atn_discussion_activation_plan",
+    "atn_discord_send_message",
 ]
 
 
@@ -173,7 +173,7 @@ def require_entrypoint(root: Path) -> None:
     try:
         sys.path[:] = entrypoint_sys_path()
         entrypoint = load_module(
-            entrypoint_path, "hermes_unified_network_plugin_root_bootstrap", package_root=True
+            entrypoint_path, "atn_plugin_root_bootstrap", package_root=True
         )
     finally:
         sys.path[:] = previous_path
@@ -206,9 +206,9 @@ def require_entrypoint(root: Path) -> None:
         raise SystemExit("entrypoint registered HPLUG/DELRV-1-forbidden commands")
     registered_skill_names = [skill.get("name") for skill in context.registered_skills]
     if registered_skill_names and registered_skill_names != [
-        "hun-plugin",
-        "hun-moderator",
-        "hun-participant",
+        "atn-plugin",
+        "atn-moderator",
+        "atn-participant",
     ]:
         raise SystemExit(
             "entrypoint bundled skill registration mismatch: "

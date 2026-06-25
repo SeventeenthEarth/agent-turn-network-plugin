@@ -7,15 +7,15 @@ from typing import Any, cast
 
 import pytest
 
-from hermes_unified_network_plugin import schemas
-from hermes_unified_network_plugin.client import DaemonClient, StaticDaemonTransport
-from hermes_unified_network_plugin.client.daemon import OP_COMMAND_SUBMIT, OP_VERSION_READ
-from hermes_unified_network_plugin.protocol import JsonObject
-from hermes_unified_network_plugin.tools import handle_council_command, handle_delivery_evidence
+from atn_plugin import schemas
+from atn_plugin.client import DaemonClient, StaticDaemonTransport
+from atn_plugin.client.daemon import OP_COMMAND_SUBMIT, OP_VERSION_READ
+from atn_plugin.protocol import JsonObject
+from atn_plugin.tools import handle_council_command, handle_delivery_evidence
 
 CONTROL_CONFORMANCE_ROOT = (
     Path(__file__).resolve().parents[2].parent
-    / "kkachi-agent-network-control"
+    / "agent-turn-network-control"
     / "testdata"
     / "conformance"
 )
@@ -99,7 +99,7 @@ def _version_response() -> JsonObject:
     required_feature_groups = manifest["required_feature_groups"]
     assert isinstance(required_feature_groups, list)
     return {
-        "protocol_version": "hun-protocol-v1alpha0",
+        "protocol_version": "atn-protocol-v1alpha0",
         "daemon_version": "0.0.0-conformance-fake",
         "feature_groups": cast(list[str], required_feature_groups),
         "live_readiness": False,

@@ -31,75 +31,75 @@ def hplug_register_lines(*, include_hook: bool = False, include_command: bool = 
     return (
         "def register(ctx: object) -> None:\n"
         "    ctx.register_tool(\n"
-        '        name="hun_daemon_status",\n'
+        '        name="atn_daemon_status",\n'
         '        toolset="kkachi_agent_network",\n'
-        '        schema={"name": "hun_daemon_status"},\n'
+        '        schema={"name": "atn_daemon_status"},\n'
         '        handler=lambda args: "{}",\n'
         "    )\n"
         "    ctx.register_tool(\n"
-        '        name="hun_compatibility_diagnostics",\n'
+        '        name="atn_compatibility_diagnostics",\n'
         '        toolset="kkachi_agent_network",\n'
-        '        schema={"name": "hun_compatibility_diagnostics"},\n'
+        '        schema={"name": "atn_compatibility_diagnostics"},\n'
         '        handler=lambda args: "{}",\n'
         "    )\n"
         "    ctx.register_tool(\n"
-        '        name="hun_stream_tail",\n'
+        '        name="atn_stream_tail",\n'
         '        toolset="kkachi_agent_network",\n'
-        '        schema={"name": "hun_stream_tail"},\n'
+        '        schema={"name": "atn_stream_tail"},\n'
         '        handler=lambda args: "{}",\n'
         "    )\n"
         "    ctx.register_tool(\n"
-        '        name="hun_stream_ack",\n'
+        '        name="atn_stream_ack",\n'
         '        toolset="kkachi_agent_network",\n'
-        '        schema={"name": "hun_stream_ack"},\n'
+        '        schema={"name": "atn_stream_ack"},\n'
         '        handler=lambda args: "{}",\n'
         "    )\n"
         "    ctx.register_tool(\n"
-        '        name="hun_delegate_new",\n'
+        '        name="atn_delegate_new",\n'
         '        toolset="kkachi_agent_network",\n'
-        '        schema={"name": "hun_delegate_new"},\n'
+        '        schema={"name": "atn_delegate_new"},\n'
         '        handler=lambda args: "{}",\n'
         "    )\n"
         "    ctx.register_tool(\n"
-        '        name="hun_delegate_action",\n'
+        '        name="atn_delegate_action",\n'
         '        toolset="kkachi_agent_network",\n'
-        '        schema={"name": "hun_delegate_action"},\n'
+        '        schema={"name": "atn_delegate_action"},\n'
         '        handler=lambda args: "{}",\n'
         "    )\n"
         "    ctx.register_tool(\n"
-        '        name="hun_council_command",\n'
+        '        name="atn_council_command",\n'
         '        toolset="kkachi_agent_network",\n'
-        '        schema={"name": "hun_council_command"},\n'
+        '        schema={"name": "atn_council_command"},\n'
         '        handler=lambda args: "{}",\n'
         "    )\n"
         "    ctx.register_tool(\n"
-        '        name="hun_selected_participant_response",\n'
+        '        name="atn_selected_participant_response",\n'
         '        toolset="kkachi_agent_network",\n'
-        '        schema={"name": "hun_selected_participant_response"},\n'
+        '        schema={"name": "atn_selected_participant_response"},\n'
         '        handler=lambda args: "{}",\n'
         "    )\n"
         "    ctx.register_tool(\n"
-        '        name="hun_delivery_evidence",\n'
+        '        name="atn_delivery_evidence",\n'
         '        toolset="kkachi_agent_network",\n'
-        '        schema={"name": "hun_delivery_evidence"},\n'
+        '        schema={"name": "atn_delivery_evidence"},\n'
         '        handler=lambda args: "{}",\n'
         "    )\n"
         "    ctx.register_tool(\n"
-        '        name="hun_surface_render_projection",\n'
+        '        name="atn_surface_render_projection",\n'
         '        toolset="kkachi_agent_network",\n'
-        '        schema={"name": "hun_surface_render_projection"},\n'
+        '        schema={"name": "atn_surface_render_projection"},\n'
         '        handler=lambda args: "{}",\n'
         "    )\n"
         "    ctx.register_tool(\n"
-        '        name="hun_discussion_activation_plan",\n'
+        '        name="atn_discussion_activation_plan",\n'
         '        toolset="kkachi_agent_network",\n'
-        '        schema={"name": "hun_discussion_activation_plan"},\n'
+        '        schema={"name": "atn_discussion_activation_plan"},\n'
         '        handler=lambda args: "{}",\n'
         "    )\n"
         "    ctx.register_tool(\n"
-        '        name="hun_discord_send_message",\n'
+        '        name="atn_discord_send_message",\n'
         '        toolset="kkachi_agent_network",\n'
-        '        schema={"name": "hun_discord_send_message"},\n'
+        '        schema={"name": "atn_discord_send_message"},\n'
         '        handler=lambda args: "{}",\n'
         "    )\n"
         f"{hook_line}"
@@ -115,17 +115,17 @@ def write_bootstrap_fixture(
     manifest_text: str | None = None,
     manifest_version: str = "0.1.0",
     provides_tools: str = (
-        '["hun_daemon_status", "hun_compatibility_diagnostics", "hun_stream_tail", '
-        '"hun_stream_ack", "hun_delegate_new", "hun_delegate_action", '
-        '"hun_council_command", "hun_selected_participant_response", '
-        '"hun_delivery_evidence", "hun_surface_render_projection", '
-        '"hun_discussion_activation_plan", "hun_discord_send_message"]'
+        '["atn_daemon_status", "atn_compatibility_diagnostics", "atn_stream_tail", '
+        '"atn_stream_ack", "atn_delegate_new", "atn_delegate_action", '
+        '"atn_council_command", "atn_selected_participant_response", '
+        '"atn_delivery_evidence", "atn_surface_render_projection", '
+        '"atn_discussion_activation_plan", "atn_discord_send_message"]'
     ),
     provides_hooks: str = "[]",
     provides_commands: str = "[]",
     root_entrypoint: str | None = None,
 ) -> None:
-    package = root / "src" / "hermes_unified_network_plugin"
+    package = root / "src" / "atn_plugin"
     package.mkdir(parents=True)
     package.joinpath("__init__.py").write_text(
         package_metadata
@@ -133,17 +133,17 @@ def write_bootstrap_fixture(
         f'__version__ = "{package_version}"\n\n'
         "def package_metadata() -> dict[str, str]:\n"
         "    return {\n"
-        '        "name": "hermes-unified-network-plugin",\n'
-        '        "module": "hermes_unified_network_plugin",\n'
+        '        "name": "atn-plugin",\n'
+        '        "module": "atn_plugin",\n'
         '        "version": __version__,\n'
         "    }\n",
         encoding="utf-8",
     )
     root.joinpath("plugin.yaml").write_text(
         manifest_text
-        or "name: hermes-unified-network-plugin\n"
+        or "name: atn-plugin\n"
         f"version: {manifest_version}\n"
-        'description: "Hermes plugin scaffold for Hermes Unified Network."\n'
+        'description: "Hermes plugin scaffold for Agent Turn Network."\n'
         'author: "17번째 지구 Kkachi"\n'
         "kind: standalone\n"
         f"provides_tools: {provides_tools}\n"

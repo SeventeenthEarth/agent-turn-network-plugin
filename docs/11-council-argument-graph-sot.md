@@ -28,7 +28,7 @@ ATN is independent of KAS. KAS does not install, own, or activate ATN control, A
 
 ### 2.2 Plugin authority
 
-`hermes-unified-network-plugin` owns:
+`atn-plugin` owns:
 
 - Hermes participant-agent tool schemas and handlers;
 - daemon-client submission of typed council command envelopes;

@@ -3,9 +3,9 @@
 ## Components
 
 ```text
-hermes-unified-network-plugin/
+atn-plugin/
   plugin.yaml or equivalent manifest
-  src/hermes_unified_network_plugin/
+  src/atn_plugin/
     protocol.py          # protocol constants, models, canonical envelopes
     errors.py            # structured daemon error decoding/redaction
     conformance.py       # conformance manifest guard

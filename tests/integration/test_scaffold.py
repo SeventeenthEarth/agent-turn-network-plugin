@@ -2,10 +2,10 @@ from __future__ import annotations
 
 import os
 
-import hermes_unified_network_plugin as plugin
+import atn_plugin as plugin
 
 
 def test_integration_scaffold_stays_offline() -> None:
     # TODO(DAEMN-1): expand this tier to fake-daemon client behavior when the client exists.
     assert os.environ.get("KAN_EXTERNAL", "0") == "0"
-    assert plugin.package_metadata()["name"] == "hermes-unified-network-plugin"
+    assert plugin.package_metadata()["name"] == "atn-plugin"

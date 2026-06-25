@@ -41,9 +41,9 @@ Out of scope for this SOT unless a later task explicitly opens it:
 
 | Term | Meaning |
 |---|---|
-| daemon | `kkachi-agent-networkd`, the state/event authority. |
-| CLI | `kkachi-agent-network`, the canonical operator/control and diagnostics surface. |
-| plugin | `hermes-unified-network-plugin`, the Hermes agent-facing adapter. |
+| daemon | `atn-controld`, the state/event authority. |
+| CLI | `atn-control`, the canonical operator/control and diagnostics surface. |
+| plugin | `atn-plugin`, the Hermes agent-facing adapter. |
 | main agent | The coordinating moderator runtime that receives user intent, controls sessions, grants floor, and returns outcomes. |
 | participant agent | A real named member runtime/profile that observes session events and emits its own typed responses. |
 | member runtime | The loop or supervisor that watches daemon stream frames for one participant identity and invokes/resumes the real participant-agent profile when action is required. |

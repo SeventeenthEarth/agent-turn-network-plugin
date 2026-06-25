@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This document records the current unsupported Hermes surfaces for `hermes-unified-network-plugin` so operators do not confuse host capability with ATN plugin readiness.
+This document records the current unsupported Hermes surfaces for `atn-plugin` so operators do not confuse host capability with ATN plugin readiness.
 
 Hermes currently provides a real plugin slash-command host API through `PluginContext.register_command(name, handler, description, args_hint)`. The ATN plugin still exposes no ATN slash commands. Its manifest must continue to declare `provides_commands: []` until a later task implements and verifies concrete slash-command handlers.
 

@@ -5,13 +5,13 @@ import os
 
 import pytest
 
-from hermes_unified_network_plugin.client import DaemonClient, StaticDaemonTransport
-from hermes_unified_network_plugin.client.daemon import OP_STATUS_READ, OP_STREAM_TAIL
-from hermes_unified_network_plugin.errors import (
+from atn_plugin.client import DaemonClient, StaticDaemonTransport
+from atn_plugin.client.daemon import OP_STATUS_READ, OP_STREAM_TAIL
+from atn_plugin.errors import (
     DaemonProtocolError,
     DaemonTransportError,
 )
-from hermes_unified_network_plugin.tools import (
+from atn_plugin.tools import (
     handle_daemon_status,
     handle_delegate_action,
     handle_delegate_new,
@@ -51,7 +51,7 @@ def test_e2e_stream_tail_requires_version_probe_even_with_live_env_vars(
     monkeypatch.setenv("KAN_STREAM_URL", "ws://127.0.0.1:65535/stream")
     client = DaemonClient(
         StaticDaemonTransport(
-            {OP_STREAM_TAIL: {"protocol_version": "hun-protocol-v1alpha0", "frames": []}}
+            {OP_STREAM_TAIL: {"protocol_version": "atn-protocol-v1alpha0", "frames": []}}
         )
     )
 
@@ -82,7 +82,7 @@ def test_e2e_stream_tail_handler_does_not_use_live_env_fallback(
     result = json.loads(handle_stream_tail({"session_id": "sess-e2e", "member": "agent-1"}))
 
     assert result["ok"] is False
-    assert result["tool"] == "hun_stream_tail"
+    assert result["tool"] == "atn_stream_tail"
     assert result["error"]["category"] == "unavailable"
     assert "client factory" in result["error"]["message"]
 
@@ -127,10 +127,10 @@ def test_e2e_delegate_handlers_do_not_use_live_env_fallback(
     )
 
     assert delegate_new["ok"] is False
-    assert delegate_new["tool"] == "hun_delegate_new"
+    assert delegate_new["tool"] == "atn_delegate_new"
     assert delegate_new["error"]["category"] == "unavailable"
     assert "client factory" in delegate_new["error"]["message"]
     assert delegate_action["ok"] is False
-    assert delegate_action["tool"] == "hun_delegate_action"
+    assert delegate_action["tool"] == "atn_delegate_action"
     assert delegate_action["error"]["category"] == "unavailable"
     assert "client factory" in delegate_action["error"]["message"]

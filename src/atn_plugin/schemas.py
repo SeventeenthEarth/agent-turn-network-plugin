@@ -1,4 +1,4 @@
-"""Hermes tool schemas for fake/injected HUN plugin surfaces."""
+"""Hermes tool schemas for fake/injected ATN plugin surfaces."""
 
 from __future__ import annotations
 
@@ -139,10 +139,10 @@ DELIVERY_EVIDENCE_COMMANDS: Final[tuple[str, ...]] = (
     "delegate.escalation_delivery_failed",
 )
 
-HUN_DAEMON_STATUS: Final[dict[str, object]] = {
-    "name": "hun_daemon_status",
+ATN_DAEMON_STATUS: Final[dict[str, object]] = {
+    "name": "atn_daemon_status",
     "description": (
-        "Read-only HUN daemon status through an explicit fake/injected daemon client. "
+        "Read-only ATN daemon status through an explicit fake/injected daemon client. "
         "Fails closed when no client is injected; performs no write, live daemon discovery, "
         "Hermes, Discord, auth, token, or gateway fallback."
     ),
@@ -153,10 +153,10 @@ HUN_DAEMON_STATUS: Final[dict[str, object]] = {
     },
 }
 
-HUN_COMPATIBILITY_DIAGNOSTICS: Final[dict[str, object]] = {
-    "name": "hun_compatibility_diagnostics",
+ATN_COMPATIBILITY_DIAGNOSTICS: Final[dict[str, object]] = {
+    "name": "atn_compatibility_diagnostics",
     "description": (
-        "Read-only HUN compatibility diagnostics through an explicit fake/injected daemon "
+        "Read-only ATN compatibility diagnostics through an explicit fake/injected daemon "
         "client. Returns redacted diagnostic checks and fails closed without live fallback."
     ),
     "parameters": {
@@ -165,17 +165,17 @@ HUN_COMPATIBILITY_DIAGNOSTICS: Final[dict[str, object]] = {
             "session_id": {
                 "type": "string",
                 "minLength": 1,
-                "description": "Optional HUN session identifier for scoped diagnostics.",
+                "description": "Optional ATN session identifier for scoped diagnostics.",
             }
         },
         "additionalProperties": False,
     },
 }
 
-HUN_STREAM_TAIL: Final[dict[str, object]] = {
-    "name": "hun_stream_tail",
+ATN_STREAM_TAIL: Final[dict[str, object]] = {
+    "name": "atn_stream_tail",
     "description": (
-        "Read-only HUN stream tail through an explicit fake/injected daemon client. "
+        "Read-only ATN stream tail through an explicit fake/injected daemon client. "
         "Requires stream_frame compatibility from the injected transport and fails closed "
         "without live daemon, Hermes, Discord, auth, token, gateway, socket, or CLI fallback."
     ),
@@ -210,10 +210,10 @@ HUN_STREAM_TAIL: Final[dict[str, object]] = {
     },
 }
 
-HUN_STREAM_ACK: Final[dict[str, object]] = {
-    "name": "hun_stream_ack",
+ATN_STREAM_ACK: Final[dict[str, object]] = {
+    "name": "atn_stream_ack",
     "description": (
-        "Submit a HUN stream ack through an explicit fake/injected daemon client. "
+        "Submit a ATN stream ack through an explicit fake/injected daemon client. "
         "The caller supplies command_id as the daemon idempotency key; the plugin "
         "does not dedupe locally or fall back to live daemon discovery, Hermes, "
         "Discord, auth, token, gateway, localhost/TCP, socket discovery, or CLI."
@@ -247,8 +247,8 @@ HUN_STREAM_ACK: Final[dict[str, object]] = {
     },
 }
 
-HUN_DELEGATE_NEW: Final[dict[str, object]] = {
-    "name": "hun_delegate_new",
+ATN_DELEGATE_NEW: Final[dict[str, object]] = {
+    "name": "atn_delegate_new",
     "description": (
         "Submit a delegate.new command envelope through an explicit fake/injected daemon "
         "client. The caller must supply request_id and idempotency_key; the plugin does "
@@ -334,8 +334,8 @@ HUN_DELEGATE_NEW: Final[dict[str, object]] = {
     },
 }
 
-HUN_DELEGATE_ACTION: Final[dict[str, object]] = {
-    "name": "hun_delegate_action",
+ATN_DELEGATE_ACTION: Final[dict[str, object]] = {
+    "name": "atn_delegate_action",
     "description": (
         "Submit one exact implemented delegate.* action/review/delivery command through "
         "an explicit fake/injected daemon client. Rejects delegate.request, top-level "
@@ -382,8 +382,8 @@ HUN_DELEGATE_ACTION: Final[dict[str, object]] = {
     },
 }
 
-HUN_COUNCIL_COMMAND: Final[dict[str, object]] = {
-    "name": "hun_council_command",
+ATN_COUNCIL_COMMAND: Final[dict[str, object]] = {
+    "name": "atn_council_command",
     "description": (
         "Submit one exact implemented council.* lifecycle command through an explicit "
         "fake/injected daemon client. The plugin probes council.lifecycle with injected "
@@ -448,8 +448,8 @@ HUN_COUNCIL_COMMAND: Final[dict[str, object]] = {
     },
 }
 
-HUN_DELIVERY_EVIDENCE: Final[dict[str, object]] = {
-    "name": "hun_delivery_evidence",
+ATN_DELIVERY_EVIDENCE: Final[dict[str, object]] = {
+    "name": "atn_delivery_evidence",
     "description": (
         "Submit a delivery-evidence command through an explicit fake/injected daemon "
         "client. The plugin probes delivery_evidence with injected version.read before "
@@ -499,8 +499,8 @@ HUN_DELIVERY_EVIDENCE: Final[dict[str, object]] = {
     },
 }
 
-HUN_SELECTED_PARTICIPANT_RESPONSE: Final[dict[str, object]] = {
-    "name": "hun_selected_participant_response",
+ATN_SELECTED_PARTICIPANT_RESPONSE: Final[dict[str, object]] = {
+    "name": "atn_selected_participant_response",
     "description": (
         "Submit a selected participant response as canonical council.speak through an "
         "explicit fake/injected or configured live daemon client, mapping the caller's "
@@ -713,8 +713,8 @@ HUN_SELECTED_PARTICIPANT_RESPONSE: Final[dict[str, object]] = {
     },
 }
 
-HUN_DISCORD_SEND_MESSAGE: Final[dict[str, object]] = {
-    "name": "hun_discord_send_message",
+ATN_DISCORD_SEND_MESSAGE: Final[dict[str, object]] = {
+    "name": "atn_discord_send_message",
     "description": (
         "Send a Discord message only through an explicit injected send_message callable. "
         "Requires a dedicated test target and fails closed without sender injection; it "
@@ -780,8 +780,8 @@ HUN_DISCORD_SEND_MESSAGE: Final[dict[str, object]] = {
     },
 }
 
-HUN_SURFACE_RENDER_PROJECTION: Final[dict[str, object]] = {
-    "name": "hun_surface_render_projection",
+ATN_SURFACE_RENDER_PROJECTION: Final[dict[str, object]] = {
+    "name": "atn_surface_render_projection",
     "description": (
         "Render explicit daemon/control projection event JSON into separated clean "
         "visible transcript rows, audit rows, and evidence pointers. This pure tool "
@@ -830,10 +830,10 @@ HUN_SURFACE_RENDER_PROJECTION: Final[dict[str, object]] = {
     },
 }
 
-HUN_DISCUSSION_ACTIVATION_PLAN: Final[dict[str, object]] = {
-    "name": "hun_discussion_activation_plan",
+ATN_DISCUSSION_ACTIVATION_PLAN: Final[dict[str, object]] = {
+    "name": "atn_discussion_activation_plan",
     "description": (
-        "Build a deterministic pure/local HUN discussion activation "
+        "Build a deterministic pure/local ATN discussion activation "
         "planner/doctor report from explicit caller-provided evidence only. The "
         "tool performs no environment reads, socket discovery, daemon startup, "
         "CLI fallback, Discord/Hermes/profile/gateway inspection, or provider/"
@@ -847,7 +847,7 @@ HUN_DISCUSSION_ACTIVATION_PLAN: Final[dict[str, object]] = {
                 "description": (
                     "Explicit activation planning evidence with schema_version=1, "
                     "HUN task evidence, historical control/RUNFIX dependency labels, "
-                    "HUN plugin tool visibility, "
+                    "ATN plugin tool visibility, "
                     "explicit daemon/socket/config evidence, participant profiles, "
                     "parent-channel allow-list inheritance proof, planned changes, "
                     "rollback, verification commands, approval gates, and separated "
@@ -1070,26 +1070,26 @@ HUN_DISCUSSION_ACTIVATION_PLAN: Final[dict[str, object]] = {
     },
 }
 
-HUN_TOOL_SCHEMAS: Final[tuple[dict[str, object], ...]] = (
-    HUN_DAEMON_STATUS,
-    HUN_COMPATIBILITY_DIAGNOSTICS,
-    HUN_STREAM_TAIL,
-    HUN_STREAM_ACK,
-    HUN_DELEGATE_NEW,
-    HUN_DELEGATE_ACTION,
-    HUN_COUNCIL_COMMAND,
-    HUN_SELECTED_PARTICIPANT_RESPONSE,
-    HUN_DELIVERY_EVIDENCE,
-    HUN_SURFACE_RENDER_PROJECTION,
-    HUN_DISCUSSION_ACTIVATION_PLAN,
-    HUN_DISCORD_SEND_MESSAGE,
+ATN_TOOL_SCHEMAS: Final[tuple[dict[str, object], ...]] = (
+    ATN_DAEMON_STATUS,
+    ATN_COMPATIBILITY_DIAGNOSTICS,
+    ATN_STREAM_TAIL,
+    ATN_STREAM_ACK,
+    ATN_DELEGATE_NEW,
+    ATN_DELEGATE_ACTION,
+    ATN_COUNCIL_COMMAND,
+    ATN_SELECTED_PARTICIPANT_RESPONSE,
+    ATN_DELIVERY_EVIDENCE,
+    ATN_SURFACE_RENDER_PROJECTION,
+    ATN_DISCUSSION_ACTIVATION_PLAN,
+    ATN_DISCORD_SEND_MESSAGE,
 )
 
 
 def tool_names() -> tuple[str, ...]:
     """Return tool names in registration order."""
 
-    return tuple(str(schema["name"]) for schema in HUN_TOOL_SCHEMAS)
+    return tuple(str(schema["name"]) for schema in ATN_TOOL_SCHEMAS)
 
 
 __all__ = [
@@ -1106,17 +1106,17 @@ __all__ = [
     "DELIVERY_EVIDENCE_COMMANDS",
     "DELEGATE_ACTION_COMMANDS",
     "DELEGATE_NEW_COMMAND",
-    "HUN_COMPATIBILITY_DIAGNOSTICS",
-    "HUN_COUNCIL_COMMAND",
-    "HUN_DAEMON_STATUS",
-    "HUN_DELEGATE_ACTION",
-    "HUN_DELEGATE_NEW",
-    "HUN_DELIVERY_EVIDENCE",
-    "HUN_DISCUSSION_ACTIVATION_PLAN",
-    "HUN_DISCORD_SEND_MESSAGE",
-    "HUN_SELECTED_PARTICIPANT_RESPONSE",
-    "HUN_STREAM_ACK",
-    "HUN_STREAM_TAIL",
-    "HUN_TOOL_SCHEMAS",
+    "ATN_COMPATIBILITY_DIAGNOSTICS",
+    "ATN_COUNCIL_COMMAND",
+    "ATN_DAEMON_STATUS",
+    "ATN_DELEGATE_ACTION",
+    "ATN_DELEGATE_NEW",
+    "ATN_DELIVERY_EVIDENCE",
+    "ATN_DISCUSSION_ACTIVATION_PLAN",
+    "ATN_DISCORD_SEND_MESSAGE",
+    "ATN_SELECTED_PARTICIPANT_RESPONSE",
+    "ATN_STREAM_ACK",
+    "ATN_STREAM_TAIL",
+    "ATN_TOOL_SCHEMAS",
     "tool_names",
 ]

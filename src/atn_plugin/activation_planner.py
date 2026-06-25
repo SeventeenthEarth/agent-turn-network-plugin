@@ -1,4 +1,4 @@
-"""Pure dry-run HUN discussion activation planner.
+"""Pure dry-run ATN discussion activation planner.
 
 The planner consumes explicit caller-provided evidence only. It performs no
 environment, Discord, Hermes, daemon, socket, CLI, profile, gateway, provider,
@@ -22,7 +22,7 @@ RUNFIX_015_TASK_ID: Final = "plugin/RUNFIX-015"
 RUNFIX_017_TASK_ID: Final = "plugin/RUNFIX-017"
 RUNFIX_019_TASK_ID: Final = "plugin/RUNFIX-019"
 RUNFIX2_005_TASK_ID: Final = "plugin/RUNFIX2-005"
-HUN_008_TASK_ID: Final = "plugin/HUN-008"
+ATN_008_TASK_ID: Final = "plugin/HUN-008"
 SUPPORTED_TASK_IDS: Final[frozenset[str]] = frozenset(
     {
         RUNFIX_006_TASK_ID,
@@ -34,7 +34,7 @@ SUPPORTED_TASK_IDS: Final[frozenset[str]] = frozenset(
         RUNFIX_017_TASK_ID,
         RUNFIX_019_TASK_ID,
         RUNFIX2_005_TASK_ID,
-        HUN_008_TASK_ID,
+        ATN_008_TASK_ID,
     }
 )
 TASK_ID: Final = RUNFIX_010_TASK_ID
@@ -48,18 +48,18 @@ RUNFIX_019_CONTROL_DEPENDENCY_TASK_ID: Final = "control/RUNFIX-018"
 RUNFIX_019_CONTROL_DEPENDENCY_STATUSES: Final[frozenset[str]] = frozenset(
     {"local implementation proof", "completed/local-control", "local-control"}
 )
-HUN_008_HISTORICAL_DEPENDENCY_LABELS: Final[tuple[str, ...]] = (
+ATN_008_HISTORICAL_DEPENDENCY_LABELS: Final[tuple[str, ...]] = (
     CONTROL_DEPENDENCY_TASK_ID,
     RUNFIX_012_CONTROL_DEPENDENCY_TASK_ID,
     RUNFIX_019_CONTROL_DEPENDENCY_TASK_ID,
 )
-HUN_008_CONTROL_DEPENDENCY_TASK_IDS: Final[frozenset[str]] = frozenset(
-    HUN_008_HISTORICAL_DEPENDENCY_LABELS
+ATN_008_CONTROL_DEPENDENCY_TASK_IDS: Final[frozenset[str]] = frozenset(
+    ATN_008_HISTORICAL_DEPENDENCY_LABELS
 )
-HUN_008_CONTROL_DEPENDENCY_STATUSES: Final[frozenset[str]] = frozenset(
+ATN_008_CONTROL_DEPENDENCY_STATUSES: Final[frozenset[str]] = frozenset(
     {"completed/local-control", "local implementation proof", "local-control"}
 )
-TOOL_NAME: Final = "hun_discussion_activation_plan"
+TOOL_NAME: Final = "atn_discussion_activation_plan"
 EVIDENCE_LABELS: Final[tuple[str, ...]] = (
     "lifecycle_pass",
     "fallback_profile_pass",
@@ -249,7 +249,7 @@ def _behavior_task_id(task_id: str) -> str:
         RUNFIX_017_TASK_ID,
         RUNFIX_019_TASK_ID,
         RUNFIX2_005_TASK_ID,
-        HUN_008_TASK_ID,
+        ATN_008_TASK_ID,
     }:
         return task_id
     return RUNFIX_007_TASK_ID
@@ -264,7 +264,7 @@ def _validate_control_dependency(
     if task_id == RUNFIX_019_TASK_ID:
         _validate_runfix_019_control_dependency(value, blockers=blockers)
         return
-    if task_id == HUN_008_TASK_ID:
+    if task_id == ATN_008_TASK_ID:
         _validate_hun_008_control_dependency(value, blockers=blockers)
         return
 
@@ -400,7 +400,7 @@ def _validate_hun_008_control_dependency(value: object, *, blockers: list[JsonOb
         )
         return
     dependency = _json_object(value, label="plan.control_dependency")
-    if dependency.get("task_id") not in HUN_008_CONTROL_DEPENDENCY_TASK_IDS:
+    if dependency.get("task_id") not in ATN_008_CONTROL_DEPENDENCY_TASK_IDS:
         blockers.append(
             _blocker(
                 code="control_dependency_task_mismatch",
@@ -411,7 +411,7 @@ def _validate_hun_008_control_dependency(value: object, *, blockers: list[JsonOb
                 ),
             )
         )
-    if dependency.get("status") not in HUN_008_CONTROL_DEPENDENCY_STATUSES:
+    if dependency.get("status") not in ATN_008_CONTROL_DEPENDENCY_STATUSES:
         blockers.append(
             _blocker(
                 code="control_dependency_not_completed",
@@ -476,7 +476,7 @@ def _validate_plugin_install(value: object, *, blockers: list[JsonObject]) -> No
                 code="activation_tool_visibility_missing",
                 owner="plugin",
                 message=(
-                    "hun_discussion_activation_plan must be visible in plugin_install.tool_names."
+                    "atn_discussion_activation_plan must be visible in plugin_install.tool_names."
                 ),
             )
         )
@@ -638,7 +638,7 @@ def _profile_classification(
                     **row,
                     "reason": "tools_visibility_missing_or_false",
                     "remediation": (
-                        "Enable/verify the profile-visible HUN plugin tools before allow-listing."
+                        "Enable/verify the profile-visible ATN plugin tools before allow-listing."
                     ),
                 }
             )
@@ -659,7 +659,7 @@ def _profile_classification(
                     "reason": "bot_to_bot_enabled",
                     "remediation": (
                         "Disable bot-to-bot replies for this profile or omit it from the "
-                        "HUN discussion allow-list."
+                        "ATN discussion allow-list."
                     ),
                 }
             )
@@ -712,10 +712,10 @@ def _profile_remediation(
 
 def _activation_evidence_model_report() -> JsonObject:
     return {
-        "task_id": HUN_008_TASK_ID,
+        "task_id": ATN_008_TASK_ID,
         "public_tool_name": TOOL_NAME,
         "legacy_public_aliases_allowed": False,
-        "historical_dependency_labels": list(HUN_008_HISTORICAL_DEPENDENCY_LABELS),
+        "historical_dependency_labels": list(ATN_008_HISTORICAL_DEPENDENCY_LABELS),
         "readiness_axes": {
             "plugin_install_tool_visibility": "plugin_install",
             "daemon_socket_config_compatibility": "control_daemon",
@@ -1400,7 +1400,7 @@ def _visible_author_guard_report(
                 code="visible_author_guard_runtime_claim_unsupported",
                 owner="operator",
                 message=(
-                    "hun_discussion_activation_plan is planner-only and must not claim "
+                    "atn_discussion_activation_plan is planner-only and must not claim "
                     "runtime visible-author enforcement."
                 ),
             )

@@ -8,7 +8,7 @@
 | Minimum Python | `>=3.11` to match Hermes Python 3.11 runtime compatibility |
 | Package manager | `uv` preferred for development |
 | Build backend | `hatchling` or current Hermes-compatible Python packaging |
-| Source layout | `src/hermes_unified_network_plugin/` |
+| Source layout | `src/atn_plugin/` |
 | Test runner | `pytest` |
 | Async tests | `pytest-asyncio` when stream/client async is introduced |
 | Lint/format | `ruff check`, `ruff format` |
@@ -18,10 +18,10 @@
 ## Target layout
 
 ```text
-hermes-unified-network-plugin/
+atn-plugin/
   pyproject.toml
   plugin.yaml
-  src/hermes_unified_network_plugin/
+  src/atn_plugin/
   tests/unit/
   tests/integration/
   tests/e2e/
@@ -69,8 +69,8 @@ After the Python scaffold exists, `uv` and `pyproject.toml` are required for cod
 
 ## Bundled skill resources
 
-SKILL-1 originally packaged the historical `kan-plugin` operator skill. ATN-003 updates the public docs to `atn-plugin`, `atn-moderator`, and `atn-participant`, while ATN-005 still owns the checked-in packaged resource rename. Until ATN-005 lands, the bundled source remains under `src/hermes_unified_network_plugin/bundled_skills/` with
-`hermes_unified_network_plugin.bundled_skills.read_bundled_skill_text(...)` as
+SKILL-1 originally packaged the historical `kan-plugin` operator skill. The bundled source now lives under `src/atn_plugin/bundled_skills/` with
+`atn_plugin.bundled_skills.read_bundled_skill_text(...)` as
 the import-safe reader used by tests and installer checks. SKILL-2 verifies
 those resources in the local isolated plugin-load smoke gate.
 
@@ -94,7 +94,7 @@ DAEMN-1 added fake daemon compatibility probes for the client foundation only. A
 
 SCAFF-5 introduced smoke coverage in `scripts/check_bootstrap_smoke.py` and `tests/unit/test_bootstrap_smoke.py`; HPLUG-2 updated it for the three read-only tool registrations, DELRV-1 extended it for the two delegation/review command-envelope tools, CNDIS-1 extended it for the council and delivery-evidence command tools, and CNDIS-2 extends it for the injected-only Discord helper while keeping the explicit empty slash-command surface. This proves manifest/entrypoint/handler-contract readiness only.
 
-SKILL-2 adds `scripts/check_plugin_load_smoke.py` and `tests/unit/test_plugin_load_smoke.py` as a bounded local isolated plugin-load smoke gate. REL-PILOT-FIX-001 strengthened it so the repository plugin surface must be discovered and loaded in a temporary fake Hermes context without test-side `PYTHONPATH` help; the root entrypoint owns adding its bundled `src/` path before importing runtime modules. HUN-013 further locks the isolated surface to the checked-in HUN manifest/package/tool/skill names, zero hooks, zero commands, and zero registered resources. The gate also fails closed for unsupported live surfaces. It is not production activation, live plugin readiness, KAB readiness, or live Hermes/Discord evidence.
+SKILL-2 adds `scripts/check_plugin_load_smoke.py` and `tests/unit/test_plugin_load_smoke.py` as a bounded local isolated plugin-load smoke gate. REL-PILOT-FIX-001 strengthened it so the repository plugin surface must be discovered and loaded in a temporary fake Hermes context without test-side `PYTHONPATH` help; the root entrypoint owns adding its bundled `src/` path before importing runtime modules. ATN-005 further locks the isolated surface to the checked-in ATN manifest/package/tool/skill names, zero hooks, zero commands, and zero registered resources. The gate also fails closed for unsupported live surfaces. It is not production activation, live plugin readiness, KAB readiness, or live Hermes/Discord evidence.
 
 REL-PILOT-FIX-001 also adds Python 3.11 syntax compatibility coverage. `pyproject.toml` declares `requires-python = ">=3.11"`, Ruff targets `py311`, mypy type checks as Python 3.11, and unit tests parse repository Python sources with `ast.parse(..., feature_version=(3, 11))` so Python 3.12-only syntax such as PEP 695 `type` aliases cannot re-enter unnoticed.
 

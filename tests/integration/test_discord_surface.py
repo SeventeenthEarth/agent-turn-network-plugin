@@ -4,8 +4,8 @@ import json
 from collections.abc import Callable
 from typing import Any
 
-from hermes_unified_network_plugin.discord_surface import DiscordMessageResult, DiscordMessageTarget
-from hermes_unified_network_plugin.tools import register_tools
+from atn_plugin.discord_surface import DiscordMessageResult, DiscordMessageTarget
+from atn_plugin.tools import register_tools
 
 
 def test_fake_hermes_context_invokes_injected_discord_sender_once() -> None:
@@ -26,7 +26,7 @@ def test_fake_hermes_context_invokes_injected_discord_sender_once() -> None:
     register_tools(ctx, send_message=sender)
 
     result = json.loads(
-        ctx.handlers["hun_discord_send_message"](
+        ctx.handlers["atn_discord_send_message"](
             {
                 "content": "CNDIS-2 isolated fake send",
                 "target": {
@@ -59,7 +59,7 @@ def test_fake_hermes_context_discord_tool_fails_closed_without_sender() -> None:
     register_tools(ctx)
 
     result = json.loads(
-        ctx.handlers["hun_discord_send_message"](
+        ctx.handlers["atn_discord_send_message"](
             {
                 "content": "must not post",
                 "target": {
@@ -71,7 +71,7 @@ def test_fake_hermes_context_discord_tool_fails_closed_without_sender() -> None:
     )
 
     assert result["ok"] is False
-    assert result["tool"] == "hun_discord_send_message"
+    assert result["tool"] == "atn_discord_send_message"
     assert result["error"]["category"] == "validation"
     assert "no live Discord fallback" in result["error"]["message"]
 
@@ -81,7 +81,7 @@ def test_fake_hermes_context_surface_projection_tool_is_local_and_pure() -> None
     register_tools(ctx)
 
     result = json.loads(
-        ctx.handlers["hun_surface_render_projection"](
+        ctx.handlers["atn_surface_render_projection"](
             {
                 "projection": {
                     "schema_version": 1,
@@ -103,7 +103,7 @@ def test_fake_hermes_context_surface_projection_tool_is_local_and_pure() -> None
     )
 
     assert result["ok"] is True
-    assert result["tool"] == "hun_surface_render_projection"
+    assert result["tool"] == "atn_surface_render_projection"
     assert result["live_readiness"] is False
     assert result["data"]["local_projection"]["rows"][0]["status"] == "created"
     assert ctx.registered_hooks == []
@@ -114,8 +114,8 @@ def test_fake_hermes_context_keeps_hooks_and_commands_empty_for_discord_helper()
     ctx = FakePluginContext()
     register_tools(ctx)
 
-    assert [tool["name"] for tool in ctx.registered_tools][-1] == "hun_discord_send_message"
-    assert [tool["name"] for tool in ctx.registered_tools][-2] == "hun_discussion_activation_plan"
+    assert [tool["name"] for tool in ctx.registered_tools][-1] == "atn_discord_send_message"
+    assert [tool["name"] for tool in ctx.registered_tools][-2] == "atn_discussion_activation_plan"
     assert ctx.registered_hooks == []
     assert ctx.registered_commands == []
 

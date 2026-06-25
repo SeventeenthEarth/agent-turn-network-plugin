@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 import yaml
 
-from hermes_unified_network_plugin.bundled_skills import (
+from atn_plugin.bundled_skills import (
     BUNDLED_SKILL_NAME,
     BUNDLED_SKILL_NAMES,
     bundled_skill_names,
@@ -17,8 +17,8 @@ ROOT = Path(__file__).resolve().parents[2]
 
 
 def test_bundled_hun_skill_resource_is_import_safe_and_readable() -> None:
-    assert bundled_skill_names() == ("hun-plugin", "hun-moderator", "hun-participant")
-    assert BUNDLED_SKILL_NAME == "hun-plugin"
+    assert bundled_skill_names() == ("atn-plugin", "atn-moderator", "atn-participant")
+    assert BUNDLED_SKILL_NAME == "atn-plugin"
     assert bundled_skill_names() == BUNDLED_SKILL_NAMES
     assert not {"kan-plugin", "kan-moderator", "kan-participant"} & set(bundled_skill_names())
 
@@ -28,11 +28,11 @@ def test_bundled_hun_skill_resource_is_import_safe_and_readable() -> None:
         assert resource.name == "SKILL.md"
         assert f"name: {name}" in text
 
-    text = read_bundled_skill_text("hun-plugin")
-    assert "# HUN Plugin Operator Skill" in text
+    text = read_bundled_skill_text("atn-plugin")
+    assert "# ATN Plugin Operator Skill" in text
     assert "does not install itself into a Hermes profile" in text
     assert "provides_commands: []" in text
-    assert "hun_session_status" in text
+    assert "atn_session_status" in text
     assert "ARGUE argument-graph support as static/fake/injected" in text
     assert "Participant response template" in text
     assert "speaker_selected -> speech linkage" in text
@@ -43,12 +43,12 @@ def test_bundled_hun_skill_resource_is_import_safe_and_readable() -> None:
 
 
 def test_bundled_hun_moderator_skill_ships_council_moderation_hard_rules() -> None:
-    plugin_text = read_bundled_skill_text("hun-plugin")
-    moderator_text = read_bundled_skill_text("hun-moderator")
+    plugin_text = read_bundled_skill_text("atn-plugin")
+    moderator_text = read_bundled_skill_text("atn-moderator")
     guide_text = (ROOT / "docs" / "09-skill-and-operator-guide.md").read_text(encoding="utf-8")
 
     assert (
-        "The packaged HUN moderator role skill owns the council moderation hard rules"
+        "The packaged ATN moderator role skill owns the council moderation hard rules"
         in plugin_text
     )
     assert "Do not predeclare or hard-code a complete live speaker order" not in plugin_text
@@ -78,24 +78,24 @@ def test_bundled_hun_moderator_skill_ships_council_moderation_hard_rules() -> No
 
 
 def test_bundled_hun_skills_split_start_blockers_from_runtime_evidence() -> None:
-    plugin_text = read_bundled_skill_text("hun-plugin")
-    moderator_text = read_bundled_skill_text("hun-moderator")
+    plugin_text = read_bundled_skill_text("atn-plugin")
+    moderator_text = read_bundled_skill_text("atn-moderator")
     guide_text = (ROOT / "docs" / "09-skill-and-operator-guide.md").read_text(encoding="utf-8")
     live_reference = (
         ROOT
         / "src"
-        / "hermes_unified_network_plugin"
+        / "atn_plugin"
         / "bundled_skills"
-        / "hun-moderator"
+        / "atn-moderator"
         / "references"
         / "live-visible-preflight-and-council-new.md"
     ).read_text(encoding="utf-8")
     cross_team_reference = (
         ROOT
         / "src"
-        / "hermes_unified_network_plugin"
+        / "atn_plugin"
         / "bundled_skills"
-        / "hun-moderator"
+        / "atn-moderator"
         / "references"
         / "cross-team-participant-preflight-evidence.md"
     ).read_text(encoding="utf-8")
@@ -114,7 +114,7 @@ def test_bundled_hun_skills_split_start_blockers_from_runtime_evidence() -> None
 
     assert "Only `start_blocker` findings block `council.new`" in normalized
     assert "do not automatically stop before `council.new`" in normalized
-    assert "Do not treat `hun_discussion_activation_plan.live_readiness=false`" in normalized
+    assert "Do not treat `atn_discussion_activation_plan.live_readiness=false`" in normalized
     assert "selected-runner proof" in normalized
     assert "participant runtime freshness" in normalized
     assert "ARGUE relation counts" in normalized
@@ -126,9 +126,9 @@ def test_bundled_hun_skills_split_start_blockers_from_runtime_evidence() -> None
 
 
 def test_bundled_hun_skills_define_runner_jsonl_framing_contract() -> None:
-    plugin_text = read_bundled_skill_text("hun-plugin")
-    moderator_text = read_bundled_skill_text("hun-moderator")
-    participant_text = read_bundled_skill_text("hun-participant")
+    plugin_text = read_bundled_skill_text("atn-plugin")
+    moderator_text = read_bundled_skill_text("atn-moderator")
+    participant_text = read_bundled_skill_text("atn-participant")
     guide_text = (ROOT / "docs" / "09-skill-and-operator-guide.md").read_text(encoding="utf-8")
     combined = "\n".join([plugin_text, moderator_text, participant_text, guide_text])
     normalized = " ".join(combined.split())
@@ -159,14 +159,14 @@ def test_bundled_hun_skill_has_valid_hermes_frontmatter() -> None:
 
 def test_bundled_skill_reader_rejects_unknown_names() -> None:
     with pytest.raises(ValueError, match="unknown bundled skill"):
-        read_bundled_skill_text("../hun-plugin")
+        read_bundled_skill_text("../atn-plugin")
     for stale_name in ["kan-plugin", "kan-moderator", "kan-participant"]:
         with pytest.raises(ValueError, match="unknown bundled skill"):
             read_bundled_skill_text(stale_name)
 
 
 def test_bundled_skill_and_operator_docs_do_not_overclaim_unsupported_surfaces() -> None:
-    skill_text = read_bundled_skill_text("hun-plugin")
+    skill_text = read_bundled_skill_text("atn-plugin")
     guide_text = (ROOT / "docs" / "09-skill-and-operator-guide.md").read_text(encoding="utf-8")
     combined = f"{skill_text}\n{guide_text}"
 
@@ -176,7 +176,7 @@ def test_bundled_skill_and_operator_docs_do_not_overclaim_unsupported_surfaces()
         "production activation is supported",
         "live plugin readiness is supported",
         "KAB readiness is supported",
-        "hun_session_status is supported",
+        "atn_session_status is supported",
         "provides_commands: [kan",
         "live daemon discovery is supported",
         "uses the current Hermes session",

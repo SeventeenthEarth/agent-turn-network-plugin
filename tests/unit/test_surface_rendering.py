@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from hermes_unified_network_plugin.surface_rendering import render_surface_projection
+from atn_plugin.surface_rendering import render_surface_projection
 
 
 def test_surface_projection_renders_cursor_ordered_rows_and_evidence_statuses() -> None:

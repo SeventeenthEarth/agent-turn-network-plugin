@@ -4,28 +4,23 @@ from pathlib import Path
 
 import pytest
 
-from hermes_unified_network_plugin.conformance import (
+from atn_plugin.conformance import (
     load_conformance_manifest,
     parse_conformance_manifest,
 )
-from hermes_unified_network_plugin.errors import DaemonCompatibilityError
+from atn_plugin.errors import DaemonCompatibilityError
 
 ROOT = Path(__file__).resolve().parents[2]
 PLUGIN_DRAFT_MANIFEST = (
-    ROOT
-    / "src"
-    / "hermes_unified_network_plugin"
-    / "testdata"
-    / "conformance"
-    / "manifest.draft.json"
+    ROOT / "src" / "atn_plugin" / "testdata" / "conformance" / "manifest.draft.json"
 )
 CORE_MANIFEST = (
-    ROOT.parent / "kkachi-agent-network-control" / "testdata" / "conformance" / "manifest.json"
+    ROOT.parent / "agent-turn-network-control" / "testdata" / "conformance" / "manifest.json"
 )
 
 BASE_MANIFEST = {
     "manifest_version": 1,
-    "protocol_version": "hun-protocol-v1alpha0",
+    "protocol_version": "atn-protocol-v1alpha0",
     "stability": "draft-docs-scaffold",
     "fixtures": [],
     "required_feature_groups": ["version.read", "command_envelope", "structured_error"],
@@ -35,7 +30,7 @@ BASE_MANIFEST = {
 def test_plugin_local_zero_fixture_manifest_is_draft_only_and_not_live_ready() -> None:
     manifest = load_conformance_manifest(PLUGIN_DRAFT_MANIFEST)
 
-    assert manifest.protocol_version == "hun-protocol-v1alpha0"
+    assert manifest.protocol_version == "atn-protocol-v1alpha0"
     assert manifest.fixtures == ()
     assert manifest.live_readiness is False
 

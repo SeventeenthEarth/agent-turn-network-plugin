@@ -1,9 +1,9 @@
 {
   "manifest_version": 1,
-  "protocol_version": "hun-protocol-v1alpha0",
+  "protocol_version": "atn-protocol-v1alpha0",
   "stability": "draft-plugin-local-scaffold",
-  "owner_repo": "hermes-unified-network-plugin",
-  "consumer_repo": "hermes-unified-network-plugin",
+  "owner_repo": "atn-plugin",
+  "consumer_repo": "atn-plugin",
   "fixtures": [],
   "required_feature_groups": [
     "version.read",

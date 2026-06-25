@@ -20,7 +20,7 @@ REQUIRED_DOCS = [
 ]
 REQUIRED_PHRASES = [
     "plugin is not the source of truth",
-    "kkachi-agent-networkd",
+    "atn-controld",
     "test-prepare",
     "test-unit",
     "test-int",
@@ -45,11 +45,11 @@ FORBIDDEN_OPERATOR_CLAIMS = [
     "production activation is supported",
     "live plugin readiness is supported",
     "KAB readiness is supported",
-    "hun_session_status is supported",
+    "atn_session_status is supported",
     "provides_commands: [kan",
 ]
-BUNDLED_SKILL = "src/hermes_unified_network_plugin/bundled_skills/hun-plugin/SKILL.md"
-HUN_PUBLIC_SCAN_SUFFIXES = {".md", ".py", ".toml", ".yaml"}
+BUNDLED_SKILL = "src/atn_plugin/bundled_skills/atn-plugin/SKILL.md"
+ATN_PUBLIC_SCAN_SUFFIXES = {".md", ".py", ".toml", ".yaml"}
 
 
 class ForbiddenTerm(NamedTuple):
@@ -133,169 +133,169 @@ ALLOWED_PUBLIC_OCCURRENCES = [
         "docs/04-tooling.md",
         "kan-plugin",
         "SKILL-1 originally packaged the historical `kan-plugin` operator skill",
-        "historical SKILL-1 provenance before HUN-009 rename",
+        "historical SKILL-1 provenance before ATN-005 rename",
     ),
     AllowedOccurrence(
         "docs/06-implementation-epics-tasks.md",
         "kan_session_status",
         "`kan_session_status` is deferred because core `session.status.read`",
-        "historical HPLUG-1/HPLUG-2 row before HUN tool rename",
+        "historical HPLUG-1/HPLUG-2 row before ATN tool rename",
     ),
     AllowedOccurrence(
         "docs/06-implementation-epics-tasks.md",
         "kan_session_status",
         "`kan_session_status` remains deferred because matching core `session.status.read`",
-        "historical HPLUG-2 row before HUN tool rename",
+        "historical HPLUG-2 row before ATN tool rename",
     ),
     AllowedOccurrence(
         "docs/06-implementation-epics-tasks.md",
         "kan_stream_tail",
         "Implemented the fake/injected `kan_stream_tail` read-only plugin tool",
-        "historical HPLUG-2 row before HUN tool rename",
+        "historical HPLUG-2 row before ATN tool rename",
     ),
     AllowedOccurrence(
         "docs/06-implementation-epics-tasks.md",
         "kan_delegate_new",
         "`kan_delegate_new` -> `delegate.new`",
-        "historical DELRV-1 row before HUN tool rename",
+        "historical DELRV-1 row before ATN tool rename",
     ),
     AllowedOccurrence(
         "docs/06-implementation-epics-tasks.md",
         "kan_delegate_action",
         "`kan_delegate_action` -> exact implemented",
-        "historical DELRV-1 row before HUN tool rename",
+        "historical DELRV-1 row before ATN tool rename",
     ),
     AllowedOccurrence(
         "docs/06-implementation-epics-tasks.md",
         "kan_discord_send_message",
         "Added the injected-only `kan_discord_send_message` helper",
-        "historical CNDIS-2 row before HUN tool rename",
+        "historical CNDIS-2 row before ATN tool rename",
     ),
     AllowedOccurrence(
         "docs/06-implementation-epics-tasks.md",
         "kan-plugin",
         "Historical row: added the then-current bundled `kan-plugin` skill surface",
-        "historical SKILL-1 row before HUN skill rename",
+        "historical SKILL-1 row before ATN skill rename",
     ),
     AllowedOccurrence(
         "docs/06-implementation-epics-tasks.md",
         "kan_selected_participant_response",
         "fake/injected `kan_selected_participant_response` tool",
-        "historical PARTC-002 row before HUN tool rename",
+        "historical PARTC-002 row before ATN tool rename",
     ),
     AllowedOccurrence(
         "docs/06-implementation-epics-tasks.md",
         "kan_selected_participant_response",
         "updates `kan_selected_participant_response` framing",
-        "historical ARGUE-002 row before HUN tool rename",
+        "historical ARGUE-002 row before ATN tool rename",
     ),
     AllowedOccurrence(
         "docs/06-implementation-epics-tasks.md",
         "kan_selected_participant_response",
         "ARGUE fields are preserved through `kan_selected_participant_response`",
-        "historical RUNFIX-017 row before HUN tool rename",
+        "historical RUNFIX-017 row before ATN tool rename",
     ),
     AllowedOccurrence(
         "docs/06-implementation-epics-tasks.md",
         "kan_surface_render_projection",
         "pure/local `kan_surface_render_projection` rendering",
-        "historical SURFD-001 row before HUN tool rename",
+        "historical SURFD-001 row before ATN tool rename",
     ),
     AllowedOccurrence(
         "docs/06-implementation-epics-tasks.md",
         "kan_surface_render_projection",
         "updates `kan_surface_render_projection` so visible rows render",
-        "historical ARGUE-003 row before HUN tool rename",
+        "historical ARGUE-003 row before ATN tool rename",
     ),
     AllowedOccurrence(
         "docs/06-implementation-epics-tasks.md",
         "kan_discussion_activation_plan",
         "Historical row: added pure/local `kan_discussion_activation_plan`",
-        "historical RUNFIX-006 row before HUN tool rename",
+        "historical RUNFIX-006 row before ATN tool rename",
     ),
     AllowedOccurrence(
         "docs/06-implementation-epics-tasks.md",
         "kan_discussion_activation_plan",
         "Extended the existing pure/local `kan_discussion_activation_plan` dry-run tool",
-        "historical RUNFIX-007 row before HUN tool rename",
+        "historical RUNFIX-007 row before ATN tool rename",
     ),
     AllowedOccurrence(
         "docs/06-implementation-epics-tasks.md",
         "kan_discussion_activation_plan",
         "Extended the existing pure/local `kan_discussion_activation_plan` and packaged",
-        "historical RUNFIX-008 row before HUN tool rename",
+        "historical RUNFIX-008 row before ATN tool rename",
     ),
     AllowedOccurrence(
         "docs/06-implementation-epics-tasks.md",
         "kan_discussion_activation_plan",
         "implements local pre-`council.new` visible author guard proof in `kan_discussion_activation_plan`",
-        "historical RUNFIX-015 row before HUN tool rename",
+        "historical RUNFIX-015 row before ATN tool rename",
     ),
     AllowedOccurrence(
         "docs/06-implementation-epics-tasks.md",
         "kan_discussion_activation_plan",
         "extended the then-current `kan_discussion_activation_plan`, schema",
-        "historical RUNFIX-019 row before HUN tool rename",
+        "historical RUNFIX-019 row before ATN tool rename",
     ),
     AllowedOccurrence(
         "docs/06-implementation-epics-tasks.md",
         "kan-plugin",
         "bundled `kan-plugin`/`kan-moderator` skills",
-        "historical RUNFIX-019 row before HUN skill rename",
+        "historical RUNFIX-019 row before ATN skill rename",
     ),
     AllowedOccurrence(
         "docs/06-implementation-epics-tasks.md",
         "kan-moderator",
         "bundled `kan-plugin`/`kan-moderator` skills",
-        "historical RUNFIX-019 row before HUN skill rename",
+        "historical RUNFIX-019 row before ATN skill rename",
     ),
     AllowedOccurrence(
         "docs/06-implementation-epics-tasks.md",
         "legacy wrapper",
         "with no legacy wrapper",
-        "negative HUN-004 no-wrapper proof, not a compatibility claim",
+        "negative ATN-005 no-wrapper proof, not a compatibility claim",
     ),
     AllowedOccurrence(
         "docs/06-implementation-epics-tasks.md",
         "dual registration",
         "with no legacy aliases, dual registration, or fallback acceptance",
-        "negative HUN-006 no-dual-registration proof, not a compatibility claim",
+        "negative ATN-005 no-dual-registration proof, not a compatibility claim",
     ),
     AllowedOccurrence(
         "docs/06-implementation-epics-tasks.md",
         "fallback acceptance",
         "with no legacy aliases, dual registration, or fallback acceptance",
-        "negative HUN-006 no-fallback-acceptance proof, not a compatibility claim",
+        "negative ATN-005 no-fallback-acceptance proof, not a compatibility claim",
     ),
     AllowedOccurrence(
         "docs/10-live-transport-sot.md",
         "kan_discussion_activation_plan",
         "implemented as pure/local `kan_discussion_activation_plan`",
-        "historical RUNFIX-006 row before HUN tool rename",
+        "historical RUNFIX-006 row before ATN tool rename",
     ),
     AllowedOccurrence(
         "docs/10-live-transport-sot.md",
         "kan_discussion_activation_plan",
         "extends the pure/local `kan_discussion_activation_plan` with a pre-`council.new`",
-        "historical RUNFIX-015 row before HUN tool rename",
+        "historical RUNFIX-015 row before ATN tool rename",
     ),
     AllowedOccurrence(
         "docs/10-live-transport-sot.md",
         "kan_discussion_activation_plan",
         "extends `kan_discussion_activation_plan`, schema",
-        "historical RUNFIX-019 row before HUN tool rename",
+        "historical RUNFIX-019 row before ATN tool rename",
     ),
     AllowedOccurrence(
         "docs/12-hermes-unified-network-plugin-naming-sot.md",
         "dual registration",
         "with no legacy aliases, dual registration, or fallback acceptance",
-        "negative HUN-006 no-dual-registration proof, not a compatibility claim",
+        "negative ATN-005 no-dual-registration proof, not a compatibility claim",
     ),
     AllowedOccurrence(
         "docs/12-hermes-unified-network-plugin-naming-sot.md",
         "fallback acceptance",
         "with no legacy aliases, dual registration, or fallback acceptance",
-        "negative HUN-006 no-fallback-acceptance proof, not a compatibility claim",
+        "negative ATN-005 no-fallback-acceptance proof, not a compatibility claim",
     ),
 ]
 
@@ -321,12 +321,12 @@ def public_scan_paths(root: Path) -> list[Path]:
         root / "pyproject.toml",
     ]
     paths.extend(sorted((root / "docs").glob("*.md")))
-    source_root = root / "src" / "hermes_unified_network_plugin"
+    source_root = root / "src" / "atn_plugin"
     paths.extend(
         path
         for path in sorted(source_root.rglob("*"))
         if path.is_file()
-        and path.suffix in HUN_PUBLIC_SCAN_SUFFIXES
+        and path.suffix in ATN_PUBLIC_SCAN_SUFFIXES
         and "__pycache__" not in path.parts
     )
     return paths
@@ -355,7 +355,7 @@ def require_hun_public_terms(root: Path) -> None:
                 if is_allowed_public_occurrence(relative_path, term.token, line):
                     continue
                 raise SystemExit(
-                    "stale HUN public term found: "
+                    "stale ATN public term found: "
                     f"{relative_path}:{line_number}: {term.token!r} ({term.category})"
                 )
 
@@ -374,7 +374,7 @@ def require_bundled_skill_frontmatter(root: Path) -> None:
     if not isinstance(frontmatter, dict):
         raise SystemExit("bundled skill frontmatter must be a YAML mapping")
     name = frontmatter.get("name")
-    if name != "hun-plugin":
+    if name != "atn-plugin":
         raise SystemExit(f"bundled skill name mismatch: {name!r}")
     description = frontmatter.get("description")
     if not isinstance(description, str) or not description or len(description) > 1024:

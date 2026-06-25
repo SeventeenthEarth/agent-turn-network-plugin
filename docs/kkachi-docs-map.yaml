@@ -2,7 +2,7 @@
 project: "atn-plugin"
 public_control_repo: "atn-control"
 local_control_workspace: "../agent-turn-network-control"
-path_note: "ATN-001 locks the public rename and ATN-003 scrubs plugin docs; the current sibling workspace already resolves at the public `agent-turn-network-*` paths while ATN-004 and ATN-005 remain pending runtime/package rename work."
+path_note: "ATN-001 locks the public rename, ATN-003 scrubs plugin docs, ATN-004 completes control code/runtime naming, and ATN-005 now completes the final plugin package/tool/skill/guardrail rename work."
 roadmap: "docs/06-implementation-epics-tasks.md"
 sot_docs:
   - "docs/11-council-argument-graph-sot.md"
@@ -11,7 +11,7 @@ sot_docs:
   - "docs/01-architecture.md"
   - "docs/07-core-compatibility.md"
   - "docs/09-skill-and-operator-guide.md"
-  - "docs/12-hermes-unified-network-plugin-naming-sot.md"
+  - "docs/12-atn-plugin-naming-sot.md"
   - "docs/13-agent-turn-network-plugin-naming-sot.md"
 adr_dir: "docs"
 todo_dir: "docs"
@@ -70,7 +70,7 @@ runfix:
   plugin_sot: "docs/10-live-transport-sot.md"
   control_sot: "../agent-turn-network-control/docs/24-live-transport-control-sot.md"
   operator_guide: "docs/09-skill-and-operator-guide.md"
-  bundled_skill: "src/hermes_unified_network_plugin/bundled_skills/hun-plugin/SKILL.md"
+  bundled_skill: "src/atn_plugin/bundled_skills/atn-plugin/SKILL.md"
   cross_repo_dag:
     - "control/RUNFIX-001"
     - "plugin/RUNFIX-002"
@@ -93,25 +93,15 @@ runfix:
 
 hun:
   epic: "HUN"
-  plugin_sot: "docs/12-hermes-unified-network-plugin-naming-sot.md"
+  plugin_sot: "docs/12-atn-plugin-naming-sot.md"
   control_sot: "../agent-turn-network-control/docs/26-hermes-unified-network-control-naming-sot.md"
   cross_repo_sequence:
-    - "control/HUN-001"
-    - "plugin/HUN-002"
-    - "control/HUN-003"
-    - "plugin/HUN-004"
-    - "control/HUN-005"
-    - "plugin/HUN-006"
-    - "control/HUN-007"
-    - "plugin/HUN-008"
-    - "plugin/HUN-009"
-    - "plugin/HUN-010"
-    - "control/HUN-011"
-    - "control/HUN-012"
-    - "plugin/HUN-013"
-    - "cross-repo/HUN-014"
-  boundary: "HUN is a clean public rename and vanilla Hermes runtime-split contract. Plugin owns package/import names, manifest, tool prefix, bundled skills, plugin docs, and plugin smoke tests. Control owns daemon, CLI, protocol, fixtures, runtime evidence, and control docs. No in-repository legacy aliases, hidden plugin-to-CLI fallback, live readiness claim, Discord delivery claim, package publication, or profile/provider/gateway/auth/token mutation is authorized by HUN-001/HUN-002."
-  compatibility_proof: "cross-repo/HUN-014 is completed/local-compatibility-proof under run-20260623T033911Z-267d9cd68d9c for final local/public naming compatibility and docs-map status alignment."
+    - "control/ATN-002"
+    - "plugin/ATN-003"
+    - "control/ATN-004"
+    - "plugin/ATN-005"
+  boundary: "HUN is a clean public rename and vanilla Hermes runtime-split contract. Plugin owns package/import names, manifest, tool prefix, bundled skills, plugin docs, and plugin smoke tests. Control owns daemon, CLI, protocol, fixtures, runtime evidence, and control docs. No in-repository legacy aliases, hidden plugin-to-CLI fallback, live readiness claim, Discord delivery claim, package publication, or profile/provider/gateway/auth/token mutation is authorized by HUN-001/ATN-005."
+  compatibility_proof: "cross-repo/ATN-005 is completed/local-compatibility-proof under run-20260623T033911Z-267d9cd68d9c for final local/public naming compatibility and docs-map status alignment."
 
 
 atn:
@@ -119,7 +109,6 @@ atn:
   plugin_sot: "docs/13-agent-turn-network-plugin-naming-sot.md"
   control_sot: "../agent-turn-network-control/docs/27-agent-turn-network-control-naming-sot.md"
   cross_repo_sequence:
-    - "cross-repo/ATN-001"
     - "control/ATN-002"
     - "plugin/ATN-003"
     - "control/ATN-004"

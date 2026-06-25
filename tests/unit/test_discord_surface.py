@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from hermes_unified_network_plugin.discord_surface import (
+from atn_plugin.discord_surface import (
     DEFAULT_TEST_LABEL,
     DiscordMessageResult,
     DiscordMessageTarget,

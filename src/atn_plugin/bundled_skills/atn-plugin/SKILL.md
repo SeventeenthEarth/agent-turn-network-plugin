@@ -1,18 +1,18 @@
 ---
-name: hun-plugin
-description: Use when operating the packaged hermes-unified-network-plugin Hermes adapter, explaining its current fake/injected tool surface, or preparing a non-live install/enable/rollback plan.
+name: atn-plugin
+description: Use when operating the packaged atn-plugin Hermes adapter, explaining its current fake/injected tool surface, or preparing a non-live install/enable/rollback plan.
 version: 0.1.0
 author: 17번째 지구 Kkachi
 license: MIT
 metadata:
   hermes:
-    tags: [hun-plugin, kkachi, hermes-plugin, operator-guide, no-live]
+    tags: [atn-plugin, kkachi, hermes-plugin, operator-guide, no-live]
     related_skills: []
 ---
 
 # ATN Plugin Operator Skill
 
-Use this skill when an operator or agent needs to work with the public ATN plugin surface, explain its current safe surface, or prepare a non-live install/enable/rollback plan. ATN-005 still owns the checked-in bundled skill id/path rename, so this packaged resource remains under the current `hun-plugin` source path until that task lands.
+Use this skill when an operator or agent needs to work with the public ATN plugin surface, explain its current safe surface, or prepare a non-live install/enable/rollback plan. This packaged resource is the canonical checked-in ATN bundled skill.
 
 ## Current capability boundary
 
@@ -211,7 +211,7 @@ Final reports must keep these fields separate: `lifecycle_pass`, `selected_runne
 
 ## Required ATN companion skills
 
-`hermes-unified-network-plugin` must ship the operator guidance needed to use its
+`atn-plugin` must ship the operator guidance needed to use its
 tool surface. Do not leave ATN runtime/operator guidance as ops-only,
 profile-local, or external-directory-only skills. The plugin package owns and
 registers these bundled companion skills together as read-only, plugin-qualified
@@ -222,9 +222,9 @@ skills:
 - `atn-participant`: selected-speaker and participant response duties.
 
 Canonical Hermes loads use the qualified names
-`hermes-unified-network-plugin:atn-plugin`,
-`hermes-unified-network-plugin:atn-moderator`, and
-`hermes-unified-network-plugin:atn-participant`. Do not require flat
+`atn-plugin:atn-plugin`,
+`atn-plugin:atn-moderator`, and
+`atn-plugin:atn-participant`. Do not require flat
 profile-local copies for the normal ATN plugin path.
 
 Treat a profile where plugin tools are enabled but these companion skills cannot
@@ -377,7 +377,7 @@ text is diagnostic-only and never full ATN success.
 ## Troubleshooting prompts
 
 - Missing bundled skill: verify package data under
-  `hermes_unified_network_plugin/bundled_skills/hun-plugin/SKILL.md` and use the
+  `atn_plugin/bundled_skills/atn-plugin/SKILL.md` and use the
   import-safe resource helper instead of profile writes.
 - Unexpected slash commands: inspect the manifest and root entrypoint; the
   expected command surface is empty.

@@ -4,16 +4,16 @@ import json
 from collections.abc import Callable
 from typing import Any
 
-from hermes_unified_network_plugin.client import DaemonClient, StaticDaemonTransport
-from hermes_unified_network_plugin.client.daemon import OP_COMMAND_SUBMIT, OP_VERSION_READ
-from hermes_unified_network_plugin.tools import register_tools
+from atn_plugin.client import DaemonClient, StaticDaemonTransport
+from atn_plugin.client.daemon import OP_COMMAND_SUBMIT, OP_VERSION_READ
+from atn_plugin.tools import register_tools
 
 
 def test_fake_hermes_context_invokes_registered_delegate_handlers() -> None:
     transport = StaticDaemonTransport(
         {
             OP_VERSION_READ: {
-                "protocol_version": "hun-protocol-v1alpha0",
+                "protocol_version": "atn-protocol-v1alpha0",
                 "daemon_version": "0.0.0-fake",
                 "feature_groups": [
                     "version.read",
@@ -37,22 +37,22 @@ def test_fake_hermes_context_invokes_registered_delegate_handlers() -> None:
     register_tools(ctx, client_factory=lambda: DaemonClient(transport))
 
     assert [tool["name"] for tool in ctx.registered_tools] == [
-        "hun_daemon_status",
-        "hun_compatibility_diagnostics",
-        "hun_stream_tail",
-        "hun_stream_ack",
-        "hun_delegate_new",
-        "hun_delegate_action",
-        "hun_council_command",
-        "hun_selected_participant_response",
-        "hun_delivery_evidence",
-        "hun_surface_render_projection",
-        "hun_discussion_activation_plan",
-        "hun_discord_send_message",
+        "atn_daemon_status",
+        "atn_compatibility_diagnostics",
+        "atn_stream_tail",
+        "atn_stream_ack",
+        "atn_delegate_new",
+        "atn_delegate_action",
+        "atn_council_command",
+        "atn_selected_participant_response",
+        "atn_delivery_evidence",
+        "atn_surface_render_projection",
+        "atn_discussion_activation_plan",
+        "atn_discord_send_message",
     ]
 
     delegate_new = json.loads(
-        ctx.handlers["hun_delegate_new"](
+        ctx.handlers["atn_delegate_new"](
             {
                 "session_id": "sess-1",
                 "moderator": "agent-mod",
@@ -70,7 +70,7 @@ def test_fake_hermes_context_invokes_registered_delegate_handlers() -> None:
         )
     )
     delegate_action = json.loads(
-        ctx.handlers["hun_delegate_action"](
+        ctx.handlers["atn_delegate_action"](
             {
                 "session_id": "sess-1",
                 "command": "delegate.escalation_delivered",
@@ -81,7 +81,7 @@ def test_fake_hermes_context_invokes_registered_delegate_handlers() -> None:
         )
     )
     council_command = json.loads(
-        ctx.handlers["hun_council_command"](
+        ctx.handlers["atn_council_command"](
             {
                 "session_id": "sess-council",
                 "command": "council.ready",
@@ -97,7 +97,7 @@ def test_fake_hermes_context_invokes_registered_delegate_handlers() -> None:
         )
     )
     delivery_evidence = json.loads(
-        ctx.handlers["hun_delivery_evidence"](
+        ctx.handlers["atn_delivery_evidence"](
             {
                 "session_id": "sess-1",
                 "command": "delegate.escalation_delivered",
@@ -133,7 +133,7 @@ def test_fake_hermes_context_invokes_registered_delegate_handlers() -> None:
     }
     assert transport.requests[2] == (
         OP_VERSION_READ,
-        {"protocol_version": "hun-protocol-v1alpha0"},
+        {"protocol_version": "atn-protocol-v1alpha0"},
     )
     assert transport.requests[3][0] == OP_COMMAND_SUBMIT
     assert transport.requests[3][1] is not None
@@ -148,7 +148,7 @@ def test_fake_hermes_context_invokes_registered_delegate_handlers() -> None:
     }
     assert transport.requests[4] == (
         OP_VERSION_READ,
-        {"protocol_version": "hun-protocol-v1alpha0"},
+        {"protocol_version": "atn-protocol-v1alpha0"},
     )
     assert transport.requests[5][0] == OP_COMMAND_SUBMIT
     assert transport.requests[5][1] is not None

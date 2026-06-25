@@ -1,6 +1,6 @@
 # atn-plugin
 
-`atn-plugin` is the Python Hermes plugin adapter for Agent Turn Network (ATN). Public docs now use the ATN names `atn-plugin`, `atn-moderator`, `atn-participant`, and `atn_*` tool labels. ATN-005 still owns the checked-in package/import/manifest/tool/skill rename, so repository code identifiers remain `hermes_unified_network_plugin`, `hun-*`, and `hun_*` until that task lands. Hermes has a plugin slash-command host API, but this plugin still has no ATN slash-command bindings, live daemon discovery, live/default Discord gateway wiring, session-status tool, production activation claim, KAB bridge claim, or live plugin readiness claim.
+`atn-plugin` is the Python Hermes plugin adapter for Agent Turn Network (ATN). Public docs now use the ATN names `atn-plugin`, `atn-moderator`, `atn-participant`, and `atn_*` tool labels. The checked-in package/import/manifest/tool/skill surfaces now use the ATN names `atn_plugin`, `atn-plugin`, `atn-*`, and `atn_*`. Hermes has a plugin slash-command host API, but this plugin still has no ATN slash-command bindings, live daemon discovery, live/default Discord gateway wiring, session-status tool, production activation claim, KAB bridge claim, or live plugin readiness claim.
 
 The plugin is not the source of truth. The control daemon owns `channel.jsonl`, SQLite projections, locks, replay, cursors, and state transitions.
 

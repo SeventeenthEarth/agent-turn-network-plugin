@@ -4,34 +4,34 @@ import json
 from collections.abc import Callable
 from typing import Any
 
-from hermes_unified_network_plugin.client import DaemonClient, StaticDaemonTransport
-from hermes_unified_network_plugin.client.daemon import (
+from atn_plugin.client import DaemonClient, StaticDaemonTransport
+from atn_plugin.client.daemon import (
     OP_DIAGNOSTICS_READ,
     OP_STATUS_READ,
     OP_STREAM_TAIL,
     OP_VERSION_READ,
 )
-from hermes_unified_network_plugin.tools import register_tools
+from atn_plugin.tools import register_tools
 
 
 def test_fake_hermes_context_invokes_registered_readonly_handlers() -> None:
     transport = StaticDaemonTransport(
         {
             OP_STATUS_READ: {
-                "protocol_version": "hun-protocol-v1alpha0",
+                "protocol_version": "atn-protocol-v1alpha0",
                 "daemon_version": "0.0.0-fake",
                 "status": "fake-ready",
                 "feature_groups": ["version.read", "command_envelope", "structured_error"],
                 "live_readiness": False,
             },
             OP_DIAGNOSTICS_READ: {
-                "protocol_version": "hun-protocol-v1alpha0",
+                "protocol_version": "atn-protocol-v1alpha0",
                 "daemon_version": "0.0.0-fake",
                 "live_readiness": False,
                 "checks": [{"name": "structured_error", "ok": True}],
             },
             OP_VERSION_READ: {
-                "protocol_version": "hun-protocol-v1alpha0",
+                "protocol_version": "atn-protocol-v1alpha0",
                 "daemon_version": "0.0.0-fake",
                 "feature_groups": [
                     "version.read",
@@ -42,7 +42,7 @@ def test_fake_hermes_context_invokes_registered_readonly_handlers() -> None:
                 "live_readiness": False,
             },
             OP_STREAM_TAIL: {
-                "protocol_version": "hun-protocol-v1alpha0",
+                "protocol_version": "atn-protocol-v1alpha0",
                 "frames": [
                     {
                         "cursor": "cur_1",
@@ -65,25 +65,25 @@ def test_fake_hermes_context_invokes_registered_readonly_handlers() -> None:
     register_tools(ctx, client_factory=lambda: DaemonClient(transport))
 
     assert [tool["name"] for tool in ctx.registered_tools] == [
-        "hun_daemon_status",
-        "hun_compatibility_diagnostics",
-        "hun_stream_tail",
-        "hun_stream_ack",
-        "hun_delegate_new",
-        "hun_delegate_action",
-        "hun_council_command",
-        "hun_selected_participant_response",
-        "hun_delivery_evidence",
-        "hun_surface_render_projection",
-        "hun_discussion_activation_plan",
-        "hun_discord_send_message",
+        "atn_daemon_status",
+        "atn_compatibility_diagnostics",
+        "atn_stream_tail",
+        "atn_stream_ack",
+        "atn_delegate_new",
+        "atn_delegate_action",
+        "atn_council_command",
+        "atn_selected_participant_response",
+        "atn_delivery_evidence",
+        "atn_surface_render_projection",
+        "atn_discussion_activation_plan",
+        "atn_discord_send_message",
     ]
-    status = json.loads(ctx.handlers["hun_daemon_status"]({}))
+    status = json.loads(ctx.handlers["atn_daemon_status"]({}))
     diagnostics = json.loads(
-        ctx.handlers["hun_compatibility_diagnostics"]({"session_id": "sess-int"})
+        ctx.handlers["atn_compatibility_diagnostics"]({"session_id": "sess-int"})
     )
     stream_tail = json.loads(
-        ctx.handlers["hun_stream_tail"](
+        ctx.handlers["atn_stream_tail"](
             {"session_id": "sess-int", "member": "agent-1", "since_cursor": "cur_prev"}
         )
     )
@@ -92,16 +92,16 @@ def test_fake_hermes_context_invokes_registered_readonly_handlers() -> None:
     assert diagnostics["ok"] is True
     assert stream_tail["ok"] is True
     assert transport.requests == [
-        (OP_STATUS_READ, {"protocol_version": "hun-protocol-v1alpha0"}),
+        (OP_STATUS_READ, {"protocol_version": "atn-protocol-v1alpha0"}),
         (
             OP_DIAGNOSTICS_READ,
-            {"protocol_version": "hun-protocol-v1alpha0", "session_id": "sess-int"},
+            {"protocol_version": "atn-protocol-v1alpha0", "session_id": "sess-int"},
         ),
-        (OP_VERSION_READ, {"protocol_version": "hun-protocol-v1alpha0"}),
+        (OP_VERSION_READ, {"protocol_version": "atn-protocol-v1alpha0"}),
         (
             OP_STREAM_TAIL,
             {
-                "protocol_version": "hun-protocol-v1alpha0",
+                "protocol_version": "atn-protocol-v1alpha0",
                 "session_id": "sess-int",
                 "member": "agent-1",
                 "since_cursor": "cur_prev",

@@ -45,7 +45,7 @@ REQUIRE_UV_TARGETS = (
 TARGET_MARKERS = {
     "fmt": (("$(UV) run ruff format --check .", "ruff format check"),),
     "lint": (("$(UV) run ruff check .", "ruff lint check"),),
-    "typecheck": (("$(UV) run mypy src", "mypy typecheck"),),
+    "typecheck": (("$(UV) run python -m mypy src", "mypy typecheck"),),
     "docs-guardrails": (("scripts/guardrails.py", "docs guardrails script"),),
     "check-core-contract": (("scripts/check_core_contract.py", "core contract script"),),
     "check-bootstrap-smoke": (("scripts/check_bootstrap_smoke.py", "bootstrap smoke script"),),
@@ -53,6 +53,7 @@ TARGET_MARKERS = {
         ("scripts/check_plugin_load_smoke.py", "plugin-load smoke script"),
     ),
     "check-make-contract": (("scripts/check_make_contract.py", "Makefile contract script"),),
+    "test-unit": (("python -m pytest tests/unit", "pytest unit module runner"),),
     "require-uv": (
         ("uv is required for Python scaffold checks", "uv fail-safe message"),
         ("pyproject.toml is required for Python scaffold checks", "pyproject fail-safe message"),
@@ -63,6 +64,7 @@ TARGET_MARKERS = {
         ("KAN_DISCORD_E2E=0", "Discord E2E opt-in default off"),
         ("HERMES_TEST_HOME", "isolated Hermes test home override"),
         ('DISCORD_TEST_TARGET=""', "Discord target isolation"),
+        ("python -m pytest", "pytest module runner"),
     ),
 }
 

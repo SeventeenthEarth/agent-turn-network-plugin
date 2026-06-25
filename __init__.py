@@ -1,4 +1,4 @@
-"""Hermes directory plugin entrypoint for hermes-unified-network-plugin.
+"""Hermes directory plugin entrypoint for atn-plugin.
 
 Registers read-only status/diagnostics/stream-tail tools, DELRV-1
 delegation/review command-envelope tools, CNDIS-1 council/delivery-evidence
@@ -22,14 +22,14 @@ if _SRC_PATH.is_dir():
     if _src not in sys.path:
         sys.path.insert(0, _src)
 
-from hermes_unified_network_plugin.bundled_skills import (  # noqa: E402
+from atn_plugin.bundled_skills import (  # noqa: E402
     bundled_skill_names,
     bundled_skill_resource,
 )
-from hermes_unified_network_plugin.client.daemon import DaemonClient  # noqa: E402
-from hermes_unified_network_plugin.client.live import load_plugin_local_live_config  # noqa: E402
-from hermes_unified_network_plugin.errors import DaemonTransportError  # noqa: E402
-from hermes_unified_network_plugin.tools import (  # noqa: E402
+from atn_plugin.client.daemon import DaemonClient  # noqa: E402
+from atn_plugin.client.live import load_plugin_local_live_config  # noqa: E402
+from atn_plugin.errors import DaemonTransportError  # noqa: E402
+from atn_plugin.tools import (  # noqa: E402
     ClientFactory,
     ToolRegistrationContext,
     register_tools,
@@ -56,26 +56,26 @@ def register(
 
 
 def _register_bundled_skills(ctx: object) -> None:
-    """Register required HUN operator/role skills bundled with this plugin.
+    """Register required ATN operator/role skills bundled with this plugin.
 
     Hermes exposes plugin skills as read-only, plugin-qualified skills.  This
     does not mutate profile skill directories and keeps the plugin package as
-    the canonical source for HUN operator guidance.
+    the canonical source for ATN operator guidance.
     """
 
     register_skill = getattr(ctx, "register_skill", None)
     if not callable(register_skill):
         return
     descriptions = {
-        "hun-plugin": "HUN plugin operator surface and boundaries.",
-        "hun-moderator": "HUN council moderator preflight, lifecycle, and closeout guidance.",
-        "hun-participant": "HUN selected-speaker participant response guidance.",
+        "atn-plugin": "ATN plugin operator surface and boundaries.",
+        "atn-moderator": "ATN council moderator preflight, lifecycle, and closeout guidance.",
+        "atn-participant": "ATN selected-speaker participant response guidance.",
     }
     for name in bundled_skill_names():
         register_skill(
             name=name,
             path=Path(str(bundled_skill_resource(name))),
-            description=descriptions.get(name, "HUN bundled operator guidance."),
+            description=descriptions.get(name, "ATN bundled operator guidance."),
         )
 
 

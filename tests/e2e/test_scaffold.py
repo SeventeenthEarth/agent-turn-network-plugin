@@ -3,14 +3,14 @@ from __future__ import annotations
 import json
 import os
 
-import hermes_unified_network_plugin as plugin
-from hermes_unified_network_plugin.client import DaemonClient, StaticDaemonTransport
-from hermes_unified_network_plugin.client.daemon import (
+import atn_plugin as plugin
+from atn_plugin.client import DaemonClient, StaticDaemonTransport
+from atn_plugin.client.daemon import (
     OP_STATUS_READ,
     OP_STREAM_TAIL,
     OP_VERSION_READ,
 )
-from hermes_unified_network_plugin.tools import handle_daemon_status, handle_stream_tail
+from atn_plugin.tools import handle_daemon_status, handle_stream_tail
 
 
 def test_e2e_scaffold_uses_isolated_environment_only() -> None:
@@ -29,7 +29,7 @@ def test_e2e_readonly_handler_smoke_uses_explicit_fake_transport_only() -> None:
                 StaticDaemonTransport(
                     {
                         OP_STATUS_READ: {
-                            "protocol_version": "hun-protocol-v1alpha0",
+                            "protocol_version": "atn-protocol-v1alpha0",
                             "daemon_version": "0.0.0-fake",
                             "status": "fake-ready",
                             "feature_groups": [
@@ -58,7 +58,7 @@ def test_e2e_stream_tail_handler_smoke_uses_explicit_fake_transport_only() -> No
                 StaticDaemonTransport(
                     {
                         OP_VERSION_READ: {
-                            "protocol_version": "hun-protocol-v1alpha0",
+                            "protocol_version": "atn-protocol-v1alpha0",
                             "daemon_version": "0.0.0-fake",
                             "feature_groups": [
                                 "version.read",
@@ -69,7 +69,7 @@ def test_e2e_stream_tail_handler_smoke_uses_explicit_fake_transport_only() -> No
                             "live_readiness": False,
                         },
                         OP_STREAM_TAIL: {
-                            "protocol_version": "hun-protocol-v1alpha0",
+                            "protocol_version": "atn-protocol-v1alpha0",
                             "frames": [],
                         },
                     }
@@ -79,5 +79,5 @@ def test_e2e_stream_tail_handler_smoke_uses_explicit_fake_transport_only() -> No
     )
 
     assert result["ok"] is True
-    assert result["tool"] == "hun_stream_tail"
+    assert result["tool"] == "atn_stream_tail"
     assert result["data"] == {"frames": [], "next_cursor": None}

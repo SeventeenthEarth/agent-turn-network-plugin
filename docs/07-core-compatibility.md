@@ -2,7 +2,7 @@
 
 ## Goal
 
-Let `hermes-unified-network-plugin` develop independently from the Go control runtime while proving compatibility with the control daemon contract.
+Let `atn-plugin` develop independently from the Go control runtime while proving compatibility with the control daemon contract.
 
 The control-side SOT is public-facing as `atn-control` and currently resolved through the local compatibility path `../../agent-turn-network-control/docs/21-cross-repo-development.md`. For live-local transport work, the control-side companion SOT is `../../agent-turn-network-control/docs/24-live-transport-control-sot.md` and the plugin-side SOT is `docs/10-live-transport-sot.md`. `plugin/LTRAN-001` is completed as docs-only SOT/mapping work; it does not implement live transport or claim live/production/Discord/gateway/auth/token/KAB/hidden CLI fallback readiness. `plugin/LTRAN-002` is completed as the first bounded implementation task for explicit Unix-socket `status.read` / `version.read` live smoke only.
 
@@ -73,7 +73,7 @@ tests, and `make check-plugin-load-smoke` local isolated plugin-load smoke gate.
 
 | Surface or feature | Control / Hermes status | Plugin support | Evidence source | Unsupported or degraded behavior |
 | --- | --- | --- | --- | --- |
-| Protocol `atn-protocol-v1alpha0` | Control conformance manifest declares the protocol | Supported for fake/injected client compatibility checks | `make check-core-contract`, `docs/07-core-compatibility.md`, `src/hermes_unified_network_plugin/protocol.py` | Any other protocol fails closed before compatibility is claimed. |
+| Protocol `atn-protocol-v1alpha0` | Control conformance manifest declares the protocol | Supported for fake/injected client compatibility checks | `make check-core-contract`, `docs/07-core-compatibility.md`, `src/atn_plugin/protocol.py` | Any other protocol fails closed before compatibility is claimed. |
 | `version.read` | Control-supported compatibility probe | Used by stream, council, and delivery-evidence feature gates through injected clients | `tests/unit/test_status_version_client.py`, `tests/unit/test_tool_handlers.py`, `tests/integration/test_cndis_conformance.py` | `session.status.read` is not implemented or exposed. |
 | Command/event envelope and structured error | Control-supported command envelope and daemon error contract | Supported through `atn_delegate_new`, `atn_delegate_action`, `atn_council_command`, and `atn_delivery_evidence` with caller-supplied request/idempotency IDs | `tests/unit/test_command_envelope.py`, `tests/unit/test_daemon_error_decoding.py`, `tests/integration/test_delegate_plugin_tools.py` | Unknown commands, malformed envelopes, missing IDs, or daemon structured failures return JSON `ok:false`; no local lifecycle or retry state is added. |
 | Stream features | Control feature group `stream_frame` gates retained stream reads | `atn_stream_tail` supported only with positive injected `version.read` compatibility | `tests/unit/test_stream_frame_parsing.py`, `tests/integration/test_fake_daemon_stream_diagnostics.py` | Missing `stream_frame`, malformed frames, live sockets, SSE, WebSocket, CLI, or daemon discovery fail closed / remain unsupported. |
@@ -84,7 +84,7 @@ tests, and `make check-plugin-load-smoke` local isolated plugin-load smoke gate.
 | Discussion activation planner/doctor | RUNFIX requires explicit install-vs-activation planning before any apply/live-local pilot | `atn_discussion_activation_plan` builds a pure/local dry-run report from caller-provided evidence, classifies eligible/excluded/blocked profiles from explicit effective Discord evidence, excludes bot-to-bot-enabled profiles by default, emits eligible-only `allow_list_targets`, profile remediation, parent-channel proof state, fallback audit, keeps RUNFIX labels separate, and always returns `live_readiness: false` | `tests/unit/test_discussion_activation_planner.py`, `tests/unit/test_tool_handlers.py`, `tests/unit/test_tool_schemas.py` | No daemon startup, socket discovery, current Hermes/Discord/profile/gateway inspection, CLI fallback, Discord send/channel creation, profile/gateway/provider/auth/token/model mutation, live readiness, or activation apply. |
 | `transcript.render` | Control-supported capability | Not exposed as a plugin tool in SKILL-2 | Control `TRANS-001` completion is recorded as unblock evidence only | No `atn_transcript_render` tool, command, hook, or live fallback is added. |
 | `export.bundle` | Control-supported capability | Not exposed as a plugin tool in SKILL-2 | Control `TRANS-001`/`RELIA-001` completion is recorded as unblock evidence only | No `atn_export_bundle` tool, command, hook, or live fallback is added. |
-| Packaged skill resource | Public ATN bundled skill names are `atn-plugin`, `atn-moderator`, and `atn-participant`; current checked-in package resources remain under `bundled_skills/hun-plugin/SKILL.md`, `bundled_skills/hun-moderator/SKILL.md`, and `bundled_skills/hun-participant/SKILL.md` until ATN-005 | Supported for import-safe package resource reads | `tests/unit/test_bundled_skills.py`, `make check-plugin-load-smoke` | The package does not install into the user's Hermes profile. |
+| Packaged skill resource | Public ATN bundled skill names are `atn-plugin`, `atn-moderator`, and `atn-participant`; current checked-in package resources remain under `bundled_skills/atn-plugin/SKILL.md`, `bundled_skills/atn-moderator/SKILL.md`, and `bundled_skills/atn-participant/SKILL.md` until ATN-005 | Supported for import-safe package resource reads | `tests/unit/test_bundled_skills.py`, `make check-plugin-load-smoke` | The package does not install into the user's Hermes profile. |
 | Local isolated plugin-load smoke | Hermes-compatible root `register(ctx)` entrypoint can be loaded with a fake context | Supported only as local isolated plugin-load smoke | `scripts/check_plugin_load_smoke.py`, `tests/unit/test_plugin_load_smoke.py`, `make check-plugin-load-smoke` | This is not production activation, live plugin readiness, KAB readiness, live Hermes readiness, or live Discord readiness. |
 | Live-local daemon transport | `plugin/LTRAN-001` docs-only mapping complete; `control/LTRAN-001`, `control/LTRAN-002`, and `control/LTRAN-003` completed as dependency evidence | `plugin/LTRAN-002` supports explicit `live_transport.unix_socket_path` Unix-socket transport for `status.read` and `version.read` smoke only | `tests/unit/test_live_transport_config.py`, `tests/integration/test_live_unix_socket_transport.py`, `docs/10-live-transport-sot.md` | No-config, unsafe paths, localhost/TCP, CLI fallback, daemon discovery, Hermes gateway, auth/token, KAB, provider/profile mutation, stream/write support, equivalence proof, dedupe proof, hidden fallback, and production activation remain unsupported. |
 | `atn_session_status` | No authoritative `session.status.read` plugin contract | Unsupported | Guardrails, schema tests, docs | Do not add `atn_session_status` or `session.status.read` support. |
@@ -213,7 +213,7 @@ plugin-load readiness, or any change to `provides_commands: []`.
 
 ## HPLUG-3 slash-command compatibility guard
 
-Hermes host slash-command support exists through `PluginContext.register_command`, but HUN plugin slash commands are not compatible-ready. Control ATN must first provide daemon command authority, protocol fixtures, idempotency/error semantics, and delivery-evidence rules for the specific operation. Until then, `provides_commands: []` is the correct manifest state and no slash-command handler should be registered. See `docs/08-unsupported-surfaces.md` for the operator-facing unsupported-surface matrix and future binding checklist.
+Hermes host slash-command support exists through `PluginContext.register_command`, but ATN plugin slash commands are not compatible-ready. Control ATN must first provide daemon command authority, protocol fixtures, idempotency/error semantics, and delivery-evidence rules for the specific operation. Until then, `provides_commands: []` is the correct manifest state and no slash-command handler should be registered. See `docs/08-unsupported-surfaces.md` for the operator-facing unsupported-surface matrix and future binding checklist.
 
 ## SKILL-2 local isolated plugin-load guard
 
@@ -229,7 +229,7 @@ environment variables do not change local behavior, rejects a fake
 and verifies wheel package inclusion plus bundled skill compatibility.
 
 This smoke gate does not read or mutate a live Hermes profile, contact
-kkachi-agent-networkd, open sockets, use localhost, call a CLI, discover
+atn-controld, open sockets, use localhost, call a CLI, discover
 providers, use auth/token/gateway material, contact Discord, call KAB, prove
 production activation, or prove live plugin readiness. The smoke claim is only
 local isolated plugin-load smoke.

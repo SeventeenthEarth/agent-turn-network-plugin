@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "hermes-unified-network-plugin"
+name = "atn-plugin"
 dynamic = ["version"]
 description = "Hermes plugin adapter for Agent Turn Network fake/injected tools and bundled ATN operator guidance."
 readme = "README.md"
@@ -19,10 +19,10 @@ dev = [
 ]
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/hermes_unified_network_plugin"]
+packages = ["src/atn_plugin"]
 
 [tool.hatch.version]
-path = "src/hermes_unified_network_plugin/__init__.py"
+path = "src/atn_plugin/__init__.py"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -41,4 +41,4 @@ python_version = "3.11"
 strict = true
 explicit_package_bases = true
 mypy_path = "src"
-packages = ["hermes_unified_network_plugin"]
+packages = ["atn_plugin"]

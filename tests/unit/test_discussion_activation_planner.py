@@ -4,8 +4,8 @@ import json
 
 import pytest
 
-from hermes_unified_network_plugin.activation_planner import build_discussion_activation_plan
-from hermes_unified_network_plugin.tools import handle_discussion_activation_plan
+from atn_plugin.activation_planner import build_discussion_activation_plan
+from atn_plugin.tools import handle_discussion_activation_plan
 
 
 def complete_plan() -> dict[str, object]:
@@ -21,8 +21,8 @@ def complete_plan() -> dict[str, object]:
             "installed": True,
             "enabled": True,
             "tool_names": [
-                "hun_daemon_status",
-                "hun_discussion_activation_plan",
+                "atn_daemon_status",
+                "atn_discussion_activation_plan",
             ],
             "evidence_ref": "plugin-load-smoke",
         },
@@ -428,7 +428,7 @@ def test_complete_dry_run_is_ready_for_approval_without_live_readiness() -> None
             "evidence_ref": "profile/seohwang/bot-to-bot-enabled",
             "remediation": (
                 "Disable bot-to-bot replies for this profile or omit it from the "
-                "HUN discussion allow-list."
+                "ATN discussion allow-list."
             ),
         }
     ]
@@ -483,7 +483,7 @@ def test_complete_dry_run_is_ready_for_approval_without_live_readiness() -> None
     assert report["operator_evidence_report"]["runner_evidence"]["status"] == "unproven"
     assert report["activation_evidence_model_report"] == {
         "task_id": "plugin/HUN-008",
-        "public_tool_name": "hun_discussion_activation_plan",
+        "public_tool_name": "atn_discussion_activation_plan",
         "legacy_public_aliases_allowed": False,
         "historical_dependency_labels": [
             "control/RUNFIX-005",
@@ -515,7 +515,7 @@ def test_legacy_kan_activation_tool_name_does_not_satisfy_visibility() -> None:
     assert {
         "code": "activation_tool_visibility_missing",
         "owner": "plugin",
-        "message": "hun_discussion_activation_plan must be visible in plugin_install.tool_names.",
+        "message": "atn_discussion_activation_plan must be visible in plugin_install.tool_names.",
     } in report["blockers"]
 
 
@@ -1980,7 +1980,7 @@ def test_bot_to_bot_enabled_profiles_are_excluded_by_default() -> None:
             "evidence_ref": "profile/jonghoe/bot-to-bot",
             "remediation": (
                 "Disable bot-to-bot replies for this profile or omit it from the "
-                "HUN discussion allow-list."
+                "ATN discussion allow-list."
             ),
         }
     ]
@@ -2025,7 +2025,7 @@ def test_missing_tool_visibility_or_eligibility_blocks_profile(
             "remediation": (
                 "Provide explicit effective Hermes profile tool visibility evidence."
                 if reason == "tools_visibility_unknown"
-                else "Enable/verify the profile-visible HUN plugin tools before allow-listing."
+                else "Enable/verify the profile-visible ATN plugin tools before allow-listing."
                 if reason == "tools_visibility_missing_or_false"
                 else "Provide explicit effective Hermes bot-to-bot policy evidence."
             ),
@@ -2112,7 +2112,7 @@ def test_handler_wraps_report_and_keeps_live_readiness_false() -> None:
     body = json.loads(handle_discussion_activation_plan({"plan": complete_plan()}))
 
     assert body["ok"] is True
-    assert body["tool"] == "hun_discussion_activation_plan"
+    assert body["tool"] == "atn_discussion_activation_plan"
     assert body["live_readiness"] is False
     assert body["data"]["status"] == "ready_for_approval"
     assert body["data"]["live_readiness"] is False
@@ -2122,6 +2122,6 @@ def test_handler_fails_closed_for_malformed_args() -> None:
     body = json.loads(handle_discussion_activation_plan({"plan": {"schema_version": 2}}))
 
     assert body["ok"] is False
-    assert body["tool"] == "hun_discussion_activation_plan"
+    assert body["tool"] == "atn_discussion_activation_plan"
     assert body["live_readiness"] is False
     assert body["error"]["category"] == "validation"

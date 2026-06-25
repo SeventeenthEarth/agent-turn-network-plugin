@@ -6,19 +6,19 @@ from collections.abc import Callable, Mapping
 from pathlib import Path
 from typing import Any, cast
 
-from hermes_unified_network_plugin.client import DaemonClient, StaticDaemonTransport
-from hermes_unified_network_plugin.client.daemon import OP_COMMAND_SUBMIT, OP_VERSION_READ
-from hermes_unified_network_plugin.protocol import JsonObject
-from hermes_unified_network_plugin.tools import handle_council_command
+from atn_plugin.client import DaemonClient, StaticDaemonTransport
+from atn_plugin.client.daemon import OP_COMMAND_SUBMIT, OP_VERSION_READ
+from atn_plugin.protocol import JsonObject
+from atn_plugin.tools import handle_council_command
 
 CONTROL_CONFORMANCE_ROOT = (
     Path(__file__).resolve().parents[2].parent
-    / "kkachi-agent-network-control"
+    / "agent-turn-network-control"
     / "testdata"
     / "conformance"
 )
 BASE_VERSION_WITH_COUNCIL: JsonObject = {
-    "protocol_version": "hun-protocol-v1alpha0",
+    "protocol_version": "atn-protocol-v1alpha0",
     "daemon_version": "0.0.0-fake",
     "feature_groups": ["version.read", "command_envelope", "structured_error", "council.lifecycle"],
     "live_readiness": False,
@@ -78,7 +78,7 @@ def _assert_no_transport_on_invalid(args: JsonObject, expected_message: str) -> 
     result = _decode(handle_council_command(args, client_factory=client_factory))
 
     assert result["ok"] is False
-    assert result["tool"] == "hun_council_command"
+    assert result["tool"] == "atn_council_command"
     assert result["error"] == {
         "category": "validation",
         "message": expected_message,

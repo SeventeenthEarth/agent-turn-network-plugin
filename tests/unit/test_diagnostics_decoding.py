@@ -6,14 +6,14 @@ from typing import cast
 
 import pytest
 
-from hermes_unified_network_plugin.client.diagnostics import parse_daemon_diagnostics
-from hermes_unified_network_plugin.errors import DaemonErrorDetails, DaemonProtocolError
-from hermes_unified_network_plugin.protocol import DIAGNOSTIC_CHECK_LIMIT, JsonObject
+from atn_plugin.client.diagnostics import parse_daemon_diagnostics
+from atn_plugin.errors import DaemonErrorDetails, DaemonProtocolError
+from atn_plugin.protocol import DIAGNOSTIC_CHECK_LIMIT, JsonObject
 
 
 def valid_diagnostics() -> JsonObject:
     return {
-        "protocol_version": "hun-protocol-v1alpha0",
+        "protocol_version": "atn-protocol-v1alpha0",
         "daemon_version": "0.0.0-fake",
         "live_readiness": False,
         "checks": [
@@ -50,7 +50,7 @@ def valid_diagnostics() -> JsonObject:
 def test_diagnostics_response_decodes_checks_and_redacts_details() -> None:
     diagnostics = parse_daemon_diagnostics(valid_diagnostics())
 
-    assert diagnostics.protocol_version == "hun-protocol-v1alpha0"
+    assert diagnostics.protocol_version == "atn-protocol-v1alpha0"
     assert diagnostics.daemon_version == "0.0.0-fake"
     assert diagnostics.live_readiness is False
     assert len(diagnostics.checks) == 2
@@ -92,26 +92,26 @@ def test_diagnostics_response_decodes_json_string() -> None:
             "checks": [],
         },
         {"daemon_version": "0.0.0", "live_readiness": False, "checks": []},
-        {"protocol_version": "hun-protocol-v1alpha0", "live_readiness": False, "checks": []},
+        {"protocol_version": "atn-protocol-v1alpha0", "live_readiness": False, "checks": []},
         {
-            "protocol_version": "hun-protocol-v1alpha0",
+            "protocol_version": "atn-protocol-v1alpha0",
             "daemon_version": "0.0.0",
             "live_readiness": "false",
             "checks": [],
         },
         {
-            "protocol_version": "hun-protocol-v1alpha0",
+            "protocol_version": "atn-protocol-v1alpha0",
             "daemon_version": "0.0.0",
             "live_readiness": False,
         },
         {
-            "protocol_version": "hun-protocol-v1alpha0",
+            "protocol_version": "atn-protocol-v1alpha0",
             "daemon_version": "0.0.0",
             "live_readiness": False,
             "checks": "not-list",
         },
         {
-            "protocol_version": "hun-protocol-v1alpha0",
+            "protocol_version": "atn-protocol-v1alpha0",
             "daemon_version": "0.0.0",
             "live_readiness": False,
             "checks": ["not-object"],

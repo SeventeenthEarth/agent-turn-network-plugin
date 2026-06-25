@@ -51,8 +51,8 @@ def test_make_contract_rejects_marker_moved_to_comment(monkeypatch: pytest.Monke
     check_make_contract = load_check_make_contract()
     makefile = check_make_contract.MAKEFILE.read_text(encoding="utf-8")
     broken = makefile.replace(
-        "\t@KAN_EXTERNAL=0 $(UV) run pytest tests/integration",
-        "\t@$(UV) run pytest tests/integration",
+        "\t@KAN_EXTERNAL=0 $(UV) run python -m pytest tests/integration",
+        "\t@$(UV) run python -m pytest tests/integration",
     )
     broken += "\n# unrelated offline marker: KAN_EXTERNAL=0\n"
 

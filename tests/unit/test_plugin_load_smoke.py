@@ -68,7 +68,7 @@ def test_plugin_load_smoke_rejects_legacy_manifest_name(
     manifest = root / "plugin.yaml"
     manifest.write_text(
         manifest.read_text(encoding="utf-8").replace(
-            "name: hermes-unified-network-plugin",
+            "name: atn-plugin",
             "name: kkachi-agent-network-plugin",
         ),
         encoding="utf-8",
@@ -86,7 +86,7 @@ def test_plugin_load_smoke_rejects_legacy_manifest_tool_alias(
     manifest = root / "plugin.yaml"
     manifest.write_text(
         manifest.read_text(encoding="utf-8").replace(
-            "hun_stream_tail",
+            "atn_stream_tail",
             "kan_stream_tail",
         ),
         encoding="utf-8",
@@ -104,7 +104,7 @@ def test_plugin_load_smoke_rejects_manifest_runfix_public_wording(
     manifest = root / "plugin.yaml"
     manifest.write_text(
         manifest.read_text(encoding="utf-8").replace(
-            "pure HUN discussion activation planner/doctor",
+            "pure ATN discussion activation planner/doctor",
             "pure RUNFIX discussion activation planner/doctor",
         ),
         encoding="utf-8",
@@ -144,7 +144,7 @@ def test_plugin_load_smoke_rejects_entrypoint_resource_registration(
         + "\n\n_original_register = register\n\n"
         + "def register(ctx):\n"
         + "    _original_register(ctx)\n"
-        + "    ctx.register_resource(name='hun_live_state', path='/tmp/unsupported')\n",
+        + "    ctx.register_resource(name='atn_live_state', path='/tmp/unsupported')\n",
         encoding="utf-8",
     )
 
@@ -184,13 +184,13 @@ def test_plugin_load_smoke_requires_entrypoint_to_self_bootstrap_src(
     (root / "__init__.py").write_text(
         '"""Broken fixture: imports the src package without local path bootstrapping."""\n\n'
         "from __future__ import annotations\n\n"
-        "from hermes_unified_network_plugin.tools import register_tools\n\n"
+        "from atn_plugin.tools import register_tools\n\n"
         "def register(ctx):\n"
         "    register_tools(ctx)\n",
         encoding="utf-8",
     )
 
-    with pytest.raises(SystemExit, match="No module named 'hermes_unified_network_plugin'"):
+    with pytest.raises(SystemExit, match="No module named 'atn_plugin'"):
         plugin_load_smoke.main(root=root)
 
 
@@ -199,7 +199,7 @@ def test_plugin_load_smoke_rejects_python312_only_runtime_syntax(
     tmp_path: Path,
 ) -> None:
     root = copy_repo_fixture(tmp_path)
-    protocol = root / "src" / "hermes_unified_network_plugin" / "protocol.py"
+    protocol = root / "src" / "atn_plugin" / "protocol.py"
     protocol.write_text("type JsonValue = str\n", encoding="utf-8")
 
     with pytest.raises(SystemExit, match="Python 3.11 syntax failure"):
@@ -214,7 +214,7 @@ def test_plugin_load_smoke_rejects_wheel_package_drift(
     pyproject = root / "pyproject.toml"
     pyproject.write_text(
         pyproject.read_text(encoding="utf-8").replace(
-            'packages = ["src/hermes_unified_network_plugin"]',
+            'packages = ["src/atn_plugin"]',
             'packages = ["src/other_package"]',
         ),
         encoding="utf-8",
@@ -229,10 +229,10 @@ def test_plugin_load_smoke_rejects_legacy_package_metadata(
     tmp_path: Path,
 ) -> None:
     root = copy_repo_fixture(tmp_path)
-    package = root / "src" / "hermes_unified_network_plugin" / "__init__.py"
+    package = root / "src" / "atn_plugin" / "__init__.py"
     package.write_text(
         package.read_text(encoding="utf-8").replace(
-            '"hermes-unified-network-plugin"',
+            '"atn-plugin"',
             '"kkachi-agent-network-plugin"',
         ),
         encoding="utf-8",
@@ -247,20 +247,13 @@ def test_plugin_load_smoke_rejects_legacy_bundled_skill_name(
     tmp_path: Path,
 ) -> None:
     root = copy_repo_fixture(tmp_path)
-    skill = (
-        root
-        / "src"
-        / "hermes_unified_network_plugin"
-        / "bundled_skills"
-        / "hun-plugin"
-        / "SKILL.md"
-    )
+    skill = root / "src" / "atn_plugin" / "bundled_skills" / "atn-plugin" / "SKILL.md"
     skill.write_text(
-        skill.read_text(encoding="utf-8").replace("name: hun-plugin", "name: kan-plugin"),
+        skill.read_text(encoding="utf-8").replace("name: atn-plugin", "name: kan-plugin"),
         encoding="utf-8",
     )
 
-    with pytest.raises(SystemExit, match="bundled skill hun-plugin"):
+    with pytest.raises(SystemExit, match="bundled skill atn-plugin"):
         plugin_load_smoke.main(root=root)
 
 

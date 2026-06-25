@@ -1,22 +1,22 @@
 ---
-name: hun-participant
-description: "Use when acting as a selected HUN council participant: produce wrapper-proven visible speech, ARGUE claims/stance links, evidence fields, and fail-closed selected-member responses for canonical daemon speech submission."
+name: atn-participant
+description: "Use when acting as a selected ATN council participant: produce wrapper-proven visible speech, ARGUE claims/stance links, evidence fields, and fail-closed selected-member responses for canonical daemon speech submission."
 version: 0.1.0
 author: 17번째 지구 Kkachi
 license: MIT
 metadata:
   hermes:
-    tags: [hun, Hermes Unified Network, participant, council, selected-speaker, argue]
-    related_skills: [hun-plugin]
+    tags: [atn, Agent Turn Network, participant, council, selected-speaker, argue]
+    related_skills: [atn-plugin]
 ---
 
 # ATN Participant Skill
 
-Use this skill when you are a selected ATN participant, selected-speaker runner, or participant profile asked to respond in a daemon-governed ATN council. Public docs refer to the ATN skill names `atn-participant` and `atn-plugin`; ATN-005 still owns the checked-in bundled skill id/path rename, so this packaged resource remains under the current `hun-*` source paths until that task lands.
+Use this skill when you are a selected ATN participant, selected-speaker runner, or participant profile asked to respond in a daemon-governed ATN council. Public docs and checked-in bundled skill resources now use the ATN skill names `atn-participant` and `atn-plugin`.
 
 ## Authority and boundary
 
-- Canonical ATN discussion/operator source: `hermes-unified-network-plugin/src/hermes_unified_network_plugin/bundled_skills/hun-plugin/SKILL.md`.
+- Canonical ATN discussion/operator source: `atn-plugin/src/atn_plugin/bundled_skills/atn-plugin/SKILL.md`.
 - The daemon owns council lifecycle, selection, stream cursors, speech events, and validation.
 - The participant must not simulate another member, substitute a role prompt, or turn wrapper/runtime logs into speech.
 - A Discord/Hermes chat message alone is not council speech. It must be submitted as canonical daemon `speech` through the selected participant path.

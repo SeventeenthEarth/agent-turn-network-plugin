@@ -17,26 +17,26 @@ from typing import Any
 import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
-PACKAGE_MODULE = "hermes_unified_network_plugin"
-PACKAGE_NAME = "hermes-unified-network-plugin"
-# HUN-013: this remains a Hermes host compatibility toolset identifier, not a
-# public package/tool/skill alias. HUN-014 owns any cross-repo compatibility rename.
+PACKAGE_MODULE = "atn_plugin"
+PACKAGE_NAME = "atn-plugin"
+# This remains a Hermes host compatibility toolset identifier, not a
+# public package/tool/skill alias.
 TOOLSET = "kkachi_agent_network"
 EXPECTED_TOOLS = [
-    "hun_daemon_status",
-    "hun_compatibility_diagnostics",
-    "hun_stream_tail",
-    "hun_stream_ack",
-    "hun_delegate_new",
-    "hun_delegate_action",
-    "hun_council_command",
-    "hun_selected_participant_response",
-    "hun_delivery_evidence",
-    "hun_surface_render_projection",
-    "hun_discussion_activation_plan",
-    "hun_discord_send_message",
+    "atn_daemon_status",
+    "atn_compatibility_diagnostics",
+    "atn_stream_tail",
+    "atn_stream_ack",
+    "atn_delegate_new",
+    "atn_delegate_action",
+    "atn_council_command",
+    "atn_selected_participant_response",
+    "atn_delivery_evidence",
+    "atn_surface_render_projection",
+    "atn_discussion_activation_plan",
+    "atn_discord_send_message",
 ]
-EXPECTED_SKILLS = ["hun-plugin", "hun-moderator", "hun-participant"]
+EXPECTED_SKILLS = ["atn-plugin", "atn-moderator", "atn-participant"]
 LEGACY_PUBLIC_IDENTIFIERS = (
     "kkachi_agent_network_plugin",
     "kkachi-agent-network-plugin",
@@ -75,15 +75,15 @@ def require_no_legacy_public_identifier(label: str, value: object) -> None:
             raise SystemExit(f"plugin-load smoke {label} contains legacy identifier: {token}")
 
 
-def require_hun_tool_name(label: str, value: object) -> None:
-    if not isinstance(value, str) or not value.startswith("hun_"):
-        raise SystemExit(f"plugin-load smoke {label} must use hun_ tool name: {value!r}")
+def require_atn_tool_name(label: str, value: object) -> None:
+    if not isinstance(value, str) or not value.startswith("atn_"):
+        raise SystemExit(f"plugin-load smoke {label} must use atn_ tool name: {value!r}")
     require_no_legacy_public_identifier(label, value)
 
 
-def require_hun_skill_name(label: str, value: object) -> None:
+def require_atn_skill_name(label: str, value: object) -> None:
     if value not in EXPECTED_SKILLS:
-        raise SystemExit(f"plugin-load smoke {label} must use HUN bundled skill: {value!r}")
+        raise SystemExit(f"plugin-load smoke {label} must use ATN bundled skill: {value!r}")
     require_no_legacy_public_identifier(label, value)
 
 
@@ -129,7 +129,7 @@ def require_manifest(plugin_home: Path) -> None:
             f"{manifest.get('provides_tools')!r}"
         )
     for tool_name in manifest["provides_tools"]:
-        require_hun_tool_name("manifest provides_tools", tool_name)
+        require_atn_tool_name("manifest provides_tools", tool_name)
     if manifest.get("provides_hooks") != []:
         raise SystemExit(
             "plugin-load smoke manifest provides_hooks must remain explicit empty list"
@@ -155,18 +155,18 @@ def require_package_and_bundled_skill(plugin_home: Path) -> None:
         .get("targets", {})
         .get("wheel", {})
     )
-    if wheel.get("packages") != ["src/hermes_unified_network_plugin"]:
+    if wheel.get("packages") != ["src/atn_plugin"]:
         raise SystemExit("plugin-load smoke wheel package inclusion mismatch")
     require_no_legacy_public_identifier("wheel package inclusion", wheel.get("packages"))
 
     bundled_root = plugin_home / "src" / PACKAGE_MODULE / "bundled_skills"
     expected_skills = {
-        "hun-plugin": ("name: hun-plugin", "provides_commands: []", "hun_session_status"),
-        "hun-moderator": ("name: hun-moderator", "hun_discussion_activation_plan", "tools_visible"),
-        "hun-participant": ("name: hun-participant", "selected-speaker", "stance_links"),
+        "atn-plugin": ("name: atn-plugin", "provides_commands: []", "atn_session_status"),
+        "atn-moderator": ("name: atn-moderator", "atn_discussion_activation_plan", "tools_visible"),
+        "atn-participant": ("name: atn-participant", "selected-speaker", "stance_links"),
     }
     for skill_name, phrases in expected_skills.items():
-        require_hun_skill_name("bundled skill directory", skill_name)
+        require_atn_skill_name("bundled skill directory", skill_name)
         skill = bundled_root / skill_name / "SKILL.md"
         if not skill.exists():
             raise SystemExit(f"plugin-load smoke missing bundled skill: {skill_name}")
@@ -242,7 +242,7 @@ def load_entrypoint(plugin_home: Path) -> ModuleType:
         sys.path[:] = entrypoint_sys_path()
         return load_module(
             plugin_home / "__init__.py",
-            "hermes_unified_network_plugin_root_plugin_load_smoke",
+            "atn_plugin_root_plugin_load_smoke",
             package_root=True,
         )
     finally:
@@ -269,7 +269,7 @@ def require_entrypoint_load(plugin_home: Path) -> FakeHermesContext:
             f"{registered_tool_names!r} != {EXPECTED_TOOLS!r}"
         )
     for tool_name in registered_tool_names:
-        require_hun_tool_name("registered tool", tool_name)
+        require_atn_tool_name("registered tool", tool_name)
     if context.registered_hooks:
         raise SystemExit("plugin-load smoke registered unsupported hooks")
     if context.registered_commands:
@@ -282,7 +282,7 @@ def require_entrypoint_load(plugin_home: Path) -> FakeHermesContext:
             f"plugin-load smoke bundled skill registration mismatch: {registered_skill_names!r}"
         )
     for skill_name in registered_skill_names:
-        require_hun_skill_name("registered skill", skill_name)
+        require_atn_skill_name("registered skill", skill_name)
     for skill in context.registered_skills:
         if not Path(str(skill.get("path"))).exists():
             raise SystemExit(f"plugin-load smoke registered skill path missing: {skill!r}")
@@ -306,7 +306,7 @@ def require_handler_fail_closed(context: FakeHermesContext) -> dict[str, str]:
         if not isinstance(result, str):
             raise SystemExit(f"plugin-load smoke handler did not return JSON string: {name}")
         body = json.loads(result)
-        if name in {"hun_surface_render_projection", "hun_discussion_activation_plan"}:
+        if name in {"atn_surface_render_projection", "atn_discussion_activation_plan"}:
             if body.get("ok") is not True or body.get("live_readiness") is not False:
                 raise SystemExit(
                     f"plugin-load smoke pure local handler must succeed locally: {body}"
@@ -332,20 +332,20 @@ def require_entrypoint_fail_closed(plugin_home: Path) -> dict[str, str]:
 
 
 def representative_args(tool_name: str) -> dict[str, object]:
-    if tool_name == "hun_daemon_status":
+    if tool_name == "atn_daemon_status":
         return {}
-    if tool_name == "hun_compatibility_diagnostics":
+    if tool_name == "atn_compatibility_diagnostics":
         return {"session_id": "sess-smoke"}
-    if tool_name == "hun_stream_tail":
+    if tool_name == "atn_stream_tail":
         return {"session_id": "sess-smoke", "member": "agent-smoke", "limit": 1}
-    if tool_name == "hun_stream_ack":
+    if tool_name == "atn_stream_ack":
         return {
             "session_id": "sess-smoke",
             "member": "agent-smoke",
             "cursor": "cur-smoke",
             "command_id": "cmd-smoke-stream-ack",
         }
-    if tool_name == "hun_delegate_new":
+    if tool_name == "atn_delegate_new":
         return {
             "session_id": "sess-smoke",
             "moderator": "moderator-smoke",
@@ -360,7 +360,7 @@ def representative_args(tool_name: str) -> dict[str, object]:
             "request_id": "req-smoke-delegate-new",
             "idempotency_key": "idem-smoke-delegate-new",
         }
-    if tool_name == "hun_delegate_action":
+    if tool_name == "atn_delegate_action":
         return {
             "session_id": "sess-smoke",
             "command": "delegate.submit",
@@ -368,7 +368,7 @@ def representative_args(tool_name: str) -> dict[str, object]:
             "idempotency_key": "idem-smoke-delegate-action",
             "payload": {"command_id": "cmd-smoke"},
         }
-    if tool_name == "hun_council_command":
+    if tool_name == "atn_council_command":
         return {
             "session_id": "sess-smoke",
             "command": "council.ready",
@@ -376,7 +376,7 @@ def representative_args(tool_name: str) -> dict[str, object]:
             "idempotency_key": "idem-smoke-council",
             "payload": {"command_id": "cmd-smoke", "actor": "agent-smoke"},
         }
-    if tool_name == "hun_selected_participant_response":
+    if tool_name == "atn_selected_participant_response":
         return {
             "session_id": "sess-smoke",
             "selected_member": "agent-smoke",
@@ -409,7 +409,7 @@ def representative_args(tool_name: str) -> dict[str, object]:
             "idempotency_key": "idem-smoke-speak",
             "ack_command_id": "cmd-smoke-ack",
         }
-    if tool_name == "hun_delivery_evidence":
+    if tool_name == "atn_delivery_evidence":
         return {
             "session_id": "sess-smoke",
             "command": "delegate.escalation_delivered",
@@ -417,7 +417,7 @@ def representative_args(tool_name: str) -> dict[str, object]:
             "idempotency_key": "idem-smoke-delivery",
             "payload": {"command_id": "cmd-smoke", "escalation": "evt-smoke"},
         }
-    if tool_name == "hun_surface_render_projection":
+    if tool_name == "atn_surface_render_projection":
         return {
             "projection": {
                 "schema_version": 1,
@@ -435,7 +435,7 @@ def representative_args(tool_name: str) -> dict[str, object]:
                 ],
             }
         }
-    if tool_name == "hun_discussion_activation_plan":
+    if tool_name == "atn_discussion_activation_plan":
         return {
             "plan": {
                 "schema_version": 1,
@@ -449,8 +449,8 @@ def representative_args(tool_name: str) -> dict[str, object]:
                     "installed": True,
                     "enabled": True,
                     "tool_names": [
-                        "hun_daemon_status",
-                        "hun_discussion_activation_plan",
+                        "atn_daemon_status",
+                        "atn_discussion_activation_plan",
                     ],
                 },
                 "control_daemon": {
@@ -478,7 +478,7 @@ def representative_args(tool_name: str) -> dict[str, object]:
                 "approval_gates": ["explicit live-local apply approval"],
             }
         }
-    if tool_name == "hun_discord_send_message":
+    if tool_name == "atn_discord_send_message":
         return {
             "content": "local isolated plugin-load smoke",
             "target": {
@@ -579,7 +579,7 @@ class FakeHermesContext:
 
 def main(*, root: Path = ROOT) -> None:
     root = root.resolve()
-    with tempfile.TemporaryDirectory(prefix="hun-plugin-load-smoke-") as temp:
+    with tempfile.TemporaryDirectory(prefix="atn-plugin-load-smoke-") as temp:
         plugin_home = make_isolated_plugin_home(root, Path(temp))
         require_manifest(plugin_home)
         require_python311_syntax(plugin_home)

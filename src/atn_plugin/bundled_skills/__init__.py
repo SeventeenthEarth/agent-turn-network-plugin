@@ -1,4 +1,4 @@
-"""Bundled operator skill resources for hermes-unified-network-plugin.
+"""Bundled operator skill resources for atn-plugin.
 
 The helpers in this module are import-safe: they expose packaged text resources
 only and never install files into a Hermes profile or discover live runtime
@@ -10,8 +10,8 @@ from __future__ import annotations
 from importlib import resources
 from importlib.resources.abc import Traversable
 
-BUNDLED_SKILL_NAME = "hun-plugin"
-BUNDLED_SKILL_NAMES = ("hun-plugin", "hun-moderator", "hun-participant")
+BUNDLED_SKILL_NAME = "atn-plugin"
+BUNDLED_SKILL_NAMES = ("atn-plugin", "atn-moderator", "atn-participant")
 
 
 def bundled_skill_names() -> tuple[str, ...]:

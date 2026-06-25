@@ -26,16 +26,16 @@ lint: require-uv
 	@$(UV) run ruff check .
 
 typecheck: require-uv
-	@$(UV) run mypy src
+	@$(UV) run python -m mypy src
 
-docs-guardrails:
-	@$(PYTHON) scripts/guardrails.py
+docs-guardrails: require-uv
+	@$(UV) run python scripts/guardrails.py
 
-check-make-contract:
-	@$(PYTHON) scripts/check_make_contract.py
+check-make-contract: require-uv
+	@$(UV) run python scripts/check_make_contract.py
 
-check-core-contract:
-	@$(PYTHON) scripts/check_core_contract.py
+check-core-contract: require-uv
+	@$(UV) run python scripts/check_core_contract.py
 
 check-bootstrap-smoke: require-uv
 	@$(UV) run python scripts/check_bootstrap_smoke.py
@@ -44,10 +44,10 @@ check-plugin-load-smoke: require-uv
 	@$(UV) run python scripts/check_plugin_load_smoke.py
 
 test-unit: require-uv
-	@$(UV) run pytest tests/unit
+	@$(UV) run python -m pytest tests/unit
 
 test-int: require-uv
-	@KAN_EXTERNAL=0 $(UV) run pytest tests/integration
+	@KAN_EXTERNAL=0 $(UV) run python -m pytest tests/integration
 
 test-e2e: require-uv
-	@KAN_E2E=1 KAN_DISCORD_E2E=0 HERMES_HOME="$${HERMES_TEST_HOME:-$$(mktemp -d)}" DISCORD_TEST_TARGET="" $(UV) run pytest tests/e2e
+	@KAN_E2E=1 KAN_DISCORD_E2E=0 HERMES_HOME="$${HERMES_TEST_HOME:-$$(mktemp -d)}" DISCORD_TEST_TARGET="" $(UV) run python -m pytest tests/e2e

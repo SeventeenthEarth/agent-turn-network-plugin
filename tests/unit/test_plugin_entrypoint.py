@@ -9,49 +9,49 @@ from typing import Any
 
 import yaml  # type: ignore[import-untyped]
 
-from hermes_unified_network_plugin.client import DaemonClient, StaticDaemonTransport
-from hermes_unified_network_plugin.client import transport as transport_module
-from hermes_unified_network_plugin.client.daemon import OP_STATUS_READ
-from hermes_unified_network_plugin.protocol import JsonObject
+from atn_plugin.client import DaemonClient, StaticDaemonTransport
+from atn_plugin.client import transport as transport_module
+from atn_plugin.client.daemon import OP_STATUS_READ
+from atn_plugin.protocol import JsonObject
 
 ROOT = Path(__file__).resolve().parents[2]
 
 
 EXPECTED_TOOLS = [
-    "hun_daemon_status",
-    "hun_compatibility_diagnostics",
-    "hun_stream_tail",
-    "hun_stream_ack",
-    "hun_delegate_new",
-    "hun_delegate_action",
-    "hun_council_command",
-    "hun_selected_participant_response",
-    "hun_delivery_evidence",
-    "hun_surface_render_projection",
-    "hun_discussion_activation_plan",
-    "hun_discord_send_message",
+    "atn_daemon_status",
+    "atn_compatibility_diagnostics",
+    "atn_stream_tail",
+    "atn_stream_ack",
+    "atn_delegate_new",
+    "atn_delegate_action",
+    "atn_council_command",
+    "atn_selected_participant_response",
+    "atn_delivery_evidence",
+    "atn_surface_render_projection",
+    "atn_discussion_activation_plan",
+    "atn_discord_send_message",
 ]
 
 EXPECTED_BUNDLED_SKILLS = [
-    "hun-plugin",
-    "hun-moderator",
-    "hun-participant",
+    "atn-plugin",
+    "atn-moderator",
+    "atn-participant",
 ]
 
-LEGACY_TOOL_NAMES = [name.replace("hun_", "kan_", 1) for name in EXPECTED_TOOLS]
+LEGACY_TOOL_NAMES = [name.replace("atn_", "kan_", 1) for name in EXPECTED_TOOLS]
 
 
 def test_plugin_manifest_declares_fake_injected_tool_surface() -> None:
     manifest = yaml.safe_load((ROOT / "plugin.yaml").read_text(encoding="utf-8"))
 
     assert manifest == {
-        "name": "hermes-unified-network-plugin",
+        "name": "atn-plugin",
         "version": "0.1.0",
         "description": (
-            "Hermes plugin adapter for Hermes Unified Network; exposes fake/injected "
+            "Hermes plugin adapter for Agent Turn Network; exposes fake/injected "
             "read-only tools, delegation/review command-envelope tools, CNDIS "
             "council/delivery-evidence tools, selected participant response proof, "
-            "pure visible-surface projection rendering, a pure HUN discussion "
+            "pure visible-surface projection rendering, a pure ATN discussion "
             "activation planner/doctor, and an injected-only Discord helper without "
             "slash-command bindings."
         ),
@@ -89,7 +89,7 @@ def test_root_entrypoint_uses_adjacent_config_when_no_explicit_config_or_factory
     monkeypatch: Any,
 ) -> None:
     module = _load_root_entrypoint()
-    socket_path = "/var/run/hund.sock"
+    socket_path = "/var/run/atn-controld.sock"
     (tmp_path / "config.yaml").write_text(
         f'live_transport:\n  unix_socket_path: "{socket_path}"\n',
         encoding="utf-8",
@@ -100,7 +100,7 @@ def test_root_entrypoint_uses_adjacent_config_when_no_explicit_config_or_factory
         socket_path=socket_path,
         responses={
             OP_STATUS_READ: {
-                "protocol_version": "hun-protocol-v1alpha0",
+                "protocol_version": "atn-protocol-v1alpha0",
                 "daemon_version": "0.0.0-adjacent-config",
                 "status": "adjacent-config-ready",
                 "feature_groups": ["version.read", "command_envelope", "structured_error"],
@@ -111,7 +111,7 @@ def test_root_entrypoint_uses_adjacent_config_when_no_explicit_config_or_factory
     fake_ctx = FakePluginContext()
 
     module.register(fake_ctx)
-    status = json.loads(fake_ctx.handler("hun_daemon_status")({}))
+    status = json.loads(fake_ctx.handler("atn_daemon_status")({}))
 
     assert status["ok"] is True
     assert status["data"]["status"] == "adjacent-config-ready"
@@ -131,7 +131,7 @@ def test_root_entrypoint_malformed_adjacent_config_registers_fail_closed_handler
     fake_ctx = FakePluginContext()
 
     module.register(fake_ctx)
-    status = json.loads(fake_ctx.handler("hun_daemon_status")({}))
+    status = json.loads(fake_ctx.handler("atn_daemon_status")({}))
 
     assert [tool["name"] for tool in fake_ctx.registered_tools] == EXPECTED_TOOLS
     assert status["ok"] is False
@@ -149,7 +149,7 @@ def test_root_entrypoint_non_utf8_adjacent_config_registers_fail_closed_handler(
     fake_ctx = FakePluginContext()
 
     module.register(fake_ctx)
-    status = json.loads(fake_ctx.handler("hun_daemon_status")({}))
+    status = json.loads(fake_ctx.handler("atn_daemon_status")({}))
 
     assert [tool["name"] for tool in fake_ctx.registered_tools] == EXPECTED_TOOLS
     assert status["ok"] is False
@@ -212,7 +212,7 @@ def test_root_entrypoint_preserves_explicit_client_factory_precedence(
 
 def _load_root_entrypoint() -> ModuleType:
     spec = importlib.util.spec_from_file_location(
-        "hermes_plugins.hermes_unified_network_plugin_under_test",
+        "hermes_plugins.atn_plugin_under_test",
         ROOT / "__init__.py",
         submodule_search_locations=[str(ROOT)],
     )

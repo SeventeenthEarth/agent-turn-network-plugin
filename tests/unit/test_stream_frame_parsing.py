@@ -7,16 +7,16 @@ from typing import cast
 
 import pytest
 
-from hermes_unified_network_plugin.client.stream import (
+from atn_plugin.client.stream import (
     parse_stream_frame,
     parse_stream_frames_ndjson,
     parse_stream_tail_response,
 )
-from hermes_unified_network_plugin.errors import (
+from atn_plugin.errors import (
     DaemonProtocolError,
     DaemonStreamError,
 )
-from hermes_unified_network_plugin.protocol import STREAM_TAIL_FRAME_LIMIT, JsonObject
+from atn_plugin.protocol import STREAM_TAIL_FRAME_LIMIT, JsonObject
 
 
 def valid_frame() -> JsonObject:
@@ -156,20 +156,20 @@ def test_malformed_stream_event_fields_fail_closed(
 
 def test_stream_tail_response_parses_frames_and_next_cursor() -> None:
     response = {
-        "protocol_version": "hun-protocol-v1alpha0",
+        "protocol_version": "atn-protocol-v1alpha0",
         "frames": [valid_frame(), json.dumps(valid_frame())],
         "next_cursor": "cur_next",
     }
 
     tail = parse_stream_tail_response(response)
 
-    assert tail.protocol_version == "hun-protocol-v1alpha0"
+    assert tail.protocol_version == "atn-protocol-v1alpha0"
     assert len(tail.frames) == 2
     assert tail.next_cursor == "cur_next"
 
 
 def test_stream_tail_response_allows_empty_frames() -> None:
-    tail = parse_stream_tail_response({"protocol_version": "hun-protocol-v1alpha0", "frames": []})
+    tail = parse_stream_tail_response({"protocol_version": "atn-protocol-v1alpha0", "frames": []})
 
     assert tail.frames == ()
 
@@ -180,10 +180,10 @@ def test_stream_tail_response_allows_empty_frames() -> None:
         "{not-json",
         [],
         {"protocol_version": "wrong", "frames": []},
-        {"protocol_version": "hun-protocol-v1alpha0"},
-        {"protocol_version": "hun-protocol-v1alpha0", "frames": "not-list"},
-        {"protocol_version": "hun-protocol-v1alpha0", "frames": ["[]"]},
-        {"protocol_version": "hun-protocol-v1alpha0", "frames": [], "next_cursor": ""},
+        {"protocol_version": "atn-protocol-v1alpha0"},
+        {"protocol_version": "atn-protocol-v1alpha0", "frames": "not-list"},
+        {"protocol_version": "atn-protocol-v1alpha0", "frames": ["[]"]},
+        {"protocol_version": "atn-protocol-v1alpha0", "frames": [], "next_cursor": ""},
     ],
 )
 def test_malformed_stream_tail_response_fails_closed(response: object) -> None:
@@ -194,7 +194,7 @@ def test_malformed_stream_tail_response_fails_closed(response: object) -> None:
 def test_oversized_stream_tail_frames_array_fails_closed() -> None:
     frame = valid_frame()
     response = {
-        "protocol_version": "hun-protocol-v1alpha0",
+        "protocol_version": "atn-protocol-v1alpha0",
         "frames": [deepcopy(frame) for _ in range(STREAM_TAIL_FRAME_LIMIT + 1)],
     }
 

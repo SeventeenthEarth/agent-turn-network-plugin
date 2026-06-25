@@ -7,14 +7,14 @@ from typing import Any, cast
 
 import pytest
 
-from hermes_unified_network_plugin.client import DaemonClient, StaticDaemonTransport
-from hermes_unified_network_plugin.client.daemon import OP_COMMAND_SUBMIT
-from hermes_unified_network_plugin.protocol import JsonObject, JsonValue
-from hermes_unified_network_plugin.tools import handle_delegate_action, handle_delegate_new
+from atn_plugin.client import DaemonClient, StaticDaemonTransport
+from atn_plugin.client.daemon import OP_COMMAND_SUBMIT
+from atn_plugin.protocol import JsonObject, JsonValue
+from atn_plugin.tools import handle_delegate_action, handle_delegate_new
 
 CONTROL_CONFORMANCE_ROOT = (
     Path(__file__).resolve().parents[2].parent
-    / "kkachi-agent-network-control"
+    / "agent-turn-network-control"
     / "testdata"
     / "conformance"
 )
@@ -235,7 +235,7 @@ def test_deleg_002_success_fixtures_submit_exact_fake_command_envelopes(
     assert body["request_id"] == request_fixture["request_id"]
     assert body["idempotency_key"] == _idempotency_key(request_fixture)
     assert body["client_metadata"] == {
-        "name": "hermes-unified-network-plugin",
+        "name": "atn-plugin",
         "version": "0.1.0",
         "transport": "injected",
     }
@@ -314,7 +314,7 @@ def test_deleg_002_permission_and_validation_error_fixtures_fail_closed(
 
     expected_error = _mapping(error_fixture["error"], label="error")
     assert result["ok"] is False
-    assert result["tool"] == "hun_delegate_action"
+    assert result["tool"] == "atn_delegate_action"
     assert result["live_readiness"] is False
     assert result["error"] == {
         "category": expected_error["category"],
@@ -393,7 +393,7 @@ def test_plugin_local_malformed_fake_daemon_responses_fail_closed(
     )
 
     assert result["ok"] is False
-    assert result["tool"] == "hun_delegate_action"
+    assert result["tool"] == "atn_delegate_action"
     assert result["live_readiness"] is False
     assert result["error"]["category"] == "protocol"
 

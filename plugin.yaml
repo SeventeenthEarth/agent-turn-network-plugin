@@ -1,20 +1,20 @@
-name: hermes-unified-network-plugin
+name: atn-plugin
 version: 0.1.0
-description: "Hermes plugin adapter for Hermes Unified Network; exposes fake/injected read-only tools, delegation/review command-envelope tools, CNDIS council/delivery-evidence tools, selected participant response proof, pure visible-surface projection rendering, a pure HUN discussion activation planner/doctor, and an injected-only Discord helper without slash-command bindings."
+description: "Hermes plugin adapter for Agent Turn Network; exposes fake/injected read-only tools, delegation/review command-envelope tools, CNDIS council/delivery-evidence tools, selected participant response proof, pure visible-surface projection rendering, a pure ATN discussion activation planner/doctor, and an injected-only Discord helper without slash-command bindings."
 author: "17번째 지구 Kkachi"
 kind: standalone
 provides_tools:
-  - hun_daemon_status
-  - hun_compatibility_diagnostics
-  - hun_stream_tail
-  - hun_stream_ack
-  - hun_delegate_new
-  - hun_delegate_action
-  - hun_council_command
-  - hun_selected_participant_response
-  - hun_delivery_evidence
-  - hun_surface_render_projection
-  - hun_discussion_activation_plan
-  - hun_discord_send_message
+  - atn_daemon_status
+  - atn_compatibility_diagnostics
+  - atn_stream_tail
+  - atn_stream_ack
+  - atn_delegate_new
+  - atn_delegate_action
+  - atn_council_command
+  - atn_selected_participant_response
+  - atn_delivery_evidence
+  - atn_surface_render_projection
+  - atn_discussion_activation_plan
+  - atn_discord_send_message
 provides_hooks: []
 provides_commands: []

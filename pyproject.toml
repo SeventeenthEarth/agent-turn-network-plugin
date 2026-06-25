@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "hermes-unified-network-plugin"
 dynamic = ["version"]
-description = "Hermes plugin adapter for Hermes Unified Network fake/injected tools and bundled HUN operator guidance."
+description = "Hermes plugin adapter for Agent Turn Network fake/injected tools and bundled ATN operator guidance."
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = []

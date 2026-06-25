@@ -51,9 +51,9 @@ Live daemon support remains blocked until stable endpoint declarations and separ
 
 HPLUG-2 introduced three read-only Hermes tool schemas through the root plugin entrypoint and `plugin.yaml`:
 
-- `hun_daemon_status` calls `DaemonClient.read_status()` through an explicit fake/injected client factory.
-- `hun_compatibility_diagnostics` calls `DaemonClient.read_diagnostics(session_id=...)` through an explicit fake/injected client factory.
-- `hun_stream_tail` calls `DaemonClient.read_stream_tail(session_id=..., member=..., since_cursor=..., limit=...)` through an explicit fake/injected client factory.
+- `atn_daemon_status` calls `DaemonClient.read_status()` through an explicit fake/injected client factory.
+- `atn_compatibility_diagnostics` calls `DaemonClient.read_diagnostics(session_id=...)` through an explicit fake/injected client factory.
+- `atn_stream_tail` calls `DaemonClient.read_stream_tail(session_id=..., member=..., since_cursor=..., limit=...)` through an explicit fake/injected client factory.
 
 All handlers return JSON strings. Success envelopes include `ok: true`, `tool`, `protocol_version`, `live_readiness`, and `data`. Failure envelopes include `ok: false`, `tool`, `live_readiness: false`, and an operator-safe `error` object with `category`, `message`, and `retryable`.
 
@@ -65,20 +65,20 @@ Failure mapping is fail-closed:
 - invalid tool arguments -> `validation`;
 - structured daemon command/stream errors preserve daemon category/ids after redaction.
 
-`hun_stream_tail` success data contains `frames` and `next_cursor`. Each frame includes cursor/replay metadata and an event envelope; stream payload/details are redacted with the same sensitive-key rules before Hermes receives them.
+`atn_stream_tail` success data contains `frames` and `next_cursor`. Each frame includes cursor/replay metadata and an event envelope; stream payload/details are redacted with the same sensitive-key rules before Hermes receives them.
 
-`hun_session_status` is deliberately not exposed in HPLUG-2 because the control conformance manifest still has `fixtures: []` and no `session.status.read` authority. It remains deferred until `DAEMN-002` or a later control task provides control fixture/protocol evidence.
+`atn_session_status` is deliberately not exposed in HPLUG-2 because the control conformance manifest still has `fixtures: []` and no `session.status.read` authority. It remains deferred until `DAEMN-002` or a later control task provides control fixture/protocol evidence.
 
 ## DELRV-1 delegation/review command-envelope tools
 
 DELRV-1 adds fake/injected-only Hermes tool schemas for daemon-owned delegation and review command envelopes:
 
-- `hun_delegate_new` builds and submits command envelope `delegate.new`.
-- `hun_delegate_action` builds and submits a closed enum of exact implemented `delegate.*` action/review/delivery commands: `delegate.ack`, `delegate.message`, `delegate.clarify`, `delegate.answer_clarification`, `delegate.update`, `delegate.request_update`, `delegate.submit`, `delegate.review`, `delegate.review_question`, `delegate.review_answer`, `delegate.review_submit`, `delegate.revise`, `delegate.accept`, `delegate.escalate`, `delegate.escalation_flush`, `delegate.resolve_escalation`, `delegate.escalation_delivered`, `delegate.escalation_delivery_failed`.
+- `atn_delegate_new` builds and submits command envelope `delegate.new`.
+- `atn_delegate_action` builds and submits a closed enum of exact implemented `delegate.*` action/review/delivery commands: `delegate.ack`, `delegate.message`, `delegate.clarify`, `delegate.answer_clarification`, `delegate.update`, `delegate.request_update`, `delegate.submit`, `delegate.review`, `delegate.review_question`, `delegate.review_answer`, `delegate.review_submit`, `delegate.revise`, `delegate.accept`, `delegate.escalate`, `delegate.escalation_flush`, `delegate.resolve_escalation`, `delegate.escalation_delivered`, `delegate.escalation_delivery_failed`.
 
 Both tools require caller-supplied non-empty `request_id` and `idempotency_key`. The plugin does not generate hidden identifiers, cache/dedupe requests, own delegation lifecycle state, or perform daemon discovery. Local validation rejects `delegate.request`, top-level `review`, missing metadata, non-object payloads, and any command outside the closed enum before transport. Structured daemon failures such as `conflict` are preserved in the JSON error envelope.
 
-For `hun_delegate_action`, the top-level `session_id` is authoritative: handlers always overwrite/set `payload.session_id` with that value before submitting the envelope. Remaining payload fields stay opaque for daemon-side validation.
+For `atn_delegate_action`, the top-level `session_id` is authoritative: handlers always overwrite/set `payload.session_id` with that value before submitting the envelope. Remaining payload fields stay opaque for daemon-side validation.
 
 This is fake/injected DELRV-1 readiness only. The tools use `DaemonClient.build_command_envelope(...)` and `submit_command(...)` through an injected client factory; they do not prove live daemon, installed Hermes plugin-load, slash-command, Discord, gateway, auth, token, socket, localhost, or CLI readiness.
 
@@ -86,24 +86,24 @@ This is fake/injected DELRV-1 readiness only. The tools use `DaemonClient.build_
 
 CNDIS-1 adds fake/injected-only Hermes tool schemas for daemon-owned council lifecycle and delivery-evidence command envelopes:
 
-- `hun_council_command` builds and submits a closed enum of exact implemented `council.*` commands: `council.new`, `council.request_attendance`, `council.attend`, `council.lock_agenda`, `council.prepare`, `council.ready`, `council.prepared_partial`, `council.poll`, `council.hand_raise`, `council.grant`, `council.speak`, `council.intervene`, `council.propose`, `council.revise`, `council.request_vote`, `council.vote`, `council.finalize`, and `council.unresolved`.
-- `hun_delivery_evidence` builds and submits only `delegate.escalation_delivered` and `delegate.escalation_delivery_failed`. `hun_delegate_action` keeps accepting those commands for DELRV compatibility; `hun_delivery_evidence` is the clearer CNDIS surface.
+- `atn_council_command` builds and submits a closed enum of exact implemented `council.*` commands: `council.new`, `council.request_attendance`, `council.attend`, `council.lock_agenda`, `council.prepare`, `council.ready`, `council.prepared_partial`, `council.poll`, `council.hand_raise`, `council.grant`, `council.speak`, `council.intervene`, `council.propose`, `council.revise`, `council.request_vote`, `council.vote`, `council.finalize`, and `council.unresolved`.
+- `atn_delivery_evidence` builds and submits only `delegate.escalation_delivered` and `delegate.escalation_delivery_failed`. `atn_delegate_action` keeps accepting those commands for DELRV compatibility; `atn_delivery_evidence` is the clearer CNDIS surface.
 
 Both tools require caller-supplied non-empty `request_id` and `idempotency_key`. The plugin does not generate IDs, cache/dedupe, own council lifecycle/consensus state, write logs/locks/cursors, or transition delivery evidence locally. The top-level `session_id` is authoritative and overwrites/sets `payload.session_id` before submit.
 
-Before `command.submit`, `hun_council_command` calls injected `version.read` and requires `council.lifecycle`; `hun_delivery_evidence` requires `delivery_evidence`. Missing feature groups return `compatibility` before submit. Unknown commands, missing IDs, non-object payloads, and command-specific missing payload fields return `validation` before the client factory or submit path is used.
+Before `command.submit`, `atn_council_command` calls injected `version.read` and requires `council.lifecycle`; `atn_delivery_evidence` requires `delivery_evidence`. Missing feature groups return `compatibility` before submit. Unknown commands, missing IDs, non-object payloads, and command-specific missing payload fields return `validation` before the client factory or submit path is used.
 
 This is fake/injected CNDIS readiness only. It does not prove live daemon, installed Hermes plugin-load, slash-command, Discord helper/send_message, gateway, auth, token, socket, localhost, CLI, or KAB readiness.
 
 ## RUNFIX-006/RUNFIX-007 discussion activation planner/doctor
 
-RUNFIX-006 added `hun_discussion_activation_plan` as a pure/local Hermes tool.
+RUNFIX-006 added `atn_discussion_activation_plan` as a pure/local Hermes tool.
 RUNFIX-007 keeps the same tool surface and extends the dry-run report for
 Discord eligibility and bot-to-bot exclusion. HUN-008 keeps the tool public
-surface HUN-aligned while preserving historical RUNFIX/control task IDs only as
+surface ATN-aligned while preserving historical RUNFIX/control task IDs only as
 evidence provenance and dependency labels. The tool builds a deterministic
 activation planner/doctor report from explicit caller-provided evidence only.
-The input names historical control/RUNFIX dependency evidence, HUN plugin
+The input names historical control/RUNFIX dependency evidence, ATN plugin
 install/enabled/tool visibility evidence, explicit daemon socket/config and
 compatibility evidence, participant profiles, selected Discord parent-channel
 proof, planned dry-run changes, rollback steps, verification commands, approval
@@ -119,7 +119,7 @@ Bot-to-bot-enabled profiles are excluded by default. Unknown or missing profile
 eligibility or tool visibility blocks that profile. The report includes
 eligible-only `allow_list_targets`, profile remediation, parent-channel proof
 state, and a fallback audit rejecting hidden plugin-to-CLI subprocess fallback,
-current Hermes/Discord inference, manual profile replies as full HUN success,
+current Hermes/Discord inference, manual profile replies as full ATN success,
 daemon startup/discovery, profile/gateway/provider/auth/token/model mutation,
 `codex exec`, generic OpenAI SDK, raw app-server transport, and KAB
 `native_codex`.
@@ -137,7 +137,7 @@ plugin install/tool visibility, daemon socket/config compatibility, profile/
 gateway visibility, visible-surface readiness, selected-runner/runtime proof, and
 final live-readiness claim as separate axes.
 
-This planner never proves live readiness. `hun_discussion_activation_plan` always
+This planner never proves live readiness. `atn_discussion_activation_plan` always
 returns `live_readiness: false` and performs no environment reads, current
 Hermes/Discord/profile/gateway inspection, socket discovery, CLI fallback,
 daemon startup, Discord send/channel creation, profile/gateway/provider/auth/
@@ -145,7 +145,7 @@ token/model mutation, activation apply, or production readiness claim.
 
 ## CNDIS-2 injected Discord helper
 
-CNDIS-2 adds `hun_discord_send_message` as a narrow injected-only Hermes tool wrapper over
+CNDIS-2 adds `atn_discord_send_message` as a narrow injected-only Hermes tool wrapper over
 `discord_surface.py`:
 
 - callers must supply `content` and an explicit Discord target object;
@@ -161,7 +161,7 @@ CNDIS-2 adds `hun_discord_send_message` as a narrow injected-only Hermes tool wr
 The helper never reads environment variables, opens live gateway/socket/CLI paths,
 discovers the current Hermes session, uses auth/token/credential config, registers slash
 commands, or records daemon delivery evidence by itself. If a caller wants daemon-owned
-delivery evidence, it must still submit the existing fake/injected `hun_delivery_evidence`
+delivery evidence, it must still submit the existing fake/injected `atn_delivery_evidence`
 command with Discord IDs treated only as evidence pointers.
 
 ## DAEMN-2 fake stream and diagnostics surfaces
@@ -178,8 +178,8 @@ This is parser and fake-daemon readiness only. HPLUG-2 maps the existing fake/in
 
 ## HPLUG-3 unsupported slash-command bindings
 
-Hermes provides a plugin slash-command host API through `PluginContext.register_command(name, handler, description, args_hint)`. HUN plugin slash-command exposure remains unsupported. The plugin manifest must keep `provides_commands: []`, and the root entrypoint must not register command handlers until a later task supplies a concrete slash-command binding contract and isolated verification.
+Hermes provides a plugin slash-command host API through `PluginContext.register_command(name, handler, description, args_hint)`. ATN plugin slash-command exposure remains unsupported. The plugin manifest must keep `provides_commands: []`, and the root entrypoint must not register command handlers until a later task supplies a concrete slash-command binding contract and isolated verification.
 
-Future HUN slash-command bindings must preserve the same fail-closed boundary as tools: no live daemon discovery, Hermes, Discord, gateway, auth, token, localhost, socket, or CLI fallback unless explicitly designed and tested. A command must have daemon-owned state semantics, fake or conformance fixtures, duplicate/idempotency handling, structured error preservation, argument validation, redaction coverage, manifest declaration, and isolated Hermes/gateway smoke evidence before readiness is claimed.
+Future ATN slash-command bindings must preserve the same fail-closed boundary as tools: no live daemon discovery, Hermes, Discord, gateway, auth, token, localhost, socket, or CLI fallback unless explicitly designed and tested. A command must have daemon-owned state semantics, fake or conformance fixtures, duplicate/idempotency handling, structured error preservation, argument validation, redaction coverage, manifest declaration, and isolated Hermes/gateway smoke evidence before readiness is claimed.
 
 See `docs/08-unsupported-surfaces.md` for the operator-facing unsupported-surface matrix and future binding checklist.

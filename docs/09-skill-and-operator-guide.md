@@ -1,10 +1,8 @@
-# HUN Skill and Operator Guide
+# ATN Skill and Operator Guide
 
 ## Scope
 
-The packaged HUN operator skills and local compatibility matrix remain the
-operator-facing guide for `hermes-unified-network-plugin`. The bundled skills live
-inside the Python package:
+The packaged ATN operator skills and local compatibility matrix remain the operator-facing guide for this repository. Public docs now use the ATN skill names `atn-plugin`, `atn-moderator`, and `atn-participant`, while ATN-005 still owns the checked-in packaged skill id/path rename. Until ATN-005 lands, the bundled source remains inside the Python package:
 
 ```text
 src/hermes_unified_network_plugin/bundled_skills/hun-plugin/SKILL.md
@@ -12,7 +10,7 @@ src/hermes_unified_network_plugin/bundled_skills/hun-moderator/SKILL.md
 src/hermes_unified_network_plugin/bundled_skills/hun-participant/SKILL.md
 ```
 
-The package exposes import-safe resource helpers and registers these read-only plugin-provided skills when Hermes loads the plugin. Canonical activation loads them by plugin-qualified names such as `hermes-unified-network-plugin:hun-plugin`, `hermes-unified-network-plugin:hun-moderator`, and `hermes-unified-network-plugin:hun-participant`; it must not require profile-local flat copies. The bundled source remains canonical; ops external skill directories are not required for HUN plugin use.
+The package exposes import-safe resource helpers and the public ATN operator guidance. Canonical plugin-qualified activation and the checked-in bundled resource ids remain aligned by ATN-005; until then, the bundled source remains canonical and profile-local flat copies are not required.
 
 This guide does not enable a live plugin, contact a daemon, modify the sibling
 control repo, or prove production activation, live plugin readiness, or live
@@ -23,26 +21,26 @@ smoke claim is exactly local isolated plugin-load smoke.
 
 The current plugin surface is fake/injected Hermes tools only:
 
-- `hun_daemon_status`
-- `hun_compatibility_diagnostics`
-- `hun_stream_tail`
-- `hun_stream_ack`
-- `hun_delegate_new`
-- `hun_delegate_action`
-- `hun_council_command`
-- `hun_selected_participant_response`
-- `hun_delivery_evidence`
-- `hun_surface_render_projection`
-- `hun_discussion_activation_plan`
-- `hun_discord_send_message`
+- `atn_daemon_status`
+- `atn_compatibility_diagnostics`
+- `atn_stream_tail`
+- `atn_stream_ack`
+- `atn_delegate_new`
+- `atn_delegate_action`
+- `atn_council_command`
+- `atn_selected_participant_response`
+- `atn_delivery_evidence`
+- `atn_surface_render_projection`
+- `atn_discussion_activation_plan`
+- `atn_discord_send_message`
 
 `plugin.yaml` must continue to declare `provides_commands: []`. The root
-entrypoint must not register HUN slash commands.
+entrypoint must not register ATN slash commands.
 
 Unsupported in SKILL-2:
 
-- `hun_session_status` or `session.status.read`;
-- HUN slash commands through Hermes `register_command`;
+- `atn_session_status` or `session.status.read`;
+- ATN slash commands through Hermes `register_command`;
 - native Discord slash-command registration;
 - live daemon discovery or localhost/socket/SSE/WebSocket transport;
 - CLI fallback;
@@ -63,12 +61,12 @@ Default verification and operator rehearsal are local only:
 3. Do not create plugin-owned lifecycle state, idempotency state, council state,
    logs, locks, cursors, or delivery-evidence transitions.
 4. Treat Discord IDs as evidence pointers only. Daemon-owned delivery evidence
-   still goes through `hun_delivery_evidence`.
-5. Treat `hun_surface_render_projection` output as a local projection over
+   still goes through `atn_delivery_evidence`.
+5. Treat `atn_surface_render_projection` output as a local projection over
    explicit daemon/control event JSON, not lifecycle authority. Use
    `visible_transcript` for operator-facing discussion text and keep raw
    cursor/event details in `audit_log`/`rows` evidence.
-6. Treat `hun_discussion_activation_plan` output as a dry-run planner/doctor
+6. Treat `atn_discussion_activation_plan` output as a dry-run planner/doctor
    report only. It never proves live readiness or authorizes broad apply/pilot
    scope. For a Discord-origin `live_visible_thread` discussion whose start gate
    passes, `ready_to_start` means proceed to `council.new` without another
@@ -85,11 +83,11 @@ Before any `council.new` for a live-visible or cross-team council, operator evid
 
 Accepted planned reconcile evidence needs at least: `principal`, `in_loaded_registry: false`, `planned_reconcile: true`, `mapping_unambiguous: true`, and `wrapper_resolves: true`. Ambiguous mapping, disabled existing principals, unresolved wrappers, or missing loaded-registry evidence block before `council.new`; the control-owned reconcile also validates invalid/reserved principal ids before registry mutation. Do not downgrade to artifact-only or daemon CLI actor speech unless the operator explicitly approves that different mode before session creation. Registry membership persists across council sessions; subscription, heartbeat, cursor ack, attendance/preparation, and selected-runner readiness remain session-scoped runtime gates.
 
-## HUN council moderation hard rules
+## ATN council moderation hard rules
 
 Historical label: KAN council moderation hard rules.
 
-For any live HUN council, operator guidance must keep the discussion
+For any live ATN council, operator guidance must keep the discussion
 lifecycle-first, per-turn selected, and daemon-event authoritative. These rules
 do not authorize live daemon/runtime activation, Discord delivery, profile
 mutation, or live readiness by themselves.
@@ -224,7 +222,7 @@ Use two separate verdicts when rehearsing ARGUE discussion quality:
    are replayable, delivery/evidence pointers are reconstructable, and no plugin
    fallback or lifecycle-state ownership appears.
 2. Discussion-quality pass: relation evidence is grounded, visible relation
-   summaries from `hun_surface_render_projection` are readable, audit fields keep
+   summaries from `atn_surface_render_projection` are readable, audit fields keep
    `claims[]`, `stance_links[]`, `contribution_type`, `event_id`, `turn`,
    `speaker`, and `speech`, participants engage non-immediate prior claims where
    appropriate, challenge/refine/synthesize relations appear when the scenario
@@ -235,9 +233,9 @@ profiles, plugin enablement, daemon/CLI path, gateway/tool visibility, and any
 visible Discord surface. Do not treat this operator guide, local isolated
 plugin-load smoke, or fake/injected fixture harness as live readiness.
 
-KAS does not install, own, activate, or gate HUN runtime/plugin/bundled-skill artifacts.
-The HUN plugin package owns the bundled guidance source and exposes it through
-Hermes plugin-qualified skills. HUN development and HUN use must not depend on
+KAS does not install, own, activate, or gate ATN runtime/plugin/bundled-skill artifacts.
+The ATN plugin package owns the bundled guidance source and exposes it through
+Hermes plugin-qualified skills. ATN development and ATN use must not depend on
 profile-local flat copies or profile-local KAS development phase skills being
 present.
 
@@ -247,7 +245,7 @@ present.
 주유's 2026-06-19 rename-council handoff is registered as `RUNFIX-014` through `RUNFIX-017`. `control/RUNFIX-014` and `plugin/RUNFIX-015` have local implementation proof. `control/RUNFIX-016` has local implementation proof under KAH run `run-20260619T083649Z-d10e1f5cc20b` and local commit `9c15d22`. `plugin/RUNFIX-017` has local implementation proof under KAH run `run-20260619T101255Z-189d01ba8b8f` after official color review, Blue synthesis, and final KAH gate. Operators must treat the following as local proof, implementation-candidate evidence, or required planning/acceptance boundaries, not completed runtime capability:
 
 1. `control/RUNFIX-014` selected-runner accounting: control KAH run `run-20260619T051710Z-8e1f6efb61ec` provides local implementation proof that a run with `runner_invocation_failed` followed by later fallback/manual canonical `speech` is lifecycle/fallback evidence, not `selected_runner_pass`. Reports must consume the control accounting labels and expose runner started/succeeded/failed counts plus fallback/manual harness flags.
-2. `plugin/RUNFIX-015` visible author guard: plugin KAH run `run-20260619T071526Z-7d2ba33b07d5` adds local `hun_discussion_activation_plan` proof for pre-`council.new` visible-author validation. Explicit caller-provided same-path probes must prove each selected participant posts as the expected profile author. Evidence includes `profile`, expected author source (`registry_snapshot` or approved profile-author map), observed bot/user, `source_env`, `posting_path`, shared/default negative proof, shared-default-then-profile-local env precedence, per-turn Discord message id, selected member, profile author id, and `speech_event_id`. Shared/default or unexpected authors fail closed; the planner does not perform live Discord delivery or runtime/profile/provider/gateway/auth/token/model mutation.
+2. `plugin/RUNFIX-015` visible author guard: plugin KAH run `run-20260619T071526Z-7d2ba33b07d5` adds local `atn_discussion_activation_plan` proof for pre-`council.new` visible-author validation. Explicit caller-provided same-path probes must prove each selected participant posts as the expected profile author. Evidence includes `profile`, expected author source (`registry_snapshot` or approved profile-author map), observed bot/user, `source_env`, `posting_path`, shared/default negative proof, shared-default-then-profile-local env precedence, per-turn Discord message id, selected member, profile author id, and `speech_event_id`. Shared/default or unexpected authors fail closed; the planner does not perform live Discord delivery or runtime/profile/provider/gateway/auth/token/model mutation.
 3. `control/RUNFIX-016` summary robustness: KAH run `run-20260619T083649Z-d10e1f5cc20b` has local implementation proof that closeout/summary tooling tolerates `payload.plugin_evidence`, dict/list `payload.evidence`, and missing optional evidence. A finalized lifecycle must not look failed because optional evidence has an alternate shape; this remains fail-closed local proof evidence only, not runtime readiness.
 4. `plugin/RUNFIX-017` ARGUE quality-required prompts: non-opening quality-required speeches with sufficient local context must link to caller-provided prior targets through valid `stance_links[]` or justify `contribution_type: "new_axis"` with `new_axis_reason`; prompts should provide compact prior claim graph targets; explicit `discussion_quality` evidence is required for the quality gate; in `quality_required`, the first orphan non-opening speech blocks `discussion_quality_pass`; warning-only behavior is reserved for `quality_warn`, and repeated-orphan counts remain diagnostic evidence.
 
@@ -255,25 +253,25 @@ Final reports must keep these fields separate: `lifecycle_pass`, `selected_runne
 
 ## RUNFIX activation guidance
 
-`RUNFIX` distinguishes plugin installation from live-local HUN discussion activation.
+`RUNFIX` distinguishes plugin installation from live-local ATN discussion activation.
 
 - Plugin install/load proves only that the packaged plugin surface can be discovered and its declared tools can be used in the approved Hermes profile.
-- Discussion activation requires an explicit dry-run plan before any apply step. The `hun_discussion_activation_plan` tool can build the planner/doctor report from caller-provided evidence: control daemon/socket/config evidence, participant profile list, selected Discord parent channel, effective Discord profile eligibility, planned allow-list/config changes, rollback, smoke commands, and approval boundary.
-- Profiles with effective bot-to-bot enabled Discord behavior are excluded from HUN discussion allow-lists by default. Report every excluded profile and reason/remediation; `allow_list_targets` must include eligible profiles only.
-- Visible-pilot surface policy is thread-preferred and parent-channel fallback allowed. Create or use a dedicated thread under the approved parent channel first. If thread creation/posting is unsupported, use the approved parent channel directly as a fallback, but record `fallback_reason` in the task brief, HUN surface metadata, visible closeout, and final report. Parent-channel fallback is not no-restart thread readiness, and manual participant messages remain diagnostic-only unless canonical HUN event linkage is also proven.
-- Discord-origin council requests default to `live_visible_thread` output. Do not silently satisfy a Discord thread request with artifact-only daemon CLI actor speech. If the operator explicitly asks for `artifact_only`, `daemon_cli_actor_speech`, or transcript/export-only output, record that confirmation before `council.new`; otherwise classify preflight findings before session creation. When the user has already asked for the HUN discussion and the start gate passes, do not ask for another approval; start the council.
+- Discussion activation requires an explicit dry-run plan before any apply step. The `atn_discussion_activation_plan` tool can build the planner/doctor report from caller-provided evidence: control daemon/socket/config evidence, participant profile list, selected Discord parent channel, effective Discord profile eligibility, planned allow-list/config changes, rollback, smoke commands, and approval boundary.
+- Profiles with effective bot-to-bot enabled Discord behavior are excluded from ATN discussion allow-lists by default. Report every excluded profile and reason/remediation; `allow_list_targets` must include eligible profiles only.
+- Visible-pilot surface policy is thread-preferred and parent-channel fallback allowed. Create or use a dedicated thread under the approved parent channel first. If thread creation/posting is unsupported, use the approved parent channel directly as a fallback, but record `fallback_reason` in the task brief, ATN surface metadata, visible closeout, and final report. Parent-channel fallback is not no-restart thread readiness, and manual participant messages remain diagnostic-only unless canonical ATN event linkage is also proven.
+- Discord-origin council requests default to `live_visible_thread` output. Do not silently satisfy a Discord thread request with artifact-only daemon CLI actor speech. If the operator explicitly asks for `artifact_only`, `daemon_cli_actor_speech`, or transcript/export-only output, record that confirmation before `council.new`; otherwise classify preflight findings before session creation. When the user has already asked for the ATN discussion and the start gate passes, do not ask for another approval; start the council.
 - Use three preflight categories. `start_blocker` blocks `council.new`; `runtime_evidence_pending` is collected during attendance, preparation, selected-runner, speech, delivery, and closeout; `final_acceptance_unproven` is reported as separated closeout labels. Only `start_blocker` findings block `council.new`.
 - `start_blocker` findings are unavailable daemon/protocol/tool surface, missing or invalid roster, unresolved registry principals with no unambiguous control-owned reconcile, explicitly unavailable profile/plugin tool surface, missing target Discord surface, positively detected bot-to-bot or shared/default-author risk without approval, or unapproved provider/profile/gateway/auth/token mutation.
 - Missing selected-runner proof, participant runtime freshness, same-path per-turn author linkage, visible turn counts, ARGUE relation counts, and discussion-quality proof are not automatic start blockers. Track them as `runtime_evidence_pending` or `final_acceptance_unproven`, then report them separately at closeout.
 - Before starting a live visible council, collect non-mutating probes when feasible: bound thread or approved parent-channel fallback with `fallback_reason`, turn-posting probe for the selected-speaker/profile-send path or approved fallback poster, visible closeout probe, `real_profile_gateway_replies: true`, and `cli_actor_speech_only: false`. If these are missing because no probe has been run yet, collect the probe before asking the user; if collecting it requires profile/provider/gateway/auth/token mutation, stop for approval.
 - For `plugin/RUNFIX-012`, `participant_runtime_readiness` from `control/RUNFIX-011` diagnostics remains explicit evidence. Required classes are control task/status/evidence ref, subscriber presence, cursor ack freshness, heartbeat freshness, attendance and preparation terminal evidence, selected-runner readiness/prerequisites, and visible-surface proof as a separate evidence class; missing classes are runtime/acceptance evidence gaps unless they also prove a `start_blocker`.
 - Gateway liveness, transcript/export artifacts, parent-channel fallback alone, and manual/fallback profile text are diagnostics only. They must not be substituted for participant runtime readiness, selected-runner proof, visible-surface proof, `live_readiness`, or production readiness.
-- Fallback/manual participant messages may be useful diagnostic evidence, but they must be labeled `fallback_profile_pass` and must not be reported as selected-speaker runner success or HUN live discussion readiness.
-- `hun_discussion_activation_plan` always keeps `live_readiness: false`; it must not read env vars, inspect current Hermes/Discord/profile/gateway state, open sockets, shell out, start daemons, mutate profiles/gateway/Discord/auth/token/provider/model settings, or infer readiness from missing evidence. Do not treat `hun_discussion_activation_plan.live_readiness=false` as a `council.new` blocker by itself. If the planner returns `status: blocked`, do not automatically stop before `council.new`; classify each blocker first.
+- Fallback/manual participant messages may be useful diagnostic evidence, but they must be labeled `fallback_profile_pass` and must not be reported as selected-speaker runner success or ATN live discussion readiness.
+- `atn_discussion_activation_plan` always keeps `live_readiness: false`; it must not read env vars, inspect current Hermes/Discord/profile/gateway state, open sockets, shell out, start daemons, mutate profiles/gateway/Discord/auth/token/provider/model settings, or infer readiness from missing evidence. Do not treat `atn_discussion_activation_plan.live_readiness=false` as a `council.new` blocker by itself. If the planner returns `status: blocked`, do not automatically stop before `council.new`; classify each blocker first.
 
 Minimum live-local acceptance evidence remains evidence-gated and includes: `runner_invocation_started` from `speaker_selected`, selected-runner submitted canonical `speech` linkage, visible-surface evidence, ARGUE relation counts/diagnostics, eligible-profile-only allow-list evidence, and explicit no-claim language for production activation. These labels gate acceptance/live-readiness claims, not the basic `council.new` start gate or a second approval prompt. Durable runner failure is a terminal-failure diagnostic and blocks `selected_runner_pass` / live-readiness claims unless a later task explicitly proves a new selected-runner success path.
 
-For `plugin/RUNFIX-008`, `hun_discussion_activation_plan` also exposes an
+For `plugin/RUNFIX-008`, `atn_discussion_activation_plan` also exposes an
 `operator_evidence_report` from explicit caller-provided `operator_evidence`
 only:
 
@@ -298,7 +296,7 @@ evidence:
   visible closeout probe, real profile/gateway replies, CLI-actor-only status,
   and expected/posted turn counts;
 - `final_report_contract`: final reports must separately state
-  `HUN lifecycle finalized`, `Discord visible turns posted: N/expected`,
+  `ATN lifecycle finalized`, `Discord visible turns posted: N/expected`,
   `real profile/gateway replies`, and `CLI actor speech only`.
 
 Missing or ambiguous runner, ARGUE, or canonical-link evidence remains
@@ -340,13 +338,13 @@ Recommended inspection path:
 ```python
 from hermes_unified_network_plugin.bundled_skills import read_bundled_skill_text
 
-skill_text = read_bundled_skill_text("hun-plugin")
+skill_text = read_bundled_skill_text("atn-plugin")
 ```
 
 Manual operator install, when a later approved workflow allows profile writes:
 
 1. Build or install the Python package from the reviewed plugin revision.
-2. Read the packaged `hun-plugin/SKILL.md` with the import-safe helper.
+2. Read the packaged `atn-plugin/SKILL.md` with the import-safe helper.
 3. Copy that exact text into the approved Hermes profile skill location.
 4. Record the source package version and git revision in the operator change log.
 5. Run local verification before making any operator-readiness claim.
@@ -365,7 +363,7 @@ Before enabling, confirm:
 - the package imports without runtime integrations;
 - the root directory-plugin entrypoint loads from the staged repository without
   external `PYTHONPATH=<plugin>/src` help;
-- `read_bundled_skill_text("hun-plugin")` returns the bundled `SKILL.md`;
+- `read_bundled_skill_text("atn-plugin")` returns the bundled `SKILL.md`;
 - `plugin.yaml` still lists only the supported tool names and
   `provides_commands: []`;
 - the operator guide and unsupported-surfaces docs still say fake/injected only;
@@ -389,10 +387,10 @@ gateway config, sockets, or localhost services as part of SKILL-2 rollback.
 
 | Symptom | Likely cause | Safe response |
 | --- | --- | --- |
-| Bundled skill cannot be found | Package data missing or wrong resource name | Use `bundled_skill_names()` and `read_bundled_skill_text("hun-plugin")`; verify the package contains `bundled_skills/hun-plugin/SKILL.md`. |
+| Bundled skill cannot be found | Package data missing or wrong resource name | Use `bundled_skill_names()` and `read_bundled_skill_text("atn-plugin")`; verify the package contains `bundled_skills/atn-plugin/SKILL.md`. |
 | Skill claims live readiness | Overclaiming docs or stale bundled skill text | Restore the bundled skill text from the package source; SKILL-2 is fake/injected plus local isolated plugin-load smoke only. |
 | Slash commands appear | Manifest or entrypoint drift | Restore `provides_commands: []` and verify the root entrypoint registers no commands. |
-| `hun_session_status` appears | Unsupported session-status drift | Remove the surface until `session.status.read` fixture/protocol authority exists. |
+| `atn_session_status` appears | Unsupported session-status drift | Remove the surface until `session.status.read` fixture/protocol authority exists. |
 | ARGUE fields are dropped or inferred from legacy pointers | Contract drift or hidden state inference | Preserve explicit argument-graph fields verbatim and treat `responds_to_event_id` as display-only; do not infer state from Discord/Hermes order. |
 | ARGUE support is described as runtime scoring or live pilot readiness | Scope overclaim | Keep local ARGUE schema/tool coverage and local visible relation rendering bounded to fake/injected fixtures and evidence display; runtime validation/scoring, live Discord, production activation, and live-local pilot readiness require separate explicit approval and evidence. |
 | A handler tries localhost, a socket, CLI, gateway, auth, token, Discord, or KAB | No-live boundary violation | Fail closed and remove the fallback; default checks must use explicit fake/injected dependencies only. |

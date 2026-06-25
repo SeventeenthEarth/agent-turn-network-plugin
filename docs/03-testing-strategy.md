@@ -47,9 +47,9 @@ When required environment variables are absent, E2E tests must skip with a clear
 
 `make check-make-contract` verifies required single-line target declarations, `.PHONY` coverage, `make test` dependencies, preparation-gate dependencies, scoped tool commands, offline integration defaults, and isolated E2E environment variables. `make test-prepare` includes this check so target-contract drift is caught before tests run.
 
-`make check-bootstrap-smoke` verifies fake/injected plugin bootstrap readiness: package import/metadata through the `src/` layout, plugin manifest shape with exactly `hun_daemon_status`, `hun_compatibility_diagnostics`, `hun_stream_tail`, `hun_stream_ack`, `hun_delegate_new`, `hun_delegate_action`, `hun_council_command`, `hun_selected_participant_response`, `hun_delivery_evidence`, `hun_surface_render_projection`, `hun_discussion_activation_plan`, and `hun_discord_send_message`, explicit empty hook/command declarations, and root entrypoint registration of callable JSON-string handlers without hooks or slash commands.
+`make check-bootstrap-smoke` verifies fake/injected plugin bootstrap readiness: package import/metadata through the `src/` layout, plugin manifest shape with exactly `atn_daemon_status`, `atn_compatibility_diagnostics`, `atn_stream_tail`, `atn_stream_ack`, `atn_delegate_new`, `atn_delegate_action`, `atn_council_command`, `atn_selected_participant_response`, `atn_delivery_evidence`, `atn_surface_render_projection`, `atn_discussion_activation_plan`, and `atn_discord_send_message`, explicit empty hook/command declarations, and root entrypoint registration of callable JSON-string handlers without hooks or slash commands.
 
-`make check-plugin-load-smoke` verifies local isolated plugin-load smoke only. It copies repository-local plugin files into a temporary plugin home, loads the root `register(ctx)` entrypoint with a fake Hermes context, asserts the exact manifest-declared HUN tools in order, asserts HUN package metadata and bundled skill names, asserts no hooks, commands, or resources, calls representative handlers without injected clients/senders and requires JSON `ok:false`, verifies live-looking environment variables do not change behavior, rejects command-registering entrypoints or `provides_commands: [kan]`, and checks wheel package inclusion plus bundled skill compatibility. It does not read a live Hermes profile, contact a daemon, open sockets, call KAB, contact Discord/gateway/auth/token/provider resources, or prove production activation.
+`make check-plugin-load-smoke` verifies local isolated plugin-load smoke only. It copies repository-local plugin files into a temporary plugin home, loads the root `register(ctx)` entrypoint with a fake Hermes context, asserts the exact manifest-declared ATN tools in order, asserts current checked-in package metadata and bundled skill names, asserts no hooks, commands, or resources, calls representative handlers without injected clients/senders and requires JSON `ok:false`, verifies live-looking environment variables do not change behavior, rejects command-registering entrypoints or `provides_commands: [kan]`, and checks wheel package inclusion plus bundled skill compatibility. It does not read a live Hermes profile, contact a daemon, open sockets, call KAB, contact Discord/gateway/auth/token/provider resources, or prove production activation.
 
 Once the Python scaffold exists, missing `uv` or `pyproject.toml` is a fail-safe prerequisite error for code/test targets rather than a silent pass. Live external resources remain forbidden by default.
 
@@ -72,8 +72,8 @@ These tests do not open sockets, start a daemon, call the CLI, inspect Hermes ru
 
 HPLUG-2 remains fake/injected-only by default:
 
-- unit tests cover exact tool schema names, manifest declarations, root entrypoint registration, JSON-string handler success envelopes, fail-closed handler errors, diagnostics/stream redaction, stream-tail argument validation, and deferred absence of `hun_session_status`;
-- integration tests use a fake Hermes context and `StaticDaemonTransport` to invoke `hun_daemon_status`, `hun_compatibility_diagnostics`, and `hun_stream_tail`, asserting the exact `status.read` / `diagnostics.read` / `version.read` + `stream.tail` operation sequence;
+- unit tests cover exact tool schema names, manifest declarations, root entrypoint registration, JSON-string handler success envelopes, fail-closed handler errors, diagnostics/stream redaction, stream-tail argument validation, and deferred absence of `atn_session_status`;
+- integration tests use a fake Hermes context and `StaticDaemonTransport` to invoke `atn_daemon_status`, `atn_compatibility_diagnostics`, and `atn_stream_tail`, asserting the exact `status.read` / `diagnostics.read` / `version.read` + `stream.tail` operation sequence;
 - E2E smoke tests run only with isolated `KAN_E2E=1` defaults and prove live-looking daemon/stream/Discord/token environment variables do not create live fallback behavior.
 
 These tests do not claim installed-plugin loading, live daemon readiness, session-status support, slash commands, write tools, or Discord helper readiness.
@@ -82,7 +82,7 @@ These tests do not claim installed-plugin loading, live daemon readiness, sessio
 
 DELRV-1 remains fake/injected-only by default:
 
-- unit tests cover `hun_delegate_new` and `hun_delegate_action` schemas, exact closed `delegate.*` enum membership, absence of `delegate.request` and top-level `review`, caller-supplied `request_id`/`idempotency_key`, deterministic action `session_id` payload normalization, JSON-string success envelopes, validation failures before transport, structured daemon `conflict` preservation, malformed response protocol failures, and missing-client `unavailable` failures;
+- unit tests cover `atn_delegate_new` and `atn_delegate_action` schemas, exact closed `delegate.*` enum membership, absence of `delegate.request` and top-level `review`, caller-supplied `request_id`/`idempotency_key`, deterministic action `session_id` payload normalization, JSON-string success envelopes, validation failures before transport, structured daemon `conflict` preservation, malformed response protocol failures, and missing-client `unavailable` failures;
 - integration tests use a fake Hermes context and `StaticDaemonTransport` to invoke the delegation handlers and assert exact `command.submit` envelopes;
 - bootstrap tests assert the two DELRV-1 tools are declared while `provides_commands: []` remains unchanged.
 
@@ -92,7 +92,7 @@ These tests do not claim live daemon readiness, plugin-load readiness, slash com
 
 CNDIS-1 remains fake/injected-only by default:
 
-- unit tests cover `hun_council_command` and `hun_delivery_evidence` schemas, exact closed council and delivery-evidence enums, feature probes before submit, missing-feature compatibility failures before submit, caller-supplied `request_id`/`idempotency_key`, deterministic `session_id` payload normalization, command-specific payload validation before transport, duplicate idempotency pass-through without local dedupe, structured daemon error preservation, malformed response protocol failures, and missing-client `unavailable` behavior;
+- unit tests cover `atn_council_command` and `atn_delivery_evidence` schemas, exact closed council and delivery-evidence enums, feature probes before submit, missing-feature compatibility failures before submit, caller-supplied `request_id`/`idempotency_key`, deterministic `session_id` payload normalization, command-specific payload validation before transport, duplicate idempotency pass-through without local dedupe, structured daemon error preservation, malformed response protocol failures, and missing-client `unavailable` behavior;
 - integration tests use a fake Hermes context plus `StaticDaemonTransport` to invoke both handlers and assert exact `version.read` then `command.submit` sequencing;
 - `tests/integration/test_cndis_conformance.py` consumes the sibling control conformance manifest and all COUNC-001 council request/response fixtures plus both delivery-evidence fixtures read-only, with fake transport only;
 - bootstrap and core-contract tests assert the two CNDIS tools are declared while `provides_hooks: []` and `provides_commands: []` remain unchanged and the control manifest includes `delivery_evidence` and `council.lifecycle`.
@@ -107,11 +107,11 @@ CNDIS-2 remains fake/injected-only by default:
   missing or non-dedicated target failures, current/active target rejection, live opt-in
   label/cleanup requirements, fake sender exactly-once behavior, and inert E2E config
   parsing from a supplied mapping;
-- unit tool-handler tests cover `hun_discord_send_message` schema/handler fail-closed
+- unit tool-handler tests cover `atn_discord_send_message` schema/handler fail-closed
   behavior, missing target validation before sender, active-target rejection before
   sender, and fake sender success envelopes;
 - integration tests use a fake Hermes context and injected sender to invoke
-  `hun_discord_send_message`, while separately proving the registered helper does not add
+  `atn_discord_send_message`, while separately proving the registered helper does not add
   hooks or slash commands;
 - E2E tests run with `KAN_DISCORD_E2E=0` by default, set live-looking Discord/Hermes
   environment names, and still prove no live post occurs without an injected sender.

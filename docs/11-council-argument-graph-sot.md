@@ -1,14 +1,14 @@
 # Plugin Council Argument Graph SOT
 
-Status: Blue-authored plugin SOT draft for `ARGUE` implementation planning. This document is the plugin-side durable source of truth for HUN council discussion-quality surfaces. It is not an implementation-complete claim and does not enable live/default/production runtime behavior by itself.
+Status: Blue-authored plugin SOT draft for `ARGUE` implementation planning. This document is the plugin-side durable source of truth for ATN council discussion-quality surfaces. It is not an implementation-complete claim and does not enable live/default/production runtime behavior by itself.
 
 Date: 2026-06-15
-Owner: 마초 / `macho` for the bounded HUN plugin lane
-Companion control SOT: `../../kkachi-agent-network-control/docs/25-council-argument-graph-sot.md`
+Owner: 마초 / `macho` for the bounded ATN plugin lane
+Companion control SOT: `../../agent-turn-network-control/docs/25-council-argument-graph-sot.md`
 
 ## 1. Purpose
 
-HUN council discussions must preserve evidence that participants engage each other's claims rather than only producing valid-looking turn logs. The control daemon owns event/state authority and validation, but the plugin owns the Hermes participant-agent tool surface that receives selected participant responses, submits council writes, and renders visible discussion evidence.
+ATN council discussions must preserve evidence that participants engage each other's claims rather than only producing valid-looking turn logs. The control daemon owns event/state authority and validation, but the plugin owns the Hermes participant-agent tool surface that receives selected participant responses, submits council writes, and renders visible discussion evidence.
 
 This plugin SOT makes the plugin side independently complete for `ARGUE` work. A reader should be able to implement or review the plugin tasks from this document without opening the control SOT first, while still treating the control SOT and fixtures as the authority for daemon protocol semantics.
 
@@ -22,9 +22,9 @@ how each speech supports, challenges, refines, extends, questions, or synthesize
 
 ## 2. Authority and boundary
 
-### 2.1 HUN independence
+### 2.1 ATN independence
 
-HUN is independent of KAS. KAS does not install, own, or activate HUN control, HUN plugin, HUN bundled operator guidance, or HUN participant profile state.
+ATN is independent of KAS. KAS does not install, own, or activate ATN control, ATN plugin, ATN bundled operator guidance, or ATN participant profile state.
 
 ### 2.2 Plugin authority
 
@@ -33,16 +33,16 @@ HUN is independent of KAS. KAS does not install, own, or activate HUN control, H
 - Hermes participant-agent tool schemas and handlers;
 - daemon-client submission of typed council command envelopes;
 - local argument-graph argument validation before a command is submitted, where the validation can be performed from caller-provided selected-event/projection context;
-- selected participant response framing for `hun_selected_participant_response`;
+- selected participant response framing for `atn_selected_participant_response`;
 - fail-closed filtering of runtime warning/noise before it becomes visible `speech` text;
 - visible surface rendering of daemon-provided relation evidence;
-- packaged HUN operator guidance bundled in this plugin package.
+- packaged ATN operator guidance bundled in this plugin package.
 
 The plugin must not become a second lifecycle state authority, must not infer council state from Discord order, and must not hide CLI/daemon fallback behavior.
 
 ### 2.3 Control dependency
 
-`kkachi-agent-network-control` owns:
+`agent-turn-network-control` owns:
 
 - daemon event/state authority;
 - canonical protocol schemas and conformance fixtures;
@@ -179,9 +179,9 @@ In compatibility/default paths, the plugin may submit orphan speech if the daemo
 
 ## 5. Plugin schema requirements
 
-### 5.1 `hun_council_command`
+### 5.1 `atn_council_command`
 
-`hun_council_command` must allow ARGUE-capable `council.hand_raise` and `council.speak` payloads without weakening existing command-envelope rules.
+`atn_council_command` must allow ARGUE-capable `council.hand_raise` and `council.speak` payloads without weakening existing command-envelope rules.
 
 For `council.speak`, the plugin must accept and preserve these additive speech fields:
 
@@ -228,9 +228,9 @@ For `council.hand_raise`, the plugin must accept and preserve preferred ARGUE ta
 
 `target_event_ids[]` and `target_claim_ids[]`, if present for compatibility, are display hints only and must not be treated as independent parallel arrays for validation.
 
-### 5.2 `hun_selected_participant_response`
+### 5.2 `atn_selected_participant_response`
 
-`hun_selected_participant_response` is the most important plugin-side ARGUE surface because it turns participant-agent output into a daemon `council.speak` command.
+`atn_selected_participant_response` is the most important plugin-side ARGUE surface because it turns participant-agent output into a daemon `council.speak` command.
 
 The tool must require or receive enough context to prove:
 
@@ -279,7 +279,7 @@ The participant prompt must not pre-script a full round-robin `TURN_PLAN` for al
 
 ## 7. Visible rendering requirements
 
-`hun_surface_render_projection` must render daemon/control projection data without becoming lifecycle authority.
+`atn_surface_render_projection` must render daemon/control projection data without becoming lifecycle authority.
 
 Minimum human rendering for an ARGUE speech row:
 
@@ -320,7 +320,7 @@ The bundled plugin operator guidance must explain:
 - that plugin rendering is a visible surface and evidence pointer, not lifecycle state;
 - that profile activation and live Discord pilots remain separate approval-gated flows.
 
-Guidance must not say KAS installs, owns, or activates HUN artifacts.
+Guidance must not say KAS installs, owns, or activates ATN artifacts.
 
 ## 9. Conformance fixture dependency
 
@@ -380,7 +380,7 @@ Acceptance requires:
 
 Acceptance requires:
 
-- `hun_selected_participant_response` frames selected participant output into structured ARGUE fields;
+- `atn_selected_participant_response` frames selected participant output into structured ARGUE fields;
 - selected participant identity/provenance is checked against caller-provided selection context;
 - runtime warning/noise text fails closed before visible speech submission;
 - quality-required orphan speech fails closed when local context is sufficient;
@@ -391,7 +391,7 @@ Acceptance requires:
 
 Acceptance requires:
 
-- `hun_surface_render_projection` renders human-readable relation summaries;
+- `atn_surface_render_projection` renders human-readable relation summaries;
 - audit output preserves machine-readable relation fields;
 - daemon-supplied quality diagnostics are shown without rewriting speech;
 - renderer remains pure/local and uses daemon cursor/order authority only;
@@ -410,7 +410,7 @@ Acceptance requires:
 
 A future visible live-local pilot may claim discussion-quality success only when evidence shows:
 
-- actual named participant profiles had HUN plugin/tool visibility before the run;
+- actual named participant profiles had ATN plugin/tool visibility before the run;
 - daemon/CLI event stream is authoritative and replayable;
 - each non-opening speech in quality-required mode has valid relation evidence or justified `new_axis`;
 - at least one relation targets a claim more than one turn earlier;
@@ -427,7 +427,7 @@ This SOT does not:
 
 - enable production/live readiness;
 - authorize gateway, provider, token, profile, Discord, daemon runtime, or plugin activation mutation;
-- require KAS to install or own HUN artifacts;
+- require KAS to install or own ATN artifacts;
 - force direct reply to the immediately previous turn;
 - require automatic natural-language claim extraction in the first implementation slice;
 - authorize hidden fallback from plugin to CLI or from visible surface to lifecycle state;
@@ -438,7 +438,7 @@ This SOT does not:
 These are later ARGUE task decisions, not blockers for this SOT:
 
 - exact JSON schema nesting for selected participant response context;
-- whether `hun_council_command` and `hun_selected_participant_response` share one ARGUE validator module or separate command-specific validators;
+- whether `atn_council_command` and `atn_selected_participant_response` share one ARGUE validator module or separate command-specific validators;
 - exact renderer compactness controls for long multi-claim discussions;
 - whether local fake fixtures live under plugin tests or a copied control conformance-fixture mirror until `control/ARGUE-002` lands;
 - exact operator-guide examples for Korean/English mixed participant responses.

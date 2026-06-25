@@ -1,13 +1,13 @@
-# hermes-unified-network-plugin
+# atn-plugin
 
-`hermes-unified-network-plugin` is the Python Hermes plugin adapter for Hermes Unified Network (HUN). In the current local stage it exposes fake/injected Hermes plugin tools only: read-only `hun_daemon_status`, `hun_compatibility_diagnostics`, `hun_stream_tail`, `hun_stream_ack`, command-envelope `hun_delegate_new` and `hun_delegate_action`, `hun_council_command`, `hun_selected_participant_response`, `hun_delivery_evidence`, pure local `hun_surface_render_projection`, pure local `hun_discussion_activation_plan`, plus the injected-only `hun_discord_send_message` helper. It also packages the `hun-plugin`, `hun-moderator`, and `hun-participant` operator skills and has a local isolated plugin-load smoke gate for the repository entrypoint. Hermes has a plugin slash-command host API, but this plugin still has no HUN slash-command bindings, live daemon discovery, live/default Discord gateway wiring, session-status tool, production activation claim, KAB bridge claim, or live plugin readiness claim.
+`atn-plugin` is the Python Hermes plugin adapter for Agent Turn Network (ATN). Public docs now use the ATN names `atn-plugin`, `atn-moderator`, `atn-participant`, and `atn_*` tool labels. ATN-005 still owns the checked-in package/import/manifest/tool/skill rename, so repository code identifiers remain `hermes_unified_network_plugin`, `hun-*`, and `hun_*` until that task lands. Hermes has a plugin slash-command host API, but this plugin still has no ATN slash-command bindings, live daemon discovery, live/default Discord gateway wiring, session-status tool, production activation claim, KAB bridge claim, or live plugin readiness claim.
 
-The plugin is not the source of truth. `kkachi-agent-networkd` owns `channel.jsonl`, SQLite projections, locks, replay, cursors, and state transitions.
+The plugin is not the source of truth. The control daemon owns `channel.jsonl`, SQLite projections, locks, replay, cursors, and state transitions.
 
 ## Repository boundary
 
-- This repo: Python plugin code, fake/injected-transport daemon client foundation, Hermes tool schemas/handlers, future HUN-facing surfaces as separate tasks land, fake-daemon integration tests, isolated plugin E2E tests.
-- Control repo: public label `hun-control`, current local compatibility path `../kkachi-agent-network-control`, Go daemon/CLI, protocol SOT, event/state/storage/security/recovery docs.
+- This repo: Python plugin code, fake/injected-transport daemon client foundation, Hermes tool schemas/handlers, future ATN-facing surfaces as separate tasks land, fake-daemon integration tests, isolated plugin E2E tests.
+- Control repo: public label `atn-control`, current local compatibility path `../agent-turn-network-control`, Go daemon/CLI, protocol SOT, event/state/storage/security/recovery docs.
 - Discord helper behavior is injected-only by default. If delivery evidence is needed, it
   must be recorded separately through typed daemon commands, and raw Discord tokens must
   not move into the daemon.
@@ -44,13 +44,13 @@ Key docs:
 
 ## Current state
 
-Local fake/injected plugin stage. The package layout, plugin manifest, root Hermes directory entrypoint, status/diagnostics/stream-tail tools, delegation/review command-envelope tools, council/delivery-evidence command tools, pure visible-surface projection renderer, pure discussion activation planner/doctor, injected-only Discord helper, bundled `hun-plugin` / `hun-moderator` / `hun-participant` operator skills, compatibility matrix, and local isolated plugin-load smoke gate are in place. Handlers return JSON strings, preserve fail-closed error categories, redact sensitive diagnostics/stream payloads, and require explicit fake/injected `DaemonClient` factories, explicit caller-provided planner evidence, or explicit injected Discord senders for daemon/planner/Discord surfaces.
+Local fake/injected plugin stage. The package layout, plugin manifest, root Hermes directory entrypoint, status/diagnostics/stream-tail tools, delegation/review command-envelope tools, council/delivery-evidence command tools, pure visible-surface projection renderer, pure discussion activation planner/doctor, injected-only Discord helper, bundled `atn-plugin` / `atn-moderator` / `atn-participant` operator skills, compatibility matrix, and local isolated plugin-load smoke gate are in place. Handlers return JSON strings, preserve fail-closed error categories, redact sensitive diagnostics/stream payloads, and require explicit fake/injected `DaemonClient` factories, explicit caller-provided planner evidence, or explicit injected Discord senders for daemon/planner/Discord surfaces.
 
-`hun_stream_tail` probes `version.read` for `stream_frame` compatibility before `stream.tail`. `hun_delegate_new` submits `delegate.new`; `hun_delegate_action` accepts only the exact implemented `delegate.*` action/review/delivery enum, rejects `delegate.request` and top-level `review`, requires caller-supplied `request_id`/`idempotency_key`, and owns no lifecycle/idempotency state.
+`atn_stream_tail` probes `version.read` for `stream_frame` compatibility before `stream.tail`. `atn_delegate_new` submits `delegate.new`; `atn_delegate_action` accepts only the exact implemented `delegate.*` action/review/delivery enum, rejects `delegate.request` and top-level `review`, requires caller-supplied `request_id`/`idempotency_key`, and owns no lifecycle/idempotency state.
 
-`hun_council_command` accepts only the exact implemented `council.*` lifecycle enum and probes `version.read` for `council.lifecycle` before `command.submit`. `hun_selected_participant_response` submits a wrapper-proven `council.speak` payload for the selected member, then acks the selected cursor only after submit succeeds. `hun_delivery_evidence` accepts only `delegate.escalation_delivered` and `delegate.escalation_delivery_failed` and probes for `delivery_evidence` first. These tools preserve caller-supplied IDs and own no logs, locks, cursors, consensus/lifecycle state, idempotency/dedupe, or delivery evidence transitions.
+`atn_council_command` accepts only the exact implemented `council.*` lifecycle enum and probes `version.read` for `council.lifecycle` before `command.submit`. `atn_selected_participant_response` submits a wrapper-proven `council.speak` payload for the selected member, then acks the selected cursor only after submit succeeds. `atn_delivery_evidence` accepts only `delegate.escalation_delivered` and `delegate.escalation_delivery_failed` and probes for `delivery_evidence` first. These tools preserve caller-supplied IDs and own no logs, locks, cursors, consensus/lifecycle state, idempotency/dedupe, or delivery evidence transitions.
 
-`hun_surface_render_projection` is pure/local: it accepts explicit daemon/control
+`atn_surface_render_projection` is pure/local: it accepts explicit daemon/control
 projection JSON, sorts by daemon cursor/order authority, renders a clean
 `visible_transcript` for operator-facing discussion text, keeps raw cursors/event
 ids in `audit_log`/`rows`, and returns `live_readiness: false`. In closeout mode
@@ -61,7 +61,7 @@ closeout proof. It performs no daemon
 reads, Discord reads or sends, environment reads, lifecycle transitions, or CLI
 fallback.
 
-`hun_discussion_activation_plan` is pure/local: it accepts explicit operator
+`atn_discussion_activation_plan` is pure/local: it accepts explicit operator
 activation-planning evidence only and returns a deterministic dry-run
 planner/doctor report. It classifies profiles as eligible, excluded, or
 blocked/unknown from explicit effective Discord evidence; excludes
@@ -74,12 +74,12 @@ returns `live_readiness: false`. It performs no environment reads, current
 Hermes/Discord/profile/gateway inspection, socket discovery, CLI fallback, daemon
 startup, Discord sends, or profile/gateway/provider/auth/token/model mutation.
 
-`hun_discord_send_message` validates an explicit dedicated Discord test target with a
+`atn_discord_send_message` validates an explicit dedicated Discord test target with a
 visible label and cleanup hint, then calls only an injected `send_message` callable. It
 fails closed without sender injection, does not read environment variables or current
 Hermes/Discord state, and treats Discord IDs only as evidence pointers.
 
-`hun_session_status` remains deferred until the control repo provides fixture/protocol authority for `session.status.read`. HUN slash commands remain unsupported and `provides_commands: []` remains unchanged. SKILL-2 does not install into the user's Hermes profile and does not prove live daemon support, live Discord sending, production activation, KAB bridge behavior, or live Hermes integration.
+`atn_session_status` remains deferred until the control repo provides fixture/protocol authority for `session.status.read`. ATN slash commands remain unsupported and `provides_commands: []` remains unchanged. SKILL-2 does not install into the user's Hermes profile and does not prove live daemon support, live Discord sending, production activation, KAB bridge behavior, or live Hermes integration.
 
 ## Test targets
 

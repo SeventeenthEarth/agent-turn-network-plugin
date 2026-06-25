@@ -2,7 +2,7 @@
 
 ## Scope
 
-This roadmap and task backlog is for `hermes-unified-network-plugin`. Control daemon/CLI roadmap lives in `../../kkachi-agent-network-control/docs/09-implementation-epics.md` and `../../kkachi-agent-network-control/docs/roadmap.md`; those sibling paths are current local compatibility paths for public `hun-control` references.
+This roadmap and task backlog is for `hermes-unified-network-plugin`. Control daemon/CLI roadmap lives in `../../agent-turn-network-control/docs/09-implementation-epics.md` and `../../agent-turn-network-control/docs/roadmap.md`; those sibling paths are current local compatibility paths for public `hun-control` references.
 
 Task status values are limited to:
 
@@ -28,7 +28,7 @@ Split a task only when the dependency, approval gate, failure domain, or reviewe
 
 ## Control dependency gates
 
-The plugin may develop ahead of `kkachi-agent-network-control` only when a task can be completed against docs, local fakes, or control conformance fixtures. When a task requires a control daemon capability, command, feature flag, fixture, or delivery-evidence path that does not exist yet, keep or move that task to `blocked` instead of inventing plugin-side fallback behavior.
+The plugin may develop ahead of `agent-turn-network-control` only when a task can be completed against docs, local fakes, or control conformance fixtures. When a task requires a control daemon capability, command, feature flag, fixture, or delivery-evidence path that does not exist yet, keep or move that task to `blocked` instead of inventing plugin-side fallback behavior.
 
 Historical completed plugin tasks before the post-Release live-local work preserve their original short task IDs such as `SCAFF-1`, `DAEMN-1`, and `SKILL-2` for audit continuity. New post-Release cross-repo live-local epics normally use five-letter uppercase epic IDs and three-digit task IDs. `HUN` is the user-approved exception for the Hermes Unified Network public rename task stream. When a capability spans control and plugin, both repositories use the same epic ID and one globally sequential task number stream; cite tasks with repo-qualified notation such as `control/RUNFIX-001` or `plugin/RUNFIX-002`. A repo-local roadmap may therefore skip numbers owned by the sibling repo.
 
@@ -131,7 +131,7 @@ Epic ID: `LTRAN`
 
 Exit: the plugin has an explicit, locally verified live daemon transport that preserves daemon authority, keeps the CLI as the main-agent control plane, keeps the plugin as the participant-agent KAN client surface, and proves plugin reads/writes address the same daemon contract as the CLI. This exit is not production activation, live/default Discord delivery, gateway/auth/token mutation, or KAB bridge readiness.
 
-SOT: `docs/10-live-transport-sot.md`. Control companion SOT: `../../kkachi-agent-network-control/docs/24-live-transport-control-sot.md`.
+SOT: `docs/10-live-transport-sot.md`. Control companion SOT: `../../agent-turn-network-control/docs/24-live-transport-control-sot.md`.
 
 Dependency gate: complete the control `LTRAN` epic before starting the plugin `LTRAN` implementation epic. Do not switch from plugin `LTRAN` to control tasks mid-epic; if a missing control capability is discovered, block the plugin epic and open/complete the needed control epic before resuming plugin work.
 
@@ -147,7 +147,7 @@ Epic ID: `PARTC`
 
 Exit: participant agents can observe actionable daemon events and submit participant-originated council writes through the plugin/protocol-client path, with member runtime invocation evidence supplied by the completed control `MEMBR` epic. This exit does not claim always-on production runtimes or simulated role substitution.
 
-SOT: `docs/10-live-transport-sot.md`. Control companion SOT: `../../kkachi-agent-network-control/docs/24-live-transport-control-sot.md`.
+SOT: `docs/10-live-transport-sot.md`. Control companion SOT: `../../agent-turn-network-control/docs/24-live-transport-control-sot.md`.
 
 Dependency gate: complete the control `MEMBR` epic before starting plugin `PARTC`. Active task transfer between repos happens only at the epic boundary.
 
@@ -162,7 +162,7 @@ Epic ID: `SURFD`
 
 Exit: the plugin-side visible-surface helper/rendering boundary can present daemon event data and record evidence pointers without becoming lifecycle state authority or enabling live/default Discord from plugin registration.
 
-SOT: `docs/10-live-transport-sot.md`. Control companion SOT: `../../kkachi-agent-network-control/docs/24-live-transport-control-sot.md`.
+SOT: `docs/10-live-transport-sot.md`. Control companion SOT: `../../agent-turn-network-control/docs/24-live-transport-control-sot.md`.
 
 Dependency gate: complete the control `SURFD` epic before starting plugin `SURFD`. Active task transfer between repos happens only at the epic boundary.
 
@@ -176,7 +176,7 @@ Epic ID: `ARGUE`
 
 Exit: the plugin can accept, validate where deterministically possible, submit, and render relation-aware council discussion evidence without becoming lifecycle authority. ARGUE completion means participant-agent tool schemas, selected participant response handling, visible projection rendering, and packaged operator guidance preserve `claims[]`, `stance_links[]`, `contribution_type`, `new_axis_reason`, and quality diagnostics supplied by control. This exit is not production activation, live/default Discord delivery, gateway/auth/token/provider/profile mutation, KAB bridge readiness, or a live-local pilot claim.
 
-SOT: `docs/11-council-argument-graph-sot.md`. Control companion SOT: `../../kkachi-agent-network-control/docs/25-council-argument-graph-sot.md`.
+SOT: `docs/11-council-argument-graph-sot.md`. Control companion SOT: `../../agent-turn-network-control/docs/25-council-argument-graph-sot.md`.
 
 Dependency gate: develop ARGUE sequentially through the control/plugin DAG. Control owns protocol/event/state/validation fixtures; plugin implementation starts only after the relevant control ARGUE fixture or gate exists, unless a task explicitly records local fake-fixture scope and keeps control compatibility completion blocked.
 
@@ -194,7 +194,7 @@ Epic ID: `RUNFIX`
 
 Exit: an approved live-local HUN discussion can be installed/activated only with explicit control dependency evidence, eligible real participant profiles, bot-to-bot-free Discord channel policy, selected-speaker runner evidence, visible-surface evidence, canonical speech linkage, fallback disclosure, and ARGUE discussion-quality diagnostics. This exit is not a production activation, arbitrary Discord deployment, KAB bridge readiness, or permission to mutate profiles/gateway/auth/token/provider state without separate approval.
 
-SOT: `docs/10-live-transport-sot.md`. Control companion SOT: `../../kkachi-agent-network-control/docs/24-live-transport-control-sot.md`.
+SOT: `docs/10-live-transport-sot.md`. Control companion SOT: `../../agent-turn-network-control/docs/24-live-transport-control-sot.md`.
 
 Dependency gate: RUNFIX uses one global cross-repo task sequence. `plugin/RUNFIX-002` follows `control/RUNFIX-001`; `plugin/RUNFIX-006` follows `control/RUNFIX-005`; `control/RUNFIX-009` follows `plugin/RUNFIX-008`; `plugin/RUNFIX-010` follows `control/RUNFIX-009`; `plugin/RUNFIX-012` follows `control/RUNFIX-011`; `plugin/RUNFIX-013` may proceed after the RUNFIX-013 plan records the moderation-skill evidence and control-policy references. `control/RUNFIX-014` precedes `plugin/RUNFIX-015` where reports consume selected-runner labels; `control/RUNFIX-016` provides the canonical summary helper that plugin visible runners should call or match; `plugin/RUNFIX-017` depends on control/RUNFIX-005 quality diagnostics and the post-pilot report labels; `plugin/RUNFIX-019` depends on `control/RUNFIX-018` daemon registry reconcile semantics.
 
@@ -218,7 +218,7 @@ Epic ID: `RUNFIX2`
 
 Exit: an approved live-local HUN discussion can run with production-friendly defaults and clean visible UX only when the daemon-selected runner path succeeds, participant runtime readiness is proven at grant/turn time, visible turns match the lifecycle formula, Discord messages hide audit identifiers, and final labels remain evidence-derived. RUNFIX2 does not authorize production activation, live/default Discord outside an approved pilot, gateway/auth/token/provider/profile mutation, KAB readiness, push, or broad rollout.
 
-SOT: `docs/10-live-transport-sot.md`. Control companion SOT: `../../kkachi-agent-network-control/docs/24-live-transport-control-sot.md`.
+SOT: `docs/10-live-transport-sot.md`. Control companion SOT: `../../agent-turn-network-control/docs/24-live-transport-control-sot.md`.
 
 Dependency gate: `control/RUNFIX2-001` locks evidence/config semantics before implementation claims. `control/RUNFIX2-002` is completed/control-local for selected-runner response generation, runner-success accounting, compact JSONL stdout framing, and pretty/multiline JSON compatibility before `plugin/RUNFIX2-005` can claim `selected_runner_pass`. `control/RUNFIX2-003` is completed/control-local for the lifecycle turn formula before `plugin/RUNFIX2-004` and `plugin/RUNFIX2-005` claim expected visible turn counts.
 
@@ -259,7 +259,7 @@ Exit: both repositories converge to Agent Turn Network public naming with `atn-c
 |---|---|---|---|
 | ATN-001 | ATN naming SOT and roadmap lock | completed/docs-only | Added control and plugin ATN naming SOT documents, recorded ATN-001 through ATN-005 in the roadmaps/docs maps, and locked the no-alias policy. Review consensus: Red `t_d43402f0`, Orange `t_6d6bb8e8`, Gray `t_7ebc9e1e`, Blue synthesis `t_8e348f72`. This does not rename code, binaries, packages, tools, live profiles, hosted repositories, or public release artifacts. |
 | ATN-002 | Control public docs rename | planned | Control-owned task to rewrite control public docs, docs index/map surfaces, protocol wording, examples, operator-facing text, and roadmap status wording to ATN-only naming without changing binaries or code behavior. |
-| ATN-003 | Plugin public docs rename | planned | Rewrite plugin public docs, package/docs metadata, operator guide, and bundled skill documentation to ATN-only naming without changing package/tool code behavior. |
+| ATN-003 | Plugin public docs rename | completed/local-docs-proof | Rewrote plugin public docs, package/docs metadata, operator guide, and bundled skill documentation to ATN-only naming ahead of ATN-005, updated sibling workspace path references to the current `agent-turn-network-control` checkout, and preserved historical HUN provenance rows separately. |
 | ATN-004 | Control code and binary rename | planned | Control-owned task to rename control Go module, CLI binary, daemon binary, data-home/env/socket/protocol markers, fixtures, tests, Makefile surfaces, and command examples to ATN names with no aliases. |
 | ATN-005 | Plugin package, tools, skills, and final guardrails | planned | Rename plugin distribution/import package, manifest, Hermes tools, bundled skills, schemas/handlers/tests/scripts, docs examples, and guardrails to ATN names; close final cross-repo ATN compatibility proof with no aliases. |
 

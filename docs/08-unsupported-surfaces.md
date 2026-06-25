@@ -2,31 +2,31 @@
 
 ## Purpose
 
-This document records the current unsupported Hermes surfaces for `hermes-unified-network-plugin` so operators do not confuse host capability with HUN plugin readiness.
+This document records the current unsupported Hermes surfaces for `hermes-unified-network-plugin` so operators do not confuse host capability with ATN plugin readiness.
 
-Hermes currently provides a real plugin slash-command host API through `PluginContext.register_command(name, handler, description, args_hint)`. The HUN plugin still exposes no HUN slash commands. Its manifest must continue to declare `provides_commands: []` until a later task implements and verifies concrete slash-command handlers.
+Hermes currently provides a real plugin slash-command host API through `PluginContext.register_command(name, handler, description, args_hint)`. The ATN plugin still exposes no ATN slash commands. Its manifest must continue to declare `provides_commands: []` until a later task implements and verifies concrete slash-command handlers.
 
-## Current HUN plugin exposure
+## Current ATN plugin exposure
 
 Supported now:
 
-- `hun_daemon_status` — read-only fake/injected daemon status tool.
-- `hun_compatibility_diagnostics` — read-only fake/injected diagnostics tool with redaction.
-- `hun_stream_tail` — read-only fake/injected retained stream tail tool with `stream_frame` pre-probe.
-- `hun_delegate_new` — fake/injected `delegate.new` command-envelope submission tool with caller-supplied request/idempotency metadata.
-- `hun_delegate_action` — fake/injected closed-enum `delegate.*` action/review/delivery command-envelope submission tool.
-- `hun_council_command` — fake/injected closed-enum `council.*` lifecycle command-envelope submission tool with `council.lifecycle` pre-probe.
-- `hun_delivery_evidence` — fake/injected closed-enum delivery-evidence command-envelope submission tool with `delivery_evidence` pre-probe.
-- `hun_discord_send_message` — fake/injected Discord helper tool that requires an
+- `atn_daemon_status` — read-only fake/injected daemon status tool.
+- `atn_compatibility_diagnostics` — read-only fake/injected diagnostics tool with redaction.
+- `atn_stream_tail` — read-only fake/injected retained stream tail tool with `stream_frame` pre-probe.
+- `atn_delegate_new` — fake/injected `delegate.new` command-envelope submission tool with caller-supplied request/idempotency metadata.
+- `atn_delegate_action` — fake/injected closed-enum `delegate.*` action/review/delivery command-envelope submission tool.
+- `atn_council_command` — fake/injected closed-enum `council.*` lifecycle command-envelope submission tool with `council.lifecycle` pre-probe.
+- `atn_delivery_evidence` — fake/injected closed-enum delivery-evidence command-envelope submission tool with `delivery_evidence` pre-probe.
+- `atn_discord_send_message` — fake/injected Discord helper tool that requires an
   injected sender and dedicated test target; it returns Discord IDs only as evidence
   pointers and fails closed by default.
 
 Unsupported now:
 
-- HUN slash commands through `ctx.register_command`.
-- Native Discord slash-command registration for HUN operations.
-- Additional write-capable HUN tools beyond the DELRV-1/CNDIS-1 fake/injected command-envelope tools and the CNDIS-2 injected-only Discord helper.
-- `hun_session_status` and any `session.status.read` surface.
+- ATN slash commands through `ctx.register_command`.
+- Native Discord slash-command registration for ATN operations.
+- Additional write-capable ATN tools beyond the DELRV-1/CNDIS-1 fake/injected command-envelope tools and the CNDIS-2 injected-only Discord helper.
+- `atn_session_status` and any `session.status.read` surface.
 - Live daemon discovery, localhost/socket/SSE/WebSocket transport, or CLI fallback.
 - Default/live Hermes gateway/send_message delivery helpers, current-session/current-thread
   fallback, or Discord helper behavior that claims daemon-recorded evidence.
@@ -43,20 +43,20 @@ Hermes host evidence:
 - Plugin command names are normalized, built-in command conflicts are rejected, and handlers receive raw argument strings.
 - `hermes_cli/commands.py::COMMAND_REGISTRY` remains the built-in slash-command SOT.
 
-HUN plugin readiness boundary:
+ATN plugin readiness boundary:
 
 - The plugin does not register slash commands; DELRV-1/CNDIS-1 command-envelope tools are Hermes tools, not slash-command bindings.
 - The plugin is not installed/enabled as a live Hermes plugin in the active environment, so no live plugin command claim is valid.
 - Free-form Discord replies or slash invocations must not become authoritative lifecycle transitions; daemon events remain the SOT.
-- `hun_discord_send_message` does not change daemon evidence. Delivery evidence remains
-  daemon-owned through `hun_delivery_evidence`; Discord IDs are evidence pointers only.
+- `atn_discord_send_message` does not change daemon evidence. Delivery evidence remains
+  daemon-owned through `atn_delivery_evidence`; Discord IDs are evidence pointers only.
 
 ## Future binding requirements
 
-Before a HUN slash command can be added, a later task must provide all of the following evidence:
+Before a ATN slash command can be added, a later task must provide all of the following evidence:
 
 1. A concrete command name and no-conflict mapping against Hermes built-ins.
-2. A daemon-owned operation or CLI-equivalent command in the control HUN contract.
+2. A daemon-owned operation or CLI-equivalent command in the control ATN contract.
 3. Fake or conformance fixtures for success, validation failure, duplicate/idempotent request, permission or compatibility failure, and malformed daemon payloads.
 4. A fail-closed handler that returns a safe string/JSON response and never turns daemon failure into success.
 5. No live daemon, Hermes, Discord, gateway, auth, token, localhost, socket, or CLI fallback unless that fallback is explicitly designed, approved, and tested.
@@ -66,4 +66,4 @@ Before a HUN slash command can be added, a later task must provide all of the fo
 
 ## Non-goals for HPLUG-3
 
-HPLUG-3 is documentation only. It does not add command handlers, alter plugin registration code, change Hermes core, change HUN daemon/control behavior, or claim live install readiness.
+HPLUG-3 is documentation only. It does not add command handlers, alter plugin registration code, change Hermes core, change ATN daemon/control behavior, or claim live install readiness.

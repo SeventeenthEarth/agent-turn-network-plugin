@@ -47,9 +47,9 @@ The project `.gitignore` must include `.kkachi/`, `.codegraph/`, `.omx/`, `.omc/
 
 `make check-make-contract` verifies required single-line target declarations, `.PHONY` coverage, `make test` dependencies, preparation-gate dependencies, scoped tool commands, offline integration defaults, and isolated E2E environment variables.
 
-`make check-bootstrap-smoke` verifies the package import/metadata, fake/injected plugin manifest shape, exact tool registrations, callable handler presence, and root directory-plugin entrypoint availability without registering hooks or HUN slash commands.
+`make check-bootstrap-smoke` verifies the package import/metadata, fake/injected plugin manifest shape, exact tool registrations, callable handler presence, and root directory-plugin entrypoint availability without registering hooks or ATN slash commands.
 
-`make check-plugin-load-smoke` verifies local isolated plugin-load smoke. It creates a temporary plugin home from repository-local files, loads the root entrypoint through a fake Hermes registration context without externally adding `<plugin>/src` to `PYTHONPATH`, checks exact HUN tool order, HUN package metadata, HUN bundled skill names, zero hooks, zero commands, zero registered resources, handler JSON-string fail-closed behavior without injected clients/senders, live-looking environment inertness, negative command-overclaim fixtures, wheel package inclusion, Python 3.11 syntax compatibility, and bundled skill compatibility. It does not inspect or mutate the user's Hermes profile and does not contact daemon, Discord, KAB, gateway, auth, token, provider, localhost, socket, CLI, or network resources.
+`make check-plugin-load-smoke` verifies local isolated plugin-load smoke. It creates a temporary plugin home from repository-local files, loads the root entrypoint through a fake Hermes registration context without externally adding `<plugin>/src` to `PYTHONPATH`, checks exact public ATN tool order, current checked-in package metadata/resource ids, zero hooks, zero commands, zero registered resources, handler JSON-string fail-closed behavior without injected clients/senders, live-looking environment inertness, negative command-overclaim fixtures, wheel package inclusion, Python 3.11 syntax compatibility, and bundled skill compatibility. It does not inspect or mutate the user's Hermes profile and does not contact daemon, Discord, KAB, gateway, auth, token, provider, localhost, socket, CLI, or network resources.
 
 `make test-unit` runs `pytest tests/unit`.
 
@@ -69,10 +69,7 @@ After the Python scaffold exists, `uv` and `pyproject.toml` are required for cod
 
 ## Bundled skill resources
 
-SKILL-1 originally packaged the historical `kan-plugin` operator skill. HUN-009
-renamed the public package resources to `hun-plugin`, `hun-moderator`, and
-`hun-participant` under
-`src/hermes_unified_network_plugin/bundled_skills/`, with
+SKILL-1 originally packaged the historical `kan-plugin` operator skill. ATN-003 updates the public docs to `atn-plugin`, `atn-moderator`, and `atn-participant`, while ATN-005 still owns the checked-in packaged resource rename. Until ATN-005 lands, the bundled source remains under `src/hermes_unified_network_plugin/bundled_skills/` with
 `hermes_unified_network_plugin.bundled_skills.read_bundled_skill_text(...)` as
 the import-safe reader used by tests and installer checks. SKILL-2 verifies
 those resources in the local isolated plugin-load smoke gate.
@@ -88,16 +85,16 @@ local isolated plugin-load smoke boundary are documented in `docs/09-skill-and-o
 SCAFF-5 delivers a scaffold smoke gate for the first plugin scaffold PR. It proves:
 
 - the plugin package imports through the `src/` layout and exposes stable metadata;
-- the plugin manifest is a YAML mapping with the expected name, version, standalone kind, exact `provides_tools: [hun_daemon_status, hun_compatibility_diagnostics, hun_stream_tail, hun_stream_ack, hun_delegate_new, hun_delegate_action, hun_council_command, hun_selected_participant_response, hun_delivery_evidence, hun_surface_render_projection, hun_discussion_activation_plan, hun_discord_send_message]`, and explicit empty `provides_hooks: []` / `provides_commands: []` declarations;
+- the plugin manifest is a YAML mapping with the expected name, version, standalone kind, exact `provides_tools: [atn_daemon_status, atn_compatibility_diagnostics, atn_stream_tail, atn_stream_ack, atn_delegate_new, atn_delegate_action, atn_council_command, atn_selected_participant_response, atn_delivery_evidence, atn_surface_render_projection, atn_discussion_activation_plan, atn_discord_send_message]`, and explicit empty `provides_hooks: []` / `provides_commands: []` declarations;
 - the root directory-plugin entrypoint exposes `register(ctx)`;
-- the entrypoint registers callable fake/injected JSON-string handlers and does not register hooks or HUN slash commands;
+- the entrypoint registers callable fake/injected JSON-string handlers and does not register hooks or ATN slash commands;
 - `make test` succeeds without live Hermes, Discord, daemon, or network resources.
 
 DAEMN-1 added fake daemon compatibility probes for the client foundation only. At that stage, full plugin-bootstrap checks that required real declared tool handlers and handler JSON-string return contracts were deferred. HPLUG-2 now enables those checks for the three read-only JSON-string handlers.
 
 SCAFF-5 introduced smoke coverage in `scripts/check_bootstrap_smoke.py` and `tests/unit/test_bootstrap_smoke.py`; HPLUG-2 updated it for the three read-only tool registrations, DELRV-1 extended it for the two delegation/review command-envelope tools, CNDIS-1 extended it for the council and delivery-evidence command tools, and CNDIS-2 extends it for the injected-only Discord helper while keeping the explicit empty slash-command surface. This proves manifest/entrypoint/handler-contract readiness only.
 
-SKILL-2 adds `scripts/check_plugin_load_smoke.py` and `tests/unit/test_plugin_load_smoke.py` as a bounded local isolated plugin-load smoke gate. REL-PILOT-FIX-001 strengthened it so the repository plugin surface must be discovered and loaded in a temporary fake Hermes context without test-side `PYTHONPATH` help; the root entrypoint owns adding its bundled `src/` path before importing runtime modules. HUN-013 further locks the isolated surface to HUN manifest/package/tool/skill names, zero hooks, zero commands, and zero registered resources. The gate also fails closed for unsupported live surfaces. It is not production activation, live plugin readiness, KAB readiness, or live Hermes/Discord evidence.
+SKILL-2 adds `scripts/check_plugin_load_smoke.py` and `tests/unit/test_plugin_load_smoke.py` as a bounded local isolated plugin-load smoke gate. REL-PILOT-FIX-001 strengthened it so the repository plugin surface must be discovered and loaded in a temporary fake Hermes context without test-side `PYTHONPATH` help; the root entrypoint owns adding its bundled `src/` path before importing runtime modules. HUN-013 further locks the isolated surface to the checked-in HUN manifest/package/tool/skill names, zero hooks, zero commands, and zero registered resources. The gate also fails closed for unsupported live surfaces. It is not production activation, live plugin readiness, KAB readiness, or live Hermes/Discord evidence.
 
 REL-PILOT-FIX-001 also adds Python 3.11 syntax compatibility coverage. `pyproject.toml` declares `requires-python = ">=3.11"`, Ruff targets `py311`, mypy type checks as Python 3.11, and unit tests parse repository Python sources with `ast.parse(..., feature_version=(3, 11))` so Python 3.12-only syntax such as PEP 695 `type` aliases cannot re-enter unnoticed.
 
@@ -129,7 +126,7 @@ No async test dependency is introduced because DAEMN-2 does not implement live s
 
 HPLUG-2 maps DAEMN-2 stream-tail support into the plugin layer without adding dependencies:
 
-- `schemas.py` declares `hun_stream_tail` with required `session_id`/`member`, optional `since_cursor`, bounded `limit`, and `additionalProperties: false`.
+- `schemas.py` declares `atn_stream_tail` with required `session_id`/`member`, optional `since_cursor`, bounded `limit`, and `additionalProperties: false`.
 - `tools.py` validates stream-tail args before transport, requires explicit `client_factory`, calls `read_stream_tail()`, serializes frames/events into JSON, and redacts sensitive payload/details values.
 - `plugin.yaml`, the root entrypoint, and bootstrap smoke tests include these read-only tools and still no hooks or slash commands.
 
@@ -137,9 +134,9 @@ HPLUG-2 maps DAEMN-2 stream-tail support into the plugin layer without adding de
 
 DELRV-1 maps exact daemon-owned delegation/review command names into fake/injected Hermes tools without adding dependencies:
 
-- `schemas.py` declares `hun_delegate_new` and `hun_delegate_action`; the action schema uses a closed enum for implemented `delegate.*` commands and omits `delegate.request` / top-level `review`.
+- `schemas.py` declares `atn_delegate_new` and `atn_delegate_action`; the action schema uses a closed enum for implemented `delegate.*` commands and omits `delegate.request` / top-level `review`.
 - `tools.py` validates required caller-supplied `request_id` and `idempotency_key`, builds command envelopes through `DaemonClient.build_command_envelope(...)`, submits via `submit_command(...)`, preserves structured daemon errors, and does not generate IDs or keep lifecycle/idempotency state.
-- `hun_delegate_action` always overwrites/sets `payload.session_id` from the top-level `session_id` before submit.
+- `atn_delegate_action` always overwrites/sets `payload.session_id` from the top-level `session_id` before submit.
 - `plugin.yaml`, the root entrypoint, and bootstrap smoke tests declare the two DELRV-1 tools while preserving `provides_commands: []`.
 
 No live daemon discovery, localhost/socket transport, Hermes/Discord/gateway/auth/token access, or CLI fallback is introduced.
@@ -150,7 +147,7 @@ CNDIS-1 maps exact daemon-owned council and delivery-evidence command names into
 
 - `protocol.py` declares `delivery_evidence` and `council.lifecycle` feature groups and required feature tuples.
 - `client/daemon.py` exposes `require_feature_groups(...)`, which performs injected `version.read` only and fails closed before submit on missing features.
-- `schemas.py` declares `hun_council_command` and `hun_delivery_evidence` with closed enums and `additionalProperties: false`.
+- `schemas.py` declares `atn_council_command` and `atn_delivery_evidence` with closed enums and `additionalProperties: false`.
 - `tools.py` validates command-specific payload fields, preserves caller-supplied `request_id`/`idempotency_key`, normalizes top-level `session_id` into the command payload, probes required features, and submits through the explicit fake/injected client.
 - `plugin.yaml`, the root entrypoint, and bootstrap smoke tests declare the two CNDIS-1 tools while preserving `provides_hooks: []` and `provides_commands: []`.
 
@@ -158,18 +155,18 @@ No live daemon discovery, localhost/socket transport, Hermes/Discord/gateway/aut
 
 ## CNDIS-2 Discord helper module
 
-CNDIS-2 adds `discord_surface.py` and the `hun_discord_send_message` schema/handler
+CNDIS-2 adds `discord_surface.py` and the `atn_discord_send_message` schema/handler
 without adding dependencies:
 
 - `discord_surface.py` defines typed target/result objects, a `SendMessageFn` protocol,
   `send_discord_message(...)`, and inert `e2e_config_from_env(...)` parsing from an
   explicitly supplied mapping;
-- `schemas.py` declares a target-gated `hun_discord_send_message` tool schema;
+- `schemas.py` declares a target-gated `atn_discord_send_message` tool schema;
 - `tools.py` requires an injected sender and renders fail-closed JSON when the sender,
   target, dedicated-test marker, visible live label, or cleanup hint is missing;
 - `plugin.yaml`, the root entrypoint, and bootstrap smoke tests declare the helper tool
   while preserving `provides_hooks: []` and `provides_commands: []`.
 
 No environment read, live Discord discovery, Hermes current-session lookup, gateway/auth
-token usage, native Discord slash command, HUN slash command, or daemon delivery-evidence
+token usage, native Discord slash command, ATN slash command, or daemon delivery-evidence
 transition is introduced.

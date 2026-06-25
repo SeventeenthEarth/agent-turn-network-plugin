@@ -2,7 +2,7 @@
 
 ## Purpose
 
-The plugin may provide a Discord visible surface for HUN council sessions through an
+The plugin may provide a Discord visible surface for ATN council sessions through an
 injected Hermes gateway/send_message boundary. Discord is for human-visible
 discussion/evidence, not canonical state.
 
@@ -10,23 +10,23 @@ discussion/evidence, not canonical state.
 
 - Discord message IDs, channel IDs, and thread IDs are evidence pointers.
 - `channel.jsonl` in the control daemon remains the SOT.
-- `hun_discord_send_message` is an injected-only helper. It requires a caller-supplied
+- `atn_discord_send_message` is an injected-only helper. It requires a caller-supplied
   `send_message` callable plus an explicit dedicated test target; without the injected
   sender it returns a fail-closed JSON error and does not post.
 - The helper does not read environment variables, discover current Hermes sessions,
   inspect active Discord threads, open gateway/socket/CLI connections, or use tokens.
 - The plugin records delivery success/failure only through fake/injected
-  `hun_delivery_evidence` command submission. Discord message IDs, channel IDs, and
+  `atn_delivery_evidence` command submission. Discord message IDs, channel IDs, and
   thread IDs remain evidence pointers; they are not daemon state.
 - The daemon must not require raw Discord tokens.
 - Free-form Discord replies are never parsed as authoritative lifecycle transitions.
-- HUN slash-command invocations are not supported in HPLUG-3/CNDIS-1. Native Discord slash commands may only become supported after a later task proves the Hermes command binding, HUN daemon command contract, delivery-evidence path, and isolated Discord test target.
+- ATN slash-command invocations are not supported in HPLUG-3/CNDIS-1. Native Discord slash commands may only become supported after a later task proves the Hermes command binding, ATN daemon command contract, delivery-evidence path, and isolated Discord test target.
 
 CNDIS-1 supports council and delivery-evidence command tools through explicit fake/injected daemon clients only. It does not post to Discord, call Hermes gateway/send_message, or infer delivery evidence from live Discord state.
 
 CNDIS-2 adds only the injected helper boundary. It still does not claim live Discord
 readiness, active Hermes session delivery, gateway configuration, daemon-recorded evidence,
-or HUN/KAB slash-command support.
+or ATN/KAB slash-command support.
 
 ## Testing
 

@@ -12,10 +12,11 @@ CONTROL_REPO = (
     or os.environ.get("KAN_CONTROL_REPO")
     or os.environ.get("KAN_CORE_REPO")
 )
-CORE = Path(CONTROL_REPO or PLUGIN.parent / "kkachi-agent-network-control").resolve()
+CORE = Path(CONTROL_REPO or PLUGIN.parent / "agent-turn-network-control").resolve()
 EXPECTED_PROTOCOL = "hun-protocol-v1alpha0"
+PUBLIC_CONTROL_PROTOCOL = "atn-protocol-v1alpha0"
 REQUIRED_CONTROL_PHRASES = [
-    EXPECTED_PROTOCOL,
+    PUBLIC_CONTROL_PROTOCOL,
     "Milestone unlock matrix",
     "make check-plugin-contract",
     "testdata/conformance/manifest.json",
@@ -89,8 +90,8 @@ def main(*, plugin: Path = PLUGIN, core: Path = CORE) -> None:
 
     if not has_make_target(makefile, "check-plugin-contract"):
         raise SystemExit("control Makefile missing check-plugin-contract target")
-    if EXPECTED_PROTOCOL not in compat:
-        raise SystemExit("plugin compatibility doc does not declare expected protocol")
+    if PUBLIC_CONTROL_PROTOCOL not in compat:
+        raise SystemExit("plugin compatibility doc does not declare public protocol")
     if "conformance fixture version" not in dist and "conformance fixture" not in dist:
         raise SystemExit("control distribution doc does not describe conformance fixture handoff")
 

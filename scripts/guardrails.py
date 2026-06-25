@@ -34,9 +34,9 @@ REQUIRED_OPERATOR_PHRASES = [
     "Rollback",
     "Troubleshooting",
     "No-live defaults",
-    "registers these read-only plugin-provided skills",
+    "public ATN operator guidance",
     "provides_commands: []",
-    "hun_session_status",
+    "atn_session_status",
     "SKILL-2",
 ]
 FORBIDDEN_OPERATOR_CLAIMS = [

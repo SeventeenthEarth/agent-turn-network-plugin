@@ -10,13 +10,13 @@ metadata:
     related_skills: [hun-plugin]
 ---
 
-# HUN Participant Skill
+# ATN Participant Skill
 
-Use this skill when you are a selected HUN participant, selected-speaker runner, or participant profile asked to respond in a daemon-governed HUN council. This is the packaged HUN participant role companion to the canonical HUN discussion/operator skill `hun-plugin`.
+Use this skill when you are a selected ATN participant, selected-speaker runner, or participant profile asked to respond in a daemon-governed ATN council. Public docs refer to the ATN skill names `atn-participant` and `atn-plugin`; ATN-005 still owns the checked-in bundled skill id/path rename, so this packaged resource remains under the current `hun-*` source paths until that task lands.
 
 ## Authority and boundary
 
-- Canonical HUN discussion/operator source: `hermes-unified-network-plugin/src/hermes_unified_network_plugin/bundled_skills/hun-plugin/SKILL.md`.
+- Canonical ATN discussion/operator source: `hermes-unified-network-plugin/src/hermes_unified_network_plugin/bundled_skills/hun-plugin/SKILL.md`.
 - The daemon owns council lifecycle, selection, stream cursors, speech events, and validation.
 - The participant must not simulate another member, substitute a role prompt, or turn wrapper/runtime logs into speech.
 - A Discord/Hermes chat message alone is not council speech. It must be submitted as canonical daemon `speech` through the selected participant path.
@@ -32,7 +32,7 @@ When selected by a `speaker_selected` stream frame:
 4. Confirm `participant_response.member == selected_member`.
 5. Confirm `participant_response.role_substitution == false`.
 6. Preserve runner evidence: invocation id, started event id, terminal event id, terminal event type `participant_response`, adapter kind `hermes-agent`, and wrapper binding evidence.
-7. Submit through `hun_selected_participant_response` only when all checks pass. The tool submits canonical `council.speak` and then acks the selected stream cursor after submit success.
+7. Submit through `atn_selected_participant_response` only when all checks pass. The tool submits canonical `council.speak` and then acks the selected stream cursor after submit success.
 
 Never acknowledge the selected cursor before canonical speech submit succeeds.
 

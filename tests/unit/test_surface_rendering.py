@@ -364,24 +364,24 @@ def test_surface_projection_renders_clean_visible_closeout_transcript_and_audit_
         "vote",
         "final_closeout",
     ]
-    assert visible_transcript[2]["label"] == "[KAN | T1/3]"
-    assert visible_transcript[1]["text"] == "[KAN]\nNext speaker: seohwang."
+    assert visible_transcript[2]["label"] == "[ATN | T1/3]"
+    assert visible_transcript[1]["text"] == "[ATN]\nNext speaker: seohwang."
     assert (
         visible_transcript[2]["text"]
-        == "[KAN | T1/3]\nseohwang: Fail closed on missing final proof."
+        == "[ATN | T1/3]\nseohwang: Fail closed on missing final proof."
     )
-    assert visible_transcript[3]["label"] == "[KAN | T2/3]"
+    assert visible_transcript[3]["label"] == "[ATN | T2/3]"
     assert visible_transcript[3]["text"] == (
-        "[KAN | T2/3]\ngongmyeong proposed draft closeout v1: Ship with posted proof only."
+        "[ATN | T2/3]\ngongmyeong proposed draft closeout v1: Ship with posted proof only."
     )
     assert visible_transcript[5]["text"] == (
-        "[KAN]\nseohwang voted approve on draft v1. Reason: Proof present."
+        "[ATN]\nseohwang voted approve on draft v1. Reason: Proof present."
     )
     assert visible_transcript[-1] == {
         "kind": "final_closeout",
-        "label": "[KAN | T3/3]",
+        "label": "[ATN | T3/3]",
         "outcome": "finalized",
-        "text": "[KAN | T3/3]\ngongmyeong final closeout: Approved with visible proof.",
+        "text": "[ATN | T3/3]\ngongmyeong final closeout: Approved with visible proof.",
         "consensus": "approve",
     }
     forbidden_visible_keys = {
@@ -492,7 +492,7 @@ def test_surface_projection_remains_local_and_exposes_no_live_fallback() -> None
     assert result["live_readiness"] is False
     assert result["order_authority"] == "daemon_cursor"
     assert result["visible_transcript"] == [
-        {"kind": "header", "label": "[KAN]", "text": "[KAN]\nCouncil session opened."}
+        {"kind": "header", "label": "[ATN]", "text": "[ATN]\nCouncil session opened."}
     ]
     assert "fallback" not in result
     assert "delivery" not in result
@@ -805,7 +805,7 @@ def test_surface_projection_renders_quality_warning_without_rewriting_speech() -
     assert visible["quality_warnings"] == [
         "warning orphan_speech: Accepted in warn mode but missing relation links."
     ]
-    assert visible["text"].startswith("[KAN]\nmacho: The original speech text must remain exact.")
+    assert visible["text"].startswith("[ATN]\nmacho: The original speech text must remain exact.")
 
 
 def test_surface_projection_renders_quality_warning_with_code_and_no_severity() -> None:

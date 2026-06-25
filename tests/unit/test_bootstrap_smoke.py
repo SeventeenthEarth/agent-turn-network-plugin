@@ -32,73 +32,73 @@ def hplug_register_lines(*, include_hook: bool = False, include_command: bool = 
         "def register(ctx: object) -> None:\n"
         "    ctx.register_tool(\n"
         '        name="atn_daemon_status",\n'
-        '        toolset="kkachi_agent_network",\n'
+        '        toolset="atn_plugin",\n'
         '        schema={"name": "atn_daemon_status"},\n'
         '        handler=lambda args: "{}",\n'
         "    )\n"
         "    ctx.register_tool(\n"
         '        name="atn_compatibility_diagnostics",\n'
-        '        toolset="kkachi_agent_network",\n'
+        '        toolset="atn_plugin",\n'
         '        schema={"name": "atn_compatibility_diagnostics"},\n'
         '        handler=lambda args: "{}",\n'
         "    )\n"
         "    ctx.register_tool(\n"
         '        name="atn_stream_tail",\n'
-        '        toolset="kkachi_agent_network",\n'
+        '        toolset="atn_plugin",\n'
         '        schema={"name": "atn_stream_tail"},\n'
         '        handler=lambda args: "{}",\n'
         "    )\n"
         "    ctx.register_tool(\n"
         '        name="atn_stream_ack",\n'
-        '        toolset="kkachi_agent_network",\n'
+        '        toolset="atn_plugin",\n'
         '        schema={"name": "atn_stream_ack"},\n'
         '        handler=lambda args: "{}",\n'
         "    )\n"
         "    ctx.register_tool(\n"
         '        name="atn_delegate_new",\n'
-        '        toolset="kkachi_agent_network",\n'
+        '        toolset="atn_plugin",\n'
         '        schema={"name": "atn_delegate_new"},\n'
         '        handler=lambda args: "{}",\n'
         "    )\n"
         "    ctx.register_tool(\n"
         '        name="atn_delegate_action",\n'
-        '        toolset="kkachi_agent_network",\n'
+        '        toolset="atn_plugin",\n'
         '        schema={"name": "atn_delegate_action"},\n'
         '        handler=lambda args: "{}",\n'
         "    )\n"
         "    ctx.register_tool(\n"
         '        name="atn_council_command",\n'
-        '        toolset="kkachi_agent_network",\n'
+        '        toolset="atn_plugin",\n'
         '        schema={"name": "atn_council_command"},\n'
         '        handler=lambda args: "{}",\n'
         "    )\n"
         "    ctx.register_tool(\n"
         '        name="atn_selected_participant_response",\n'
-        '        toolset="kkachi_agent_network",\n'
+        '        toolset="atn_plugin",\n'
         '        schema={"name": "atn_selected_participant_response"},\n'
         '        handler=lambda args: "{}",\n'
         "    )\n"
         "    ctx.register_tool(\n"
         '        name="atn_delivery_evidence",\n'
-        '        toolset="kkachi_agent_network",\n'
+        '        toolset="atn_plugin",\n'
         '        schema={"name": "atn_delivery_evidence"},\n'
         '        handler=lambda args: "{}",\n'
         "    )\n"
         "    ctx.register_tool(\n"
         '        name="atn_surface_render_projection",\n'
-        '        toolset="kkachi_agent_network",\n'
+        '        toolset="atn_plugin",\n'
         '        schema={"name": "atn_surface_render_projection"},\n'
         '        handler=lambda args: "{}",\n'
         "    )\n"
         "    ctx.register_tool(\n"
         '        name="atn_discussion_activation_plan",\n'
-        '        toolset="kkachi_agent_network",\n'
+        '        toolset="atn_plugin",\n'
         '        schema={"name": "atn_discussion_activation_plan"},\n'
         '        handler=lambda args: "{}",\n'
         "    )\n"
         "    ctx.register_tool(\n"
         '        name="atn_discord_send_message",\n'
-        '        toolset="kkachi_agent_network",\n'
+        '        toolset="atn_plugin",\n'
         '        schema={"name": "atn_discord_send_message"},\n'
         '        handler=lambda args: "{}",\n'
         "    )\n"

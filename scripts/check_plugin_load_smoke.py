@@ -21,7 +21,7 @@ PACKAGE_MODULE = "atn_plugin"
 PACKAGE_NAME = "atn-plugin"
 # This remains a Hermes host compatibility toolset identifier, not a
 # public package/tool/skill alias.
-TOOLSET = "kkachi_agent_network"
+TOOLSET = "atn_plugin"
 EXPECTED_TOOLS = [
     "atn_daemon_status",
     "atn_compatibility_diagnostics",

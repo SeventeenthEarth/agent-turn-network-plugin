@@ -44,7 +44,7 @@ from .protocol import (
 from .surface_rendering import render_surface_projection
 
 ClientFactory = Callable[[], DaemonClient]
-TOOLSET: Final = "kkachi_agent_network"
+TOOLSET: Final = "atn_plugin"
 ARGUE_SPEECH_PASSTHROUGH_FIELDS: Final[frozenset[str]] = frozenset(
     {
         "claims",

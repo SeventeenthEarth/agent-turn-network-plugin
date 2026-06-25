@@ -296,8 +296,8 @@ def test_surface_render_projection_handler_returns_local_projection_success() ->
                 "visible_transcript": [
                     {
                         "kind": "header",
-                        "label": "[KAN]",
-                        "text": "[KAN]\nCouncil session opened.",
+                        "label": "[ATN]",
+                        "text": "[ATN]\nCouncil session opened.",
                     }
                 ],
                 "audit_log": [

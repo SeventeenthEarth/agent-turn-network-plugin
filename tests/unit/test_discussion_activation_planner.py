@@ -198,12 +198,12 @@ def complete_runfix_012_plan() -> dict[str, object]:
 
 def complete_hun_008_plan() -> dict[str, object]:
     plan = complete_runfix_012_plan()
-    plan["task_id"] = "plugin/HUN-008"
+    plan["task_id"] = "plugin/ATN-005"
     return plan
 
 
 def complete_prior_task_plan(task_id: str) -> dict[str, object]:
-    if task_id == "plugin/HUN-008":
+    if task_id == "plugin/ATN-005":
         return complete_hun_008_plan()
     if task_id == "plugin/RUNFIX-017":
         return complete_runfix_017_plan()
@@ -482,7 +482,7 @@ def test_complete_dry_run_is_ready_for_approval_without_live_readiness() -> None
     ]
     assert report["operator_evidence_report"]["runner_evidence"]["status"] == "unproven"
     assert report["activation_evidence_model_report"] == {
-        "task_id": "plugin/HUN-008",
+        "task_id": "plugin/ATN-005",
         "public_tool_name": "atn_discussion_activation_plan",
         "legacy_public_aliases_allowed": False,
         "historical_dependency_labels": [
@@ -538,7 +538,7 @@ def test_runfix_006_task_id_remains_accepted_with_runfix_007_behavior_label() ->
         "plugin/RUNFIX-008",
         "plugin/RUNFIX-010",
         "plugin/RUNFIX-017",
-        "plugin/HUN-008",
+        "plugin/ATN-005",
     ],
 )
 def test_prior_runfix_task_ids_remain_accepted(task_id: str) -> None:
@@ -563,8 +563,8 @@ def test_hun_008_is_local_proof_only_even_for_discord_origin_request() -> None:
 
     report = build_discussion_activation_plan(plan)
 
-    assert report["task_id"] == "plugin/HUN-008"
-    assert report["behavior_task_id"] == "plugin/HUN-008"
+    assert report["task_id"] == "plugin/ATN-005"
+    assert report["behavior_task_id"] == "plugin/ATN-005"
     assert report["status"] == "ready_for_approval"
     assert report["start_authority"] == "explicit_operator_approval_required"
     assert report["live_readiness"] is False
@@ -593,7 +593,7 @@ def test_hun_008_control_dependency_accepts_historical_labels(task_id: str, stat
     report = build_discussion_activation_plan(plan)
 
     assert report["status"] == "ready_for_approval"
-    assert report["behavior_task_id"] == "plugin/HUN-008"
+    assert report["behavior_task_id"] == "plugin/ATN-005"
     assert report["live_readiness"] is False
     assert task_id in report["activation_evidence_model_report"]["historical_dependency_labels"]
 
@@ -1275,7 +1275,7 @@ def test_discord_origin_runfix_010_defaults_to_live_visible_blocks_without_surfa
         "code": "visible_surface_readiness_missing",
         "owner": "operator/Hermes-gateway",
         "message": (
-            "Discord-origin KAN council requests default to live visible thread output; "
+            "Discord-origin ATN council requests default to live visible thread output; "
             "provide surface binding, turn-posting, profile/gateway reply, and closeout evidence "
             "or explicitly confirm artifact-only mode before creating the session."
         ),

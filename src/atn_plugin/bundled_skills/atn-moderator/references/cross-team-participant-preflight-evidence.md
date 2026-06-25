@@ -82,7 +82,7 @@ hermes --profile <profile> chat -Q --max-turns 3 -s atn-plugin:atn-plugin -q \
 hermes --profile <profile> send \
   --to 'discord:<parent_channel_id>:<thread_id>' \
   --json \
-  '[KAN preflight author probe] <korean-name> / <profile>: profile-send visible author probe.'
+  '[ATN preflight author probe] <korean-name> / <profile>: profile-send visible author probe.'
 ```
 
 Record each returned Discord `message_id` as author proof. If the send succeeds but all messages appear as one shared/default bot or without clear per-speaker labels, block as `VISIBLE_SURFACE_IDENTITY_NOT_PROVEN` and redesign the surface before `council.new`.

@@ -519,7 +519,7 @@ def _visible_label(*, event: Mapping[str, object], payload: Mapping[str, object]
     nested = _visible_progress_from_nested(payload.get("discussion_lifecycle"))
     if nested is not None:
         return nested
-    return "[KAN]"
+    return "[ATN]"
 
 
 def _visible_progress_from_fields(
@@ -612,7 +612,7 @@ def _visible_progress_pair(
 
 
 def _format_visible_progress(index: int, total: int) -> str:
-    return f"[KAN | T{index}/{total}]"
+    return f"[ATN | T{index}/{total}]"
 
 
 def _visible_text(label: str, body: str) -> str:

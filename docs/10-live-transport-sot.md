@@ -10,7 +10,7 @@ The control-side companion SOT is `../../agent-turn-network-control/docs/24-live
 
 This document does **not** authorize production activation, live Discord delivery, gateway/auth/token changes, KAB bridge readiness, or active profile mutation by itself. It defines the architecture, component responsibilities, command/data-plane boundaries, plugin implementation slices, cross-repo dependency gates, and verification evidence required before any later activation decision.
 
-RUNFIX update: this SOT also records the plugin-owned side of `RUNFIX`, the cross-repo remediation epic created from the 2026-06-17 council dogfood issues report. `control/RUNFIX-001` and `plugin/RUNFIX-002` are accepted docs-only SOT locks after historical HUN Red/Orange/Gray review, focused re-check, and Blue final synthesis; they do not install or activate live ATN discussion by themselves.
+RUNFIX update: this SOT also records the plugin-owned side of `RUNFIX`, the cross-repo remediation epic created from the 2026-06-17 council dogfood issues report. `control/RUNFIX-001` and `plugin/RUNFIX-002` are accepted docs-only SOT locks after historical Red/Orange/Gray review, focused re-check, and Blue final synthesis; they do not install or activate live ATN discussion by themselves.
 
 ## Scope
 
@@ -97,20 +97,20 @@ RUNFIX evidence labels are mandatory in operator reports:
 | 3 | control | RUNFIX-003 | completed/local-control | Selected-speaker member runtime dispatch accepted in control repo commit `56a8991` with KAH run `run-20260617T064753Z-103e15ca05fa`, final gate pass, focused tests/docs guardrails/check-plugin-contract pass, and no plugin package mutation. |
 | 4 | control | RUNFIX-004 | completed/local-control | Hermes adapter command contract and runner diagnostics completed in control commit `0138b59` with KAH run `run-20260617T101645Z-1757e05ffbcf`; evidence remains local/control-only with no plugin package mutation, live Discord delivery, production daemon activation, profile/provider/gateway/auth/token mutation, or push claim. |
 | 5 | control | RUNFIX-005 | completed/local-control | Control-local implementation under KAH run `run-20260618T020120Z-fe2144618fe6` adds the status projection/diagnostic surface for `discussion_quality`, hard warnings, and linked hand-raise `graph_need` counts. Control-local verification passed `git diff --check`, focused storage/protocol/daemon/command tests, `make docs-guardrails`, `make check-plugin-contract`, `make test-prepare`, and `make test`; Red `t_1d5692f1`, Orange `t_388bb347`, Gray `t_6fb40282`, and Blue synthesis `t_1eb87c6b` accepted bounded local-control closeout. This does not claim plugin implementation/readiness, live Discord delivery, production daemon activation, profile/provider/gateway/auth/token mutation, commit, push, or broad rollout. |
-| 6 | plugin | RUNFIX-006 | local implementation proof | Discussion activation planner/doctor implemented as pure/local `kan_discussion_activation_plan` from explicit caller-provided evidence only. It classifies eligible/excluded/blocked profiles, excludes bot-to-bot-enabled profiles by default, blocks missing tool visibility or unknown eligibility, requires explicit parent-channel allow-list inheritance proof or reports a Hermes/gateway blocker, keeps RUNFIX evidence labels separate, and always returns `live_readiness: false`. No apply/live-local pilot, live Discord delivery, daemon startup, profile/gateway/provider/auth/token/model mutation, production activation, commit, push, or broad rollout claim is made by this row. |
+| 6 | plugin | RUNFIX-006 | local implementation proof | Discussion activation planner/doctor is implemented as pure/local `atn_discussion_activation_plan` from explicit caller-provided evidence only. It classifies eligible/excluded/blocked profiles, excludes bot-to-bot-enabled profiles by default, blocks missing tool visibility or unknown eligibility, requires explicit parent-channel allow-list inheritance proof or reports a Hermes/gateway blocker, keeps RUNFIX evidence labels separate, and always returns `live_readiness: false`. No apply/live-local pilot, live Discord delivery, daemon startup, profile/gateway/provider/auth/token/model mutation, production activation, commit, push, or broad rollout claim is made by this row. |
 | 7 | plugin | RUNFIX-007 | local implementation proof | Existing pure/local activation planner now supports effective Discord eligibility evidence, eligible-only allow-list targets, profile remediation, parent-channel proof state, thread-only proof rejection, and fallback audit rejection while keeping `live_readiness: false` and making no live activation claim. |
 | 8 | plugin | RUNFIX-008 | local implementation proof | Existing pure/local activation planner now accepts `plugin/RUNFIX-008` and exposes participant ARGUE response template fields, explicit operator evidence reporting, ARGUE counts, selected-runner evidence, canonical `speaker_selected -> speech` linkage, RUNFIX labels, and diagnostic-only fallback disclosure from caller-provided evidence only. Missing or ambiguous runner/ARGUE/canonical-link evidence remains `unproven`/`blocked`, `live_readiness` remains false, and this row makes no live Discord delivery, daemon startup/discovery, profile/provider/gateway/auth/token/model mutation, production activation, KAB readiness, commit, push, or broad rollout claim. |
 | 9 | control | RUNFIX-009 | local implementation proof | Control KAH run `run-20260618T102752Z-7d8ccfa584e4` adds deterministic local smoke proof for runner invocation, canonical `speaker_selected -> speech` linkage, ARGUE diagnostics/hard warnings, and transcript/export/projection closeout evidence. This row is dependency evidence for the later plugin/RUNFIX-010 pilot only; it does not authorize live Discord delivery, daemon startup/discovery, profile/provider/gateway/auth/token/model mutation, production activation, KAB readiness, commit, push, or broad rollout. |
-| 10 | plugin | RUNFIX-010 | completed/PASS_WITH_RISK | Approved live-local activation pilot and final operator package, now including Discord-origin live-visible default and artifact-only fail-closed guardrails. Bounded visible-local pilot evidence exists with parent-channel fallback disclosure and remaining risks; KAH run `run-20260618T112843Z-40b023a5d9c8` final gate passed. This is not production/live readiness, no-restart thread readiness, full KAN roster readiness, selected-speaker live runner readiness, or always-on participant runtime readiness. |
+| 10 | plugin | RUNFIX-010 | completed/PASS_WITH_RISK | Approved live-local activation pilot and final operator package, now including Discord-origin live-visible default and artifact-only fail-closed guardrails. Bounded visible-local pilot evidence exists with parent-channel fallback disclosure and remaining risks; KAH run `run-20260618T112843Z-40b023a5d9c8` final gate passed. This is not production/live readiness, no-restart thread readiness, full ATN roster coverage, selected-speaker live runner readiness, or always-on participant runtime readiness. |
 | 11 | control | RUNFIX-011 | local implementation proof | Control KAH run `run-20260618T162156Z-419f3769f2cc` implements derived participant runtime readiness from durable subscriber presence, cursor ack freshness, heartbeat freshness, attendance/preparation success or timeout/failure evidence, and selected-runner prerequisites. Control status/stream diagnostics now fail closed when those proofs are missing. This remains control-local evidence only and does not authorize live Discord delivery, production daemon activation, profile/gateway/provider/auth/token/model mutation, plugin/RUNFIX-012 consumption, or live readiness. |
 | 12 | plugin | RUNFIX-012 | local implementation proof | Plugin activation planner/operator guardrails now consume explicit `control/RUNFIX-011` participant-runtime readiness evidence from caller input only. The planner reports control task/status/evidence ref, subscriber presence, cursor ack freshness, heartbeat freshness, attendance/preparation terminal evidence, selected-runner readiness/prerequisites, and visible-surface proof as separate evidence classes. Missing, stale, ambiguous, gateway-only, transcript/export-only, parent-channel-fallback-only, or manual/fallback-profile-only evidence blocks or diagnoses readiness and keeps `live_readiness=false`. This remains local plugin proof only and does not claim live Discord delivery, production/live readiness, profile/provider/gateway/auth/token/model mutation, commit, push, or broad rollout. |
 | 13 | plugin | RUNFIX-013 | local implementation proof | Packaged skill/operator guidance now records ATN council moderation hard rules for lifecycle-first discussion, no predeclared complete live speaker order, per-turn poll/hand-raise evaluation, justified daemon `speaker_selected`, `relevance` as default with per-turn justified `targeted`, `random`, `moderator_direct`, and `role_order`, daemon `speech` event authority, moderator-opinion handling, and cancel/restart versus repair-forward guidance. This remains docs/bundled-skill/package proof only and does not claim live daemon/runtime activation, Discord delivery, production/live readiness, profile/provider/gateway/auth/token/model mutation, commit, push, or broad rollout. |
 | 14 | control | RUNFIX-014 | local implementation proof dependency | Control KAH run `run-20260619T051710Z-8e1f6efb61ec` implements selected-runner terminal accounting and live-report guardrails. Plugin reports must consume control accounting labels and must not promote a run with `runner_invocation_failed` followed by fallback/manual canonical `speech` into `selected_runner_pass` or live readiness. |
-| 15 | plugin | RUNFIX-015 | local implementation proof | Plugin KAH run `run-20260619T071526Z-7d2ba33b07d5` extends the pure/local `kan_discussion_activation_plan` with a pre-`council.new` visible author guard. The tool validates explicit caller-provided same-path author probes, expected author source (`registry_snapshot` or approved profile-author map), source-env/posting-path evidence, shared-default-then-profile-local env precedence proof, per-turn Discord message id/member/author/speech linkage, and separated final report fields. Missing/shared-default/unexpected author evidence fails closed without live Discord delivery or runtime/profile/provider/gateway/auth/token/model mutation. |
+| 15 | plugin | RUNFIX-015 | local implementation proof | Plugin KAH run `run-20260619T071526Z-7d2ba33b07d5` extends the pure/local `atn_discussion_activation_plan` with a pre-`council.new` visible author guard. The tool validates explicit caller-provided same-path author probes, expected author source (`registry_snapshot` or approved profile-author map), source-env/posting-path evidence, shared-default-then-profile-local env precedence proof, per-turn Discord message id/member/author/speech linkage, and separated final report fields. Missing/shared-default/unexpected author evidence fails closed without live Discord delivery or runtime/profile/provider/gateway/auth/token/model mutation. |
 | 16 | control | RUNFIX-016 | local implementation proof control dependency | Control KAH run `run-20260619T083649Z-d10e1f5cc20b` final gate passed and local commit `9c15d22` is the bounded dependency for canonical summary/turn-accounting over `channel.jsonl` and export bundles, including export manifest `summary_turn_accounting`. Plugin visible runners should call or conform to the helper and must tolerate dict/list/missing evidence shapes instead of crashing after `council_finalized`. Unsupported evidence maps/lists remain fail-closed and do not prove visible delivery, live readiness, plugin readiness, production daemon activation, profile/provider/gateway/auth/token/model mutation, Discord delivery, commit, push, or broad rollout. |
 | 17 | plugin | RUNFIX-017 | local implementation proof | ARGUE quality-required prompt and runner contract hardening is implemented locally under KAH run `run-20260619T101255Z-189d01ba8b8f`; official color review, Blue synthesis, and final KAH gate passed. Plugin/operator prompts provide compact prior claim graph targets, selected responses preserve ARGUE fields, non-opening quality-required speeches with sufficient local context require caller-target-valid `stance_links[]` or justified `new_axis`, explicit `discussion_quality` evidence is required for the quality gate, `discussion_quality_pass` fails on the first orphan non-opening speech in `quality_required`, and repeated-orphan counts remain diagnostics without synthetic relation inference. |
 | 18 | control | RUNFIX-018 | local implementation proof control dependency | Control KAH run `run-20260619T214003Z-8a2afe33923f` implements daemon-owned registry reconciliation for explicit `council.new` rosters. If a selected moderator/participant principal is missing from the loaded registry but the principal id is valid, non-reserved, and same-named wrapper resolution is unambiguous, the daemon adds the member to persistent `registry.yaml`, reloads, snapshots, and reports `registry_reconcile`; ambiguous, invalid, unresolved, or disabled principals fail closed before session creation. |
-| 19 | plugin | RUNFIX-019 | local implementation proof | Plugin KAH run `run-20260619T214004Z-4d1e54b7304a` extends `kan_discussion_activation_plan`, schema, operator guide, and bundled skills with explicit `daemon_registry_membership` evidence. Live-visible plans must show each eligible principal is loaded/enabled or has an unambiguous planned reconcile; ambiguous mapping, disabled principals, missing registry evidence, or unresolved wrappers block before `council.new` without downgrading to artifact-only or daemon CLI actor speech. |
+| 19 | plugin | RUNFIX-019 | local implementation proof | Plugin KAH run `run-20260619T214004Z-4d1e54b7304a` extends `atn_discussion_activation_plan`, schema, operator guide, and bundled skills with explicit `daemon_registry_membership` evidence. Live-visible plans must show each eligible principal is loaded/enabled or has an unambiguous planned reconcile; ambiguous mapping, disabled principals, missing registry evidence, or unresolved wrappers block before `council.new` without downgrading to artifact-only or daemon CLI actor speech. |
 
 
 ## RUNFIX2 discussion runtime usability hardening
@@ -131,7 +131,7 @@ RUNFIX2 cross-repo sequence and current local-proof status:
 | 1 | control | RUNFIX2-001 | completed/control-local | Evidence/config semantics and terminal readiness model: control local implementation separates status generation time from event-time readiness evaluation and keeps pass labels evidence-derived. Control KAH final gates, official review, and Blue acceptance passed; plugin-owned downstream consumption remains scoped to later RUNFIX2 tasks. |
 | 2 | control | RUNFIX2-002 | completed/control-local | Selected-runner Hermes adapter fix: control local implementation changes default runner invocation from delivery-only `send <prompt>` to response-generation `chat -Q -q <prompt>`, requires `runner_invocation_succeeded` plus linked canonical `speech`, and keeps delivery/fallback output as terminal diagnostic evidence. Plugin consumption remains scoped to later RUNFIX2 rows. |
 | 3 | control | RUNFIX2-003 | completed/control-local | Discussion lifecycle closeout: control local implementation exposes `discussion_lifecycle`, keeps `limits.max_discussion_turns` as participant discussion turns only, blocks `council.propose` until T0 moderator opening + T1..Tmax selected participant discussion + one selected closeout speech per participant, and leaves `council.unresolved` as the fail-closed terminal path. Expected visible turns are `max_discussion_turns + participant_count + 2`; plugin consumption remains scoped to RUNFIX2-004/005. |
-| 4 | plugin | RUNFIX2-004 | local implementation proof | Clean visible transcript rendering is implemented locally in the pure renderer: visible rows use concise KAN labels, e.g. `[KAN | T15/15]`, while audit/export rows keep machine identifiers. This does not claim live Discord delivery or RUNFIX2-005 pilot proof. |
+| 4 | plugin | RUNFIX2-004 | local implementation proof | Clean visible transcript rendering is implemented locally in the pure renderer: visible rows use concise ATN labels, e.g. `[ATN | T15/15]`, while audit/export rows keep machine identifiers. This does not claim live Discord delivery or RUNFIX2-005 pilot proof. |
 | 5 | plugin | RUNFIX2-005 | local implementation proof | Local plugin implementation now supports explicit-only `integrated_discussion_proof` for RUNFIX2-005, with separated lifecycle, selected-runner, runtime-at-turns, visible-surface, clean-transcript, visible-closeout, fallback, discussion-quality, and final-label axes. Selected-runner proof requires runner success plus canonical linked speech for the selected member; per-turn runtime readiness must be grant/turn-time evidence; visible count validates the RUNFIX2 formula. Manual/profile fallback remains diagnostic-only and cannot repair selected-runner failure. `live_readiness` remains false; actual live pilot, Discord/daemon/profile/provider/gateway/auth/token mutation, production readiness, push, and broad rollout remain separately approval-bound. |
 
 
@@ -211,37 +211,37 @@ The CLI owns the canonical operator and main-agent control surface.
 Primary control commands include:
 
 ```bash
-kkachi-agent-network council new ...
-kkachi-agent-network council request-attendance ...
-kkachi-agent-network council attend ...
-kkachi-agent-network council lock-agenda ...
-kkachi-agent-network council prepare ...
-kkachi-agent-network council poll ...
-kkachi-agent-network council grant ...
-kkachi-agent-network council intervene ...
-kkachi-agent-network council propose ...
-kkachi-agent-network council revise ...
-kkachi-agent-network council request-vote ...
-kkachi-agent-network council finalize ...
-kkachi-agent-network council unresolved ...
-kkachi-agent-network cancel ...
+atn-control council new ...
+atn-control council request-attendance ...
+atn-control council attend ...
+atn-control council lock-agenda ...
+atn-control council prepare ...
+atn-control council poll ...
+atn-control council grant ...
+atn-control council intervene ...
+atn-control council propose ...
+atn-control council revise ...
+atn-control council request-vote ...
+atn-control council finalize ...
+atn-control council unresolved ...
+atn-control cancel ...
 ```
 
 Primary diagnostics/recovery commands include:
 
 ```bash
-kkachi-agent-network daemon start
-kkachi-agent-network daemon status
-kkachi-agent-network daemon stop
-kkachi-agent-network doctor
-kkachi-agent-network registry validate
-kkachi-agent-network storage verify
-kkachi-agent-network storage rebuild-projection
-kkachi-agent-network status <session_id> --verbose
-kkachi-agent-network stream <session_id> --member <member> --since <cursor> --follow --format ndjson
-kkachi-agent-network stream ack <session_id> --member <member> --cursor <cursor>
-kkachi-agent-network transcript <session_id> --format md
-kkachi-agent-network export <session_id> --bundle
+atn-control daemon start
+atn-control daemon status
+atn-control daemon stop
+atn-control doctor
+atn-control registry validate
+atn-control storage verify
+atn-control storage rebuild-projection
+atn-control status <session_id> --verbose
+atn-control stream <session_id> --member <member> --since <cursor> --follow --format ndjson
+atn-control stream ack <session_id> --member <member> --cursor <cursor>
+atn-control transcript <session_id> --format md
+atn-control export <session_id> --bundle
 ```
 
 The CLI must be usable by the main agent through normal terminal execution and by a human operator during diagnostics or recovery.
@@ -375,7 +375,7 @@ Main agent actions:
 2. Run CLI:
 
 ```bash
-kkachi-agent-network council new "<topic>" \
+atn-control council new "<topic>" \
   --members <participant-1>,<participant-2>,<participant-3> \
   --moderator <main-agent-id> \
   --surface discord-thread \
@@ -398,12 +398,12 @@ Discuss this in the direction of <decision criteria>.
 Main agent actions:
 
 ```bash
-kkachi-agent-network council lock-agenda <session_id> \
+atn-control council lock-agenda <session_id> \
   --decision-question "<decision question>" \
   --max-rounds <n>
 
-kkachi-agent-network council request-attendance <session_id> --timeout 5m
-kkachi-agent-network council prepare <session_id> --timeout 10m
+atn-control council request-attendance <session_id> --timeout 5m
+atn-control council prepare <session_id> --timeout 10m
 ```
 
 Participant runtime actions:
@@ -417,7 +417,7 @@ Participant runtime actions:
 Main agent actions:
 
 ```bash
-kkachi-agent-network council poll <session_id> --research-timeout 10m
+atn-control council poll <session_id> --research-timeout 10m
 ```
 
 Participant runtime actions:
@@ -429,7 +429,7 @@ Participant runtime actions:
 Main agent grants floor:
 
 ```bash
-kkachi-agent-network council grant <session_id> \
+atn-control council grant <session_id> \
   --to <participant-id> \
   --mode role_order \
   --round <round-number> \
@@ -457,7 +457,7 @@ The delivery layer renders the speech to the visible surface and stores evidence
 For small steering changes, the main agent records an intervention:
 
 ```bash
-kkachi-agent-network council intervene <session_id> \
+atn-control council intervene <session_id> \
   --to <participant-id> \
   --reason "user_direction_change" \
   --message "<new direction or constraint>"
@@ -486,8 +486,8 @@ Main agent maps the intent to explicit CLI commands.
 Normal finalization:
 
 ```bash
-kkachi-agent-network council propose <session_id> --from-file draft.md
-kkachi-agent-network council request-vote <session_id> --draft-version <n> --timeout 10m
+atn-control council propose <session_id> --from-file draft.md
+atn-control council request-vote <session_id> --draft-version <n> --timeout 10m
 ```
 
 Participant runtimes observe `consensus_vote_requested` and emit `council.vote`.
@@ -495,7 +495,7 @@ Participant runtimes observe `consensus_vote_requested` and emit `council.vote`.
 Main agent finalizes:
 
 ```bash
-kkachi-agent-network council finalize <session_id> \
+atn-control council finalize <session_id> \
   --authority-return-status posted \
   --return-evidence <evidence-pointer>
 ```
@@ -503,13 +503,13 @@ kkachi-agent-network council finalize <session_id> \
 Unresolved closure:
 
 ```bash
-kkachi-agent-network council unresolved <session_id> --reason "<reason>"
+atn-control council unresolved <session_id> --reason "<reason>"
 ```
 
 Cancellation:
 
 ```bash
-kkachi-agent-network cancel <session_id> --reason "<reason>"
+atn-control cancel <session_id> --reason "<reason>"
 ```
 
 ## Live daemon transport contract for the plugin

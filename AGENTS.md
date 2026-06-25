@@ -1,10 +1,10 @@
-# AGENTS.md — KAN Plugin Local Agent Contract
+# AGENTS.md — ATN Plugin Local Agent Contract
 
 <!-- KAS:MANAGED:BEGIN core-behavior -->
 ## KAS-managed baseline behavior
 
 These repo-local instructions preserve the useful baseline guardrails from the
-`andrej-karpathy-skills` `CLAUDE.md` lineage and adapt them for KAN plugin.
+`andrej-karpathy-skills` `CLAUDE.md` lineage and adapt them for the ATN plugin repository.
 These repo-local instructions are optional development guardrails only. They do
 not make KAS, KAH, KAB, or any profile-local skill suite a prerequisite for
 working on this repository, and they do not authorize profile mutation,
@@ -28,7 +28,7 @@ Operating principles:
 
 Layer boundaries:
 
-- KAN plugin repository source, tests, and docs are sufficient for ordinary
+- ATN plugin repository source, tests, and docs are sufficient for ordinary
   development. Optional Kkachi workflow helpers may record evidence or reviews
   when explicitly selected, but absence of those helpers or profile-local phase
   skills must not block normal code/docs work.
@@ -42,21 +42,21 @@ Layer boundaries:
 
 ## Identity and scope
 
-This repository is `kkachi-agent-network-plugin`, the Hermes plugin / participant-agent tool-surface lane for KAN.
+This repository is `atn-plugin`, the Hermes plugin / participant-agent tool-surface lane for ATN.
 
 - Blue commander: 마초 / `macho`
 - Red reviewer: 서황 / `seohwang`
 - Orange reviewer: 종회 / `jonghoe`
 - Gray reviewer: 만총 / `manchong`
-- Repo path: `/Users/draccoon/Workspace/SeventeenthEarth/kkachi/kkachi-agent-network-plugin`
-- Sibling control repo: `/Users/draccoon/Workspace/SeventeenthEarth/kkachi/kkachi-agent-network-control`
+- Repo path: `/Users/draccoon/Workspace/SeventeenthEarth/agent-turn-network/agent-turn-network-plugin`
+- Sibling control repo: `/Users/draccoon/Workspace/SeventeenthEarth/agent-turn-network/agent-turn-network-control`
 
-마초 owns KAN plugin technical direction, decomposition, sequencing, plan gates, implementation authorization, evidence synthesis, and Blue final reporting. This does not grant KAB/KAH/KAS-wide command authority and does not replace other Kkachi project commanders.
+마초 owns ATN plugin technical direction, decomposition, sequencing, plan gates, implementation authorization, evidence synthesis, and Blue final reporting. This does not grant KAB/KAH/KAS-wide command authority and does not replace other project commanders.
 
 ## Optional development helpers
 
 Profile-local Kkachi/KAS phase skills are development conveniences, not project
-requirements and not KAN runtime/operator skills. Do not mention or require profile-local phase-skill names in this repository's product docs or install path.
+requirements and not ATN runtime/operator skills. Do not mention or require profile-local phase-skill names in this repository's product docs or install path.
 Ordinary direct edits, tests, docs updates, and reviews may proceed from the repo
 SOT and the commands documented here.
 
@@ -71,7 +71,7 @@ Use this order when claims conflict:
 
 1. 주군's current instruction.
 2. Team registry SOT: `/Users/draccoon/Workspace/Hermes/17thHermes/01_references/team/team-agent-registry.yaml`.
-3. KAN plugin SOT:
+3. ATN plugin SOT:
    - `docs/11-council-argument-graph-sot.md`
    - `docs/10-live-transport-sot.md`
    - `docs/06-implementation-epics-tasks.md`
@@ -79,15 +79,15 @@ Use this order when claims conflict:
    - `docs/01-architecture.md`
    - `docs/07-core-compatibility.md`
    - `docs/09-skill-and-operator-guide.md`
-4. KAN control dependency SOT:
-   - `../kkachi-agent-network-control/docs/25-council-argument-graph-sot.md`
-   - `../kkachi-agent-network-control/docs/24-live-transport-control-sot.md`
-   - `../kkachi-agent-network-control/docs/roadmap.md`
+4. ATN control dependency SOT:
+   - `../agent-turn-network-control/docs/25-council-argument-graph-sot.md`
+   - `../agent-turn-network-control/docs/24-live-transport-control-sot.md`
+   - `../agent-turn-network-control/docs/roadmap.md`
 5. Optional workflow helper state under `.kkachi/` only when that helper is explicitly selected and available.
 
 ## Plugin/control boundary
 
-The durable KAN runtime relationship is:
+The durable ATN runtime relationship is:
 
 ```text
 main agent / operator
@@ -133,7 +133,7 @@ Gray is not a default plan-stage participant unless task-specific authority, ris
 
 Color review rules:
 
-- Official KAN plugin color review uses 서황 Red, 종회 Orange, 만총 Gray, and Blue synthesis by 마초.
+- Official ATN plugin color review uses 서황 Red, 종회 Orange, 만총 Gray, and Blue synthesis by 마초.
 - `delegate_task`, temporary helpers, and helper output are not official Red/Orange/Gray evidence.
 - Color review converges through Blue synthesis, selected implementer-lane adjustment, rerun verification, and re-review until no valid requested changes remain.
 - MAR review is the default independent review lane for development/implementation tasks unless 주군 explicitly waives or replaces it before start; required roles are `logic`, `security`, `arch`, `cve`, and `test_adequacy`.
@@ -155,7 +155,7 @@ Do not silently force implementation phases on read-only work, and do not silent
 
 ## Backend and Codex boundary
 
-Stage 1 KAN plugin implementation uses the local Codex app-server path when a backend lane is needed:
+Stage 1 ATN plugin implementation uses the local Codex app-server path when a backend lane is needed:
 
 ```text
 openai_codex.Codex / CodexConfig
@@ -177,7 +177,7 @@ HOME=/Users/draccoon make check-core-contract
 HOME=/Users/draccoon make test
 ```
 
-`make test` expands to the project tiered targets and avoids duplicate-test-name import mismatch pitfalls seen with raw broad pytest in related KAN plugin workflows.
+`make test` expands to the project tiered targets and avoids duplicate-test-name import mismatch pitfalls seen with raw broad pytest in related ATN plugin workflows.
 
 ## Reporting requirements
 

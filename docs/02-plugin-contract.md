@@ -28,7 +28,7 @@ Hermes tool handlers must:
 
 ## CLI fallback rule
 
-CLI fallback is not implemented in DAEMN-1. If a later task adds one, it must be explicit, argv-only, equivalent to an operator running `kkachi-agent-network` manually, and covered by tests.
+CLI fallback is not implemented in DAEMN-1. If a later task adds one, it must be explicit, argv-only, equivalent to an operator running `atn-control` manually, and covered by tests.
 
 ## Plugin/control equivalence
 
@@ -99,7 +99,7 @@ This is fake/injected CNDIS readiness only. It does not prove live daemon, insta
 
 RUNFIX-006 added `atn_discussion_activation_plan` as a pure/local Hermes tool.
 RUNFIX-007 keeps the same tool surface and extends the dry-run report for
-Discord eligibility and bot-to-bot exclusion. HUN-008 keeps the tool public
+Discord eligibility and bot-to-bot exclusion. ATN-005 keeps the tool public
 surface ATN-aligned while preserving historical RUNFIX/control task IDs only as
 evidence provenance and dependency labels. The tool builds a deterministic
 activation planner/doctor report from explicit caller-provided evidence only.
@@ -108,7 +108,7 @@ install/enabled/tool visibility evidence, explicit daemon socket/config and
 compatibility evidence, participant profiles, selected Discord parent-channel
 proof, planned dry-run changes, rollback steps, verification commands, approval
 gates, optional operator blockers, and separated evidence labels. Inputs may use
-`plugin/HUN-008` for the HUN evidence-model check; older `plugin/RUNFIX-*` task
+`plugin/ATN-005` for the ATN evidence-model check; older `plugin/RUNFIX-*` task
 IDs remain historical planner behavior selectors, not legacy public tool aliases.
 
 The tool classifies participant profiles into eligible, excluded, and
@@ -132,7 +132,7 @@ parent inheritance.
 The five historical evidence labels (`lifecycle_pass`, `fallback_profile_pass`,
 `selected_runner_pass`, `visible_surface_pass`, and `discussion_quality_pass`)
 remain separate and default to `unproven` unless explicitly supplied.
-The HUN-008 report also exposes an activation evidence-model summary that keeps
+The ATN-005 report also exposes an activation evidence-model summary that keeps
 plugin install/tool visibility, daemon socket/config compatibility, profile/
 gateway visibility, visible-surface readiness, selected-runner/runtime proof, and
 final live-readiness claim as separate axes.

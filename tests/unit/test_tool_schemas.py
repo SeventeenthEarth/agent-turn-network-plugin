@@ -67,7 +67,7 @@ def test_stream_tail_schema_requires_session_and_member_with_bounded_optional_cu
             "session_id": {
                 "type": "string",
                 "minLength": 1,
-                "description": "HUN session identifier whose retained stream tail should be read.",
+                "description": "ATN session identifier whose retained stream tail should be read.",
             },
             "member": {
                 "type": "string",
@@ -103,7 +103,7 @@ def test_stream_ack_schema_requires_cursor_and_command_id() -> None:
             "session_id": {
                 "type": "string",
                 "minLength": 1,
-                "description": "HUN session identifier whose stream cursor should be acknowledged.",
+                "description": "ATN session identifier whose stream cursor should be acknowledged.",
             },
             "member": {
                 "type": "string",
@@ -317,11 +317,11 @@ def test_discussion_activation_plan_schema_is_pure_local_doctor_tool() -> None:
             "plugin/RUNFIX-017",
             "plugin/RUNFIX-019",
             "plugin/RUNFIX2-005",
-            "plugin/HUN-008",
+            "plugin/ATN-005",
         ],
     }
     assert (
-        "HUN-008 preserves those IDs"
+        "ATN-005 preserves those IDs"
         in plan_schema["properties"]["control_dependency"]["description"]
     )
     participant_profiles = plan_schema["properties"]["participant_profiles"]
@@ -376,7 +376,7 @@ def test_delegate_new_schema_requires_explicit_metadata_and_creation_fields() ->
             "session_id": {
                 "type": "string",
                 "minLength": 1,
-                "description": "HUN session identifier for the delegation.",
+                "description": "ATN session identifier for the delegation.",
             },
             "moderator": {
                 "type": "string",
@@ -460,7 +460,7 @@ def test_delegate_action_schema_uses_closed_implemented_delegate_enum() -> None:
                 "type": "string",
                 "minLength": 1,
                 "description": (
-                    "HUN session identifier; overrides/sets payload.session_id before submit."
+                    "ATN session identifier; overrides/sets payload.session_id before submit."
                 ),
             },
             "command": {

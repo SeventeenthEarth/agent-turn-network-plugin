@@ -89,19 +89,7 @@ runfix:
     - "plugin/RUNFIX-015"
     - "control/RUNFIX-016"
     - "plugin/RUNFIX-017"
-  boundary: "RUNFIX plugin docs distinguish plugin install/load from KAN discussion activation, require approval-gated dry-run/apply, exclude bot-to-bot enabled profiles from KAN discussion allow-lists by default, and forbid fallback/manual profile evidence from being reported as selected-speaker runner success or live readiness. control/RUNFIX-014 has local implementation proof for selected-runner accounting; plugin/RUNFIX-015 has local implementation proof under `run-20260619T071526Z-7d2ba33b07d5` for pure/local visible author guard planning; control/RUNFIX-016 has local implementation proof under control KAH run `run-20260619T083649Z-d10e1f5cc20b` and local commit `9c15d22`; plugin/RUNFIX-017 has local implementation proof under `run-20260619T101255Z-189d01ba8b8f` for ARGUE quality-required prompting after official color review, Blue synthesis, and final KAH gate."
-
-hun:
-  epic: "HUN"
-  plugin_sot: "docs/12-atn-plugin-naming-sot.md"
-  control_sot: "../agent-turn-network-control/docs/26-hermes-unified-network-control-naming-sot.md"
-  cross_repo_sequence:
-    - "control/ATN-002"
-    - "plugin/ATN-003"
-    - "control/ATN-004"
-    - "plugin/ATN-005"
-  boundary: "HUN is a clean public rename and vanilla Hermes runtime-split contract. Plugin owns package/import names, manifest, tool prefix, bundled skills, plugin docs, and plugin smoke tests. Control owns daemon, CLI, protocol, fixtures, runtime evidence, and control docs. No in-repository legacy aliases, hidden plugin-to-CLI fallback, live readiness claim, Discord delivery claim, package publication, or profile/provider/gateway/auth/token mutation is authorized by HUN-001/ATN-005."
-  compatibility_proof: "cross-repo/ATN-005 is completed/local-compatibility-proof under run-20260623T033911Z-267d9cd68d9c for final local/public naming compatibility and docs-map status alignment."
+  boundary: "RUNFIX plugin docs distinguish plugin install/load from ATN discussion activation, require approval-gated dry-run/apply, exclude bot-to-bot enabled profiles from ATN discussion allow-lists by default, and forbid fallback/manual profile evidence from being reported as selected-speaker runner success or live readiness. control/RUNFIX-014 has local implementation proof for selected-runner accounting; plugin/RUNFIX-015 has local implementation proof under `run-20260619T071526Z-7d2ba33b07d5` for pure/local visible author guard planning; control/RUNFIX-016 has local implementation proof under control KAH run `run-20260619T083649Z-d10e1f5cc20b` and local commit `9c15d22`; plugin/RUNFIX-017 has local implementation proof under `run-20260619T101255Z-189d01ba8b8f` for ARGUE quality-required prompting after official color review, Blue synthesis, and final KAH gate."
 
 
 atn:

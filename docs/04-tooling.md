@@ -34,7 +34,7 @@ atn-plugin/
 Historical KAS workflow guidance for this plugin lane is maintained in the installed Hermes profile KAS reference, not in a project-local `skills/` directory:
 
 ```text
-/Users/draccoon/.hermes/profiles/hwangchung/skills/kkachi-orchestrate/references/kan-plugin-readiness-and-activation.md
+/Users/draccoon/.hermes/profiles/hwangchung/skills/kkachi-orchestrate/references/atn-plugin-readiness-and-activation.md
 ```
 
 Before a KAH/KAS task starts, refresh CodeGraph with `codegraph index <repo>` when `.codegraph/` exists. If the repository has source but no `.codegraph/`, run `codegraph init -i <repo>`. For a completely empty bootstrap project, record a deferred CodeGraph reason in `codegraph-evidence.md`, then run `codegraph init -i <repo>` after source files exist and before final verification.
@@ -69,7 +69,7 @@ After the Python scaffold exists, `uv` and `pyproject.toml` are required for cod
 
 ## Bundled skill resources
 
-SKILL-1 originally packaged the historical `kan-plugin` operator skill. The bundled source now lives under `src/atn_plugin/bundled_skills/` with
+SKILL-1 originally packaged the `atn-plugin` operator skill. The bundled source now lives under `src/atn_plugin/bundled_skills/` with
 `atn_plugin.bundled_skills.read_bundled_skill_text(...)` as
 the import-safe reader used by tests and installer checks. SKILL-2 verifies
 those resources in the local isolated plugin-load smoke gate.

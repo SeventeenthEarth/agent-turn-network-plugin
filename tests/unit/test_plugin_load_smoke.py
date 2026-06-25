@@ -165,7 +165,7 @@ def test_plugin_load_smoke_rejects_entrypoint_legacy_tool_registration(
         + "    _original_register(ctx)\n"
         + "    ctx.register_tool(\n"
         + "        name='kan_stream_tail',\n"
-        + "        toolset='kkachi_agent_network',\n"
+        + "        toolset='atn_plugin',\n"
         + "        schema={},\n"
         + "        handler=lambda args: '{}',\n"
         + "    )\n",

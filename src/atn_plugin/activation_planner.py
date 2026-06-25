@@ -22,7 +22,7 @@ RUNFIX_015_TASK_ID: Final = "plugin/RUNFIX-015"
 RUNFIX_017_TASK_ID: Final = "plugin/RUNFIX-017"
 RUNFIX_019_TASK_ID: Final = "plugin/RUNFIX-019"
 RUNFIX2_005_TASK_ID: Final = "plugin/RUNFIX2-005"
-ATN_008_TASK_ID: Final = "plugin/HUN-008"
+ATN_005_TASK_ID: Final = "plugin/ATN-005"
 SUPPORTED_TASK_IDS: Final[frozenset[str]] = frozenset(
     {
         RUNFIX_006_TASK_ID,
@@ -34,7 +34,7 @@ SUPPORTED_TASK_IDS: Final[frozenset[str]] = frozenset(
         RUNFIX_017_TASK_ID,
         RUNFIX_019_TASK_ID,
         RUNFIX2_005_TASK_ID,
-        ATN_008_TASK_ID,
+        ATN_005_TASK_ID,
     }
 )
 TASK_ID: Final = RUNFIX_010_TASK_ID
@@ -48,15 +48,15 @@ RUNFIX_019_CONTROL_DEPENDENCY_TASK_ID: Final = "control/RUNFIX-018"
 RUNFIX_019_CONTROL_DEPENDENCY_STATUSES: Final[frozenset[str]] = frozenset(
     {"local implementation proof", "completed/local-control", "local-control"}
 )
-ATN_008_HISTORICAL_DEPENDENCY_LABELS: Final[tuple[str, ...]] = (
+ATN_005_HISTORICAL_DEPENDENCY_LABELS: Final[tuple[str, ...]] = (
     CONTROL_DEPENDENCY_TASK_ID,
     RUNFIX_012_CONTROL_DEPENDENCY_TASK_ID,
     RUNFIX_019_CONTROL_DEPENDENCY_TASK_ID,
 )
-ATN_008_CONTROL_DEPENDENCY_TASK_IDS: Final[frozenset[str]] = frozenset(
-    ATN_008_HISTORICAL_DEPENDENCY_LABELS
+ATN_005_CONTROL_DEPENDENCY_TASK_IDS: Final[frozenset[str]] = frozenset(
+    ATN_005_HISTORICAL_DEPENDENCY_LABELS
 )
-ATN_008_CONTROL_DEPENDENCY_STATUSES: Final[frozenset[str]] = frozenset(
+ATN_005_CONTROL_DEPENDENCY_STATUSES: Final[frozenset[str]] = frozenset(
     {"completed/local-control", "local implementation proof", "local-control"}
 )
 TOOL_NAME: Final = "atn_discussion_activation_plan"
@@ -81,7 +81,7 @@ def build_discussion_activation_plan(plan: Mapping[str, object]) -> JsonObject:
             "plan.task_id must be plugin/RUNFIX-006, plugin/RUNFIX-007, "
             "plugin/RUNFIX-008, plugin/RUNFIX-010, plugin/RUNFIX-012, "
             "plugin/RUNFIX-015, plugin/RUNFIX-017, plugin/RUNFIX-019, "
-            "plugin/RUNFIX2-005, or plugin/HUN-008"
+            "plugin/RUNFIX2-005, or plugin/ATN-005"
         )
 
     blockers: list[JsonObject] = []
@@ -249,7 +249,7 @@ def _behavior_task_id(task_id: str) -> str:
         RUNFIX_017_TASK_ID,
         RUNFIX_019_TASK_ID,
         RUNFIX2_005_TASK_ID,
-        ATN_008_TASK_ID,
+        ATN_005_TASK_ID,
     }:
         return task_id
     return RUNFIX_007_TASK_ID
@@ -264,8 +264,8 @@ def _validate_control_dependency(
     if task_id == RUNFIX_019_TASK_ID:
         _validate_runfix_019_control_dependency(value, blockers=blockers)
         return
-    if task_id == ATN_008_TASK_ID:
-        _validate_hun_008_control_dependency(value, blockers=blockers)
+    if task_id == ATN_005_TASK_ID:
+        _validate_atn_005_control_dependency(value, blockers=blockers)
         return
 
     if not isinstance(value, Mapping):
@@ -386,21 +386,21 @@ def _validate_runfix_019_control_dependency(value: object, *, blockers: list[Jso
         )
 
 
-def _validate_hun_008_control_dependency(value: object, *, blockers: list[JsonObject]) -> None:
+def _validate_atn_005_control_dependency(value: object, *, blockers: list[JsonObject]) -> None:
     if not isinstance(value, Mapping):
         blockers.append(
             _blocker(
                 code="control_dependency_missing",
                 owner="control",
                 message=(
-                    "plugin/HUN-008 requires explicit historical control dependency "
+                    "plugin/ATN-005 requires explicit historical control dependency "
                     "evidence for the activation planner model."
                 ),
             )
         )
         return
     dependency = _json_object(value, label="plan.control_dependency")
-    if dependency.get("task_id") not in ATN_008_CONTROL_DEPENDENCY_TASK_IDS:
+    if dependency.get("task_id") not in ATN_005_CONTROL_DEPENDENCY_TASK_IDS:
         blockers.append(
             _blocker(
                 code="control_dependency_task_mismatch",
@@ -411,13 +411,13 @@ def _validate_hun_008_control_dependency(value: object, *, blockers: list[JsonOb
                 ),
             )
         )
-    if dependency.get("status") not in ATN_008_CONTROL_DEPENDENCY_STATUSES:
+    if dependency.get("status") not in ATN_005_CONTROL_DEPENDENCY_STATUSES:
         blockers.append(
             _blocker(
                 code="control_dependency_not_completed",
                 owner="control",
                 message=(
-                    "plugin/HUN-008 control dependency status must be completed/local-control, "
+                    "plugin/ATN-005 control dependency status must be completed/local-control, "
                     "local implementation proof, or local-control."
                 ),
             )
@@ -427,7 +427,7 @@ def _validate_hun_008_control_dependency(value: object, *, blockers: list[JsonOb
             _blocker(
                 code="control_dependency_evidence_missing",
                 owner="control",
-                message="plugin/HUN-008 control_dependency.evidence_ref is required.",
+                message="plugin/ATN-005 control_dependency.evidence_ref is required.",
             )
         )
 
@@ -712,10 +712,10 @@ def _profile_remediation(
 
 def _activation_evidence_model_report() -> JsonObject:
     return {
-        "task_id": ATN_008_TASK_ID,
+        "task_id": ATN_005_TASK_ID,
         "public_tool_name": TOOL_NAME,
         "legacy_public_aliases_allowed": False,
-        "historical_dependency_labels": list(ATN_008_HISTORICAL_DEPENDENCY_LABELS),
+        "historical_dependency_labels": list(ATN_005_HISTORICAL_DEPENDENCY_LABELS),
         "readiness_axes": {
             "plugin_install_tool_visibility": "plugin_install",
             "daemon_socket_config_compatibility": "control_daemon",
@@ -1004,7 +1004,7 @@ def _visible_surface_readiness_report(
                 code="visible_surface_readiness_missing",
                 owner="operator/Hermes-gateway",
                 message=(
-                    "Discord-origin KAN council requests default to live visible thread output; "
+                    "Discord-origin ATN council requests default to live visible thread output; "
                     "provide surface binding, turn-posting, profile/gateway reply, "
                     "and closeout evidence "
                     "or explicitly confirm artifact-only mode before creating the session."
@@ -1970,7 +1970,7 @@ def _visible_author_final_result_report(
         blockers.append(
             _blocker(
                 code="visible_author_final_lifecycle_missing",
-                owner="operator/KAN-control",
+                owner="operator/atn-control",
                 message="final_result.lifecycle must be explicit.",
             )
         )

@@ -194,7 +194,7 @@ def require_entrypoint(root: Path) -> None:
             f"expected {EXPECTED_TOOLS!r}"
         )
     for tool in context.registered_tools:
-        if tool.get("toolset") != "kkachi_agent_network":
+        if tool.get("toolset") != "atn_plugin":
             raise SystemExit(f"entrypoint toolset mismatch: {tool!r}")
         if not isinstance(tool.get("schema"), dict):
             raise SystemExit(f"entrypoint tool schema must be a mapping: {tool!r}")

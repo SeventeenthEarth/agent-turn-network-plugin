@@ -85,7 +85,7 @@ Accepted planned reconcile evidence needs at least: `principal`, `in_loaded_regi
 
 ## ATN council moderation hard rules
 
-Historical label: KAN council moderation hard rules.
+Council moderation hard rules.
 
 For any live ATN council, operator guidance must keep the discussion
 lifecycle-first, per-turn selected, and daemon-event authoritative. These rules

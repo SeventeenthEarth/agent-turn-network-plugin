@@ -55,7 +55,7 @@ def test_bundled_hun_moderator_skill_ships_council_moderation_hard_rules() -> No
 
     for text in [moderator_text, guide_text]:
         normalized = " ".join(text.split())
-        assert "KAN council moderation hard rules" in normalized
+        assert "ATN council moderation hard rules" in normalized
         assert "Do not predeclare or hard-code a complete live speaker order" in normalized
         assert "`council.new`" in normalized
         assert "`request_attendance`" in normalized

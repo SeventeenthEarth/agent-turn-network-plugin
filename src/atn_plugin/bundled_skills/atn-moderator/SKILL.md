@@ -69,7 +69,7 @@ Use daemon-owned `atn_council_command` commands with caller-supplied `command_id
 
 ## ATN council moderation hard rules
 
-Historical label: KAN council moderation hard rules.
+Council moderation hard rules.
 
 For any live ATN council, the moderator must preserve the daemon-governed
 council loop. These rules are hard guardrails for ATN moderator guidance; they

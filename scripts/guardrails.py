@@ -285,18 +285,6 @@ ALLOWED_PUBLIC_OCCURRENCES = [
         "extends `kan_discussion_activation_plan`, schema",
         "historical RUNFIX-019 row before ATN tool rename",
     ),
-    AllowedOccurrence(
-        "docs/12-hermes-unified-network-plugin-naming-sot.md",
-        "dual registration",
-        "with no legacy aliases, dual registration, or fallback acceptance",
-        "negative ATN-005 no-dual-registration proof, not a compatibility claim",
-    ),
-    AllowedOccurrence(
-        "docs/12-hermes-unified-network-plugin-naming-sot.md",
-        "fallback acceptance",
-        "with no legacy aliases, dual registration, or fallback acceptance",
-        "negative ATN-005 no-fallback-acceptance proof, not a compatibility claim",
-    ),
 ]
 
 
@@ -342,7 +330,7 @@ def is_allowed_public_occurrence(relative_path: str, token: str, line: str) -> b
     )
 
 
-def require_hun_public_terms(root: Path) -> None:
+def require_atn_public_terms(root: Path) -> None:
     for path in public_scan_paths(root):
         if not path.exists():
             continue
@@ -405,7 +393,7 @@ def main(*, root: Path = ROOT) -> None:
             raise SystemExit(f"operator guide overclaims unsupported surface: {phrase}")
 
     require_bundled_skill_frontmatter(root)
-    require_hun_public_terms(root)
+    require_atn_public_terms(root)
 
     print("docs-guardrails: ok")
 

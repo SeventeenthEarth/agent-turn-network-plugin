@@ -4,13 +4,13 @@
 
 Let `hermes-unified-network-plugin` develop independently from the Go control runtime while proving compatibility with the control daemon contract.
 
-The control-side SOT is `../../kkachi-agent-network-control/docs/21-cross-repo-development.md`. For live-local transport work, the control-side companion SOT is `../../kkachi-agent-network-control/docs/24-live-transport-control-sot.md` and the plugin-side SOT is `docs/10-live-transport-sot.md`. `plugin/LTRAN-001` is completed as docs-only SOT/mapping work; it does not implement live transport or claim live/production/Discord/gateway/auth/token/KAB/hidden CLI fallback readiness. `plugin/LTRAN-002` is completed as the first bounded implementation task for explicit Unix-socket `status.read` / `version.read` live smoke only.
+The control-side SOT is public-facing as `hun-control` and currently resolved through the local compatibility path `../../kkachi-agent-network-control/docs/21-cross-repo-development.md`. For live-local transport work, the control-side companion SOT is `../../kkachi-agent-network-control/docs/24-live-transport-control-sot.md` and the plugin-side SOT is `docs/10-live-transport-sot.md`. `plugin/LTRAN-001` is completed as docs-only SOT/mapping work; it does not implement live transport or claim live/production/Discord/gateway/auth/token/KAB/hidden CLI fallback readiness. `plugin/LTRAN-002` is completed as the first bounded implementation task for explicit Unix-socket `status.read` / `version.read` live smoke only.
 
 ## Current supported control contract
 
 | Field | Value |
 | --- | --- |
-| Control repo | `../../kkachi-agent-network-control` |
+| Control repo | `hun-control` public label; `../../kkachi-agent-network-control` current local compatibility path |
 | Protocol version | `hun-protocol-v1alpha0` |
 | Fixture manifest | `../../kkachi-agent-network-control/testdata/conformance/manifest.json` |
 | Stability | draft, docs/scaffold/client-foundation plus fake/injected HPLUG-2 read-only status/diagnostics/stream-tail tools, DELRV command tools, CNDIS council/delivery-evidence tools, ARGUE static argument-graph schema/tool contract coverage, HPLUG-3 unsupported slash-command documentation, SKILL-2 compatibility matrix, and local isolated plugin-load smoke |

@@ -1,5 +1,8 @@
 # kkachi-agent-helper:managed
-project: "kkachi-agent-network-plugin"
+project: "hun-plugin"
+public_control_repo: "hun-control"
+local_control_workspace: "../kkachi-agent-network-control"
+path_note: "HUN-014 is completed/local-compatibility-proof: public labels use hun-plugin/hun-control while local checks still resolve the existing sibling workspace path."
 roadmap: "docs/06-implementation-epics-tasks.md"
 sot_docs:
   - "docs/11-council-argument-graph-sot.md"
@@ -22,7 +25,7 @@ kan_team:
   orange: "jonghoe"
   gray: "manchong"
 kas:
-  project: "kan-plugin"
+  project: "hun-plugin"
   suite_roles:
     macho: "blue_commander"
     seohwang: "red_reviewer"
@@ -107,3 +110,4 @@ hun:
     - "plugin/HUN-013"
     - "cross-repo/HUN-014"
   boundary: "HUN is a clean public rename and vanilla Hermes runtime-split contract. Plugin owns package/import names, manifest, tool prefix, bundled skills, plugin docs, and plugin smoke tests. Control owns daemon, CLI, protocol, fixtures, runtime evidence, and control docs. No in-repository legacy aliases, hidden plugin-to-CLI fallback, live readiness claim, Discord delivery claim, package publication, or profile/provider/gateway/auth/token mutation is authorized by HUN-001/HUN-002."
+  compatibility_proof: "cross-repo/HUN-014 is completed/local-compatibility-proof under run-20260623T033911Z-267d9cd68d9c for final local/public naming compatibility and docs-map status alignment."

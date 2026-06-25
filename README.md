@@ -7,7 +7,7 @@ The plugin is not the source of truth. `kkachi-agent-networkd` owns `channel.jso
 ## Repository boundary
 
 - This repo: Python plugin code, fake/injected-transport daemon client foundation, Hermes tool schemas/handlers, future HUN-facing surfaces as separate tasks land, fake-daemon integration tests, isolated plugin E2E tests.
-- Control repo: `../kkachi-agent-network-control`, Go daemon/CLI, protocol SOT, event/state/storage/security/recovery docs.
+- Control repo: public label `hun-control`, current local compatibility path `../kkachi-agent-network-control`, Go daemon/CLI, protocol SOT, event/state/storage/security/recovery docs.
 - Discord helper behavior is injected-only by default. If delivery evidence is needed, it
   must be recorded separately through typed daemon commands, and raw Discord tokens must
   not move into the daemon.

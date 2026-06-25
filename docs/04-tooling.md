@@ -65,7 +65,7 @@ After the Python scaffold exists, `uv` and `pyproject.toml` are required for cod
 
 `make docs-guardrails` runs `scripts/guardrails.py`. The script is import-safe for unit testing, verifies the required docs set and required project phrases, scans all `docs/*.md` files for stale docs-relative sibling paths, and scans public/package surfaces for stale legacy package, tool, skill, manifest, command, compatibility, and unsupported live/private-config claims. Historical/provenance/safety-boundary exceptions must be path-, token-, and line-specific with a recorded reason. It does not duplicate Makefile target structure checks; `make check-make-contract` owns Makefile structure.
 
-`make check-core-contract` runs `scripts/check_core_contract.py`. The script is import-safe for unit testing and verifies the local companion control repo, `KAN_CONTROL_REPO`, or legacy `KAN_CORE_REPO`, exposes the expected conformance manifest protocol, cross-repo development phrases, distribution fixture handoff wording, reciprocal `check-plugin-contract` Makefile target, and matching plugin compatibility declaration.
+`make check-core-contract` runs `scripts/check_core_contract.py`. The script is import-safe for unit testing and verifies the local companion control repo, `HUN_CONTROL_REPO`, `HUN_CORE_REPO`, or legacy private `KAN_CONTROL_REPO` / `KAN_CORE_REPO`, exposes the expected conformance manifest protocol, cross-repo development phrases, distribution fixture handoff wording, reciprocal `check-plugin-contract` Makefile target, and matching plugin compatibility declaration.
 
 ## Bundled skill resources
 

@@ -247,3 +247,20 @@ Exit: the plugin repository is public-ready under the Hermes Unified Network nam
 | HUN-014 | Cross-repo HUN final compatibility | completed/local-compatibility-proof | Completed local compatibility proof under run `run-20260623T033911Z-267d9cd68d9c` reconciles final HUN control/plugin compatibility: local checkout paths remain compatibility paths, public labels use `hun-control` / `hun-plugin`, HUN override env vars are preferred before legacy private KAN vars, docs-map status is current, and contract checks remain local/fail-closed. This does not claim live readiness, Discord delivery, package publication, hosted repository rename, profile/provider/gateway/auth/token mutation, commit, push, or production rollout. |
 
 Control-owned HUN rows are listed in the control roadmap. Use repo-qualified task names when needed, for example `control/HUN-001` and `plugin/HUN-002`.
+
+
+## ATN: Agent Turn Network public rename
+
+Epic ID: `ATN`
+
+Exit: both repositories converge to Agent Turn Network public naming with `atn-control`, `atn-plugin`, `atn_` tools, ATN bundled skills, no public legacy aliases, and final cross-repo guardrail proof. Live readiness, production activation, Discord delivery, package publication, hosted repository rename, push, and profile/provider/gateway/auth/token mutation remain separately approved scopes.
+
+| Task ID | Task Title | Task Status | Task Description |
+|---|---|---|---|
+| ATN-001 | ATN naming SOT and roadmap lock | completed/docs-only | Added control and plugin ATN naming SOT documents, recorded ATN-001 through ATN-005 in the roadmaps/docs maps, and locked the no-alias policy. Review consensus: Red `t_d43402f0`, Orange `t_6d6bb8e8`, Gray `t_7ebc9e1e`, Blue synthesis `t_8e348f72`. This does not rename code, binaries, packages, tools, live profiles, hosted repositories, or public release artifacts. |
+| ATN-002 | Control public docs rename | planned | Control-owned task to rewrite control public docs, docs index/map surfaces, protocol wording, examples, operator-facing text, and roadmap status wording to ATN-only naming without changing binaries or code behavior. |
+| ATN-003 | Plugin public docs rename | planned | Rewrite plugin public docs, package/docs metadata, operator guide, and bundled skill documentation to ATN-only naming without changing package/tool code behavior. |
+| ATN-004 | Control code and binary rename | planned | Control-owned task to rename control Go module, CLI binary, daemon binary, data-home/env/socket/protocol markers, fixtures, tests, Makefile surfaces, and command examples to ATN names with no aliases. |
+| ATN-005 | Plugin package, tools, skills, and final guardrails | planned | Rename plugin distribution/import package, manifest, Hermes tools, bundled skills, schemas/handlers/tests/scripts, docs examples, and guardrails to ATN names; close final cross-repo ATN compatibility proof with no aliases. |
+
+Control-owned ATN rows are also listed in the control roadmap. Use repo-qualified task names when needed, for example `control/ATN-002` or `plugin/ATN-005`.

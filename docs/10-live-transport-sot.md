@@ -10,7 +10,7 @@ The control-side companion SOT is `../../agent-turn-network-control/docs/24-live
 
 This document does **not** authorize production activation, live Discord delivery, gateway/auth/token changes, KAB bridge readiness, or active profile mutation by itself. It defines the architecture, component responsibilities, command/data-plane boundaries, plugin implementation slices, cross-repo dependency gates, and verification evidence required before any later activation decision.
 
-RUNFIX update: this SOT also records the plugin-owned side of `RUNFIX`, the cross-repo remediation epic created from the 2026-06-17 council dogfood issues report. `control/RUNFIX-001` and `plugin/RUNFIX-002` are accepted docs-only SOT locks after historical Red/Orange/Gray review, focused re-check, and Blue final synthesis; they do not install or activate live ATN discussion by themselves.
+RUNFIX update: this SOT also records the plugin-owned side of `RUNFIX`, the cross-repo remediation epic created from the 2026-06-17 council dogfood issues report. `control/RUNFIX-001` and `plugin/RUNFIX-002` are accepted docs-only SOT locks after historical Red/Orange/Gray review, focused re-check, and Blue final synthesis; they do not install or activate live ATN discussion by themselves. RUNFIX3 update: this SOT also records the plugin-owned follow-up from the 2026-06-25 KLM live-thread postmortem; `RUNFIX3-001` is a docs-only SOT/roadmap lock and does not authorize live Discord rollout, profile/provider/gateway/auth/token/model mutation, daemon startup, push, or production readiness.
 
 ## Scope
 
@@ -133,6 +133,29 @@ RUNFIX2 cross-repo sequence and current local-proof status:
 | 3 | control | RUNFIX2-003 | completed/control-local | Discussion lifecycle closeout: control local implementation exposes `discussion_lifecycle`, keeps `limits.max_discussion_turns` as participant discussion turns only, blocks `council.propose` until T0 moderator opening + T1..Tmax selected participant discussion + one selected closeout speech per participant, and leaves `council.unresolved` as the fail-closed terminal path. Expected visible turns are `max_discussion_turns + participant_count + 2`; plugin consumption remains scoped to RUNFIX2-004/005. |
 | 4 | plugin | RUNFIX2-004 | local implementation proof | Clean visible transcript rendering is implemented locally in the pure renderer: visible rows use concise ATN labels, e.g. `[ATN | T15/15]`, while audit/export rows keep machine identifiers. This does not claim live Discord delivery or RUNFIX2-005 pilot proof. |
 | 5 | plugin | RUNFIX2-005 | local implementation proof | Local plugin implementation now supports explicit-only `integrated_discussion_proof` for RUNFIX2-005, with separated lifecycle, selected-runner, runtime-at-turns, visible-surface, clean-transcript, visible-closeout, fallback, discussion-quality, and final-label axes. Selected-runner proof requires runner success plus canonical linked speech for the selected member; per-turn runtime readiness must be grant/turn-time evidence; visible count validates the RUNFIX2 formula. Manual/profile fallback remains diagnostic-only and cannot repair selected-runner failure. `live_readiness` remains false; actual live pilot, Discord/daemon/profile/provider/gateway/auth/token mutation, production readiness, push, and broad rollout remain separately approval-bound. |
+
+
+## RUNFIX3 live-visible council contract hardening
+
+RUNFIX3 records the 2026-06-25 KLM live Discord thread postmortem. The SOT is `17thHermes:40_outputs/team/macho/atn/2026-06-25-atn-live-visible-council-contract-hardening-sot.md`. The failed session `sess_klm_selected_runner_20260625T085557Z` is diagnostic-only evidence and must not be counted as a successful live-visible council.
+
+Plugin-owned RUNFIX3 work must harden operator guidance and evidence reporting for:
+
+- exact origin Discord `chat_id:thread_id` binding rather than display-name target labels;
+- the lifecycle formula `max_discussion_turns + participant_count + 2` with moderator opening, selected participant discussion, participant closeouts, and moderator synthesis separated;
+- selected-runner proof versus `moderator_direct`, manual profile text, fallback profile text, or moderator reposting;
+- content-plane prompts separated from audit/control identifiers;
+- participant-to-participant dialogue mode instead of operator-report-style turns;
+- drift repair, intervention, or unresolved closeout when visible turns leave the requested topic or control-plane metadata leaks into speeches.
+
+RUNFIX3 task order and current status:
+
+| Global Order | Repo | Task ID | Status | Plugin-owned acceptance |
+|---:|---|---|---|---|
+| 1 | cross-repo | RUNFIX3-001 | completed | Docs-only SOT and roadmap lock accepted after Red/Orange/Gray review and Blue synthesis. It records the KLM live-thread failure as diagnostic-only and defines the follow-up task split; no runtime mutation or live readiness claim. |
+| 2 | plugin | RUNFIX3-002 | planned | Harden packaged moderator/operator guidance for exact thread binding, lifecycle turn formula, selected-runner downgrade approval, dialogue mode, content/audit separation, and drift repair/unresolved closeout. |
+| 3 | plugin | RUNFIX3-003 | planned | Add planner/schema/operator-evidence axes for origin binding equality, visible-turn counts, participant closeouts, moderator synthesis, delivery target match, prompt envelope, dialogue-mode diagnostics, and drift diagnostics. |
+| 4 | control | RUNFIX3-004 | planned | Control-owned diagnostics/enforcement follow-up. Plugin records dependency only. |
 
 
 ### Profile and Discord eligibility policy

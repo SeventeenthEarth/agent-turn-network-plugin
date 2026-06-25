@@ -230,6 +230,25 @@ Dependency gate: `control/RUNFIX2-001` locks evidence/config semantics before im
 Control-owned RUNFIX2 tasks are listed in the control roadmap: `control/RUNFIX2-001`, `control/RUNFIX2-002`, and `control/RUNFIX2-003`. Plugin rows here record only plugin-owned implementation/proof work and cross-repo dependency boundaries.
 
 
+## RUNFIX3: Live-visible council contract hardening
+
+Epic ID: `RUNFIX3`
+
+RUNFIX3 is the 2026-06-25 follow-up from 주유's KLM live Discord thread postmortem and 마초 Blue triage. It preserves the RUNFIX lineage as an explicit epic-id exception like RUNFIX2 because the work directly hardens the same live-council readiness lane. The SOT is `17thHermes:40_outputs/team/macho/atn/2026-06-25-atn-live-visible-council-contract-hardening-sot.md`.
+
+Exit: an approved live-visible ATN discussion can enforce exact origin Discord thread binding, the `max_discussion_turns + participant_count + 2` visible-turn formula, selected-runner proof versus manual/profile fallback, content/audit prompt separation, participant-to-participant dialogue mode, and drift repair or unresolved closeout while keeping all pass labels evidence-derived. RUNFIX3 does not authorize production activation, live/default Discord outside an approved pilot, gateway/auth/token/provider/profile mutation, KAB readiness, push, or broad rollout.
+
+Dependency gate: `RUNFIX3-001` locks the cross-repo SOT and roadmaps before implementation. `plugin/RUNFIX3-002` hardens moderator/operator guidance. `plugin/RUNFIX3-003` adds planner/schema/operator-evidence support. `control/RUNFIX3-004` then connects control lifecycle/selected-runner/delivery diagnostics to live preflight/status/finalization behavior.
+
+| Task ID | Task Title | Task Status | Task Description |
+|---|---|---|---|
+| RUNFIX3-001 | Live-visible council contract SOT and roadmap lock | completed | Docs-only cross-repo SOT lock in `17thHermes:40_outputs` records `sess_klm_selected_runner_20260625T085557Z` as failed live-visible council contract evidence, fixes the expected T0/T1..TN/TN+1..TN+P/TN+P+1 lifecycle, and defines the four-PR sequence. Review evidence is recorded in the SOT color review log. |
+| RUNFIX3-002 | Moderator/operator live-thread contract hardening | planned | Harden packaged `atn-moderator`, `atn-plugin`, and operator guidance for exact origin `chat_id:thread_id` binding, display-name target rejection, selected-runner downgrade approval, lifecycle turn formula, participant-to-participant dialogue, content/audit prompt separation, and drift repair/unresolved closeout. |
+| RUNFIX3-003 | Planner and evidence schema for live-thread proof axes | planned | Extend plugin planner/schema/operator evidence so activation and final reports carry origin binding equality, expected/actual visible turns, participant closeout and moderator synthesis evidence, per-turn delivery target match, content/audit prompt envelope, dialogue-mode diagnostics, and drift diagnostics without promoting live readiness. |
+
+Control-owned RUNFIX3 follow-up is listed in the control roadmap as `control/RUNFIX3-004`.
+
+
 ## ATN: Agent Turn Network public rename
 
 Epic ID: `ATN`

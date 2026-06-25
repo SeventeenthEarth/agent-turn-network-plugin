@@ -7,13 +7,10 @@ from pathlib import Path
 
 PLUGIN = Path(__file__).resolve().parents[1]
 CONTROL_REPO = (
-    os.environ.get("HUN_CONTROL_REPO")
-    or os.environ.get("HUN_CORE_REPO")
-    or os.environ.get("KAN_CONTROL_REPO")
-    or os.environ.get("KAN_CORE_REPO")
+    os.environ.get("ATN_CONTROL_REPO")
 )
 CORE = Path(CONTROL_REPO or PLUGIN.parent / "agent-turn-network-control").resolve()
-EXPECTED_PROTOCOL = "hun-protocol-v1alpha0"
+EXPECTED_PROTOCOL = "atn-protocol-v1alpha0"
 PUBLIC_CONTROL_PROTOCOL = "atn-protocol-v1alpha0"
 REQUIRED_CONTROL_PHRASES = [
     PUBLIC_CONTROL_PROTOCOL,

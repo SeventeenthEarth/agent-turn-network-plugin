@@ -9,7 +9,7 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
 SCRIPT = ROOT / "scripts" / "check_core_contract.py"
-PROTOCOL = "hun-protocol-v1alpha0"
+PROTOCOL = "atn-protocol-v1alpha0"
 
 
 def load_check_core_contract() -> ModuleType:
@@ -84,7 +84,7 @@ def test_core_contract_rejects_missing_plugin_protocol_declaration(tmp_path: Pat
     plugin, core = write_contract_fixture(tmp_path, include_plugin_protocol=False)
 
     with pytest.raises(
-        SystemExit, match="plugin compatibility doc does not declare expected protocol"
+        SystemExit, match="plugin compatibility doc does not declare public protocol"
     ):
         check_core_contract.main(plugin=plugin, core=core)
 

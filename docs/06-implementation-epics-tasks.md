@@ -31,7 +31,7 @@ Split a task only when the dependency, approval gate, failure domain, or reviewe
 
 The plugin may develop ahead of `agent-turn-network-control` only when a task can be completed against docs, local fakes, or control conformance fixtures. When a task requires a control daemon capability, command, feature flag, fixture, or delivery-evidence path that does not exist yet, keep or move that task to `blocked` instead of inventing plugin-side fallback behavior.
 
-Historical completed plugin tasks before the post-Release live-local work preserve their original short task IDs such as `SCAFF-1`, `DAEMN-1`, and `SKILL-2` for audit continuity. New post-Release cross-repo live-local epics normally use five-letter uppercase epic IDs and three-digit task IDs. `ATN` is the current public rename epic for Agent Turn Network. When a capability spans control and plugin, both repositories use the same epic ID and one globally sequential task number stream; cite tasks with repo-qualified notation such as `control/RUNFIX-001` or `plugin/RUNFIX-002`. A repo-local roadmap may therefore skip numbers owned by the sibling repo.
+Historical completed plugin tasks before the post-Release live-local work preserve their original short task IDs such as `SCAFF-1`, `DAEMN-1`, and `SKILL-2` for audit continuity. New post-Release cross-repo live-local epics normally use five-letter uppercase epic IDs and three-digit task IDs. `ATN` is the current public rename epic for Agent Turn Network. Explicit user-approved exceptions include `RUNFIX2`, `RUNFIX3`, and the `NEXFIX` epic whose requested task id prefix is `NEWFIX-*`. When a capability spans control and plugin, both repositories use the same epic ID and one globally sequential task number stream; cite tasks with repo-qualified notation such as `control/RUNFIX-001` or `plugin/RUNFIX-002`. A repo-local roadmap may therefore skip numbers owned by the sibling repo.
 
 Use `docs/07-core-compatibility.md` as the compatibility SOT. The short rule is:
 
@@ -250,6 +250,23 @@ Dependency gate: `RUNFIX3-001` locks the cross-repo SOT and roadmaps before impl
 | RUNFIX3-003 | Planner and evidence schema for live-thread proof axes | implementation_complete/review_pending | Plugin-owned planner/schema/operator-evidence support against the frozen control evidence contract is implemented and awaiting focused reviewer acceptance. The planner/report surface now adds `plugin/RUNFIX3-003` task support, exact-origin fail-closed proof, formula-grounded visible-turn accounting, separate `start_status` versus overall `status`, explicit `runfix3_acceptance_status`, a dedicated selected-runner proof-chain acceptance axis, start-gated daemon registry membership, and RUNFIX3-specific closeout/synthesis/delivery-target/prompt-envelope/dialogue/drift/fail-closed reports without promoting live readiness. Fixed minimum gates have passed, with `make test-unit` run as a deliberate tightening over the older waiver wording. Durable verification evidence: `docs/evidence/2026-06-26-runfix3-003-planner-proof-evidence.md`. |
 
 Control-owned RUNFIX3 follow-up `control/RUNFIX3-004` is now implementation_complete/review_pending in the control roadmap; plugin mirrors it as a dependency/status trace only.
+
+
+## NEXFIX: Selected-runner prompt envelope remediation
+
+Epic ID: `NEXFIX`
+
+NEXFIX is the 2026-06-26 follow-up from 주유's selected-runner prompt envelope defect report. The SOT lock is `17thHermes:40_outputs/team/macho/atn/2026-06-26-atn-selected-runner-prompt-envelope-nexfix-sot.md`. This is an explicit naming exception: the epic label is `NEXFIX`, while 주군 requested task ids `NEWFIX-001` and `NEWFIX-002`.
+
+Exit: long or live-visible selected-runner councils have both runtime readiness and content-plane readiness gates. Control owns the projection-backed prompt envelope in `control/NEWFIX-001`; plugin owns packaged moderator/participant guidance in `plugin/NEWFIX-002`. NEXFIX does not authorize production activation, live Discord rollout, default Discord activation, gateway/auth/token/provider/profile/model mutation, KAB readiness, push, package publication, or broad rollout; any live pilot remains separately approved and outside this docs-only task.
+
+Dependency gate: `plugin/NEWFIX-002` should consume the `control/NEWFIX-001` contract once accepted, or phrase guidance against the planned control contract without inventing daemon authority. The named handoff target is `selected_runner_prompt_evidence`: a control status/export field, deterministic fixture artifact, or equivalent non-secret prompt-capture proof that records selected member, turn, causation, agenda/prior-context source refs, included/missing context keys, prompt hash or redacted excerpt, and `result`. The plugin must not treat `council.grant` hints, visible messages, or operator prose as authoritative replacement for daemon projection.
+
+| Task ID | Task Title | Task Status | Task Description |
+|---|---|---|---|
+| NEWFIX-002 | Moderator and participant content-plane readiness guidance | planned | Plugin-owned guidance hardening: `atn-moderator` separates runtime readiness from content-plane readiness, classifies missing/blocked `selected_runner_prompt_evidence` as a `start_blocker` for long or live-visible councils, and intervenes/cancels if a first speech reports missing agenda/prior context. `atn-participant` guidance must fail closed or return a current-control `speech`-contract-compatible diagnostic payload when agenda context is missing rather than producing generic speech; until a richer diagnostic event type is approved, the producer stdout remains `type: "speech"` with `payload.speech`, optional diagnostic `claims[]`, empty or valid `stance_links[]`, `contribution_type`, `new_axis_reason`, and optional `evidence[]`. |
+
+Control-owned `control/NEWFIX-001` is listed in the control roadmap. Plugin mirrors it as the blocking content-plane prompt contract dependency and does not claim control implementation authority.
 
 
 ## ATN: Agent Turn Network public rename

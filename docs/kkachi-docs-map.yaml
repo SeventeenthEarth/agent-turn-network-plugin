@@ -102,3 +102,18 @@ atn:
     - "control/ATN-004"
     - "plugin/ATN-005"
   boundary: "ATN is a clean public rename to Agent Turn Network. Plugin owns package/import names, manifest, tool prefix, bundled skills, plugin docs, and plugin smoke tests. Control owns daemon, CLI, protocol, fixtures, runtime evidence, and control docs. No in-repository legacy aliases, hidden plugin-to-CLI fallback, live readiness claim, Discord delivery claim, package publication, or profile/provider/gateway/auth/token mutation is authorized by ATN-001."
+
+nexfix:
+  epic: "NEXFIX"
+  task_prefix_exception: "NEWFIX"
+  plugin_sot: "docs/10-live-transport-sot.md"
+  control_sot: "../agent-turn-network-control/docs/24-live-transport-control-sot.md"
+  vault_sot: "17thHermes:40_outputs/team/macho/atn/2026-06-26-atn-selected-runner-prompt-envelope-nexfix-sot.md"
+  prompt_evidence_contract: "selected_runner_prompt_evidence"
+  operator_guide: "docs/09-skill-and-operator-guide.md"
+  moderator_skill: "src/atn_plugin/bundled_skills/atn-moderator/SKILL.md"
+  participant_skill: "src/atn_plugin/bundled_skills/atn-participant/SKILL.md"
+  cross_repo_sequence:
+    - "control/NEWFIX-001"
+    - "plugin/NEWFIX-002"
+  boundary: "NEXFIX hardens selected-runner content-plane readiness after the 2026-06-26 prompt-envelope defect. Plugin owns packaged moderator/participant guidance for envelope preflight and missing-context diagnostics while control owns the authoritative projection-backed prompt. No live Discord rollout, daemon startup/discovery, production activation, profile/provider/gateway/auth/token/model mutation, hidden CLI fallback, package publication, push, or broad rollout is authorized."

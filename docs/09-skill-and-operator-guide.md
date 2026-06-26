@@ -268,6 +268,8 @@ For `plugin/RUNFIX-010`, the report also separates live-visible UX from daemon e
 - `visible_surface_readiness_report`: exact origin binding result, surface binding, turn delivery probe, visible closeout probe, real profile/gateway replies, CLI-actor-only status, and expected/posted turn counts;
 - `final_report_contract`: final reports must separately state `ATN lifecycle finalized`, `Discord visible turns posted: N/expected`, `real profile/gateway replies`, `CLI actor speech only`, participant closeout coverage, moderator synthesis coverage, and repair-forward versus unresolved closeout.
 
+For `plugin/RUNFIX3-003`, the report adds `runfix3_live_thread_proof_report` for participant closeout coverage, moderator synthesis coverage, per-turn delivery-target proof, prompt-envelope proof, dialogue-mode proof, drift status, and final fail-closed proof status.
+
 Missing or ambiguous runner, ARGUE, canonical-link, or origin-binding evidence remains `unproven`/`blocked`. Manual/fallback profile text can explain a blocker, but it is never selected-runner success, discussion-quality success, or live readiness.
 
 For `plugin/RUNFIX-012`, the report adds

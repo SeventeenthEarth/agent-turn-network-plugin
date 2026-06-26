@@ -406,6 +406,342 @@ def test_discussion_activation_plan_handler_returns_local_doctor_report() -> Non
     assert result["data"]["evidence_labels"]["selected_runner_pass"] == "unproven"
 
 
+def test_discussion_activation_plan_handler_exposes_runfix3_live_thread_report() -> None:
+    result = decode(
+        handle_discussion_activation_plan(
+            {
+                "plan": {
+                    "schema_version": 1,
+                    "task_id": "plugin/RUNFIX3-003",
+                    "control_dependency": {
+                        "task_id": "control/RUNFIX-005",
+                        "status": "completed/local-control",
+                        "evidence_ref": "control-runfix-005",
+                    },
+                    "plugin_install": {
+                        "installed": True,
+                        "enabled": True,
+                        "tool_names": ["atn_discussion_activation_plan"],
+                    },
+                    "control_daemon": {
+                        "mode": "explicit",
+                        "socket_or_config_ref": "socket-config",
+                        "compatibility_ref": "version-read",
+                    },
+                    "participant_profiles": [
+                        {
+                            "profile": "macho",
+                            "tools_visible": True,
+                            "bot_to_bot_enabled": False,
+                        },
+                        {
+                            "profile": "seohwang",
+                            "tools_visible": True,
+                            "bot_to_bot_enabled": False,
+                        },
+                    ],
+                    "discord_parent_channel": {
+                        "channel_id": "parent-123",
+                        "allow_list_inheritance_proven": True,
+                        "proof_source": "gateway_parent_allow_list_inheritance",
+                        "proof_ref": "parent-proof",
+                    },
+                    "planned_changes": ["local proof only"],
+                    "rollback": {"steps": ["revert local proof fixtures"]},
+                    "verification_commands": ["make test-prepare"],
+                    "approval_gates": ["explicit apply approval"],
+                    "operator_evidence": {
+                        "runner": {
+                            "speaker_selected_event_id": "evt_select_1",
+                            "selected_member": "macho",
+                            "runner_invocation_started_ref": "runner/run-1/invocation-started",
+                        },
+                        "canonical_speech": {
+                            "speaker_selected_event_id": "evt_select_1",
+                            "speech_event_id": "evt_speech_1",
+                            "speaker": "macho",
+                        },
+                        "participant_response": {
+                            "speech": (
+                                "We should keep the pilot blocked until canonical "
+                                "speech linkage is proven."
+                            ),
+                            "claims": [
+                                {
+                                    "claim_id": "T03.C1",
+                                    "summary": "Canonical speech linkage gates pilot acceptance.",
+                                    "kind": "requirement",
+                                }
+                            ],
+                            "stance_links": [
+                                {
+                                    "target_event_id": "evt_speech_0",
+                                    "target_claim_id": "T01.C1",
+                                    "stance": "support",
+                                    "rationale": (
+                                        "The prior traceability requirement remains "
+                                        "the acceptance axis."
+                                    ),
+                                }
+                            ],
+                            "contribution_type": "support",
+                            "new_axis_reason": None,
+                            "evidence": [{"kind": "runner_log", "ref": "runner/run-1/speech-link"}],
+                        },
+                        "fallback_disclosure": {
+                            "fallback_profile_pass": True,
+                            "evidence_ref": "manual/profile-diagnostic-reply",
+                            "missing_evidence": ["visible delivery evidence"],
+                        },
+                        "discussion_quality": {
+                            "quality_mode": "quality_required",
+                            "local_context_sufficient": True,
+                            "prior_claims": [
+                                {
+                                    "event_id": "evt_speech_0",
+                                    "claim_id": "T01.C1",
+                                    "speaker": "seohwang",
+                                    "summary": "Prior traceability remains the acceptance axis.",
+                                    "available_stances": [
+                                        "support",
+                                        "challenge",
+                                        "refine",
+                                        "synthesize",
+                                    ],
+                                }
+                            ],
+                            "turns": [
+                                {
+                                    "speech_event_id": "evt_speech_1",
+                                    "is_opening_speech": False,
+                                    "participant_response": {
+                                        "speech": (
+                                            "We should keep the pilot blocked until "
+                                            "canonical speech linkage is proven."
+                                        ),
+                                        "claims": [
+                                            {
+                                                "claim_id": "T03.C1",
+                                                "summary": (
+                                                    "Canonical speech linkage gates "
+                                                    "pilot acceptance."
+                                                ),
+                                                "kind": "requirement",
+                                            }
+                                        ],
+                                        "stance_links": [
+                                            {
+                                                "target_event_id": "evt_speech_0",
+                                                "target_claim_id": "T01.C1",
+                                                "stance": "support",
+                                                "rationale": (
+                                                    "The prior traceability requirement "
+                                                    "remains the acceptance axis."
+                                                ),
+                                            }
+                                        ],
+                                        "contribution_type": "support",
+                                        "new_axis_reason": None,
+                                        "evidence": [
+                                            {
+                                                "kind": "runner_log",
+                                                "ref": "runner/run-1/speech-link",
+                                            }
+                                        ],
+                                    },
+                                }
+                            ],
+                        },
+                    },
+                    "daemon_registry_membership": {
+                        "registry_loaded": True,
+                        "selected_moderator_principal": "macho",
+                        "evidence_ref": "control/registry/show",
+                        "participants": [
+                            {
+                                "principal": "macho",
+                                "in_loaded_registry": True,
+                                "mapping_unambiguous": True,
+                                "planned_reconcile": False,
+                                "wrapper_resolves": True,
+                                "enabled": True,
+                            },
+                            {
+                                "principal": "seohwang",
+                                "in_loaded_registry": True,
+                                "mapping_unambiguous": True,
+                                "planned_reconcile": False,
+                                "wrapper_resolves": True,
+                                "enabled": True,
+                            },
+                        ],
+                    },
+                    "request_context": {
+                        "source": "discord_thread",
+                        "chat_id": "chat-123",
+                        "thread_id": "thread-456",
+                    },
+                    "visible_surface_readiness": {
+                        "surface_bound": True,
+                        "parent_channel_id": "parent-123",
+                        "thread_id": "thread-456",
+                        "observed_chat_id": "chat-123",
+                        "observed_thread_id": "thread-456",
+                        "exact_origin_binding": True,
+                        "origin_binding_evidence_ref": "discord/thread-origin-proof",
+                        "turn_posting_strategy": "selected_speaker_profile_send",
+                        "turn_delivery_probe_ref": "discord/thread-turn-probe",
+                        "visible_closeout_probe_ref": "discord/thread-closeout-probe",
+                        "real_profile_gateway_replies": True,
+                        "cli_actor_speech_only": False,
+                        "max_discussion_turns": 3,
+                        "participant_count": 2,
+                        "visible_turns_expected": 7,
+                        "visible_turns_posted": 7,
+                    },
+                    "runfix3_live_thread_proof": {
+                        "participant_closeout": {
+                            "participant_closeout_pass": True,
+                            "rows": [
+                                {
+                                    "participant": "macho",
+                                    "closeout_turn": 4,
+                                    "speech_event_id": "evt_closeout_macho",
+                                    "delivery_target_match": True,
+                                    "evidence_ref": "plugin/surface/closeout-macho",
+                                },
+                                {
+                                    "participant": "seohwang",
+                                    "closeout_turn": 5,
+                                    "speech_event_id": "evt_closeout_seohwang",
+                                    "delivery_target_match": True,
+                                    "evidence_ref": "plugin/surface/closeout-seohwang",
+                                },
+                            ],
+                            "evidence_ref": "plugin/surface/participant-closeouts",
+                        },
+                        "moderator_synthesis": {
+                            "moderator_synthesis_pass": True,
+                            "speech_event_id": "evt_synthesis_1",
+                            "delivery_target_match": True,
+                            "evidence_ref": "plugin/surface/moderator-synthesis",
+                        },
+                        "delivery_targets": {
+                            "delivery_target_pass": True,
+                            "rows": [
+                                {
+                                    "turn": 0,
+                                    "speaker_selected_event_id": "evt_select_opening",
+                                    "speech_event_id": "evt_opening_1",
+                                    "expected_delivery_target": "chat-123:thread-456",
+                                    "posted_delivery_target": "chat-123:thread-456",
+                                    "evidence_ref": "plugin/surface/delivery-target-opening",
+                                },
+                                {
+                                    "turn": 1,
+                                    "speaker_selected_event_id": "evt_select_1",
+                                    "speech_event_id": "evt_speech_1",
+                                    "expected_delivery_target": "chat-123:thread-456",
+                                    "posted_delivery_target": "chat-123:thread-456",
+                                    "evidence_ref": "plugin/surface/delivery-target-turn-1",
+                                },
+                                {
+                                    "turn": 2,
+                                    "speaker_selected_event_id": "evt_select_2",
+                                    "speech_event_id": "evt_speech_2",
+                                    "expected_delivery_target": "chat-123:thread-456",
+                                    "posted_delivery_target": "chat-123:thread-456",
+                                    "evidence_ref": "plugin/surface/delivery-target-turn-2",
+                                },
+                                {
+                                    "turn": 3,
+                                    "speaker_selected_event_id": "evt_select_3",
+                                    "speech_event_id": "evt_speech_3",
+                                    "expected_delivery_target": "chat-123:thread-456",
+                                    "posted_delivery_target": "chat-123:thread-456",
+                                    "evidence_ref": "plugin/surface/delivery-target-turn-3",
+                                },
+                                {
+                                    "turn": 4,
+                                    "speaker_selected_event_id": "evt_select_closeout_macho",
+                                    "speech_event_id": "evt_closeout_macho",
+                                    "expected_delivery_target": "chat-123:thread-456",
+                                    "posted_delivery_target": "chat-123:thread-456",
+                                    "evidence_ref": "plugin/surface/delivery-target-closeout-macho",
+                                },
+                                {
+                                    "turn": 5,
+                                    "speaker_selected_event_id": "evt_select_closeout_seohwang",
+                                    "speech_event_id": "evt_closeout_seohwang",
+                                    "expected_delivery_target": "chat-123:thread-456",
+                                    "posted_delivery_target": "chat-123:thread-456",
+                                    "evidence_ref": (
+                                        "plugin/surface/delivery-target-closeout-seohwang"
+                                    ),
+                                },
+                                {
+                                    "turn": 6,
+                                    "speaker_selected_event_id": "evt_select_synthesis",
+                                    "speech_event_id": "evt_synthesis_1",
+                                    "expected_delivery_target": "chat-123:thread-456",
+                                    "posted_delivery_target": "chat-123:thread-456",
+                                    "evidence_ref": "plugin/surface/delivery-target-synthesis",
+                                },
+                            ],
+                            "evidence_ref": "plugin/surface/delivery-targets",
+                        },
+                        "prompt_envelope": {
+                            "prompt_envelope_pass": True,
+                            "content_audit_separated": True,
+                            "control_metadata_leaked": False,
+                            "evidence_ref": "plugin/surface/prompt-envelope",
+                        },
+                        "dialogue_mode": {
+                            "dialogue_mode_pass": True,
+                            "participant_to_participant": True,
+                            "moderator_substitute_turns": False,
+                            "evidence_ref": "plugin/surface/dialogue-mode",
+                        },
+                        "drift": {
+                            "status": "repair_forward",
+                            "drift_detected": True,
+                            "repaired_forward": True,
+                            "unresolved_closeout": False,
+                            "evidence_ref": "plugin/surface/drift-status",
+                        },
+                        "final_fail_closed": {
+                            "final_fail_closed_pass": True,
+                            "final_status": "repair_forward",
+                            "fail_closed": True,
+                            "evidence_ref": "plugin/surface/fail-closed-final",
+                        },
+                    },
+                }
+            }
+        )
+    )
+
+    assert result["ok"] is True
+    assert result["tool"] == "atn_discussion_activation_plan"
+    assert result["live_readiness"] is False
+    assert result["data"]["status"] == "ready_to_start"
+    assert result["data"]["behavior_task_id"] == "plugin/RUNFIX3-003"
+    assert result["data"]["visible_surface_readiness_report"]["exact_origin_binding_proven"] is True
+    assert result["data"]["visible_surface_readiness_report"]["visible_turn_count_proven"] is True
+    assert result["data"]["integrated_discussion_proof_report"]["status"] == "not_required"
+    assert result["data"]["runfix3_live_thread_proof_report"]["status"] == "proven"
+    assert (
+        result["data"]["runfix3_live_thread_proof_report"]["participant_closeout_coverage"][
+            "status"
+        ]
+        == "proven"
+    )
+    assert (
+        result["data"]["runfix3_live_thread_proof_report"]["moderator_synthesis_coverage"]["status"]
+        == "proven"
+    )
+
+
 def test_diagnostics_handler_rejects_invalid_session_id_before_transport() -> None:
     result = decode(
         handle_compatibility_diagnostics(

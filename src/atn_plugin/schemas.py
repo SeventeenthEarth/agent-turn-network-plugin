@@ -852,7 +852,8 @@ ATN_DISCUSSION_ACTIVATION_PLAN: Final[dict[str, object]] = {
                     "parent-channel allow-list inheritance proof, planned changes, "
                     "rollback, verification commands, approval gates, and separated "
                     "evidence labels, optional live-visible surface readiness, "
-                    "and optional integrated discussion proof evidence."
+                    "optional integrated discussion proof evidence, and optional "
+                    "RUNFIX3 live-thread proof evidence."
                 ),
                 "properties": {
                     "schema_version": {"type": "integer", "const": 1},
@@ -868,6 +869,7 @@ ATN_DISCUSSION_ACTIVATION_PLAN: Final[dict[str, object]] = {
                             "plugin/RUNFIX-017",
                             "plugin/RUNFIX-019",
                             "plugin/RUNFIX2-005",
+                            "plugin/RUNFIX3-003",
                             "plugin/ATN-005",
                         ],
                     },
@@ -970,9 +972,11 @@ ATN_DISCUSSION_ACTIVATION_PLAN: Final[dict[str, object]] = {
                         "type": "object",
                         "additionalProperties": True,
                         "description": (
-                            "RUNFIX-010 preflight evidence for live visible thread output: "
+                            "RUNFIX-010 live visible thread preflight evidence and "
+                            "RUNFIX3-003 visible-surface proof input: exact origin binding, "
                             "surface binding, turn-posting probe, visible closeout probe, "
-                            "real profile/gateway replies, and non-CLI-actor speech path."
+                            "real profile/gateway replies, non-CLI-actor speech path, and "
+                            "expected/posted visible turn counts."
                         ),
                     },
                     "participant_runtime_readiness": {
@@ -1031,6 +1035,23 @@ ATN_DISCUSSION_ACTIVATION_PLAN: Final[dict[str, object]] = {
                             "delivery-only, gateway-only, or current-only evidence cannot "
                             "satisfy selected-runner, runtime, visible-surface, "
                             "clean-transcript, or closeout proof."
+                        ),
+                    },
+                    "runfix3_live_thread_proof": {
+                        "type": "object",
+                        "additionalProperties": True,
+                        "description": (
+                            "Explicit-only plugin/RUNFIX3-003 live-thread proof input. "
+                            "When task_id is plugin/RUNFIX3-003, "
+                            "visible_surface_readiness_report owns exact origin binding plus "
+                            "expected/posted visible-turn fields, while "
+                            "runfix3_live_thread_proof_report owns participant closeout "
+                            "coverage, moderator synthesis coverage, per-turn delivery target "
+                            "rows plus aggregate delivery-target proof, prompt envelope proof, "
+                            "dialogue mode proof, drift status, and fail-closed final status. "
+                            "selected_runner_pass remains evidence-derived only, "
+                            "live_readiness stays false, and the planner does not invent "
+                            "control enforcement semantics."
                         ),
                     },
                     "evidence_labels": {

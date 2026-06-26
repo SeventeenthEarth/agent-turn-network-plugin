@@ -87,11 +87,67 @@ def daemon_registry_membership(
         row["enabled"] = enabled
     membership: dict[str, object] = {
         "registry_loaded": True,
+        "selected_moderator_principal": "macho",
         "participants": [row],
     }
     if evidence_ref is not None:
         membership["evidence_ref"] = evidence_ref
     return membership
+
+
+def visible_author_guard_sample() -> dict[str, object]:
+    return {
+        "guard_surface": "pre_council_new_activation_plan",
+        "runtime_enforcement": False,
+        "profile_author_probes": [
+            {
+                "profile": "macho",
+                "expected_author_source": "registry_snapshot",
+                "expected_author_id": "bot-macho",
+                "observed_bot_id": "bot-macho",
+                "observed_username": "Macho",
+                "source_env": "profile:macho/.env",
+                "posting_path": "discord.gateway.profile_send",
+                "same_path_probe": {
+                    "evidence_ref": "probe/macho/same-path",
+                    "message_id": "msg-probe-macho",
+                    "surface": "discord_thread",
+                    "posting_path": "discord.gateway.profile_send",
+                },
+                "shared_default_author": False,
+                "shared_default_negative_proof_ref": "env/macho/no-shared-default",
+                "profile_local_override_present": True,
+            }
+        ],
+        "env_precedence_proof": {
+            "order": ["shared_default", "default", "profile_local"],
+            "per_key_source": [
+                {
+                    "profile": "macho",
+                    "key": "DISCORD_BOT_ID",
+                    "source": "profile_local",
+                    "value_ref": "profile:macho/.env#DISCORD_BOT_ID",
+                }
+            ],
+            "final_author_source": "profile_local",
+        },
+        "per_turn_visible_evidence": [
+            {
+                "discord_message_id": "msg-turn-1",
+                "selected_member": "macho",
+                "profile_author_id": "bot-macho",
+                "posting_path": "discord.gateway.profile_send",
+                "speech_event_id": "evt_speech_1",
+            }
+        ],
+        "final_result": {
+            "lifecycle": "pre_session_blocker_check_only",
+            "visible_turns_posted": 1,
+            "real_profile_gateway_replies": True,
+            "selected_runner_labels": ["selected_runner_pass"],
+            "shared_default_author_fallback_status": "none",
+        },
+    }
 
 
 def complete_runfix_008_plan() -> dict[str, object]:
@@ -207,6 +263,8 @@ def complete_prior_task_plan(task_id: str) -> dict[str, object]:
         return complete_hun_008_plan()
     if task_id == "plugin/RUNFIX-017":
         return complete_runfix_017_plan()
+    if task_id == "plugin/RUNFIX3-003":
+        return complete_runfix3_003_plan()
     if task_id in {"plugin/RUNFIX-008", "plugin/RUNFIX-010"}:
         return complete_runfix_008_plan()
     return complete_plan()
@@ -349,6 +407,180 @@ def complete_runfix2_005_plan() -> dict[str, object]:
     return plan
 
 
+def complete_runfix3_003_plan() -> dict[str, object]:
+    plan = complete_runfix_017_plan()
+    plan["task_id"] = "plugin/RUNFIX3-003"
+    plan["request_context"] = {
+        "source": "discord_thread",
+        "chat_id": "chat-123",
+        "thread_id": "thread-456",
+    }
+    participant_profiles = plan["participant_profiles"]
+    assert isinstance(participant_profiles, list)
+    second_profile = participant_profiles[1]
+    assert isinstance(second_profile, dict)
+    second_profile["bot_to_bot_enabled"] = False
+
+    plan["visible_surface_readiness"] = {
+        "surface_bound": True,
+        "parent_channel_id": "parent-123",
+        "thread_id": "thread-456",
+        "observed_chat_id": "chat-123",
+        "observed_thread_id": "thread-456",
+        "exact_origin_binding": True,
+        "origin_binding_evidence_ref": "discord/thread-origin-proof",
+        "turn_posting_strategy": "selected_speaker_profile_send",
+        "turn_delivery_probe_ref": "discord/thread-turn-probe",
+        "visible_closeout_probe_ref": "discord/thread-closeout-probe",
+        "real_profile_gateway_replies": True,
+        "cli_actor_speech_only": False,
+        "max_discussion_turns": 3,
+        "participant_count": 2,
+        "visible_turns_expected": 7,
+        "visible_turns_posted": 7,
+        "evidence_ref": "discord/thread-visible-proof",
+    }
+    plan["daemon_registry_membership"] = {
+        "registry_loaded": True,
+        "selected_moderator_principal": "macho",
+        "evidence_ref": "control/registry/show",
+        "participants": [
+            {
+                "principal": "macho",
+                "in_loaded_registry": True,
+                "mapping_unambiguous": True,
+                "planned_reconcile": False,
+                "wrapper_resolves": True,
+                "enabled": True,
+            },
+            {
+                "principal": "seohwang",
+                "in_loaded_registry": True,
+                "mapping_unambiguous": True,
+                "planned_reconcile": False,
+                "wrapper_resolves": True,
+                "enabled": True,
+            },
+        ],
+    }
+    plan["runfix3_live_thread_proof"] = {
+        "participant_closeout": {
+            "participant_closeout_pass": True,
+            "rows": [
+                {
+                    "participant": "macho",
+                    "closeout_turn": 4,
+                    "speech_event_id": "evt_closeout_macho",
+                    "delivery_target_match": True,
+                    "evidence_ref": "plugin/surface/closeout-macho",
+                },
+                {
+                    "participant": "seohwang",
+                    "closeout_turn": 5,
+                    "speech_event_id": "evt_closeout_seohwang",
+                    "delivery_target_match": True,
+                    "evidence_ref": "plugin/surface/closeout-seohwang",
+                },
+            ],
+            "evidence_ref": "plugin/surface/participant-closeouts",
+        },
+        "moderator_synthesis": {
+            "moderator_synthesis_pass": True,
+            "speech_event_id": "evt_synthesis_1",
+            "delivery_target_match": True,
+            "evidence_ref": "plugin/surface/moderator-synthesis",
+        },
+        "delivery_targets": {
+            "delivery_target_pass": True,
+            "rows": [
+                {
+                    "turn": 0,
+                    "speaker_selected_event_id": "evt_select_opening",
+                    "speech_event_id": "evt_opening_1",
+                    "expected_delivery_target": "chat-123:thread-456",
+                    "posted_delivery_target": "chat-123:thread-456",
+                    "evidence_ref": "plugin/surface/delivery-target-opening",
+                },
+                {
+                    "turn": 1,
+                    "speaker_selected_event_id": "evt_select_1",
+                    "speech_event_id": "evt_speech_1",
+                    "expected_delivery_target": "chat-123:thread-456",
+                    "posted_delivery_target": "chat-123:thread-456",
+                    "evidence_ref": "plugin/surface/delivery-target-turn-1",
+                },
+                {
+                    "turn": 2,
+                    "speaker_selected_event_id": "evt_select_2",
+                    "speech_event_id": "evt_speech_2",
+                    "expected_delivery_target": "chat-123:thread-456",
+                    "posted_delivery_target": "chat-123:thread-456",
+                    "evidence_ref": "plugin/surface/delivery-target-turn-2",
+                },
+                {
+                    "turn": 3,
+                    "speaker_selected_event_id": "evt_select_3",
+                    "speech_event_id": "evt_speech_3",
+                    "expected_delivery_target": "chat-123:thread-456",
+                    "posted_delivery_target": "chat-123:thread-456",
+                    "evidence_ref": "plugin/surface/delivery-target-turn-3",
+                },
+                {
+                    "turn": 4,
+                    "speaker_selected_event_id": "evt_select_closeout_macho",
+                    "speech_event_id": "evt_closeout_macho",
+                    "expected_delivery_target": "chat-123:thread-456",
+                    "posted_delivery_target": "chat-123:thread-456",
+                    "evidence_ref": "plugin/surface/delivery-target-closeout-macho",
+                },
+                {
+                    "turn": 5,
+                    "speaker_selected_event_id": "evt_select_closeout_seohwang",
+                    "speech_event_id": "evt_closeout_seohwang",
+                    "expected_delivery_target": "chat-123:thread-456",
+                    "posted_delivery_target": "chat-123:thread-456",
+                    "evidence_ref": "plugin/surface/delivery-target-closeout-seohwang",
+                },
+                {
+                    "turn": 6,
+                    "speaker_selected_event_id": "evt_select_synthesis",
+                    "speech_event_id": "evt_synthesis_1",
+                    "expected_delivery_target": "chat-123:thread-456",
+                    "posted_delivery_target": "chat-123:thread-456",
+                    "evidence_ref": "plugin/surface/delivery-target-synthesis",
+                },
+            ],
+            "evidence_ref": "plugin/surface/delivery-targets",
+        },
+        "prompt_envelope": {
+            "prompt_envelope_pass": True,
+            "content_audit_separated": True,
+            "control_metadata_leaked": False,
+            "evidence_ref": "plugin/surface/prompt-envelope",
+        },
+        "dialogue_mode": {
+            "dialogue_mode_pass": True,
+            "participant_to_participant": True,
+            "moderator_substitute_turns": False,
+            "evidence_ref": "plugin/surface/dialogue-mode",
+        },
+        "drift": {
+            "status": "repair_forward",
+            "drift_detected": True,
+            "repaired_forward": True,
+            "unresolved_closeout": False,
+            "evidence_ref": "plugin/surface/drift-status",
+        },
+        "final_fail_closed": {
+            "final_fail_closed_pass": True,
+            "final_status": "repair_forward",
+            "fail_closed": True,
+            "evidence_ref": "plugin/surface/fail-closed-final",
+        },
+    }
+    return plan
+
+
 def complete_runfix_015_plan() -> dict[str, object]:
     plan = complete_runfix_008_plan()
     plan["task_id"] = "plugin/RUNFIX-015"
@@ -464,7 +696,7 @@ def test_complete_dry_run_is_ready_for_approval_without_live_readiness() -> None
     assert {item["fallback"] for item in report["fallback_audit"]} == {
         "hidden_plugin_to_cli_subprocess_fallback",
         "current_hermes_or_discord_inference",
-        "manual_profile_replies_as_full_kan_success",
+        "manual_profile_replies_as_full_atn_success",
         "daemon_startup_or_discovery",
         "profile_gateway_provider_auth_token_model_mutation",
         "codex_exec",
@@ -698,9 +930,490 @@ def test_runfix2_005_complete_integrated_proof_is_ready_without_live_readiness()
     assert proof["clean_transcript_pass"]["status"] == "proven"
     assert proof["visible_closeout_pass"]["status"] == "proven"
     assert proof["fallback_profile_pass"]["status"] == "diagnostic_only"
-    assert proof["fallback_profile_pass"]["full_kan_success"] is False
+    assert proof["fallback_profile_pass"]["full_atn_success"] is False
     assert proof["discussion_quality_pass"]["status"] == "proven"
     assert proof["final_labels"]["status"] == "proven"
+
+
+def test_runfix3_003_complete_live_thread_proof_is_ready_without_live_readiness() -> None:
+    report = build_discussion_activation_plan(complete_runfix3_003_plan())
+
+    assert report["status"] == "ready_to_start"
+    assert report["task_id"] == "plugin/RUNFIX3-003"
+    assert report["behavior_task_id"] == "plugin/RUNFIX3-003"
+    assert report["live_readiness"] is False
+    assert report["visible_surface_readiness_report"]["exact_origin_binding_proven"] is True
+    assert report["visible_surface_readiness_report"]["visible_turn_count_proven"] is True
+    assert report["integrated_discussion_proof_report"]["status"] == "not_required"
+    proof = report["runfix3_live_thread_proof_report"]
+    assert proof["status"] == "proven"
+    assert proof["participant_closeout_coverage"] == {
+        "status": "proven",
+        "expected_participants": ["macho", "seohwang"],
+        "closed_out_participants": ["macho", "seohwang"],
+        "missing_participants": [],
+        "evidence_ref": "plugin/surface/participant-closeouts",
+    }
+    assert proof["moderator_synthesis_coverage"] == {
+        "status": "proven",
+        "synthesis_posted": True,
+        "evidence_ref": "plugin/surface/moderator-synthesis",
+    }
+    assert proof["delivery_target_proof"]["status"] == "proven"
+    assert proof["delivery_target_proof"]["aggregate_match"] is True
+    assert proof["delivery_target_proof"]["evidence_ref"] == "plugin/surface/delivery-targets"
+    assert all(row["match"] is True for row in proof["delivery_target_rows"])
+    assert proof["prompt_envelope_proof"] == {
+        "status": "proven",
+        "content_audit_separated": True,
+        "control_metadata_leaked": False,
+        "evidence_ref": "plugin/surface/prompt-envelope",
+    }
+    assert proof["dialogue_mode_proof"] == {
+        "status": "proven",
+        "participant_to_participant": True,
+        "moderator_substitute_turns": False,
+        "evidence_ref": "plugin/surface/dialogue-mode",
+    }
+    assert proof["drift_status"] == {
+        "status": "proven",
+        "drift_detected": True,
+        "repaired_forward": True,
+        "unresolved_closeout": False,
+        "evidence_ref": "plugin/surface/drift-status",
+    }
+    assert proof["fail_closed_final_status"] == {
+        "status": "proven",
+        "final_status": "repair_forward",
+        "fail_closed": True,
+        "evidence_ref": "plugin/surface/fail-closed-final",
+    }
+
+
+def test_runfix3_003_wrong_exact_origin_binding_fails_closed() -> None:
+    plan = complete_runfix3_003_plan()
+    readiness = plan["visible_surface_readiness"]
+    assert isinstance(readiness, dict)
+    readiness["observed_thread_id"] = "thread-wrong"
+    readiness["exact_origin_binding"] = False
+
+    report = build_discussion_activation_plan(plan)
+
+    assert report["status"] == "blocked"
+    assert report["visible_surface_readiness_report"]["exact_origin_binding_proven"] is False
+    assert any(
+        blocker["code"] == "live_visible_surface_not_ready" for blocker in report["blockers"]
+    )
+
+
+def test_runfix3_003_exact_origin_flag_still_requires_matching_observed_target() -> None:
+    plan = complete_runfix3_003_plan()
+    readiness = plan["visible_surface_readiness"]
+    assert isinstance(readiness, dict)
+    readiness["observed_thread_id"] = "thread-wrong"
+
+    report = build_discussion_activation_plan(plan)
+
+    assert report["status"] == "blocked"
+    assert report["visible_surface_readiness_report"]["exact_origin_binding_status"] == "mismatched"
+    assert report["visible_surface_readiness_report"]["exact_origin_binding_proven"] is False
+    assert any(
+        blocker["code"] == "live_visible_surface_not_ready" for blocker in report["blockers"]
+    )
+
+
+def test_runfix3_003_exact_origin_flag_without_ids_fails_closed() -> None:
+    plan = complete_runfix3_003_plan()
+    request_context = plan["request_context"]
+    readiness = plan["visible_surface_readiness"]
+    assert isinstance(request_context, dict)
+    assert isinstance(readiness, dict)
+    request_context.pop("chat_id")
+    request_context.pop("thread_id")
+    readiness.pop("observed_chat_id")
+    readiness.pop("observed_thread_id")
+
+    report = build_discussion_activation_plan(plan)
+
+    assert report["status"] == "blocked"
+    assert report["visible_surface_readiness_report"]["exact_origin_binding_status"] == "unproven"
+    assert report["visible_surface_readiness_report"]["exact_origin_binding_proven"] is False
+    assert any(
+        blocker["code"] == "live_visible_surface_not_ready" for blocker in report["blockers"]
+    )
+
+
+def test_runfix3_003_visible_turn_formula_mismatch_fails_closed() -> None:
+    plan = complete_runfix3_003_plan()
+    readiness = plan["visible_surface_readiness"]
+    assert isinstance(readiness, dict)
+    readiness["visible_turns_expected"] = 6
+    readiness["visible_turns_posted"] = 6
+
+    report = build_discussion_activation_plan(plan)
+
+    assert report["status"] == "ready_to_start"
+    assert report["visible_surface_readiness_report"]["visible_turn_count_proven"] is False
+    assert report["runfix3_live_thread_proof_report"]["status"] == "blocked"
+    assert any(
+        blocker["code"] == "runfix3_visible_turn_count_unproven" for blocker in report["blockers"]
+    )
+
+
+def test_runfix3_003_missing_formula_inputs_fails_closed() -> None:
+    plan = complete_runfix3_003_plan()
+    readiness = plan["visible_surface_readiness"]
+    assert isinstance(readiness, dict)
+    readiness.pop("max_discussion_turns")
+    readiness.pop("participant_count")
+
+    report = build_discussion_activation_plan(plan)
+
+    assert report["status"] == "ready_to_start"
+    assert report["visible_surface_readiness_report"]["visible_turn_count_proven"] is False
+    assert report["runfix3_live_thread_proof_report"]["status"] == "blocked"
+    assert any(
+        blocker["code"] == "runfix3_visible_turn_count_unproven" for blocker in report["blockers"]
+    )
+
+
+def test_runfix3_003_missing_live_thread_proof_does_not_block_start() -> None:
+    plan = complete_runfix3_003_plan()
+    plan.pop("runfix3_live_thread_proof")
+
+    report = build_discussion_activation_plan(plan)
+
+    assert report["status"] == "ready_to_start"
+    assert report["runfix3_live_thread_proof_report"]["status"] == "blocked"
+    assert any(
+        blocker["code"] == "runfix3_live_thread_proof_missing" for blocker in report["blockers"]
+    )
+
+
+def test_runfix3_003_artifact_only_mode_does_not_require_live_thread_proof() -> None:
+    plan = complete_runfix3_003_plan()
+    plan["request_context"] = {
+        "source": "discord_thread",
+        "requested_output_mode": "artifact_only",
+        "artifact_only_confirmed": True,
+    }
+    plan.pop("visible_surface_readiness")
+    plan.pop("runfix3_live_thread_proof")
+
+    report = build_discussion_activation_plan(plan)
+
+    assert report["status"] == "ready_for_approval"
+    assert report["runfix3_live_thread_proof_report"]["status"] == "not_required"
+
+
+def test_runfix3_003_missing_visible_author_guard_does_not_block_start() -> None:
+    report = build_discussion_activation_plan(complete_runfix3_003_plan())
+
+    assert report["status"] == "ready_to_start"
+    assert report["visible_author_guard_report"]["status"] == "not_required"
+
+
+def test_runfix3_003_missing_registry_membership_blocks_ready_to_start() -> None:
+    plan = complete_runfix3_003_plan()
+    plan.pop("daemon_registry_membership")
+
+    report = build_discussion_activation_plan(plan)
+
+    assert report["status"] == "blocked"
+    assert any(
+        blocker["code"] == "daemon_registry_membership_missing" for blocker in report["blockers"]
+    )
+
+
+def test_runfix3_003_missing_participant_profiles_returns_structured_blocker() -> None:
+    plan = complete_runfix3_003_plan()
+    plan.pop("participant_profiles")
+
+    report = build_discussion_activation_plan(plan)
+
+    assert report["status"] == "blocked"
+    assert report["runfix3_live_thread_proof_report"]["status"] == "blocked"
+    assert any(blocker["code"] == "participant_profiles_missing" for blocker in report["blockers"])
+
+
+def test_runfix3_003_excluded_requested_roster_blocks_start() -> None:
+    plan = complete_runfix3_003_plan()
+    participant_profiles = plan["participant_profiles"]
+    assert isinstance(participant_profiles, list)
+    second_profile = participant_profiles[1]
+    assert isinstance(second_profile, dict)
+    second_profile["bot_to_bot_enabled"] = True
+
+    report = build_discussion_activation_plan(plan)
+
+    assert report["status"] == "blocked"
+    assert report["excluded_profiles"][0]["profile"] == "seohwang"
+
+
+def test_runfix3_003_partial_delivery_coverage_fails_closed() -> None:
+    plan = complete_runfix3_003_plan()
+    proof = plan["runfix3_live_thread_proof"]
+    assert isinstance(proof, dict)
+    delivery_targets = proof["delivery_targets"]
+    assert isinstance(delivery_targets, dict)
+    rows = delivery_targets["rows"]
+    assert isinstance(rows, list)
+    delivery_targets["rows"] = rows[:4]
+
+    report = build_discussion_activation_plan(plan)
+
+    assert report["status"] == "ready_to_start"
+    assert (
+        report["runfix3_live_thread_proof_report"]["delivery_target_proof"]["aggregate_match"]
+        is False
+    )
+    assert any(
+        blocker["code"] == "runfix3_delivery_target_mismatch" for blocker in report["blockers"]
+    )
+
+
+def test_runfix3_003_missing_participant_closeout_fails_closed() -> None:
+    plan = complete_runfix3_003_plan()
+    proof = plan["runfix3_live_thread_proof"]
+    assert isinstance(proof, dict)
+    closeout = proof["participant_closeout"]
+    assert isinstance(closeout, dict)
+    rows = closeout["rows"]
+    assert isinstance(rows, list)
+    closeout["participant_closeout_pass"] = False
+    closeout["rows"] = rows[:1]
+
+    report = build_discussion_activation_plan(plan)
+
+    assert report["status"] == "ready_to_start"
+    assert report["runfix3_live_thread_proof_report"]["participant_closeout_coverage"][
+        "status"
+    ] in {
+        "blocked",
+        "unproven",
+    }
+    assert any(
+        blocker["code"] == "runfix3_participant_closeout_unproven" for blocker in report["blockers"]
+    )
+
+
+def test_runfix3_003_missing_moderator_synthesis_fails_closed() -> None:
+    plan = complete_runfix3_003_plan()
+    proof = plan["runfix3_live_thread_proof"]
+    assert isinstance(proof, dict)
+    proof.pop("moderator_synthesis")
+
+    report = build_discussion_activation_plan(plan)
+
+    assert report["status"] == "ready_to_start"
+    assert report["runfix3_live_thread_proof_report"]["moderator_synthesis_coverage"]["status"] in {
+        "blocked",
+        "unproven",
+    }
+    assert any(
+        blocker["code"] == "runfix3_moderator_synthesis_coverage_missing"
+        for blocker in report["blockers"]
+    )
+
+
+def test_runfix3_003_parent_channel_fallback_remains_startable_when_approved() -> None:
+    plan = complete_runfix3_003_plan()
+    readiness = plan["visible_surface_readiness"]
+    assert isinstance(readiness, dict)
+    readiness.pop("thread_id")
+    readiness.pop("observed_chat_id")
+    readiness.pop("observed_thread_id")
+    readiness["mode"] = "parent_channel_fallback"
+    readiness["parent_channel_id"] = "chat-123"
+    readiness["fallback_reason"] = "thread posting unsupported"
+    readiness["exact_origin_binding"] = False
+
+    report = build_discussion_activation_plan(plan)
+
+    assert report["status"] == "ready_to_start"
+    assert (
+        report["visible_surface_readiness_report"]["exact_origin_binding_status"]
+        == "parent_channel_fallback"
+    )
+    assert report["visible_surface_readiness_report"]["exact_origin_binding_proven"] is True
+
+
+def test_runfix3_003_parent_channel_fallback_with_wrong_observed_target_fails_closed() -> None:
+    plan = complete_runfix3_003_plan()
+    readiness = plan["visible_surface_readiness"]
+    assert isinstance(readiness, dict)
+    readiness.pop("thread_id")
+    readiness["mode"] = "parent_channel_fallback"
+    readiness["parent_channel_id"] = "chat-123"
+    readiness["fallback_reason"] = "thread posting unsupported"
+    readiness["exact_origin_binding"] = False
+    readiness["observed_chat_id"] = "wrong-chat"
+    readiness["observed_thread_id"] = "thread-wrong"
+
+    report = build_discussion_activation_plan(plan)
+
+    assert report["status"] == "blocked"
+    assert report["visible_surface_readiness_report"]["exact_origin_binding_status"] == "mismatched"
+    assert report["visible_surface_readiness_report"]["exact_origin_binding_proven"] is False
+    assert any(
+        blocker["code"] == "live_visible_surface_not_ready" for blocker in report["blockers"]
+    )
+
+
+def test_runfix3_003_delivery_target_mismatch_fails_closed() -> None:
+    plan = complete_runfix3_003_plan()
+    proof = plan["runfix3_live_thread_proof"]
+    assert isinstance(proof, dict)
+    delivery_targets = proof["delivery_targets"]
+    assert isinstance(delivery_targets, dict)
+    rows = delivery_targets["rows"]
+    assert isinstance(rows, list)
+    first_row = rows[0]
+    assert isinstance(first_row, dict)
+    delivery_targets["delivery_target_pass"] = False
+    first_row["posted_delivery_target"] = "chat-123:thread-wrong"
+
+    report = build_discussion_activation_plan(plan)
+
+    assert report["status"] == "ready_to_start"
+    assert (
+        report["runfix3_live_thread_proof_report"]["delivery_target_proof"]["aggregate_match"]
+        is False
+    )
+    assert any(
+        blocker["code"] == "runfix3_delivery_target_mismatch" for blocker in report["blockers"]
+    )
+
+
+def test_runfix3_003_delivery_target_flag_does_not_override_string_mismatch() -> None:
+    plan = complete_runfix3_003_plan()
+    proof = plan["runfix3_live_thread_proof"]
+    assert isinstance(proof, dict)
+    delivery_targets = proof["delivery_targets"]
+    assert isinstance(delivery_targets, dict)
+    rows = delivery_targets["rows"]
+    assert isinstance(rows, list)
+    first_row = rows[0]
+    assert isinstance(first_row, dict)
+    first_row["delivery_target_match"] = True
+    first_row["posted_delivery_target"] = "chat-123:thread-wrong"
+
+    report = build_discussion_activation_plan(plan)
+
+    assert report["status"] == "ready_to_start"
+    assert (
+        report["runfix3_live_thread_proof_report"]["delivery_target_proof"]["aggregate_match"]
+        is False
+    )
+    assert any(
+        blocker["code"] == "runfix3_delivery_target_mismatch" for blocker in report["blockers"]
+    )
+
+
+def test_runfix3_003_self_matching_wrong_delivery_target_fails_closed() -> None:
+    plan = complete_runfix3_003_plan()
+    proof = plan["runfix3_live_thread_proof"]
+    assert isinstance(proof, dict)
+    delivery_targets = proof["delivery_targets"]
+    assert isinstance(delivery_targets, dict)
+    rows = delivery_targets["rows"]
+    assert isinstance(rows, list)
+    first_row = rows[0]
+    assert isinstance(first_row, dict)
+    first_row["expected_delivery_target"] = "wrong-chat:wrong-thread"
+    first_row["posted_delivery_target"] = "wrong-chat:wrong-thread"
+
+    report = build_discussion_activation_plan(plan)
+
+    assert report["status"] == "ready_to_start"
+    assert (
+        report["runfix3_live_thread_proof_report"]["delivery_target_proof"]["aggregate_match"]
+        is False
+    )
+    assert any(
+        blocker["code"] == "runfix3_delivery_target_mismatch" for blocker in report["blockers"]
+    )
+
+
+def test_runfix3_003_prompt_envelope_leakage_fails_closed() -> None:
+    plan = complete_runfix3_003_plan()
+    proof = plan["runfix3_live_thread_proof"]
+    assert isinstance(proof, dict)
+    prompt_envelope = proof["prompt_envelope"]
+    assert isinstance(prompt_envelope, dict)
+    prompt_envelope["prompt_envelope_pass"] = False
+    prompt_envelope["content_audit_separated"] = False
+    prompt_envelope["control_metadata_leaked"] = True
+
+    report = build_discussion_activation_plan(plan)
+
+    assert report["status"] == "ready_to_start"
+    assert report["runfix3_live_thread_proof_report"]["prompt_envelope_proof"] == {
+        "status": "blocked",
+        "content_audit_separated": False,
+        "control_metadata_leaked": True,
+        "evidence_ref": "plugin/surface/prompt-envelope",
+    }
+    assert any(
+        blocker["code"] == "runfix3_prompt_envelope_unproven" for blocker in report["blockers"]
+    )
+
+
+def test_runfix3_003_non_dialogue_prose_fails_closed() -> None:
+    plan = complete_runfix3_003_plan()
+    proof = plan["runfix3_live_thread_proof"]
+    assert isinstance(proof, dict)
+    dialogue_mode = proof["dialogue_mode"]
+    assert isinstance(dialogue_mode, dict)
+    dialogue_mode["dialogue_mode_pass"] = False
+    dialogue_mode["participant_to_participant"] = False
+    dialogue_mode["moderator_substitute_turns"] = True
+
+    report = build_discussion_activation_plan(plan)
+
+    assert report["status"] == "ready_to_start"
+    assert report["runfix3_live_thread_proof_report"]["dialogue_mode_proof"] == {
+        "status": "blocked",
+        "participant_to_participant": False,
+        "moderator_substitute_turns": True,
+        "evidence_ref": "plugin/surface/dialogue-mode",
+    }
+    assert any(
+        blocker["code"] == "runfix3_dialogue_mode_unproven" for blocker in report["blockers"]
+    )
+
+
+def test_runfix3_003_unresolved_drift_fails_closed() -> None:
+    plan = complete_runfix3_003_plan()
+    proof = plan["runfix3_live_thread_proof"]
+    assert isinstance(proof, dict)
+    drift = proof["drift"]
+    assert isinstance(drift, dict)
+    final_fail_closed = proof["final_fail_closed"]
+    assert isinstance(final_fail_closed, dict)
+    drift["status"] = "unresolved"
+    drift["repaired_forward"] = False
+    drift["unresolved_closeout"] = True
+    final_fail_closed["final_fail_closed_pass"] = False
+    final_fail_closed["final_status"] = "unresolved"
+
+    report = build_discussion_activation_plan(plan)
+
+    assert report["status"] == "ready_to_start"
+    assert report["runfix3_live_thread_proof_report"]["drift_status"] == {
+        "status": "blocked",
+        "drift_detected": True,
+        "repaired_forward": False,
+        "unresolved_closeout": True,
+        "evidence_ref": "plugin/surface/drift-status",
+    }
+    assert report["runfix3_live_thread_proof_report"]["fail_closed_final_status"] == {
+        "status": "blocked",
+        "final_status": "unresolved",
+        "fail_closed": True,
+        "evidence_ref": "plugin/surface/fail-closed-final",
+    }
+    assert any(blocker["code"] == "runfix3_drift_unproven" for blocker in report["blockers"])
 
 
 def test_runfix2_005_missing_integrated_proof_fails_closed() -> None:
@@ -1196,7 +1909,7 @@ def test_runfix_008_exposes_operator_argue_and_fallback_evidence() -> None:
     assert operator_evidence["fallback_disclosure"] == {
         "status": "diagnostic_only",
         "label": "fallback_profile_pass",
-        "full_kan_success": False,
+        "full_atn_success": False,
         "evidence_ref": "manual/profile-diagnostic-reply",
         "missing_evidence": ["visible delivery evidence"],
     }
@@ -1262,6 +1975,14 @@ def test_discord_origin_runfix_010_defaults_to_live_visible_blocks_without_surfa
     assert report["visible_surface_readiness_report"] == {
         "requested_output_mode": "live_visible_thread",
         "request_source": "discord_thread",
+        "exact_origin_binding_status": "unproven",
+        "exact_origin_binding_proven": False,
+        "requested_chat_id": None,
+        "requested_thread_id": None,
+        "observed_chat_id": None,
+        "observed_thread_id": None,
+        "origin_binding_evidence_ref": None,
+        "approved_delivery_target": None,
         "surface_bound": False,
         "turn_delivery_proven": False,
         "visible_closeout_proven": False,
@@ -1269,8 +1990,11 @@ def test_discord_origin_runfix_010_defaults_to_live_visible_blocks_without_surfa
         "cli_actor_speech_only": False,
         "visible_turns_expected": 0,
         "visible_turns_posted": 0,
+        "visible_turns_formula_expected": None,
+        "visible_turn_count_proven": False,
         "ready": False,
     }
+
     assert {
         "code": "visible_surface_readiness_missing",
         "owner": "operator/Hermes-gateway",
@@ -1280,6 +2004,21 @@ def test_discord_origin_runfix_010_defaults_to_live_visible_blocks_without_surfa
             "or explicitly confirm artifact-only mode before creating the session."
         ),
     } in report["blockers"]
+
+
+def test_runfix_010_transcript_export_only_confirmation_is_accepted() -> None:
+    plan = complete_runfix_008_plan()
+    plan["task_id"] = "plugin/RUNFIX-010"
+    plan["request_context"] = {
+        "source": "discord_thread",
+        "requested_output_mode": "transcript/export-only",
+        "artifact_only_confirmed": True,
+    }
+
+    report = build_discussion_activation_plan(plan)
+
+    assert report["status"] == "ready_for_approval"
+    assert report["requested_output_mode"] == "artifact_only"
 
 
 def test_runfix_010_accepts_unambiguous_registry_reconcile_plan() -> None:
@@ -1490,14 +2229,24 @@ def test_runfix_010_live_visible_ready_requires_real_profile_gateway_and_not_cli
     assert registry_report["ready"] is True
     assert registry_report["present"] == ["macho"]
     assert report["final_report_contract"] == {
-        "lifecycle": "kan_lifecycle_finalized true/false from daemon/control evidence",
+        "lifecycle": "ATN lifecycle finalized true/false from daemon/control evidence",
         "discussion_quality": (
             "discussion_quality_pass true/false from explicit ARGUE relation evidence, "
             "separate from lifecycle_pass"
         ),
         "visible_turns_posted": "discord visible turns posted N/expected",
         "real_profile_gateway_replies": "true/false from explicit profile/gateway evidence",
+        "cli_actor_speech_only": "true/false from explicit visible-surface evidence",
         "selected_runner_labels": "selected-runner evidence labels separate from lifecycle",
+        "participant_closeout_coverage": (
+            "covered/missing/unproven from explicit per-participant closeout evidence"
+        ),
+        "moderator_synthesis_coverage": (
+            "covered/missing/unproven from explicit moderator synthesis evidence"
+        ),
+        "closeout_outcome": (
+            "repair_forward/unresolved/unproven from explicit fail-closed closeout evidence"
+        ),
         "shared_default_author_fallback_status": (
             "none/shared_default_detected/unproven from visible_author_guard"
         ),

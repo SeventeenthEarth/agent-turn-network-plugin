@@ -317,6 +317,7 @@ def test_discussion_activation_plan_schema_is_pure_local_doctor_tool() -> None:
             "plugin/RUNFIX-017",
             "plugin/RUNFIX-019",
             "plugin/RUNFIX2-005",
+            "plugin/RUNFIX3-003",
             "plugin/ATN-005",
         ],
     }
@@ -337,7 +338,9 @@ def test_discussion_activation_plan_schema_is_pure_local_doctor_tool() -> None:
     request_context = plan_schema["properties"]["request_context"]
     assert "live_visible_thread" in request_context["description"]
     visible_readiness = plan_schema["properties"]["visible_surface_readiness"]
+    assert "exact origin binding" in visible_readiness["description"]
     assert "real profile/gateway replies" in visible_readiness["description"]
+    assert "expected/posted visible turn counts" in visible_readiness["description"]
     runtime_readiness = plan_schema["properties"]["participant_runtime_readiness"]
     assert "control/RUNFIX-011" in runtime_readiness["description"]
     assert "subscriber presence" in runtime_readiness["description"]
@@ -355,6 +358,15 @@ def test_discussion_activation_plan_schema_is_pure_local_doctor_tool() -> None:
     assert "max_discussion_turns + participant_count + 2" in integrated_proof["description"]
     assert "Manual/fallback/profile" in integrated_proof["description"]
     assert "final_labels" in integrated_proof["description"]
+    runfix3_live_thread_proof = plan_schema["properties"]["runfix3_live_thread_proof"]
+    assert "plugin/RUNFIX3-003" in runfix3_live_thread_proof["description"]
+    assert "participant closeout" in runfix3_live_thread_proof["description"]
+    assert "moderator synthesis" in runfix3_live_thread_proof["description"]
+    assert "delivery target" in runfix3_live_thread_proof["description"]
+    assert "prompt envelope" in runfix3_live_thread_proof["description"]
+    assert "dialogue mode" in runfix3_live_thread_proof["description"]
+    assert "drift" in runfix3_live_thread_proof["description"]
+    assert "fail-closed final status" in runfix3_live_thread_proof["description"]
     evidence_labels = plan_schema["properties"]["evidence_labels"]
     assert set(evidence_labels["properties"]) == {
         "lifecycle_pass",

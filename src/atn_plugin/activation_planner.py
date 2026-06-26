@@ -22,6 +22,7 @@ RUNFIX_015_TASK_ID: Final = "plugin/RUNFIX-015"
 RUNFIX_017_TASK_ID: Final = "plugin/RUNFIX-017"
 RUNFIX_019_TASK_ID: Final = "plugin/RUNFIX-019"
 RUNFIX2_005_TASK_ID: Final = "plugin/RUNFIX2-005"
+RUNFIX3_003_TASK_ID: Final = "plugin/RUNFIX3-003"
 ATN_005_TASK_ID: Final = "plugin/ATN-005"
 SUPPORTED_TASK_IDS: Final[frozenset[str]] = frozenset(
     {
@@ -34,6 +35,7 @@ SUPPORTED_TASK_IDS: Final[frozenset[str]] = frozenset(
         RUNFIX_017_TASK_ID,
         RUNFIX_019_TASK_ID,
         RUNFIX2_005_TASK_ID,
+        RUNFIX3_003_TASK_ID,
         ATN_005_TASK_ID,
     }
 )
@@ -81,7 +83,7 @@ def build_discussion_activation_plan(plan: Mapping[str, object]) -> JsonObject:
             "plan.task_id must be plugin/RUNFIX-006, plugin/RUNFIX-007, "
             "plugin/RUNFIX-008, plugin/RUNFIX-010, plugin/RUNFIX-012, "
             "plugin/RUNFIX-015, plugin/RUNFIX-017, plugin/RUNFIX-019, "
-            "plugin/RUNFIX2-005, or plugin/ATN-005"
+            "plugin/RUNFIX2-005, plugin/RUNFIX3-003, or plugin/ATN-005"
         )
 
     blockers: list[JsonObject] = []
@@ -159,12 +161,39 @@ def build_discussion_activation_plan(plan: Mapping[str, object]) -> JsonObject:
     visible_author_guard = _visible_author_guard_report(
         source.get("visible_author_guard"),
         eligible_profiles=eligible_profiles,
+        requested_output_mode=cast(str, visible_surface_readiness["requested_output_mode"]),
         task_id=task_id,
         blockers=blockers,
     )
     integrated_discussion_proof = _integrated_discussion_proof_report(
         source.get("integrated_discussion_proof"),
         task_id=task_id,
+        blockers=blockers,
+    )
+    runfix3_live_thread_proof = _runfix3_live_thread_proof_report(
+        source.get("runfix3_live_thread_proof"),
+        task_id=task_id,
+        requested_output_mode=cast(str, visible_surface_readiness["requested_output_mode"]),
+        expected_profiles=[
+            profile_name
+            for profile_name in (
+                _optional_string_value(item.get("profile")) for item in eligible_profiles
+            )
+            if profile_name is not None
+        ],
+        expected_visible_turns=(
+            _non_negative_int_or_none(
+                visible_surface_readiness.get("visible_turns_formula_expected")
+            )
+            if task_id == RUNFIX3_003_TASK_ID
+            else _non_negative_int_or_none(visible_surface_readiness.get("visible_turns_expected"))
+        ),
+        approved_delivery_target=_optional_string_value(
+            visible_surface_readiness.get("approved_delivery_target")
+        ),
+        visible_turn_count_proven=(
+            visible_surface_readiness.get("visible_turn_count_proven") is True
+        ),
         blockers=blockers,
     )
 
@@ -182,6 +211,7 @@ def build_discussion_activation_plan(plan: Mapping[str, object]) -> JsonObject:
     status = _status(
         blockers=blockers,
         blocked_profiles=blocked_profiles,
+        excluded_profiles=excluded_profiles,
         eligible_profiles=eligible_profiles,
         requested_output_mode=requested_output_mode,
         request_source=request_source,
@@ -220,6 +250,7 @@ def build_discussion_activation_plan(plan: Mapping[str, object]) -> JsonObject:
         "participant_runtime_readiness_report": participant_runtime_readiness,
         "visible_author_guard_report": visible_author_guard,
         "integrated_discussion_proof_report": integrated_discussion_proof,
+        "runfix3_live_thread_proof_report": runfix3_live_thread_proof,
         "final_report_contract": _final_report_contract(),
         "fallback_audit": cast(list[JsonValue], _fallback_audit()),
         "required_approvals": cast(list[JsonValue], required_approvals),
@@ -249,6 +280,7 @@ def _behavior_task_id(task_id: str) -> str:
         RUNFIX_017_TASK_ID,
         RUNFIX_019_TASK_ID,
         RUNFIX2_005_TASK_ID,
+        RUNFIX3_003_TASK_ID,
         ATN_005_TASK_ID,
     }:
         return task_id
@@ -738,7 +770,8 @@ def _daemon_registry_membership_report(
     blockers: list[JsonObject],
 ) -> JsonObject:
     required = task_id == RUNFIX_019_TASK_ID or (
-        task_id == RUNFIX_010_TASK_ID and requested_output_mode == "live_visible_thread"
+        task_id in {RUNFIX_010_TASK_ID, RUNFIX3_003_TASK_ID}
+        and requested_output_mode == "live_visible_thread"
     )
     required_principals = [
         cast(str, profile.get("principal") or profile.get("profile"))
@@ -794,7 +827,18 @@ def _daemon_registry_membership_report(
     moderator = _optional_string_value(
         membership.get("selected_moderator_principal") or membership.get("moderator")
     )
-    if moderator is not None and moderator not in required_principals:
+    if required and moderator is None:
+        _append_registry_block(
+            report,
+            blockers,
+            code="daemon_registry_moderator_missing",
+            message=(
+                "daemon_registry_membership.selected_moderator_principal or moderator is required "
+                "for live-visible activation."
+            ),
+            required=required,
+        )
+    elif moderator is not None and moderator not in required_principals:
         required_principals.append(moderator)
         report["required_principals"] = cast(list[JsonValue], required_principals)
 
@@ -944,6 +988,14 @@ def _visible_surface_readiness_report(
     report: JsonObject = {
         "requested_output_mode": requested_output_mode,
         "request_source": request_source,
+        "exact_origin_binding_status": "unproven",
+        "exact_origin_binding_proven": False,
+        "requested_chat_id": None,
+        "requested_thread_id": None,
+        "observed_chat_id": None,
+        "observed_thread_id": None,
+        "origin_binding_evidence_ref": None,
+        "approved_delivery_target": None,
         "surface_bound": False,
         "turn_delivery_proven": False,
         "visible_closeout_proven": False,
@@ -951,11 +1003,17 @@ def _visible_surface_readiness_report(
         "cli_actor_speech_only": False,
         "visible_turns_expected": 0,
         "visible_turns_posted": 0,
+        "visible_turns_formula_expected": None,
+        "visible_turn_count_proven": False,
         "ready": False,
     }
-    if task_id != RUNFIX_010_TASK_ID:
+    if task_id not in {RUNFIX_010_TASK_ID, RUNFIX3_003_TASK_ID}:
         report["ready"] = requested_output_mode != "live_visible_thread"
         return report
+
+    if requested_output_mode in {"transcript/export-only", "transcript_export_only"}:
+        requested_output_mode = "artifact_only"
+        report["requested_output_mode"] = requested_output_mode
 
     if requested_output_mode not in {
         "live_visible_thread",
@@ -969,7 +1027,7 @@ def _visible_surface_readiness_report(
                 owner="operator",
                 message=(
                     "requested_output_mode must be live_visible_thread, artifact_only, "
-                    "daemon_cli_actor_speech, or activation_planning_only."
+                    "daemon_cli_actor_speech, transcript/export-only, or activation_planning_only."
                 ),
             )
         )
@@ -986,8 +1044,8 @@ def _visible_surface_readiness_report(
                     owner="operator",
                     message=(
                         "Artifact-only or daemon CLI actor speech mode for a "
-                        "Discord-origin request "
-                        "requires explicit operator confirmation before session creation."
+                        "Discord-origin request requires explicit operator confirmation before "
+                        "session creation."
                     ),
                 )
             )
@@ -1005,15 +1063,18 @@ def _visible_surface_readiness_report(
                 owner="operator/Hermes-gateway",
                 message=(
                     "Discord-origin ATN council requests default to live visible thread output; "
-                    "provide surface binding, turn-posting, profile/gateway reply, "
-                    "and closeout evidence "
-                    "or explicitly confirm artifact-only mode before creating the session."
+                    "provide surface binding, turn-posting, profile/gateway reply, and closeout "
+                    "evidence or explicitly confirm artifact-only mode before creating the session."
                 ),
             )
         )
         return report
 
     readiness = _json_object(readiness_value, label="plan.visible_surface_readiness")
+    origin_binding = _visible_surface_origin_binding_report(
+        request_context=request_context,
+        readiness=readiness,
+    )
     surface_bound = readiness.get("surface_bound") is True and (
         _non_empty_string(readiness.get("thread_id"))
         or (
@@ -1031,6 +1092,23 @@ def _visible_surface_readiness_report(
     cli_actor_speech_only = readiness.get("cli_actor_speech_only") is True
     expected = _non_negative_int(readiness.get("visible_turns_expected"))
     posted = _non_negative_int(readiness.get("visible_turns_posted"))
+    max_discussion_turns = _non_negative_int_or_none(readiness.get("max_discussion_turns"))
+    participant_count = _non_negative_int_or_none(readiness.get("participant_count"))
+    formula_expected = (
+        max_discussion_turns + participant_count + 2
+        if max_discussion_turns is not None and participant_count is not None
+        else None
+    )
+    visible_turn_count_proven = (
+        expected > 0
+        and posted > 0
+        and expected == posted
+        and (
+            task_id != RUNFIX3_003_TASK_ID
+            or (formula_expected is not None and expected == formula_expected)
+        )
+    )
+    report.update(origin_binding)
     report.update(
         {
             "surface_bound": surface_bound,
@@ -1040,9 +1118,13 @@ def _visible_surface_readiness_report(
             "cli_actor_speech_only": cli_actor_speech_only,
             "visible_turns_expected": expected,
             "visible_turns_posted": posted,
+            "visible_turns_formula_expected": formula_expected,
+            "visible_turn_count_proven": visible_turn_count_proven,
         }
     )
     missing: list[str] = []
+    if task_id == RUNFIX3_003_TASK_ID and not origin_binding["exact_origin_binding_proven"]:
+        missing.append("exact origin binding")
     if not surface_bound:
         missing.append("surface binding")
     if not turn_delivery_proven:
@@ -1063,6 +1145,90 @@ def _visible_surface_readiness_report(
         )
     report["ready"] = not missing
     return report
+
+
+def _visible_surface_origin_binding_report(
+    *,
+    request_context: Mapping[str, object],
+    readiness: Mapping[str, object],
+) -> JsonObject:
+    requested_chat_id = _optional_string_value(
+        request_context.get("chat_id") or request_context.get("origin_chat_id")
+    )
+    requested_thread_id = _optional_string_value(
+        request_context.get("thread_id") or request_context.get("origin_thread_id")
+    )
+    observed_chat_id = _optional_string_value(
+        readiness.get("observed_chat_id") or readiness.get("chat_id")
+    )
+    observed_thread_id = _optional_string_value(
+        readiness.get("observed_thread_id") or readiness.get("thread_id")
+    )
+    evidence_ref = _optional_string_value(
+        readiness.get("origin_binding_evidence_ref") or readiness.get("exact_origin_binding_ref")
+    )
+    exact_origin_binding_proven = False
+    exact_origin_binding_status = "unproven"
+    exact_origin_binding_flag = readiness.get("exact_origin_binding") is True
+    origin_values_present = (
+        requested_chat_id is not None
+        and requested_thread_id is not None
+        and observed_chat_id is not None
+        and observed_thread_id is not None
+    )
+    exact_origin_binding_matches = (
+        origin_values_present
+        and requested_chat_id == observed_chat_id
+        and requested_thread_id == observed_thread_id
+        and evidence_ref is not None
+    )
+    parent_channel_id = _optional_string_value(readiness.get("parent_channel_id"))
+    fallback_target_approved = (
+        _optional_string_value(readiness.get("mode")) == "parent_channel_fallback"
+        and requested_chat_id is not None
+        and parent_channel_id is not None
+        and requested_chat_id == parent_channel_id
+        and _non_empty_string(readiness.get("fallback_reason"))
+        and evidence_ref is not None
+    )
+    fallback_observed_mismatch = fallback_target_approved and (
+        (observed_chat_id is not None and observed_chat_id != parent_channel_id)
+        or observed_thread_id is not None
+    )
+    approved_delivery_target = (
+        parent_channel_id
+        if fallback_target_approved
+        else f"{requested_chat_id}:{requested_thread_id}"
+        if requested_chat_id is not None and requested_thread_id is not None
+        else None
+    )
+    if exact_origin_binding_flag and evidence_ref is not None:
+        if exact_origin_binding_matches:
+            exact_origin_binding_proven = True
+            exact_origin_binding_status = "proven"
+        elif fallback_target_approved and not fallback_observed_mismatch:
+            exact_origin_binding_proven = True
+            exact_origin_binding_status = "parent_channel_fallback"
+        elif origin_values_present or fallback_observed_mismatch:
+            exact_origin_binding_status = "mismatched"
+    elif exact_origin_binding_matches:
+        exact_origin_binding_proven = True
+        exact_origin_binding_status = "proven"
+    elif fallback_target_approved and not fallback_observed_mismatch:
+        exact_origin_binding_proven = True
+        exact_origin_binding_status = "parent_channel_fallback"
+    elif origin_values_present or fallback_observed_mismatch:
+        exact_origin_binding_status = "mismatched"
+    return {
+        "exact_origin_binding_status": exact_origin_binding_status,
+        "exact_origin_binding_proven": exact_origin_binding_proven,
+        "requested_chat_id": requested_chat_id,
+        "requested_thread_id": requested_thread_id,
+        "observed_chat_id": observed_chat_id,
+        "observed_thread_id": observed_thread_id,
+        "origin_binding_evidence_ref": evidence_ref,
+        "approved_delivery_target": approved_delivery_target,
+    }
 
 
 def _participant_runtime_readiness_report(
@@ -1342,16 +1508,23 @@ def _visible_author_guard_report(
     value: object,
     *,
     eligible_profiles: list[JsonObject],
+    requested_output_mode: str,
     task_id: str,
     blockers: list[JsonObject],
 ) -> JsonObject:
+    require_evidence = task_id == RUNFIX_015_TASK_ID
+    evaluate_optional_guard = (
+        task_id in {RUNFIX_010_TASK_ID, RUNFIX3_003_TASK_ID}
+        and requested_output_mode == "live_visible_thread"
+        and isinstance(value, Mapping)
+    )
     report: JsonObject = {
         "runfix_task_id": RUNFIX_015_TASK_ID,
         "guard_surface": "pre_council_new_activation_plan",
         "runtime_enforcement": False,
         "operator_must_consume_before_session_creation": True,
         "status": "not_required",
-        "ready": task_id != RUNFIX_015_TASK_ID,
+        "ready": not require_evidence,
         "profile_author_probes": [],
         "env_precedence_proof": _empty_env_precedence_report(),
         "per_turn_visible_evidence": [],
@@ -1365,7 +1538,7 @@ def _visible_author_guard_report(
         },
         "rejected_substitutions": [],
     }
-    if task_id != RUNFIX_015_TASK_ID:
+    if not require_evidence and not evaluate_optional_guard:
         return report
 
     report["status"] = "blocked"
@@ -1376,8 +1549,8 @@ def _visible_author_guard_report(
                 code="visible_author_guard_missing",
                 owner="operator/Hermes-gateway",
                 message=(
-                    "plugin/RUNFIX-015 requires explicit visible_author_guard evidence "
-                    "before council.new/session creation."
+                    "Live-visible Discord-origin start requires explicit visible_author_guard "
+                    "evidence before council.new/session creation."
                 ),
             )
         )
@@ -2050,18 +2223,658 @@ def _append_turn_blocker(
 
 def _final_report_contract() -> JsonObject:
     return {
-        "lifecycle": "kan_lifecycle_finalized true/false from daemon/control evidence",
+        "lifecycle": "ATN lifecycle finalized true/false from daemon/control evidence",
         "discussion_quality": (
             "discussion_quality_pass true/false from explicit ARGUE relation evidence, "
             "separate from lifecycle_pass"
         ),
         "visible_turns_posted": "discord visible turns posted N/expected",
         "real_profile_gateway_replies": "true/false from explicit profile/gateway evidence",
+        "cli_actor_speech_only": "true/false from explicit visible-surface evidence",
         "selected_runner_labels": "selected-runner evidence labels separate from lifecycle",
+        "participant_closeout_coverage": (
+            "covered/missing/unproven from explicit per-participant closeout evidence"
+        ),
+        "moderator_synthesis_coverage": (
+            "covered/missing/unproven from explicit moderator synthesis evidence"
+        ),
+        "closeout_outcome": (
+            "repair_forward/unresolved/unproven from explicit fail-closed closeout evidence"
+        ),
         "shared_default_author_fallback_status": (
             "none/shared_default_detected/unproven from visible_author_guard"
         ),
     }
+
+
+def _runfix3_live_thread_proof_report(
+    value: object,
+    *,
+    task_id: str,
+    requested_output_mode: str,
+    expected_profiles: Sequence[str],
+    expected_visible_turns: int | None,
+    approved_delivery_target: str | None,
+    visible_turn_count_proven: bool,
+    blockers: list[JsonObject],
+) -> JsonObject:
+    report: JsonObject = {
+        "runfix_task_id": RUNFIX3_003_TASK_ID,
+        "status": "not_required",
+        "participant_closeout_coverage": _empty_runfix3_closeout_report(),
+        "moderator_synthesis_coverage": _empty_runfix3_moderator_synthesis_report(),
+        "delivery_target_rows": [],
+        "delivery_target_proof": _empty_runfix3_delivery_target_proof(),
+        "prompt_envelope_proof": _empty_runfix3_prompt_envelope_report(),
+        "dialogue_mode_proof": _empty_runfix3_dialogue_mode_report(),
+        "drift_status": _empty_runfix3_drift_status_report(),
+        "fail_closed_final_status": _empty_runfix3_fail_closed_report(),
+    }
+    if task_id != RUNFIX3_003_TASK_ID or requested_output_mode != "live_visible_thread":
+        return report
+
+    report["status"] = "blocked"
+    if not isinstance(value, Mapping):
+        blockers.append(
+            _blocker(
+                code="runfix3_live_thread_proof_missing",
+                owner="operator",
+                message="plugin/RUNFIX3-003 requires explicit runfix3_live_thread_proof evidence.",
+            )
+        )
+        return report
+
+    proof = _json_object(value, label="plan.runfix3_live_thread_proof")
+    participant_closeout = _runfix3_participant_closeout_report(
+        proof.get("participant_closeout") or proof.get("participant_closeout_coverage"),
+        expected_profiles=expected_profiles,
+        blockers=blockers,
+    )
+    moderator_synthesis = _runfix3_moderator_synthesis_report(
+        proof.get("moderator_synthesis") or proof.get("moderator_synthesis_coverage"),
+        blockers=blockers,
+    )
+    delivery_target = _runfix3_delivery_target_report(
+        proof.get("delivery_targets") or proof.get("delivery_target_proof"),
+        expected_row_count=expected_visible_turns,
+        approved_delivery_target=approved_delivery_target,
+        blockers=blockers,
+    )
+    prompt_envelope = _runfix3_prompt_envelope_report(
+        proof.get("prompt_envelope") or proof.get("prompt_envelope_proof"),
+        blockers=blockers,
+    )
+    dialogue_mode = _runfix3_dialogue_mode_report(
+        proof.get("dialogue_mode") or proof.get("dialogue_mode_proof"),
+        blockers=blockers,
+    )
+    drift_status = _runfix3_drift_status_report(
+        proof.get("drift") or proof.get("drift_status"),
+        blockers=blockers,
+    )
+    fail_closed = _runfix3_fail_closed_report(
+        proof.get("final_fail_closed") or proof.get("fail_closed_proof_status"),
+        blockers=blockers,
+    )
+    report.update(
+        {
+            "participant_closeout_coverage": participant_closeout,
+            "moderator_synthesis_coverage": moderator_synthesis,
+            "delivery_target_rows": delivery_target["rows"],
+            "delivery_target_proof": delivery_target["delivery_target_proof"],
+            "prompt_envelope_proof": prompt_envelope,
+            "dialogue_mode_proof": dialogue_mode,
+            "drift_status": drift_status,
+            "fail_closed_final_status": fail_closed,
+        }
+    )
+    if not visible_turn_count_proven:
+        blockers.append(
+            _blocker(
+                code="runfix3_visible_turn_count_unproven",
+                owner="operator/control",
+                message=(
+                    "visible turns must prove max_discussion_turns + participant_count + 2 "
+                    "before RUNFIX3 live-thread proof can be reported as proven."
+                ),
+            )
+        )
+    required_reports = (
+        participant_closeout,
+        moderator_synthesis,
+        cast(JsonObject, delivery_target["delivery_target_proof"]),
+        prompt_envelope,
+        dialogue_mode,
+        drift_status,
+        fail_closed,
+    )
+    if visible_turn_count_proven and all(item["status"] == "proven" for item in required_reports):
+        report["status"] = "proven"
+    return report
+
+
+def _empty_runfix3_closeout_report() -> JsonObject:
+    return {
+        "status": "unproven",
+        "expected_participants": [],
+        "closed_out_participants": [],
+        "missing_participants": [],
+        "evidence_ref": None,
+    }
+
+
+def _empty_runfix3_moderator_synthesis_report() -> JsonObject:
+    return {
+        "status": "unproven",
+        "synthesis_posted": False,
+        "evidence_ref": None,
+    }
+
+
+def _empty_runfix3_delivery_target_proof() -> JsonObject:
+    return {
+        "status": "unproven",
+        "aggregate_match": False,
+        "evidence_ref": None,
+    }
+
+
+def _empty_runfix3_prompt_envelope_report() -> JsonObject:
+    return {
+        "status": "unproven",
+        "content_audit_separated": False,
+        "control_metadata_leaked": False,
+        "evidence_ref": None,
+    }
+
+
+def _empty_runfix3_dialogue_mode_report() -> JsonObject:
+    return {
+        "status": "unproven",
+        "participant_to_participant": False,
+        "moderator_substitute_turns": False,
+        "evidence_ref": None,
+    }
+
+
+def _empty_runfix3_drift_status_report() -> JsonObject:
+    return {
+        "status": "unproven",
+        "drift_detected": False,
+        "repaired_forward": False,
+        "unresolved_closeout": False,
+        "evidence_ref": None,
+    }
+
+
+def _empty_runfix3_fail_closed_report() -> JsonObject:
+    return {
+        "status": "unproven",
+        "final_status": "unproven",
+        "fail_closed": False,
+        "evidence_ref": None,
+    }
+
+
+def _runfix3_participant_closeout_report(
+    value: object,
+    *,
+    expected_profiles: Sequence[str],
+    blockers: list[JsonObject],
+) -> JsonObject:
+    report = _empty_runfix3_closeout_report()
+    report["expected_participants"] = list(expected_profiles)
+    if not expected_profiles:
+        report["status"] = "blocked"
+        return report
+    if not isinstance(value, Mapping):
+        blockers.append(
+            _blocker(
+                code="runfix3_participant_closeout_missing",
+                owner="operator/control",
+                message="runfix3_live_thread_proof.participant_closeout evidence is required.",
+            )
+        )
+        report["status"] = "blocked"
+        return report
+
+    closeout = _json_object(value, label="plan.runfix3_live_thread_proof.participant_closeout")
+    rows_value = closeout.get("rows")
+    evidence_ref = _optional_string_value(closeout.get("evidence_ref"))
+    closed_out: list[str] = []
+    if isinstance(rows_value, list):
+        for index, item in enumerate(rows_value):
+            if not isinstance(item, Mapping):
+                continue
+            row = _json_object(
+                item, label=f"plan.runfix3_live_thread_proof.participant_closeout.rows[{index}]"
+            )
+            participant = _optional_string_value(row.get("participant"))
+            if participant is None:
+                continue
+            closeout_turn = _json_value_or_none(row.get("closeout_turn"))
+            row_evidence_ref = _optional_string_value(row.get("evidence_ref"))
+            speech_event_id = _optional_string_value(row.get("speech_event_id"))
+            delivery_target_match = row.get("delivery_target_match") is True
+            if (
+                closeout_turn is not None
+                and row_evidence_ref is not None
+                and speech_event_id is not None
+                and delivery_target_match
+            ):
+                closed_out.append(participant)
+    closed_out = sorted(dict.fromkeys(closed_out))
+    missing_participants = [profile for profile in expected_profiles if profile not in closed_out]
+    report.update(
+        {
+            "closed_out_participants": cast(list[JsonValue], closed_out),
+            "missing_participants": cast(list[JsonValue], missing_participants),
+            "evidence_ref": evidence_ref,
+        }
+    )
+    closeout_pass = closeout.get("participant_closeout_pass") is True
+    if closeout_pass and evidence_ref is not None and not missing_participants:
+        report["status"] = "proven"
+        return report
+    blockers.append(
+        _blocker(
+            code="runfix3_participant_closeout_unproven",
+            owner="operator/control",
+            message=(
+                "participant_closeout must prove completed closeouts for every expected "
+                "participant with evidence_ref."
+            ),
+        )
+    )
+    report["status"] = "blocked"
+    return report
+
+
+def _runfix3_moderator_synthesis_report(value: object, *, blockers: list[JsonObject]) -> JsonObject:
+    report = _empty_runfix3_moderator_synthesis_report()
+    if not isinstance(value, Mapping):
+        blockers.append(
+            _blocker(
+                code="runfix3_moderator_synthesis_coverage_missing",
+                owner="operator/control",
+                message="runfix3_live_thread_proof.moderator_synthesis evidence is required.",
+            )
+        )
+        report["status"] = "blocked"
+        return report
+
+    synthesis = _json_object(value, label="plan.runfix3_live_thread_proof.moderator_synthesis")
+    evidence_ref = _optional_string_value(synthesis.get("evidence_ref"))
+    synthesis_posted = (
+        synthesis.get("moderator_synthesis_pass") is True
+        and _non_empty_string(synthesis.get("speech_event_id"))
+        and synthesis.get("delivery_target_match") is True
+        and evidence_ref is not None
+    )
+    report.update({"synthesis_posted": synthesis_posted, "evidence_ref": evidence_ref})
+    if synthesis_posted:
+        report["status"] = "proven"
+        return report
+    blockers.append(
+        _blocker(
+            code="runfix3_moderator_synthesis_coverage_unproven",
+            owner="operator/control",
+            message=(
+                "moderator_synthesis must prove posted synthesis, delivery-target match, and "
+                "evidence_ref."
+            ),
+        )
+    )
+    report["status"] = "blocked"
+    return report
+
+
+def _runfix3_delivery_target_report(
+    value: object,
+    *,
+    expected_row_count: int | None,
+    approved_delivery_target: str | None,
+    blockers: list[JsonObject],
+) -> JsonObject:
+    proof = _empty_runfix3_delivery_target_proof()
+    report: JsonObject = {"rows": [], "delivery_target_proof": proof}
+    if not isinstance(value, Mapping):
+        _append_runfix3_blocker(
+            blockers,
+            proof,
+            code="runfix3_delivery_target_missing",
+            message="runfix3_live_thread_proof.delivery_targets evidence is required.",
+        )
+        return report
+
+    delivery = _json_object(value, label="plan.runfix3_live_thread_proof.delivery_targets")
+    rows_value = delivery.get("rows")
+    rows: list[JsonObject] = []
+    if not isinstance(rows_value, list) or not rows_value:
+        _append_runfix3_blocker(
+            blockers,
+            proof,
+            code="runfix3_delivery_target_rows_missing",
+            message="delivery_targets.rows must list per-turn delivery-target evidence.",
+        )
+        report["rows"] = cast(list[JsonValue], rows)
+        return report
+
+    for index, item in enumerate(rows_value):
+        rows.append(
+            _runfix3_delivery_target_row(
+                item,
+                index=index,
+                approved_delivery_target=approved_delivery_target,
+                blockers=blockers,
+            )
+        )
+    evidence_ref = _optional_string_value(delivery.get("evidence_ref"))
+    aggregate_match = (
+        delivery.get("delivery_target_pass") is True
+        and bool(rows)
+        and all(row["status"] == "proven" for row in rows)
+        and evidence_ref is not None
+        and (expected_row_count is None or len(rows) == expected_row_count)
+    )
+    report.update(
+        {
+            "rows": cast(list[JsonValue], rows),
+            "delivery_target_proof": {
+                "status": "proven" if aggregate_match else "blocked",
+                "aggregate_match": aggregate_match,
+                "evidence_ref": evidence_ref,
+            },
+        }
+    )
+    if aggregate_match:
+        return report
+    blockers.append(
+        _blocker(
+            code="runfix3_delivery_target_mismatch",
+            owner="operator/control",
+            message=(
+                "delivery_targets must prove matching per-turn targets bound to the requested "
+                "origin or approved fallback target, aggregate delivery_target_pass=true, and full "
+                "visible-turn coverage with evidence_ref."
+            ),
+        )
+    )
+    return report
+
+
+def _runfix3_delivery_target_row(
+    value: object,
+    *,
+    index: int,
+    approved_delivery_target: str | None,
+    blockers: list[JsonObject],
+) -> JsonObject:
+    row: JsonObject = {
+        "status": "blocked",
+        "turn": None,
+        "speaker_selected_event_id": None,
+        "speech_event_id": None,
+        "expected_delivery_target": None,
+        "posted_delivery_target": None,
+        "match": False,
+        "evidence_ref": None,
+    }
+    if not isinstance(value, Mapping):
+        blockers.append(
+            _blocker(
+                code="runfix3_delivery_target_row_invalid",
+                owner="operator/control",
+                message=f"delivery_targets.rows[{index}] must be an object.",
+            )
+        )
+        return row
+
+    item = _json_object(
+        value, label=f"plan.runfix3_live_thread_proof.delivery_targets.rows[{index}]"
+    )
+    expected_target = _optional_string_value(item.get("expected_delivery_target"))
+    posted_target = _optional_string_value(item.get("posted_delivery_target"))
+    evidence_ref = _optional_string_value(item.get("evidence_ref"))
+    explicit_match = item.get("delivery_target_match")
+    match = (
+        approved_delivery_target is not None
+        and expected_target is not None
+        and posted_target is not None
+        and expected_target == approved_delivery_target
+        and posted_target == approved_delivery_target
+        and explicit_match is not False
+    )
+    row.update(
+        {
+            "turn": _json_value_or_none(item.get("turn")),
+            "speaker_selected_event_id": _optional_string_value(
+                item.get("speaker_selected_event_id")
+            ),
+            "speech_event_id": _optional_string_value(item.get("speech_event_id")),
+            "expected_delivery_target": expected_target,
+            "posted_delivery_target": posted_target,
+            "match": match,
+            "evidence_ref": evidence_ref,
+        }
+    )
+    if (
+        row["turn"] is not None
+        and row["speaker_selected_event_id"] is not None
+        and row["speech_event_id"] is not None
+        and expected_target is not None
+        and posted_target is not None
+        and evidence_ref is not None
+        and match
+    ):
+        row["status"] = "proven"
+        return row
+    blockers.append(
+        _blocker(
+            code="runfix3_delivery_target_row_unproven",
+            owner="operator/control",
+            message=(
+                f"delivery_targets.rows[{index}] must include turn, speaker_selected_event_id, "
+                "speech_event_id, and expected/posted delivery targets bound to the requested "
+                "origin or approved fallback target with evidence_ref."
+            ),
+        )
+    )
+    return row
+
+
+def _runfix3_prompt_envelope_report(value: object, *, blockers: list[JsonObject]) -> JsonObject:
+    report = _empty_runfix3_prompt_envelope_report()
+    if not isinstance(value, Mapping):
+        _append_runfix3_blocker(
+            blockers,
+            report,
+            code="runfix3_prompt_envelope_missing",
+            message="runfix3_live_thread_proof.prompt_envelope evidence is required.",
+        )
+        return report
+
+    prompt_envelope = _json_object(value, label="plan.runfix3_live_thread_proof.prompt_envelope")
+    evidence_ref = _optional_string_value(prompt_envelope.get("evidence_ref"))
+    content_audit_separated = prompt_envelope.get("content_audit_separated") is True
+    control_metadata_leaked = prompt_envelope.get("control_metadata_leaked") is True
+    report.update(
+        {
+            "content_audit_separated": content_audit_separated,
+            "control_metadata_leaked": control_metadata_leaked,
+            "evidence_ref": evidence_ref,
+        }
+    )
+    if (
+        prompt_envelope.get("prompt_envelope_pass") is True
+        and content_audit_separated
+        and not control_metadata_leaked
+        and evidence_ref is not None
+    ):
+        report["status"] = "proven"
+        return report
+    _append_runfix3_blocker(
+        blockers,
+        report,
+        code="runfix3_prompt_envelope_unproven",
+        message=(
+            "prompt_envelope must prove content_audit_separated=true, "
+            "control_metadata_leaked=false, and evidence_ref."
+        ),
+    )
+    return report
+
+
+def _runfix3_dialogue_mode_report(value: object, *, blockers: list[JsonObject]) -> JsonObject:
+    report = _empty_runfix3_dialogue_mode_report()
+    if not isinstance(value, Mapping):
+        _append_runfix3_blocker(
+            blockers,
+            report,
+            code="runfix3_dialogue_mode_missing",
+            message="runfix3_live_thread_proof.dialogue_mode evidence is required.",
+        )
+        return report
+
+    dialogue_mode = _json_object(value, label="plan.runfix3_live_thread_proof.dialogue_mode")
+    evidence_ref = _optional_string_value(dialogue_mode.get("evidence_ref"))
+    participant_to_participant = dialogue_mode.get("participant_to_participant") is True
+    moderator_substitute_turns = dialogue_mode.get("moderator_substitute_turns") is True
+    report.update(
+        {
+            "participant_to_participant": participant_to_participant,
+            "moderator_substitute_turns": moderator_substitute_turns,
+            "evidence_ref": evidence_ref,
+        }
+    )
+    if (
+        dialogue_mode.get("dialogue_mode_pass") is True
+        and participant_to_participant
+        and not moderator_substitute_turns
+        and evidence_ref is not None
+    ):
+        report["status"] = "proven"
+        return report
+    _append_runfix3_blocker(
+        blockers,
+        report,
+        code="runfix3_dialogue_mode_unproven",
+        message=(
+            "dialogue_mode must prove participant_to_participant=true, "
+            "moderator_substitute_turns=false, and evidence_ref."
+        ),
+    )
+    return report
+
+
+def _runfix3_drift_status_report(value: object, *, blockers: list[JsonObject]) -> JsonObject:
+    report = _empty_runfix3_drift_status_report()
+    if not isinstance(value, Mapping):
+        blockers.append(
+            _blocker(
+                code="runfix3_drift_missing",
+                owner="operator/control",
+                message="runfix3_live_thread_proof.drift evidence is required.",
+            )
+        )
+        report["status"] = "blocked"
+        return report
+
+    drift = _json_object(value, label="plan.runfix3_live_thread_proof.drift")
+    status_value = (
+        _optional_string_value(drift.get("status") or drift.get("drift_status")) or "unknown"
+    )
+    evidence_ref = _optional_string_value(drift.get("evidence_ref"))
+    drift_detected = drift.get("drift_detected") is True or status_value != "clean"
+    repaired_forward = drift.get("repaired_forward") is True or status_value == "repair_forward"
+    unresolved_closeout = drift.get("unresolved_closeout") is True or status_value == "unresolved"
+    report.update(
+        {
+            "drift_detected": drift_detected,
+            "repaired_forward": repaired_forward,
+            "unresolved_closeout": unresolved_closeout,
+            "evidence_ref": evidence_ref,
+        }
+    )
+    if evidence_ref is not None and (
+        status_value == "clean"
+        and not unresolved_closeout
+        or status_value == "repair_forward"
+        and repaired_forward
+        and not unresolved_closeout
+    ):
+        report["status"] = "proven"
+        return report
+    blockers.append(
+        _blocker(
+            code="runfix3_drift_unproven",
+            owner="operator/control",
+            message="drift must resolve cleanly or repair_forward with evidence_ref.",
+        )
+    )
+    report["status"] = "blocked"
+    return report
+
+
+def _runfix3_fail_closed_report(value: object, *, blockers: list[JsonObject]) -> JsonObject:
+    report = _empty_runfix3_fail_closed_report()
+    if not isinstance(value, Mapping):
+        blockers.append(
+            _blocker(
+                code="runfix3_fail_closed_missing",
+                owner="operator/control",
+                message="runfix3_live_thread_proof.final_fail_closed evidence is required.",
+            )
+        )
+        report["status"] = "blocked"
+        return report
+
+    final_fail_closed = _json_object(
+        value, label="plan.runfix3_live_thread_proof.final_fail_closed"
+    )
+    final_status = _optional_string_value(final_fail_closed.get("final_status")) or "unproven"
+    fail_closed = final_fail_closed.get("fail_closed") is True
+    evidence_ref = _optional_string_value(final_fail_closed.get("evidence_ref"))
+    report.update(
+        {
+            "final_status": final_status,
+            "fail_closed": fail_closed,
+            "evidence_ref": evidence_ref,
+        }
+    )
+    if (
+        final_fail_closed.get("final_fail_closed_pass") is True
+        and fail_closed
+        and final_status in {"clean", "repair_forward"}
+        and evidence_ref is not None
+    ):
+        report["status"] = "proven"
+        return report
+    blockers.append(
+        _blocker(
+            code="runfix3_fail_closed_unproven",
+            owner="operator/control",
+            message=(
+                "final_fail_closed must prove fail_closed=true with final_status clean or "
+                "repair_forward and evidence_ref."
+            ),
+        )
+    )
+    report["status"] = "blocked"
+    return report
+
+
+def _append_runfix3_blocker(
+    blockers: list[JsonObject],
+    report: JsonObject,
+    *,
+    code: str,
+    message: str,
+) -> None:
+    blockers.append(_blocker(code=code, owner="operator/control", message=message))
+    report["status"] = "blocked"
+    if "pass" in report:
+        report["pass"] = False
 
 
 def _integrated_discussion_proof_report(
@@ -2094,7 +2907,7 @@ def _integrated_discussion_proof_report(
             "status": "not_supplied",
             "label": "fallback_profile_pass",
             "diagnostic_only": True,
-            "full_kan_success": False,
+            "full_atn_success": False,
             "evidence_ref": None,
             "missing_evidence": [],
         },
@@ -2675,7 +3488,7 @@ def _integrated_fallback_report(value: object) -> JsonObject:
         "status": "not_supplied",
         "label": "fallback_profile_pass",
         "diagnostic_only": True,
-        "full_kan_success": False,
+        "full_atn_success": False,
         "evidence_ref": None,
         "missing_evidence": [],
     }
@@ -2866,7 +3679,7 @@ def _fallback_audit() -> list[JsonObject]:
         ("hidden_plugin_to_cli_subprocess_fallback", "Plugin must not shell out to CLI."),
         ("current_hermes_or_discord_inference", "Planner uses explicit caller evidence only."),
         (
-            "manual_profile_replies_as_full_kan_success",
+            "manual_profile_replies_as_full_atn_success",
             "Manual replies are fallback evidence only.",
         ),
         ("daemon_startup_or_discovery", "Daemon lifecycle/discovery remains outside the plugin."),
@@ -3035,7 +3848,7 @@ def _empty_operator_evidence_report(*, runfix_task_id: str = RUNFIX_008_TASK_ID)
         "fallback_disclosure": {
             "status": "not_supplied",
             "label": "fallback_profile_pass",
-            "full_kan_success": False,
+            "full_atn_success": False,
             "evidence_ref": None,
             "missing_evidence": [],
         },
@@ -3511,7 +4324,7 @@ def _fallback_disclosure_report(
     output: JsonObject = {
         "status": "not_supplied",
         "label": "fallback_profile_pass",
-        "full_kan_success": False,
+        "full_atn_success": False,
         "evidence_ref": None,
         "missing_evidence": [],
     }
@@ -3639,17 +4452,57 @@ def _status(
     *,
     blockers: list[JsonObject],
     blocked_profiles: list[JsonObject],
+    excluded_profiles: list[JsonObject],
     eligible_profiles: list[JsonObject],
     requested_output_mode: str,
     request_source: str,
     task_id: str,
 ) -> str:
-    if any(blocker["code"] != "no_eligible_profiles" for blocker in blockers) or blocked_profiles:
+    ignored_codes = (
+        {
+            "runfix3_live_thread_proof_missing",
+            "runfix3_participant_closeout_missing",
+            "runfix3_participant_closeout_unproven",
+            "runfix3_moderator_synthesis_coverage_missing",
+            "runfix3_moderator_synthesis_coverage_unproven",
+            "runfix3_delivery_target_missing",
+            "runfix3_delivery_target_rows_missing",
+            "runfix3_delivery_target_row_invalid",
+            "runfix3_delivery_target_row_unproven",
+            "runfix3_delivery_target_mismatch",
+            "runfix3_prompt_envelope_missing",
+            "runfix3_prompt_envelope_unproven",
+            "runfix3_dialogue_mode_missing",
+            "runfix3_dialogue_mode_unproven",
+            "runfix3_drift_missing",
+            "runfix3_drift_unproven",
+            "runfix3_fail_closed_missing",
+            "runfix3_fail_closed_unproven",
+            "runfix3_visible_turn_count_unproven",
+        }
+        if task_id == RUNFIX3_003_TASK_ID
+        and requested_output_mode == "live_visible_thread"
+        and request_source.startswith("discord")
+        else set()
+    )
+    blocking_codes = [
+        cast(str, blocker["code"])
+        for blocker in blockers
+        if blocker["code"] != "no_eligible_profiles" and blocker["code"] not in ignored_codes
+    ]
+    if blocking_codes or blocked_profiles:
         return "blocked"
-    if blockers or not eligible_profiles:
+    if (
+        task_id == RUNFIX3_003_TASK_ID
+        and requested_output_mode == "live_visible_thread"
+        and request_source.startswith("discord")
+        and excluded_profiles
+    ):
+        return "blocked"
+    if any(blocker["code"] not in ignored_codes for blocker in blockers) or not eligible_profiles:
         return "not_ready"
     if (
-        task_id == RUNFIX_010_TASK_ID
+        task_id in {RUNFIX_010_TASK_ID, RUNFIX3_003_TASK_ID}
         and requested_output_mode == "live_visible_thread"
         and request_source.startswith("discord")
     ):

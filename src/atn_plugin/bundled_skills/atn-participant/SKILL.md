@@ -16,11 +16,12 @@ Use this skill when you are a selected ATN participant, selected-speaker runner,
 
 ## Authority and boundary
 
-- Canonical ATN discussion/operator source: `atn-plugin/src/atn_plugin/bundled_skills/atn-plugin/SKILL.md`.
+- Canonical ATN discussion/operator sources: `atn-plugin/src/atn_plugin/bundled_skills/atn-plugin/SKILL.md` for plugin boundaries; `atn-plugin/src/atn_plugin/bundled_skills/atn-moderator/SKILL.md` and `atn-plugin/docs/09-skill-and-operator-guide.md` for live-thread/content-plane readiness procedure; daemon/control projection remains authoritative for lifecycle, selection, and selected-runner prompt context.
 - The daemon owns council lifecycle, selection, stream cursors, speech events, and validation.
 - The participant must not simulate another member, substitute a role prompt, or turn wrapper/runtime logs into speech.
 - A Discord/Hermes chat message alone is not council speech. It must be submitted as canonical daemon `speech` through the selected participant path.
 - Fail closed on member mismatch, role substitution, missing selected frame/cursor, insufficient required local context, unknown prior claim targets, or missing runner evidence.
+- Missing agenda or prior context in the selected-runner prompt is a fail-closed condition. Diagnostic output may report the defect, but it must not repair missing control prompt context or invent a substantive turn.
 
 ## Selected-speaker contract
 
@@ -84,6 +85,16 @@ Required stdout form for a council speech runner:
 Pretty/multiline JSON is compatibility input only: the control adapter may normalize it, but participant prompts must still ask for compact JSONL. Delivery/fallback-only JSON remains adapter_command_mismatch, and malformed JSON remains malformed_or_missing_response.
 
 Allowed `contribution_type` / stance vocabulary includes `support`, `challenge`, `refine`, `extend`, `synthesize`, `question`, `risk_addition`, `decision_frame`, and `new_axis` where supported by the tool schema.
+## Missing-context fail-closed diagnostic
+
+When required agenda or prior context is absent from the selected-runner prompt, fail closed instead of inventing generic substantive speech. Until a richer diagnostic event type is approved, keep the response inside the current control-compatible compact JSONL `type: "speech"` contract:
+
+```json
+{"type":"speech","payload":{"speech":"Cannot provide a substantive council turn because the selected-runner prompt omitted required agenda/context; moderator should intervene or cancel.","claims":[{"claim_id":"missing_context","summary":"Required agenda/context was absent from the selected-runner prompt.","kind":"open_question"}],"stance_links":[],"contribution_type":"question","new_axis_reason":null,"evidence":[{"kind":"diagnostic","code":"selected_runner_context_missing"}]}}
+```
+
+This diagnostic is evidence of missing control context only. It does not authorize plugin-side prompt repair, role substitution, or generic fallback speech.
+
 
 ## ARGUE quality rules
 
@@ -122,6 +133,7 @@ Return/request a fail-closed result instead of inventing a response when:
 - `role_substitution` would be required;
 - the selected stream cursor or event id is missing;
 - prior claim graph context is required but absent or ambiguous;
+- required agenda or prior context is absent from the selected-runner prompt;
 - a non-opening quality-required response would be orphaned;
 - runner evidence is missing or terminal evidence is not `participant_response`;
 - visible speech would need to include runtime noise or fallback/manual text.

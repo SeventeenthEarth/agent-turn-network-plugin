@@ -40,6 +40,7 @@ Only `start_blocker` findings block `council.new`. Treat these as start blockers
 - target Discord origin is unspecified or not proven as the exact requested `chat_id:thread_id`;
 - effective bot-to-bot or shared/default-author risk is positively detected and not approved;
 - proceeding requires provider/profile/gateway/auth/token mutation without explicit approval.
+- absent or `blocked` `selected_runner_prompt_evidence` before start for a long or live-visible council.
 
 Treat these as `runtime_evidence_pending`, not automatic start blockers, when the start gate otherwise passes:
 - subscriber presence, cursor ack freshness, heartbeat freshness;
@@ -56,6 +57,9 @@ Treat these as `final_acceptance_unproven`, not start blockers:
 When using `atn_discussion_activation_plan`, materialize collected evidence into planner input fields such as `participant_profiles[].effective_discord.tools_visible`, `participant_profiles[].effective_discord.bot_to_bot_enabled`, `discord_parent_channel.allow_list_inheritance_proven`, and `visible_surface_readiness`; prose notes or prior human knowledge do not count. Treat `start_status: blocked` as the actual `council.new` stop signal. If top-level `status: blocked` while `start_status: ready_to_start`, only RUNFIX3 final acceptance is blocked; the start gate classification still governs whether `council.new` may proceed. Do not treat `atn_discussion_activation_plan.live_readiness=false` as a start blocker by itself because the planner is pure/local and never proves live readiness.
 
 If evidence is missing but can be collected without mutating profile/provider/gateway/auth/token state, collect the probe before asking the user. If collecting evidence requires mutation, credentials, or unavailable external permissions, stop and ask for approval.
+For long or live-visible councils, treat `selected_runner_prompt_evidence` as the named control-to-plugin content-plane handoff from `control/NEWFIX-001`. Plugin hints, visible messages, and participant responses are diagnostic only and cannot replace missing control prompt context.
+
+If the first selected participant speech says the agenda or prior context is missing, intervene or cancel rather than treating that turn as normal discussion progress.
 
 For exact preflight and `council.new` schema pitfalls observed in live-visible ATN operation, see `references/live-visible-preflight-and-council-new.md`.
 For cross-team KLM/ATN participant onboarding and the evidence package needed before a live-visible run, see `references/cross-team-participant-preflight-evidence.md`.

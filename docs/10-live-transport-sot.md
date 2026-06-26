@@ -158,7 +158,7 @@ RUNFIX3 task order and current status:
 
 ## NEXFIX selected-runner prompt envelope remediation
 
-NEXFIX records the 2026-06-26 selected-runner prompt envelope defect where a selected participant received a runner prompt without the locked agenda or prior context even though lifecycle/runtime readiness passed. The SOT lock is `17thHermes:40_outputs/team/macho/atn/2026-06-26-atn-selected-runner-prompt-envelope-nexfix-sot.md`. The epic label `NEXFIX` and task prefix `NEWFIX-*` are an explicit 주군-requested exception. NEXFIX does not authorize production activation, live Discord rollout, default Discord activation, gateway/auth/token/provider/profile/model mutation, daemon startup/discovery, package publication, push, or broad rollout; any live pilot remains separately approved and outside this docs-only task.
+NEXFIX records the 2026-06-26 selected-runner prompt envelope defect where a selected participant received a runner prompt without the locked agenda or prior context even though lifecycle/runtime readiness passed. The SOT lock is `17thHermes:40_outputs/team/macho/atn/2026-06-26-atn-selected-runner-prompt-envelope-nexfix-sot.md`. The epic label `NEXFIX` and task prefix `NEWFIX-*` are an explicit 주군-requested exception. NEXFIX does not authorize production activation, live Discord rollout, default Discord activation, gateway/auth/token/provider/profile/model mutation, daemon startup/discovery, package publication, push, or broad rollout; any live pilot remains separately approved and outside this completed local NEWFIX task.
 
 Plugin-owned contract impact:
 
@@ -172,8 +172,8 @@ NEXFIX task order and current status:
 
 | Global Order | Repo | Task ID | Status | Plugin-owned acceptance |
 |---:|---|---|---|---|
-| 1 | control | NEWFIX-001 | implementation_complete/review_pending | Control-owned projection-backed selected-runner prompt envelope and missing-context fail-closed diagnostics are implemented. Fixed minimum control gates passed: `git diff --check`, `go test ./internal/storage ./internal/daemon -run 'NEWFIX001|SelectedRunnerPrompt|SelectedSpeaker|RUNFIX009|RUNFIX011' -count=1`, and `make test`. Plugin records dependency only. |
-| 2 | plugin | NEWFIX-002 | implementation_complete/review_pending | Plugin-packaged moderator/participant guidance for `selected_runner_prompt_evidence` content-plane readiness preflight, start-blocker classification for missing/blocked evidence before long or live-visible councils, and selected-runner `speech`-contract-compatible missing-context diagnostics is implemented. Fixed minimum plugin gates passed: `git diff --check` and `make test`; focused Blue re-review and acceptance closeout remain pending. |
+| 1 | control | NEWFIX-001 | completed | Control-owned projection-backed selected-runner prompt envelope and missing-context fail-closed diagnostics are accepted after focused color review and traceability repair. Verification passed: `git diff --check`, `go test ./internal/storage ./internal/daemon -run 'NEWFIX001|SelectedRunnerPrompt|SelectedSpeaker|RUNFIX009|RUNFIX011' -count=1`, and `make test`. Plugin records dependency only. |
+| 2 | plugin | NEWFIX-002 | completed | Plugin-packaged moderator/participant guidance for `selected_runner_prompt_evidence` content-plane readiness preflight, start-blocker classification for missing/blocked evidence before long or live-visible councils, and selected-runner `speech`-contract-compatible missing-context diagnostics is accepted after focused color review and traceability repair. Verification passed: `git diff --check` and `make test`; focused color review and Blue synthesis are recorded in `/Users/draccoon/Workspace/SeventeenthEarth/agent-turn-network/feedback.md`. |
 
 
 ### Profile and Discord eligibility policy

@@ -11,7 +11,6 @@ sot_docs:
   - "docs/01-architecture.md"
   - "docs/07-core-compatibility.md"
   - "docs/09-skill-and-operator-guide.md"
-  - "docs/12-atn-plugin-naming-sot.md"
   - "docs/13-agent-turn-network-plugin-naming-sot.md"
 adr_dir: "docs"
 todo_dir: "docs"
@@ -116,4 +115,4 @@ nexfix:
   cross_repo_sequence:
     - "control/NEWFIX-001"
     - "plugin/NEWFIX-002"
-  boundary: "NEXFIX hardens selected-runner content-plane readiness after the 2026-06-26 prompt-envelope defect. Plugin owns packaged moderator/participant guidance for envelope preflight and missing-context diagnostics while control owns the authoritative projection-backed prompt. No live Discord rollout, daemon startup/discovery, production activation, profile/provider/gateway/auth/token/model mutation, hidden CLI fallback, package publication, push, or broad rollout is authorized."
+  boundary: "NEXFIX hardens selected-runner content-plane readiness after the 2026-06-26 prompt-envelope defect. Plugin owns packaged moderator/participant guidance for envelope preflight and missing-context diagnostics while control owns the authoritative projection-backed prompt. No live Discord rollout, default Discord activation, daemon startup/discovery, production activation, profile/provider/gateway/auth/token/model mutation, hidden CLI fallback, package publication, push, or broad rollout is authorized."

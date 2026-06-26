@@ -169,6 +169,26 @@ def test_bundled_hun_skills_define_runner_jsonl_framing_contract() -> None:
     assert "malformed JSON remains malformed_or_missing_response" in normalized
 
 
+def test_bundled_hun_newfix002_packaged_skill_contract_is_present() -> None:
+    moderator_text = read_bundled_skill_text("atn-moderator")
+    participant_text = read_bundled_skill_text("atn-participant")
+    guide_text = (ROOT / "docs" / "09-skill-and-operator-guide.md").read_text(encoding="utf-8")
+
+    assert "NEXFIX content-plane exception" in guide_text
+    assert "absent or `blocked` `selected_runner_prompt_evidence` before start" in moderator_text
+    assert (
+        "Plugin hints, visible messages, and participant responses are diagnostic only and "
+        "cannot replace missing control prompt context." in moderator_text
+    )
+    assert (
+        "intervene or cancel rather than treating that turn as normal discussion progress."
+        in moderator_text
+    )
+    assert "fail closed instead of inventing generic substantive speech" in participant_text
+    assert 'current control-compatible compact JSONL `type: "speech"` contract' in participant_text
+    assert "selected_runner_context_missing" in participant_text
+
+
 def test_bundled_hun_skill_has_valid_hermes_frontmatter() -> None:
     for name in bundled_skill_names():
         text = read_bundled_skill_text(name)

@@ -11,13 +11,10 @@ This reference captures a reusable ATN moderator pattern from a Discord-origin r
    - `plugin/RUNFIX-010` for live visible surface readiness: surface binding, turn-posting probe, visible closeout probe, real profile/gateway replies, and `cli_actor_speech_only=false`.
    - `plugin/RUNFIX-015` for visible author guard: same-path per-profile author probes, shared/default author negative proof, env precedence proof, and per-turn `selected_member/profile_author_id/speech_event_id` linkage.
    - `plugin/RUNFIX-017` when ARGUE quality-required discussion evidence must be evaluated.
-5. If the planner returns `status: blocked`, do not automatically stop before `council.new`. Classify each blocker first:
-   - `start_blocker`: stop before `council.new`;
-   - `runtime_evidence_pending`: proceed when the start gate passes, then collect during lifecycle/turn execution;
-   - `final_acceptance_unproven`: proceed when the start gate passes, then report as a separated closeout label.
+5. If the planner returns `start_status: blocked`, stop before `council.new`. If top-level `status: blocked` while `start_status: ready_to_start`, the discussion start gate passed but RUNFIX3 final acceptance is still fail-closed.
 6. Only `start_blocker` findings block `council.new`. A pure/local planner may report missing evidence because it cannot discover the environment. That is a probe or field-mapping task unless the missing evidence proves an unsafe or impossible start condition.
 7. Do not treat `atn_discussion_activation_plan.live_readiness=false` as a start blocker by itself; the planner never proves live readiness.
-8. `ready_to_start` means the moderator should proceed to `council.new`. `ready_for_approval` is not the live-visible discussion start signal; it applies only to apply/mutation or activation-planning scopes.
+8. `start_status=ready_to_start` means the moderator should proceed to `council.new`. `ready_for_approval` is not the live-visible discussion start signal; it applies only to apply/mutation or activation-planning scopes.
 
 ## Participant profile evidence that is not enough
 

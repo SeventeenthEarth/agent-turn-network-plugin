@@ -1045,13 +1045,16 @@ ATN_DISCUSSION_ACTIVATION_PLAN: Final[dict[str, object]] = {
                             "When task_id is plugin/RUNFIX3-003, "
                             "visible_surface_readiness_report owns exact origin binding plus "
                             "expected/posted visible-turn fields, while "
-                            "runfix3_live_thread_proof_report owns participant closeout "
-                            "coverage, moderator synthesis coverage, per-turn delivery target "
-                            "rows plus aggregate delivery-target proof, prompt envelope proof, "
-                            "dialogue mode proof, drift status, and fail-closed final status. "
-                            "selected_runner_pass remains evidence-derived only, "
-                            "live_readiness stays false, and the planner does not invent "
-                            "control enforcement semantics."
+                            "runfix3_live_thread_proof_report owns separate RUNFIX3 acceptance "
+                            "axes for selected-runner proof, participant closeout coverage, "
+                            "moderator synthesis coverage, per-turn delivery target rows plus "
+                            "aggregate delivery-target proof, prompt envelope proof, dialogue "
+                            "mode proof, drift status, and fail-closed final status. The top-"
+                            "level report separates start_status from overall status so "
+                            "ready_to_start cannot be mistaken for RUNFIX3 acceptance. "
+                            "selected_runner_pass remains evidence-derived only, live_readiness "
+                            "stays false, and the planner does not invent control enforcement "
+                            "semantics."
                         ),
                     },
                     "evidence_labels": {

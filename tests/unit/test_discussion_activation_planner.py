@@ -464,6 +464,15 @@ def complete_runfix3_003_plan() -> dict[str, object]:
         ],
     }
     plan["runfix3_live_thread_proof"] = {
+        "selected_runner": {
+            "selected_member": "macho",
+            "speaker_selected_event_id": "evt_select_1",
+            "runner_invocation_started_ref": "control/runner-started-1",
+            "runner_invocation_succeeded_ref": "control/runner-succeeded-1",
+            "speech_event_id": "evt_speech_1",
+            "delivery_target_match": True,
+            "evidence_ref": "control/selected-runner-proof-turn-1",
+        },
         "participant_closeout": {
             "participant_closeout_pass": True,
             "rows": [
@@ -939,6 +948,8 @@ def test_runfix3_003_complete_live_thread_proof_is_ready_without_live_readiness(
     report = build_discussion_activation_plan(complete_runfix3_003_plan())
 
     assert report["status"] == "ready_to_start"
+    assert report["start_status"] == "ready_to_start"
+    assert report["runfix3_acceptance_status"] == "proven"
     assert report["task_id"] == "plugin/RUNFIX3-003"
     assert report["behavior_task_id"] == "plugin/RUNFIX3-003"
     assert report["live_readiness"] is False
@@ -947,6 +958,16 @@ def test_runfix3_003_complete_live_thread_proof_is_ready_without_live_readiness(
     assert report["integrated_discussion_proof_report"]["status"] == "not_required"
     proof = report["runfix3_live_thread_proof_report"]
     assert proof["status"] == "proven"
+    assert proof["selected_runner_proof"] == {
+        "status": "proven",
+        "selected_member": "macho",
+        "speaker_selected_event_id": "evt_select_1",
+        "runner_invocation_started_ref": "control/runner-started-1",
+        "runner_invocation_succeeded_ref": "control/runner-succeeded-1",
+        "speech_event_id": "evt_speech_1",
+        "delivery_target_match": True,
+        "evidence_ref": "control/selected-runner-proof-turn-1",
+    }
     assert proof["participant_closeout_coverage"] == {
         "status": "proven",
         "expected_participants": ["macho", "seohwang"],
@@ -1052,7 +1073,9 @@ def test_runfix3_003_visible_turn_formula_mismatch_fails_closed() -> None:
 
     report = build_discussion_activation_plan(plan)
 
-    assert report["status"] == "ready_to_start"
+    assert report["status"] == "blocked"
+    assert report["start_status"] == "ready_to_start"
+    assert report["runfix3_acceptance_status"] == "blocked"
     assert report["visible_surface_readiness_report"]["visible_turn_count_proven"] is False
     assert report["runfix3_live_thread_proof_report"]["status"] == "blocked"
     assert any(
@@ -1069,7 +1092,9 @@ def test_runfix3_003_missing_formula_inputs_fails_closed() -> None:
 
     report = build_discussion_activation_plan(plan)
 
-    assert report["status"] == "ready_to_start"
+    assert report["status"] == "blocked"
+    assert report["start_status"] == "ready_to_start"
+    assert report["runfix3_acceptance_status"] == "blocked"
     assert report["visible_surface_readiness_report"]["visible_turn_count_proven"] is False
     assert report["runfix3_live_thread_proof_report"]["status"] == "blocked"
     assert any(
@@ -1083,10 +1108,31 @@ def test_runfix3_003_missing_live_thread_proof_does_not_block_start() -> None:
 
     report = build_discussion_activation_plan(plan)
 
-    assert report["status"] == "ready_to_start"
+    assert report["status"] == "blocked"
+    assert report["start_status"] == "ready_to_start"
+    assert report["runfix3_acceptance_status"] == "blocked"
     assert report["runfix3_live_thread_proof_report"]["status"] == "blocked"
     assert any(
         blocker["code"] == "runfix3_live_thread_proof_missing" for blocker in report["blockers"]
+    )
+
+
+def test_runfix3_003_missing_selected_runner_proof_blocks_acceptance_only() -> None:
+    plan = complete_runfix3_003_plan()
+    proof = plan["runfix3_live_thread_proof"]
+    assert isinstance(proof, dict)
+    proof.pop("selected_runner")
+
+    report = build_discussion_activation_plan(plan)
+
+    assert report["status"] == "blocked"
+    assert report["start_status"] == "ready_to_start"
+    assert report["runfix3_acceptance_status"] == "blocked"
+    assert (
+        report["runfix3_live_thread_proof_report"]["selected_runner_proof"]["status"] == "blocked"
+    )
+    assert any(
+        blocker["code"] == "runfix3_selected_runner_proof_missing" for blocker in report["blockers"]
     )
 
 
@@ -1103,12 +1149,16 @@ def test_runfix3_003_artifact_only_mode_does_not_require_live_thread_proof() -> 
     report = build_discussion_activation_plan(plan)
 
     assert report["status"] == "ready_for_approval"
+    assert report["start_status"] == "ready_for_approval"
+    assert report["runfix3_acceptance_status"] == "not_required"
     assert report["runfix3_live_thread_proof_report"]["status"] == "not_required"
 
 
 def test_runfix3_003_missing_visible_author_guard_does_not_block_start() -> None:
     report = build_discussion_activation_plan(complete_runfix3_003_plan())
 
+    assert report["start_status"] == "ready_to_start"
+    assert report["runfix3_acceptance_status"] == "proven"
     assert report["status"] == "ready_to_start"
     assert report["visible_author_guard_report"]["status"] == "not_required"
 
@@ -1162,7 +1212,9 @@ def test_runfix3_003_partial_delivery_coverage_fails_closed() -> None:
 
     report = build_discussion_activation_plan(plan)
 
-    assert report["status"] == "ready_to_start"
+    assert report["status"] == "blocked"
+    assert report["start_status"] == "ready_to_start"
+    assert report["runfix3_acceptance_status"] == "blocked"
     assert (
         report["runfix3_live_thread_proof_report"]["delivery_target_proof"]["aggregate_match"]
         is False
@@ -1185,7 +1237,9 @@ def test_runfix3_003_missing_participant_closeout_fails_closed() -> None:
 
     report = build_discussion_activation_plan(plan)
 
-    assert report["status"] == "ready_to_start"
+    assert report["status"] == "blocked"
+    assert report["start_status"] == "ready_to_start"
+    assert report["runfix3_acceptance_status"] == "blocked"
     assert report["runfix3_live_thread_proof_report"]["participant_closeout_coverage"][
         "status"
     ] in {
@@ -1205,7 +1259,9 @@ def test_runfix3_003_missing_moderator_synthesis_fails_closed() -> None:
 
     report = build_discussion_activation_plan(plan)
 
-    assert report["status"] == "ready_to_start"
+    assert report["status"] == "blocked"
+    assert report["start_status"] == "ready_to_start"
+    assert report["runfix3_acceptance_status"] == "blocked"
     assert report["runfix3_live_thread_proof_report"]["moderator_synthesis_coverage"]["status"] in {
         "blocked",
         "unproven",
@@ -1230,7 +1286,9 @@ def test_runfix3_003_parent_channel_fallback_remains_startable_when_approved() -
 
     report = build_discussion_activation_plan(plan)
 
-    assert report["status"] == "ready_to_start"
+    assert report["status"] == "blocked"
+    assert report["start_status"] == "ready_to_start"
+    assert report["runfix3_acceptance_status"] == "blocked"
     assert (
         report["visible_surface_readiness_report"]["exact_origin_binding_status"]
         == "parent_channel_fallback"
@@ -1275,7 +1333,9 @@ def test_runfix3_003_delivery_target_mismatch_fails_closed() -> None:
 
     report = build_discussion_activation_plan(plan)
 
-    assert report["status"] == "ready_to_start"
+    assert report["status"] == "blocked"
+    assert report["start_status"] == "ready_to_start"
+    assert report["runfix3_acceptance_status"] == "blocked"
     assert (
         report["runfix3_live_thread_proof_report"]["delivery_target_proof"]["aggregate_match"]
         is False
@@ -1300,7 +1360,9 @@ def test_runfix3_003_delivery_target_flag_does_not_override_string_mismatch() ->
 
     report = build_discussion_activation_plan(plan)
 
-    assert report["status"] == "ready_to_start"
+    assert report["status"] == "blocked"
+    assert report["start_status"] == "ready_to_start"
+    assert report["runfix3_acceptance_status"] == "blocked"
     assert (
         report["runfix3_live_thread_proof_report"]["delivery_target_proof"]["aggregate_match"]
         is False
@@ -1325,7 +1387,9 @@ def test_runfix3_003_self_matching_wrong_delivery_target_fails_closed() -> None:
 
     report = build_discussion_activation_plan(plan)
 
-    assert report["status"] == "ready_to_start"
+    assert report["status"] == "blocked"
+    assert report["start_status"] == "ready_to_start"
+    assert report["runfix3_acceptance_status"] == "blocked"
     assert (
         report["runfix3_live_thread_proof_report"]["delivery_target_proof"]["aggregate_match"]
         is False
@@ -1347,7 +1411,9 @@ def test_runfix3_003_prompt_envelope_leakage_fails_closed() -> None:
 
     report = build_discussion_activation_plan(plan)
 
-    assert report["status"] == "ready_to_start"
+    assert report["status"] == "blocked"
+    assert report["start_status"] == "ready_to_start"
+    assert report["runfix3_acceptance_status"] == "blocked"
     assert report["runfix3_live_thread_proof_report"]["prompt_envelope_proof"] == {
         "status": "blocked",
         "content_audit_separated": False,
@@ -1371,7 +1437,9 @@ def test_runfix3_003_non_dialogue_prose_fails_closed() -> None:
 
     report = build_discussion_activation_plan(plan)
 
-    assert report["status"] == "ready_to_start"
+    assert report["status"] == "blocked"
+    assert report["start_status"] == "ready_to_start"
+    assert report["runfix3_acceptance_status"] == "blocked"
     assert report["runfix3_live_thread_proof_report"]["dialogue_mode_proof"] == {
         "status": "blocked",
         "participant_to_participant": False,
@@ -1399,7 +1467,9 @@ def test_runfix3_003_unresolved_drift_fails_closed() -> None:
 
     report = build_discussion_activation_plan(plan)
 
-    assert report["status"] == "ready_to_start"
+    assert report["status"] == "blocked"
+    assert report["start_status"] == "ready_to_start"
+    assert report["runfix3_acceptance_status"] == "blocked"
     assert report["runfix3_live_thread_proof_report"]["drift_status"] == {
         "status": "blocked",
         "drift_detected": True,

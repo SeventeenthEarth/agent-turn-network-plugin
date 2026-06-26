@@ -250,7 +250,7 @@ Final reports must keep these fields separate: `lifecycle_pass`, `selected_runne
 - Before starting a live visible council, collect non-mutating probes when feasible: exact thread binding, or approved parent-channel fallback with `fallback_reason`, turn-posting probe for the selected-speaker/profile-send path or approved fallback poster, visible closeout probe, `real_profile_gateway_replies: true`, and `cli_actor_speech_only: false`. If these are missing because no probe has been run yet, collect the probe before asking the user; if collecting it requires profile/provider/gateway/auth/token mutation, stop for approval.
 - Gateway liveness, transcript/export artifacts, parent-channel fallback alone, and manual/fallback profile text are diagnostics only. They must not be substituted for participant runtime readiness, selected-runner proof, visible-surface proof, exact origin proof, `live_readiness`, or production readiness.
 - Fallback/manual participant messages may be useful diagnostic evidence, but they must be labeled `fallback_profile_pass` and must not be reported as selected-speaker runner success or ATN live discussion readiness. A selected-runner downgrade is diagnostic/fallback only and does not claim `selected_runner_pass`.
-- `atn_discussion_activation_plan` always keeps `live_readiness: false`; it must not read env vars, inspect current Hermes/Discord/profile/gateway state, open sockets, shell out, start daemons, mutate profiles/gateway/Discord/auth/token/provider/model settings, or infer readiness from missing evidence. Do not treat `atn_discussion_activation_plan.live_readiness=false` as a `council.new` blocker by itself. If the planner returns `status: blocked`, do not automatically stop before `council.new`; classify each blocker first.
+- `atn_discussion_activation_plan` always keeps `live_readiness: false`; it must not read env vars, inspect current Hermes/Discord/profile/gateway state, open sockets, shell out, start daemons, mutate profiles/gateway/Discord/auth/token/provider/model settings, or infer readiness from missing evidence. Do not treat `atn_discussion_activation_plan.live_readiness=false` as a `council.new` blocker by itself. Treat `start_status: blocked` as the actual `council.new` stop signal. If top-level `status: blocked` while `start_status: ready_to_start`, the discussion start gate passed but RUNFIX3 acceptance remains blocked in `runfix3_acceptance_status`.
 - Minimum live-local acceptance evidence remains evidence-gated and includes: `runner_invocation_started` from `speaker_selected`, selected-runner submitted canonical `speech` linkage, visible-surface evidence, ARGUE relation counts/diagnostics, eligible-profile-only allow-list evidence, the exact origin `chat_id:thread_id`, expected/posted visible turns by `max_discussion_turns + participant_count + 2`, participant closeouts, moderator synthesis, and explicit no-claim language for production activation. These labels gate acceptance/live-readiness claims, not the basic `council.new` start gate or a second approval prompt. Durable runner failure is a terminal-failure diagnostic and blocks `selected_runner_pass` / live-readiness claims unless a later task explicitly proves a new selected-runner success path.
 - Visible turns must remain participant-to-participant dialogue, and visible prompt/speech content must stay separated from audit/control identifiers. If drift or metadata leakage cannot be repaired forward after canonical speech exists, close unresolved rather than reporting a normal successful closeout.
 
@@ -268,7 +268,7 @@ For `plugin/RUNFIX-010`, the report also separates live-visible UX from daemon e
 - `visible_surface_readiness_report`: exact origin binding result, surface binding, turn delivery probe, visible closeout probe, real profile/gateway replies, CLI-actor-only status, and expected/posted turn counts;
 - `final_report_contract`: final reports must separately state `ATN lifecycle finalized`, `Discord visible turns posted: N/expected`, `real profile/gateway replies`, `CLI actor speech only`, participant closeout coverage, moderator synthesis coverage, and repair-forward versus unresolved closeout.
 
-For `plugin/RUNFIX3-003`, the report adds `runfix3_live_thread_proof_report` for participant closeout coverage, moderator synthesis coverage, per-turn delivery-target proof, prompt-envelope proof, dialogue-mode proof, drift status, and final fail-closed proof status.
+For `plugin/RUNFIX3-003`, the report adds `runfix3_live_thread_proof_report` for separate RUNFIX3 acceptance axes: selected-runner proof chain, participant closeout coverage, moderator synthesis coverage, per-turn delivery-target proof, prompt-envelope proof, dialogue-mode proof, drift status, and final fail-closed proof status. The top-level output now keeps `start_status` separate from overall `status`, and exposes `runfix3_acceptance_status` so `ready_to_start` cannot be mistaken for accepted RUNFIX3 proof.
 
 Missing or ambiguous runner, ARGUE, canonical-link, or origin-binding evidence remains `unproven`/`blocked`. Manual/fallback profile text can explain a blocker, but it is never selected-runner success, discussion-quality success, or live readiness.
 
@@ -287,12 +287,9 @@ For `plugin/RUNFIX-012`, the report adds
   prerequisites;
 - `visible_surface_proof`: remains separate from participant runtime evidence.
 
-`ready_to_start` is the live-visible discussion start signal: the moderator should
-proceed to `council.new` when the user already requested the discussion and no
-`start_blocker` remains. `ready_for_approval` is not the live-visible discussion
-start signal; it is only for bounded apply/mutation or activation-planning scope.
-Neither status means `live_readiness`, live Discord delivery, production
-activation, or broad rollout.
+`start_status=ready_to_start` is the live-visible discussion start signal: the moderator should proceed to `council.new` when the user already requested the discussion and no `start_blocker` remains. `ready_for_approval` is not the live-visible discussion start signal; it is only for bounded apply/mutation or activation-planning scope. The top-level `status` may still be `blocked` when `runfix3_acceptance_status=blocked`, which means RUNFIX3 final acceptance is still fail-closed even though the `council.new` start gate passed.
+
+Neither status means `live_readiness`, live Discord delivery, production activation, or broad rollout.
 
 ## Install guidance
 

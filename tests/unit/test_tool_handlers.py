@@ -600,6 +600,15 @@ def test_discussion_activation_plan_handler_exposes_runfix3_live_thread_report()
                         "visible_turns_posted": 7,
                     },
                     "runfix3_live_thread_proof": {
+                        "selected_runner": {
+                            "selected_member": "macho",
+                            "speaker_selected_event_id": "evt_select_1",
+                            "runner_invocation_started_ref": "control/runner-started-1",
+                            "runner_invocation_succeeded_ref": "control/runner-succeeded-1",
+                            "speech_event_id": "evt_speech_1",
+                            "delivery_target_match": True,
+                            "evidence_ref": "control/selected-runner-proof-turn-1",
+                        },
                         "participant_closeout": {
                             "participant_closeout_pass": True,
                             "rows": [
@@ -725,11 +734,17 @@ def test_discussion_activation_plan_handler_exposes_runfix3_live_thread_report()
     assert result["tool"] == "atn_discussion_activation_plan"
     assert result["live_readiness"] is False
     assert result["data"]["status"] == "ready_to_start"
+    assert result["data"]["start_status"] == "ready_to_start"
+    assert result["data"]["runfix3_acceptance_status"] == "proven"
     assert result["data"]["behavior_task_id"] == "plugin/RUNFIX3-003"
     assert result["data"]["visible_surface_readiness_report"]["exact_origin_binding_proven"] is True
     assert result["data"]["visible_surface_readiness_report"]["visible_turn_count_proven"] is True
     assert result["data"]["integrated_discussion_proof_report"]["status"] == "not_required"
     assert result["data"]["runfix3_live_thread_proof_report"]["status"] == "proven"
+    assert (
+        result["data"]["runfix3_live_thread_proof_report"]["selected_runner_proof"]["status"]
+        == "proven"
+    )
     assert (
         result["data"]["runfix3_live_thread_proof_report"]["participant_closeout_coverage"][
             "status"

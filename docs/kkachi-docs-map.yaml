@@ -108,6 +108,7 @@ nexfix:
   plugin_sot: "docs/10-live-transport-sot.md"
   control_sot: "../agent-turn-network-control/docs/24-live-transport-control-sot.md"
   vault_sot: "17thHermes:40_outputs/team/macho/atn/2026-06-26-atn-selected-runner-prompt-envelope-nexfix-sot.md"
+  runtime_delivery_sot: "17thHermes:40_outputs/team/macho/atn/2026-06-28-atn-live-visible-selected-runner-runtime-delivery-newfix003-sot.md"
   prompt_evidence_contract: "selected_runner_prompt_evidence"
   operator_guide: "docs/09-skill-and-operator-guide.md"
   moderator_skill: "src/atn_plugin/bundled_skills/atn-moderator/SKILL.md"
@@ -115,4 +116,8 @@ nexfix:
   cross_repo_sequence:
     - "control/NEWFIX-001"
     - "plugin/NEWFIX-002"
-  boundary: "NEXFIX hardens selected-runner content-plane readiness after the 2026-06-26 prompt-envelope defect. Plugin owns packaged moderator/participant guidance for envelope preflight and missing-context diagnostics while control owns the authoritative projection-backed prompt. No live Discord rollout, default Discord activation, daemon startup/discovery, production activation, profile/provider/gateway/auth/token/model mutation, hidden CLI fallback, package publication, push, or broad rollout is authorized."
+    - "cross-repo/NEWFIX-003"
+    - "control/NEWFIX-004"
+    - "control/NEWFIX-005"
+    - "plugin/NEWFIX-006"
+  boundary: "NEXFIX hardens selected-runner content-plane readiness and live-visible runtime delivery after the 2026-06-26 prompt-envelope defect and 2026-06-28 KLM delivery blocker. Plugin owns packaged moderator/participant guidance and activation-planner guardrails for envelope preflight, selected-member own-history prompt evidence, and live-visible timeout evidence while control owns the authoritative projection-backed prompt and timeout policy/evidence. No live Discord rollout, default Discord activation, daemon startup/discovery, production activation, profile/provider/gateway/auth/token/model mutation, hidden CLI fallback, package publication, push, or broad rollout is authorized."

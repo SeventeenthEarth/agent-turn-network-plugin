@@ -246,7 +246,6 @@ def build_discussion_activation_plan(plan: Mapping[str, object]) -> JsonObject:
     runfix3_acceptance_status = _runfix3_acceptance_status(
         task_id=task_id,
         requested_output_mode=requested_output_mode,
-        request_source=request_source,
         runfix3_live_thread_proof=runfix3_live_thread_proof,
     )
     status = _overall_status(
@@ -1017,15 +1016,20 @@ def _visible_surface_readiness_report(
         or request_context.get("requested_output")
         or request_context.get("mode")
     )
+    explicit_non_visible_override = request_context.get("explicit_non_visible_override") is True
+    override_reason = _optional_string_value(request_context.get("override_reason"))
     if requested_output_mode is None:
         requested_output_mode = (
             "live_visible_thread"
             if request_source.startswith("discord")
+            or task_id in {RUNFIX_010_TASK_ID, RUNFIX3_003_TASK_ID}
             else "activation_planning_only"
         )
     report: JsonObject = {
         "requested_output_mode": requested_output_mode,
         "request_source": request_source,
+        "explicit_non_visible_override": explicit_non_visible_override,
+        "override_reason": override_reason,
         "exact_origin_binding_status": "unproven",
         "exact_origin_binding_proven": False,
         "requested_chat_id": None,
@@ -1052,6 +1056,9 @@ def _visible_surface_readiness_report(
     if requested_output_mode in {"transcript/export-only", "transcript_export_only"}:
         requested_output_mode = "artifact_only"
         report["requested_output_mode"] = requested_output_mode
+    elif requested_output_mode in {"local-daemon-only", "local_daemon_only"}:
+        requested_output_mode = "activation_planning_only"
+        report["requested_output_mode"] = requested_output_mode
 
     if requested_output_mode not in {
         "live_visible_thread",
@@ -1065,29 +1072,34 @@ def _visible_surface_readiness_report(
                 owner="operator",
                 message=(
                     "requested_output_mode must be live_visible_thread, artifact_only, "
-                    "daemon_cli_actor_speech, transcript/export-only, or activation_planning_only."
+                    "daemon_cli_actor_speech, transcript/export-only/transcript_export_only, "
+                    "local-daemon-only/local_daemon_only, or activation_planning_only."
                 ),
             )
         )
         return report
 
-    if requested_output_mode in {"artifact_only", "daemon_cli_actor_speech"}:
-        if (
-            request_source.startswith("discord")
-            and request_context.get("artifact_only_confirmed") is not True
-        ):
+    if requested_output_mode in {
+        "artifact_only",
+        "daemon_cli_actor_speech",
+        "activation_planning_only",
+    }:
+        if not explicit_non_visible_override or override_reason is None:
             blockers.append(
                 _blocker(
-                    code="artifact_only_confirmation_missing",
+                    code="non_visible_output_override_missing",
                     owner="operator",
                     message=(
-                        "Artifact-only or daemon CLI actor speech mode for a "
-                        "Discord-origin request requires explicit operator confirmation before "
-                        "session creation."
+                        "Live-visible Discord output is the default ATN discussion target; "
+                        "artifact-only, daemon CLI actor speech, activation-planning-only, or "
+                        "local-daemon-only discussion requires explicit user-requested override "
+                        "with override_reason before session creation."
                     ),
                 )
             )
-        report["ready"] = request_context.get("artifact_only_confirmed") is True
+            report["ready"] = False
+            return report
+        report["ready"] = True
         return report
 
     if requested_output_mode != "live_visible_thread":
@@ -1102,7 +1114,8 @@ def _visible_surface_readiness_report(
                 message=(
                     "Discord-origin ATN council requests default to live visible thread output; "
                     "provide surface binding, turn-posting, profile/gateway reply, and closeout "
-                    "evidence or explicitly confirm artifact-only mode before creating the session."
+                    "evidence or record an explicit non-visible override_reason before creating "
+                    "the session."
                 ),
             )
         )
@@ -4586,9 +4599,7 @@ def _start_status(
 ) -> str:
     acceptance_only_codes = (
         RUNFIX3_ACCEPTANCE_ONLY_CODES
-        if task_id == RUNFIX3_003_TASK_ID
-        and requested_output_mode == "live_visible_thread"
-        and request_source.startswith("discord")
+        if task_id == RUNFIX3_003_TASK_ID and requested_output_mode == "live_visible_thread"
         else frozenset()
     )
     blocking_codes = [
@@ -4624,14 +4635,9 @@ def _runfix3_acceptance_status(
     *,
     task_id: str,
     requested_output_mode: str,
-    request_source: str,
     runfix3_live_thread_proof: JsonObject,
 ) -> str:
-    if (
-        task_id != RUNFIX3_003_TASK_ID
-        or requested_output_mode != "live_visible_thread"
-        or not request_source.startswith("discord")
-    ):
+    if task_id != RUNFIX3_003_TASK_ID or requested_output_mode != "live_visible_thread":
         return "not_required"
     return cast(str, runfix3_live_thread_proof["status"])
 
@@ -4664,7 +4670,7 @@ def _required_string(value: object, *, label: str) -> str:
 
 
 def _non_empty_string(value: object) -> bool:
-    return isinstance(value, str) and bool(value)
+    return isinstance(value, str) and bool(value.strip())
 
 
 def _non_empty_evidence(value: object) -> bool:

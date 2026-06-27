@@ -311,6 +311,8 @@ def handle_council_command(
         idempotency_key = _required_string(payload.get("idempotency_key"), label="idempotency_key")
         command_payload = _required_json_object(payload.get("payload"), label="payload")
         _validate_council_payload(command, command_payload)
+        if command == "council.new":
+            _canonicalize_council_new_output_intent(command_payload)
         command_payload = {**command_payload, "session_id": session_id}
 
         return _submit_feature_gated_command(
@@ -694,8 +696,15 @@ def _validate_council_payload(command: str, payload: Mapping[str, object]) -> No
         _require_payload_string(payload, "moderator")
         _require_payload_array(payload, "members")
         _require_payload_string(payload, "title")
-        _require_payload_object(payload, "surface")
+        surface_value = payload.get("surface")
+        if surface_value is None:
+            surface: Mapping[str, object] = {}
+        elif isinstance(surface_value, Mapping):
+            surface = require_json_object(surface_value, label="payload.surface")
+        else:
+            raise ValueError("payload.surface must be a JSON object")
         _require_payload_string(payload, "event_id")
+        _validate_council_new_output_intent(payload, surface=surface)
         return
     _require_payload_string(payload, "actor")
     command_payload = _require_payload_object(payload, "payload")
@@ -703,6 +712,198 @@ def _validate_council_payload(command: str, payload: Mapping[str, object]) -> No
         _validate_argue_speech_payload(command_payload, label="payload")
     elif command == schemas.COUNCIL_HAND_RAISE_COMMAND:
         _validate_argue_hand_raise_payload(command_payload, label="payload")
+
+
+def _validate_council_new_output_intent(
+    payload: Mapping[str, object], *, surface: Mapping[str, object]
+) -> None:
+    context_value = payload.get("request_context")
+    if context_value is None:
+        context: Mapping[str, object] = {}
+    elif isinstance(context_value, Mapping):
+        context = context_value
+    else:
+        raise ValueError("payload.request_context must be a JSON object")
+
+    requested_raw = _first_non_empty_string(
+        payload.get("requested_output_mode"),
+        payload.get("output_mode"),
+        payload.get("requested_output"),
+        context.get("requested_output_mode"),
+        context.get("output_mode"),
+        context.get("requested_output"),
+    )
+    _validate_council_new_intent_field_consistency(payload, context)
+    requested_mode = _normalize_council_output_mode(requested_raw)
+    if requested_raw.strip() and requested_mode is None:
+        raise ValueError(
+            "payload.request_context.requested_output_mode must be a supported council output mode"
+        )
+    visible_required = _optional_bool(payload.get("visible_output_required")) or _optional_bool(
+        context.get("visible_output_required")
+    )
+    explicit_override = _optional_bool(
+        payload.get("explicit_non_visible_override")
+    ) or _optional_bool(context.get("explicit_non_visible_override"))
+    override_reason = _first_non_empty_string(
+        payload.get("override_reason"), context.get("override_reason")
+    )
+    non_visible_requested = requested_mode in {
+        "artifact_only",
+        "daemon_cli_actor_speech",
+        "activation_planning_only",
+    }
+    override_complete = explicit_override and bool(override_reason.strip())
+    if non_visible_requested and not override_complete:
+        raise ValueError(
+            "payload.request_context.explicit_non_visible_override requires "
+            "override_reason for non-visible/local-daemon-only council.new"
+        )
+    if not requested_raw.strip():
+        raise ValueError(
+            "payload.request_context.requested_output_mode is required: use "
+            "live_visible_thread with Discord surface, or supported non-visible/"
+            "local-daemon-only mode with explicit override_reason"
+        )
+    if (
+        requested_mode == "live_visible_thread"
+        or visible_required
+        or (not non_visible_requested and bool(surface))
+    ):
+        if surface.get("platform") != "discord":
+            raise ValueError(
+                "payload.surface.platform must be discord for live-visible council.new"
+            )
+        kind = surface.get("kind")
+        if kind == "discord_thread" and not _first_non_empty_string(surface.get("thread_id")):
+            raise ValueError("payload.surface.thread_id is required for discord_thread council.new")
+        if kind in {"discord_channel", "discord_parent_channel"} and not _first_non_empty_string(
+            surface.get("channel_id")
+        ):
+            raise ValueError(
+                "payload.surface.channel_id is required for Discord channel fallback council.new"
+            )
+        if kind not in {"discord_thread", "discord_channel", "discord_parent_channel"}:
+            raise ValueError(
+                "payload.surface.kind must be discord_thread or approved Discord channel fallback"
+            )
+
+
+def _canonicalize_council_new_output_intent(payload: JsonObject) -> None:
+    context_value = payload.get("request_context")
+    if context_value is None:
+        context: JsonObject = {}
+    elif isinstance(context_value, Mapping):
+        context = cast(JsonObject, dict(context_value))
+    else:
+        raise ValueError("payload.request_context must be a JSON object")
+
+    requested_raw = _first_non_empty_string(
+        payload.get("requested_output_mode"),
+        payload.get("output_mode"),
+        payload.get("requested_output"),
+        context.get("requested_output_mode"),
+        context.get("output_mode"),
+        context.get("requested_output"),
+    )
+    if requested_raw:
+        normalized = _normalize_council_output_mode(requested_raw)
+        context["requested_output_mode"] = normalized if normalized is not None else requested_raw
+    context.pop("output_mode", None)
+    context.pop("requested_output", None)
+    payload.pop("requested_output_mode", None)
+    payload.pop("output_mode", None)
+    payload.pop("requested_output", None)
+    payload["request_context"] = context
+
+
+def _first_non_empty_string(*values: object) -> str:
+    for value in values:
+        if isinstance(value, str) and value.strip():
+            return value.strip()
+    return ""
+
+
+def _validate_council_new_intent_field_consistency(
+    payload: Mapping[str, object], context: Mapping[str, object]
+) -> None:
+    _validate_council_new_output_mode_alias_consistency(payload, context)
+    for key in ("override_reason",):
+        top = _first_non_empty_string(payload.get(key))
+        nested = _first_non_empty_string(context.get(key))
+        if top and nested and top != nested:
+            raise ValueError(
+                "payload.request_context output-intent fields must not conflict "
+                "with top-level council.new fields"
+            )
+    for key in ("visible_output_required", "explicit_non_visible_override"):
+        if key in payload and not isinstance(payload.get(key), bool):
+            raise ValueError(
+                "payload.request_context boolean output-intent fields must be true or false"
+            )
+        if key in context and not isinstance(context.get(key), bool):
+            raise ValueError(
+                "payload.request_context boolean output-intent fields must be true or false"
+            )
+        top_bool_present, top_bool = _optional_bool_present(payload.get(key))
+        nested_bool_present, nested_bool = _optional_bool_present(context.get(key))
+        if top_bool_present and nested_bool_present and top_bool != nested_bool:
+            raise ValueError(
+                "payload.request_context output-intent fields must not conflict "
+                "with top-level council.new fields"
+            )
+
+
+def _validate_council_new_output_mode_alias_consistency(
+    payload: Mapping[str, object], context: Mapping[str, object]
+) -> None:
+    seen: dict[str, str] = {}
+    for value in (
+        payload.get("requested_output_mode"),
+        payload.get("output_mode"),
+        payload.get("requested_output"),
+        context.get("requested_output_mode"),
+        context.get("output_mode"),
+        context.get("requested_output"),
+    ):
+        raw = _first_non_empty_string(value)
+        if not raw:
+            continue
+        normalized = _normalize_council_output_mode(raw) or raw
+        seen[normalized] = raw
+    if len(seen) > 1:
+        raise ValueError(
+            "payload.request_context output-mode aliases must not declare "
+            "conflicting requested output modes"
+        )
+
+
+def _optional_bool(value: object) -> bool:
+    return bool(value) if isinstance(value, bool) else False
+
+
+def _optional_bool_present(value: object) -> tuple[bool, bool]:
+    if isinstance(value, bool):
+        return True, value
+    return False, False
+
+
+def _normalize_council_output_mode(mode: str) -> str | None:
+    stripped = mode.strip()
+    if not stripped:
+        return ""
+    if stripped in {
+        "live_visible_thread",
+        "artifact_only",
+        "daemon_cli_actor_speech",
+        "activation_planning_only",
+    }:
+        return stripped
+    if stripped in {"transcript/export-only", "transcript_export_only"}:
+        return "artifact_only"
+    if stripped in {"local-daemon-only", "local_daemon_only"}:
+        return "activation_planning_only"
+    return None
 
 
 def _selected_participant_argue_fields(participant_response: Mapping[str, object]) -> JsonObject:

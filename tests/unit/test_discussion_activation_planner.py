@@ -771,6 +771,125 @@ def test_runfix_006_task_id_remains_accepted_with_runfix_007_behavior_label() ->
     assert report["status"] == "ready_for_approval"
 
 
+def test_runfix_010_defaults_to_live_visible_and_blocks_without_surface_evidence() -> None:
+    plan = complete_runfix_008_plan()
+    plan["task_id"] = "plugin/RUNFIX-010"
+    plan.pop("request_context", None)
+    plan.pop("visible_surface_readiness", None)
+
+    report = build_discussion_activation_plan(plan)
+
+    assert report["requested_output_mode"] == "live_visible_thread"
+    assert report["status"] == "blocked"
+    assert report["start_status"] == "blocked"
+    blockers = report["blockers"]
+    assert isinstance(blockers, list)
+    assert any(
+        isinstance(blocker, dict) and blocker["code"] == "visible_surface_readiness_missing"
+        for blocker in blockers
+    )
+
+
+def test_discord_origin_activation_planning_only_requires_explicit_non_visible_override() -> None:
+    plan = complete_runfix_008_plan()
+    plan["task_id"] = "plugin/RUNFIX-010"
+    plan["request_context"] = {
+        "source": "discord_thread",
+        "requested_output_mode": "activation_planning_only",
+    }
+
+    report = build_discussion_activation_plan(plan)
+
+    assert report["requested_output_mode"] == "activation_planning_only"
+    assert report["status"] == "blocked"
+    blockers = report["blockers"]
+    assert isinstance(blockers, list)
+    assert any(
+        isinstance(blocker, dict) and blocker["code"] == "non_visible_output_override_missing"
+        for blocker in blockers
+    )
+
+
+def test_whitespace_override_reason_does_not_satisfy_non_visible_override() -> None:
+    plan = complete_runfix_008_plan()
+    plan["task_id"] = "plugin/RUNFIX-010"
+    plan["request_context"] = {
+        "source": "discord_thread",
+        "requested_output_mode": "activation_planning_only",
+        "explicit_non_visible_override": True,
+        "override_reason": "   ",
+    }
+
+    report = build_discussion_activation_plan(plan)
+
+    assert report["requested_output_mode"] == "activation_planning_only"
+    assert report["status"] == "blocked"
+    readiness_report = report["visible_surface_readiness_report"]
+    assert isinstance(readiness_report, dict)
+    assert readiness_report["override_reason"] is None
+    blockers = report["blockers"]
+    assert isinstance(blockers, list)
+    assert any(
+        isinstance(blocker, dict) and blocker["code"] == "non_visible_output_override_missing"
+        for blocker in blockers
+    )
+
+
+def test_explicit_local_daemon_override_keeps_non_visible_mode_diagnostic_only() -> None:
+    plan = complete_runfix_008_plan()
+    plan["task_id"] = "plugin/RUNFIX-010"
+    plan["request_context"] = {
+        "source": "discord_thread",
+        "requested_output_mode": "activation_planning_only",
+        "explicit_non_visible_override": True,
+        "override_reason": "주군 explicitly requested a local-daemon-only diagnostic rehearsal.",
+    }
+
+    report = build_discussion_activation_plan(plan)
+
+    assert report["requested_output_mode"] == "activation_planning_only"
+    readiness_report = report["visible_surface_readiness_report"]
+    assert isinstance(readiness_report, dict)
+    assert readiness_report["explicit_non_visible_override"] is True
+    assert report["status"] == "ready_for_approval"
+    assert report["start_authority"] == "explicit_operator_approval_required"
+
+
+@pytest.mark.parametrize(
+    ("requested_mode", "canonical_mode"),
+    [
+        ("artifact_only", "artifact_only"),
+        ("daemon_cli_actor_speech", "daemon_cli_actor_speech"),
+        ("transcript/export-only", "artifact_only"),
+        ("transcript_export_only", "artifact_only"),
+        ("local-daemon-only", "activation_planning_only"),
+        ("local_daemon_only", "activation_planning_only"),
+    ],
+)
+def test_explicit_non_visible_override_reason_is_sufficient_for_supported_modes(
+    requested_mode: str, canonical_mode: str
+) -> None:
+    plan = complete_runfix_008_plan()
+    plan["task_id"] = "plugin/RUNFIX-010"
+    plan["request_context"] = {
+        "source": "discord_thread",
+        "requested_output_mode": requested_mode,
+        "explicit_non_visible_override": True,
+        "override_reason": f"주군 explicitly requested {requested_mode} diagnostic output.",
+    }
+
+    report = build_discussion_activation_plan(plan)
+
+    assert report["status"] == "ready_for_approval"
+    assert report["requested_output_mode"] == canonical_mode
+    blockers = report["blockers"]
+    assert isinstance(blockers, list)
+    assert not any(
+        isinstance(blocker, dict) and blocker["code"] == "artifact_only_confirmation_missing"
+        for blocker in blockers
+    )
+
+
 @pytest.mark.parametrize(
     "task_id",
     [
@@ -789,6 +908,8 @@ def test_prior_runfix_task_ids_remain_accepted(task_id: str) -> None:
         plan["request_context"] = {
             "source": "operator",
             "requested_output_mode": "activation_planning_only",
+            "explicit_non_visible_override": True,
+            "override_reason": "주군 explicitly requested local-only activation planning proof.",
         }
 
     report = build_discussion_activation_plan(plan)
@@ -1117,6 +1238,22 @@ def test_runfix3_003_missing_live_thread_proof_does_not_block_start() -> None:
     )
 
 
+def test_runfix3_003_live_thread_acceptance_applies_to_operator_source() -> None:
+    plan = complete_runfix3_003_plan()
+    plan["request_context"] = {"source": "operator"}
+    plan.pop("runfix3_live_thread_proof")
+
+    report = build_discussion_activation_plan(plan)
+
+    assert report["requested_output_mode"] == "live_visible_thread"
+    assert report["start_status"] == "blocked"
+    assert report["status"] == "blocked"
+    assert report["runfix3_acceptance_status"] == "blocked"
+    proof_report = report["runfix3_live_thread_proof_report"]
+    assert isinstance(proof_report, dict)
+    assert proof_report["status"] == "blocked"
+
+
 def test_runfix3_003_missing_selected_runner_proof_blocks_acceptance_only() -> None:
     plan = complete_runfix3_003_plan()
     proof = plan["runfix3_live_thread_proof"]
@@ -1142,6 +1279,8 @@ def test_runfix3_003_artifact_only_mode_does_not_require_live_thread_proof() -> 
         "source": "discord_thread",
         "requested_output_mode": "artifact_only",
         "artifact_only_confirmed": True,
+        "explicit_non_visible_override": True,
+        "override_reason": "주군 explicitly requested artifact-only RUNFIX3 diagnostic output.",
     }
     plan.pop("visible_surface_readiness")
     plan.pop("runfix3_live_thread_proof")
@@ -2045,6 +2184,8 @@ def test_discord_origin_runfix_010_defaults_to_live_visible_blocks_without_surfa
     assert report["visible_surface_readiness_report"] == {
         "requested_output_mode": "live_visible_thread",
         "request_source": "discord_thread",
+        "explicit_non_visible_override": False,
+        "override_reason": None,
         "exact_origin_binding_status": "unproven",
         "exact_origin_binding_proven": False,
         "requested_chat_id": None,
@@ -2071,7 +2212,7 @@ def test_discord_origin_runfix_010_defaults_to_live_visible_blocks_without_surfa
         "message": (
             "Discord-origin ATN council requests default to live visible thread output; "
             "provide surface binding, turn-posting, profile/gateway reply, and closeout evidence "
-            "or explicitly confirm artifact-only mode before creating the session."
+            "or record an explicit non-visible override_reason before creating the session."
         ),
     } in report["blockers"]
 
@@ -2083,6 +2224,8 @@ def test_runfix_010_transcript_export_only_confirmation_is_accepted() -> None:
         "source": "discord_thread",
         "requested_output_mode": "transcript/export-only",
         "artifact_only_confirmed": True,
+        "explicit_non_visible_override": True,
+        "override_reason": "주군 explicitly requested transcript/export-only diagnostic output.",
     }
 
     report = build_discussion_activation_plan(plan)
@@ -2561,11 +2704,13 @@ def test_runfix_010_artifact_only_from_discord_requires_explicit_confirmation() 
     assert report["status"] == "blocked"
     assert report["requested_output_mode"] == "artifact_only"
     assert {
-        "code": "artifact_only_confirmation_missing",
+        "code": "non_visible_output_override_missing",
         "owner": "operator",
         "message": (
-            "Artifact-only or daemon CLI actor speech mode for a Discord-origin request "
-            "requires explicit operator confirmation before session creation."
+            "Live-visible Discord output is the default ATN discussion target; "
+            "artifact-only, daemon CLI actor speech, activation-planning-only, or "
+            "local-daemon-only discussion requires explicit user-requested override "
+            "with override_reason before session creation."
         ),
     } in report["blockers"]
 

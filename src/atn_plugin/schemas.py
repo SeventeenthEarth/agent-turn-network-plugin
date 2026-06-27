@@ -425,6 +425,10 @@ ATN_COUNCIL_COMMAND: Final[dict[str, object]] = {
                 "description": (
                     "Daemon-owned command params. payload.command_id is required; "
                     "command-specific fields are validated before transport. "
+                    "For council.new, payload must explicitly declare output intent: "
+                    "live_visible_thread with Discord surface/request_context evidence, "
+                    "or a supported non-visible/local-daemon-only requested_output_mode "
+                    "with explicit_non_visible_override=true and non-empty override_reason. "
                     "For council.speak and council.hand_raise, ARGUE fields are "
                     "preserved without inferring state from legacy pointers."
                 ),
@@ -963,9 +967,12 @@ ATN_DISCUSSION_ACTIVATION_PLAN: Final[dict[str, object]] = {
                         "additionalProperties": True,
                         "description": (
                             "Operator request source and output mode. Discord-origin requests "
-                            "default to live_visible_thread unless artifact_only or "
-                            "daemon_cli_actor_speech is explicitly confirmed before "
-                            "session creation."
+                            "require live_visible_thread as the default user-facing surface. "
+                            "Non-visible modes such as artifact_only, "
+                            "daemon_cli_actor_speech, transcript/export-only/"
+                            "transcript_export_only, activation_planning_only, or "
+                            "local-daemon-only/local_daemon_only discussion require "
+                            "explicit_non_visible_override=true with override_reason."
                         ),
                     },
                     "visible_surface_readiness": {

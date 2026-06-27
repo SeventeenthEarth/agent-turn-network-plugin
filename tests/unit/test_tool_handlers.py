@@ -1491,7 +1491,16 @@ def test_council_participant_commands_submit_after_feature_probe(
                 "moderator": "agent-mod",
                 "members": ["agent-1", "agent-2"],
                 "title": "Static council",
-                "surface": {"kind": "discord_thread", "thread_id": "thread-1"},
+                "request_context": {
+                    "source": "discord_thread",
+                    "requested_output_mode": "live_visible_thread",
+                    "visible_output_required": True,
+                },
+                "surface": {
+                    "kind": "discord_thread",
+                    "platform": "discord",
+                    "thread_id": "thread-1",
+                },
                 "event_id": "evt-council",
                 "command_id": "cmd-council-new",
             },
@@ -1522,6 +1531,180 @@ def test_council_moderator_commands_submit_after_feature_probe(
     assert body is not None
     assert body["command"] == command
     assert cast(JsonObject, body["payload"])["session_id"] == "sess-council"
+
+
+def test_council_new_fails_closed_without_output_intent_before_submit() -> None:
+    transport = StaticDaemonTransport(
+        {OP_VERSION_READ: BASE_VERSION_WITH_CNDIS, OP_COMMAND_SUBMIT: BASE_COMMAND_SUCCESS}
+    )
+    result = decode(
+        handle_council_command(
+            _council_args(
+                "council.new",
+                {
+                    "moderator": "agent-mod",
+                    "members": ["agent-1", "agent-2"],
+                    "title": "Undeclared local daemon bypass",
+                    "request_context": {"source": "discord_thread"},
+                    "surface": {
+                        "kind": "discord_thread",
+                        "platform": "discord",
+                        "thread_id": "thread-1",
+                    },
+                    "event_id": "evt-council",
+                    "command_id": "cmd-council-new",
+                },
+            ),
+            client_factory=factory_for_transport(transport),
+        )
+    )
+
+    assert result["ok"] is False
+    assert result["tool"] == "atn_council_command"
+    assert result["error"]["category"] == "validation"
+    assert "requested_output_mode" in result["error"]["message"]
+    assert transport.requests == []
+
+
+def test_council_new_explicit_non_visible_override_submits_without_surface() -> None:
+    transport = StaticDaemonTransport(
+        {OP_VERSION_READ: BASE_VERSION_WITH_CNDIS, OP_COMMAND_SUBMIT: BASE_COMMAND_SUCCESS}
+    )
+    payload: JsonObject = {
+        "moderator": "agent-mod",
+        "members": ["agent-1", "agent-2"],
+        "title": "Explicit local diagnostics",
+        "request_context": {
+            "source": "operator",
+            "requested_output_mode": "local-daemon-only",
+            "explicit_non_visible_override": True,
+            "override_reason": "주군 explicitly requested local-daemon-only diagnostics.",
+        },
+        "event_id": "evt-council-local-only",
+        "command_id": "cmd-council-local-only",
+    }
+
+    result = decode(
+        handle_council_command(
+            _council_args("council.new", payload),
+            client_factory=factory_for_transport(transport),
+        )
+    )
+
+    assert result["ok"] is True
+    operation, body = transport.requests[1]
+    assert operation == OP_COMMAND_SUBMIT
+    assert body is not None
+    assert body["command"] == "council.new"
+    submitted_context = cast(JsonObject, cast(JsonObject, body["payload"])["request_context"])
+    assert submitted_context == {
+        "source": "operator",
+        "requested_output_mode": "activation_planning_only",
+        "explicit_non_visible_override": True,
+        "override_reason": "주군 explicitly requested local-daemon-only diagnostics.",
+    }
+
+
+def test_council_new_output_mode_alias_is_canonicalized_before_submit() -> None:
+    transport = StaticDaemonTransport(
+        {OP_VERSION_READ: BASE_VERSION_WITH_CNDIS, OP_COMMAND_SUBMIT: BASE_COMMAND_SUCCESS}
+    )
+    payload: JsonObject = {
+        "moderator": "agent-mod",
+        "members": ["agent-1", "agent-2"],
+        "title": "Explicit local diagnostics alias",
+        "request_context": {
+            "source": "operator",
+            "output_mode": "local-daemon-only",
+            "explicit_non_visible_override": True,
+            "override_reason": "주군 explicitly requested local-daemon-only diagnostics.",
+        },
+        "event_id": "evt-council-local-only-alias",
+        "command_id": "cmd-council-local-only-alias",
+    }
+
+    result = decode(
+        handle_council_command(
+            _council_args("council.new", payload),
+            client_factory=factory_for_transport(transport),
+        )
+    )
+
+    assert result["ok"] is True
+    submitted = transport.requests[1][1]
+    assert submitted is not None
+    submitted_payload = cast(JsonObject, submitted["payload"])
+    submitted_context = cast(JsonObject, submitted_payload["request_context"])
+    assert submitted_context["requested_output_mode"] == "activation_planning_only"
+    assert "output_mode" not in submitted_context
+    assert "requested_output" not in submitted_context
+
+
+def test_council_new_conflicting_output_intent_fails_before_submit() -> None:
+    transport = StaticDaemonTransport(
+        {OP_VERSION_READ: BASE_VERSION_WITH_CNDIS, OP_COMMAND_SUBMIT: BASE_COMMAND_SUCCESS}
+    )
+    payload: JsonObject = {
+        "moderator": "agent-mod",
+        "members": ["agent-1", "agent-2"],
+        "title": "Conflicting local diagnostics",
+        "explicit_non_visible_override": False,
+        "request_context": {
+            "source": "operator",
+            "requested_output_mode": "local-daemon-only",
+            "explicit_non_visible_override": True,
+            "override_reason": "주군 explicitly requested local-daemon-only diagnostics.",
+        },
+        "event_id": "evt-council-conflict",
+        "command_id": "cmd-council-conflict",
+    }
+
+    result = decode(
+        handle_council_command(
+            _council_args("council.new", payload),
+            client_factory=factory_for_transport(transport),
+        )
+    )
+
+    assert result["ok"] is False
+    assert result["error"]["category"] == "validation"
+    assert "must not conflict" in result["error"]["message"]
+    assert transport.requests == []
+
+
+def test_council_new_conflicting_output_mode_alias_fails_before_submit() -> None:
+    transport = StaticDaemonTransport(
+        {OP_VERSION_READ: BASE_VERSION_WITH_CNDIS, OP_COMMAND_SUBMIT: BASE_COMMAND_SUCCESS}
+    )
+    payload: JsonObject = {
+        "moderator": "agent-mod",
+        "members": ["agent-1", "agent-2"],
+        "title": "Conflicting output mode aliases",
+        "requested_output_mode": "live_visible_thread",
+        "surface": {
+            "kind": "discord_thread",
+            "platform": "discord",
+            "thread_id": "thread-conflict-alias",
+        },
+        "request_context": {
+            "source": "discord_thread",
+            "output_mode": "local-daemon-only",
+        },
+        "event_id": "evt-council-conflict-alias",
+        "command_id": "cmd-council-conflict-alias",
+    }
+
+    result = decode(
+        handle_council_command(
+            _council_args("council.new", payload),
+            client_factory=factory_for_transport(transport),
+        )
+    )
+
+    assert result["ok"] is False
+    assert result["error"]["category"] == "validation"
+    assert "output-mode aliases" in result["error"]["message"]
+    assert transport.requests == []
 
 
 @pytest.mark.parametrize(

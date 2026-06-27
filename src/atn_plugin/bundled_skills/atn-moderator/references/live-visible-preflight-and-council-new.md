@@ -5,7 +5,7 @@ This reference captures a reusable ATN moderator pattern from a Discord-origin r
 ## Correct operator sequence
 
 1. Load `atn-moderator` and `atn-plugin` guidance before acting.
-2. Confirm the requested output mode. Discord-origin “discuss / council” requests default to `live_visible_thread` unless the user explicitly approves `artifact_only` or `daemon_cli_actor_speech` before session creation. If the user already asked for the ATN discussion and the live-visible start gate passes, do not ask for another approval; start the council.
+2. Confirm the requested output mode. Every `council.new` must carry explicit output intent before transport: `live_visible_thread` with Discord `surface` and request context, or a supported non-visible/local-daemon-only alias with `explicit_non_visible_override=true` and a non-empty `override_reason`. Discord-origin “discuss / council” requests require `live_visible_thread` as the default user-facing surface; local-daemon-only aliases, activation-planning-only, artifact-only, transcript/export aliases, or `daemon_cli_actor_speech` modes require explicit pre-session user approval recorded as a supported `requested_output_mode`, `explicit_non_visible_override=true`, and a non-empty `override_reason`. The current contract does not require a hidden legacy `artifact_only_confirmed` flag. If the user already asked for the ATN discussion and the live-visible start gate passes, do not ask for another approval and do not run local-daemon first.
 3. Run daemon/tool health checks, but do not treat `atn_daemon_status ok=true` as sufficient live-discussion readiness. It proves daemon/protocol visibility only.
 4. Run `atn_discussion_activation_plan` with the relevant RUNFIX planning mode:
    - `plugin/RUNFIX-010` for live visible surface readiness: surface binding, turn-posting probe, visible closeout probe, real profile/gateway replies, and `cli_actor_speech_only=false`.
@@ -37,10 +37,11 @@ When `atn_council_command(command="council.new")` is eventually allowed, the pay
 - `moderator`
 - `members` as a JSON array
 - `title`
-- `surface` as a JSON object
+- `request_context` as a JSON object with `requested_output_mode`. Use `requested_output_mode=live_visible_thread` for Discord-origin/live-visible councils; use a supported non-visible/local-daemon-only mode only with `explicit_non_visible_override=true` and non-empty `override_reason`.
+- `surface` as a JSON object for `requested_output_mode=live_visible_thread` (omit it only for explicitly approved non-visible/local-daemon-only modes)
 - `event_id`
 
-Do not put `moderator`, `members`, or `surface` only inside nested `payload`. The tool-level `session_id` should be daemon-compatible; observed stream tooling rejects IDs that do not start with `sess_`.
+Do not put `moderator`, `members`, or live-visible `surface` only inside nested `payload`. The tool-level `session_id` should be daemon-compatible; observed stream tooling rejects IDs that do not start with `sess_`.
 
 ## Fail-closed report shape
 

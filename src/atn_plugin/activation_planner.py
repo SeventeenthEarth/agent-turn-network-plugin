@@ -23,6 +23,7 @@ RUNFIX_017_TASK_ID: Final = "plugin/RUNFIX-017"
 RUNFIX_019_TASK_ID: Final = "plugin/RUNFIX-019"
 RUNFIX2_005_TASK_ID: Final = "plugin/RUNFIX2-005"
 RUNFIX3_003_TASK_ID: Final = "plugin/RUNFIX3-003"
+NEWFIX_006_TASK_ID: Final = "plugin/NEWFIX-006"
 ATN_005_TASK_ID: Final = "plugin/ATN-005"
 SUPPORTED_TASK_IDS: Final[frozenset[str]] = frozenset(
     {
@@ -36,12 +37,31 @@ SUPPORTED_TASK_IDS: Final[frozenset[str]] = frozenset(
         RUNFIX_019_TASK_ID,
         RUNFIX2_005_TASK_ID,
         RUNFIX3_003_TASK_ID,
+        NEWFIX_006_TASK_ID,
         ATN_005_TASK_ID,
     }
 )
 TASK_ID: Final = RUNFIX_010_TASK_ID
 CONTROL_DEPENDENCY_TASK_ID: Final = "control/RUNFIX-005"
 CONTROL_DEPENDENCY_STATUS: Final = "completed/local-control"
+NEWFIX_004_CONTROL_DEPENDENCY_TASK_ID: Final = "control/NEWFIX-004"
+NEWFIX_005_CONTROL_DEPENDENCY_TASK_ID: Final = "control/NEWFIX-005"
+NEWFIX_REVIEW_PENDING_STATUS: Final = "implementation_complete/review_pending"
+NEWFIX_ACCEPTED_CONTROL_STATUSES: Final[frozenset[str]] = frozenset({"completed"})
+NEWFIX_CONSUMABLE_CONTROL_STATUSES: Final[frozenset[str]] = frozenset(
+    {NEWFIX_REVIEW_PENDING_STATUS, "completed"}
+)
+NEWFIX_006_CONTROL_DEPENDENCY_TASK_IDS: Final[frozenset[str]] = frozenset(
+    {
+        CONTROL_DEPENDENCY_TASK_ID,
+        NEWFIX_004_CONTROL_DEPENDENCY_TASK_ID,
+        NEWFIX_005_CONTROL_DEPENDENCY_TASK_ID,
+    }
+)
+NEWFIX_006_CONTROL_DEPENDENCY_STATUSES: Final[frozenset[str]] = frozenset(
+    {CONTROL_DEPENDENCY_STATUS, NEWFIX_REVIEW_PENDING_STATUS, "completed"}
+)
+NEWFIX_REQUIRED_TIMEOUT_SEC: Final = 120
 RUNFIX_012_CONTROL_DEPENDENCY_TASK_ID: Final = "control/RUNFIX-011"
 RUNFIX_012_CONTROL_DEPENDENCY_STATUSES: Final[frozenset[str]] = frozenset(
     {"local implementation proof", "completed/local-control", "local-control"}
@@ -109,7 +129,8 @@ def build_discussion_activation_plan(plan: Mapping[str, object]) -> JsonObject:
             "plan.task_id must be plugin/RUNFIX-006, plugin/RUNFIX-007, "
             "plugin/RUNFIX-008, plugin/RUNFIX-010, plugin/RUNFIX-012, "
             "plugin/RUNFIX-015, plugin/RUNFIX-017, plugin/RUNFIX-019, "
-            "plugin/RUNFIX2-005, plugin/RUNFIX3-003, or plugin/ATN-005"
+            "plugin/RUNFIX2-005, plugin/RUNFIX3-003, plugin/NEWFIX-006, or "
+            "plugin/ATN-005"
         )
 
     blockers: list[JsonObject] = []
@@ -171,11 +192,27 @@ def build_discussion_activation_plan(plan: Mapping[str, object]) -> JsonObject:
         task_id=task_id,
         blockers=blockers,
     )
+    requested_output_mode = cast(str, visible_surface_readiness["requested_output_mode"])
+    request_source = cast(str, visible_surface_readiness["request_source"])
+    selected_runner_prompt_evidence = _newfix_prompt_evidence_report(
+        source.get("selected_runner_prompt_evidence"),
+        task_id=task_id,
+        requested_output_mode=requested_output_mode,
+        request_source=request_source,
+        blockers=blockers,
+    )
+    selected_runner_timeout_evidence = _newfix_timeout_evidence_report(
+        source.get("selected_runner_timeout_evidence"),
+        task_id=task_id,
+        requested_output_mode=requested_output_mode,
+        request_source=request_source,
+        blockers=blockers,
+    )
     daemon_registry_membership = _daemon_registry_membership_report(
         source.get("daemon_registry_membership"),
         eligible_profiles=eligible_profiles,
         task_id=task_id,
-        requested_output_mode=cast(str, visible_surface_readiness["requested_output_mode"]),
+        requested_output_mode=requested_output_mode,
         blockers=blockers,
     )
     participant_runtime_readiness = _participant_runtime_readiness_report(
@@ -232,8 +269,6 @@ def build_discussion_activation_plan(plan: Mapping[str, object]) -> JsonObject:
             )
         )
 
-    requested_output_mode = cast(str, visible_surface_readiness["requested_output_mode"])
-    request_source = cast(str, visible_surface_readiness["request_source"])
     start_status = _start_status(
         blockers=blockers,
         blocked_profiles=blocked_profiles,
@@ -285,6 +320,8 @@ def build_discussion_activation_plan(plan: Mapping[str, object]) -> JsonObject:
         "visible_surface_readiness_report": visible_surface_readiness,
         "daemon_registry_membership_report": daemon_registry_membership,
         "participant_runtime_readiness_report": participant_runtime_readiness,
+        "selected_runner_prompt_evidence_report": selected_runner_prompt_evidence,
+        "selected_runner_timeout_evidence_report": selected_runner_timeout_evidence,
         "visible_author_guard_report": visible_author_guard,
         "integrated_discussion_proof_report": integrated_discussion_proof,
         "runfix3_live_thread_proof_report": runfix3_live_thread_proof,
@@ -318,6 +355,7 @@ def _behavior_task_id(task_id: str) -> str:
         RUNFIX_019_TASK_ID,
         RUNFIX2_005_TASK_ID,
         RUNFIX3_003_TASK_ID,
+        NEWFIX_006_TASK_ID,
         ATN_005_TASK_ID,
     }:
         return task_id
@@ -327,6 +365,9 @@ def _behavior_task_id(task_id: str) -> str:
 def _validate_control_dependency(
     value: object, *, task_id: str, blockers: list[JsonObject]
 ) -> None:
+    if task_id == NEWFIX_006_TASK_ID:
+        _validate_newfix_006_control_dependency(value, blockers=blockers)
+        return
     if task_id == RUNFIX_012_TASK_ID:
         _validate_runfix_012_control_dependency(value, blockers=blockers)
         return
@@ -369,6 +410,52 @@ def _validate_control_dependency(
                 code="control_dependency_evidence_missing",
                 owner="control",
                 message="control/RUNFIX-005 evidence_ref is required.",
+            )
+        )
+
+
+def _validate_newfix_006_control_dependency(value: object, *, blockers: list[JsonObject]) -> None:
+    if not isinstance(value, Mapping):
+        blockers.append(
+            _blocker(
+                code="control_dependency_missing",
+                owner="control",
+                message=(
+                    "plugin/NEWFIX-006 requires explicit historical activation-planner or "
+                    "NEWFIX control dependency evidence."
+                ),
+            )
+        )
+        return
+    dependency = _json_object(value, label="plan.control_dependency")
+    if dependency.get("task_id") not in NEWFIX_006_CONTROL_DEPENDENCY_TASK_IDS:
+        blockers.append(
+            _blocker(
+                code="control_dependency_task_mismatch",
+                owner="control",
+                message=(
+                    "plugin/NEWFIX-006 control_dependency.task_id must be control/RUNFIX-005, "
+                    "control/NEWFIX-004, or control/NEWFIX-005."
+                ),
+            )
+        )
+    if dependency.get("status") not in NEWFIX_006_CONTROL_DEPENDENCY_STATUSES:
+        blockers.append(
+            _blocker(
+                code="control_dependency_not_completed",
+                owner="control",
+                message=(
+                    "plugin/NEWFIX-006 control_dependency.status must be completed/local-control, "
+                    "implementation_complete/review_pending, or completed."
+                ),
+            )
+        )
+    if not _non_empty_string(dependency.get("evidence_ref")):
+        blockers.append(
+            _blocker(
+                code="control_dependency_evidence_missing",
+                owner="control",
+                message="plugin/NEWFIX-006 control_dependency.evidence_ref is required.",
             )
         )
 
@@ -807,7 +894,7 @@ def _daemon_registry_membership_report(
     blockers: list[JsonObject],
 ) -> JsonObject:
     required = task_id == RUNFIX_019_TASK_ID or (
-        task_id in {RUNFIX_010_TASK_ID, RUNFIX3_003_TASK_ID}
+        task_id in {RUNFIX_010_TASK_ID, RUNFIX3_003_TASK_ID, NEWFIX_006_TASK_ID}
         and requested_output_mode == "live_visible_thread"
     )
     required_principals = [
@@ -1049,7 +1136,7 @@ def _visible_surface_readiness_report(
         "visible_turn_count_proven": False,
         "ready": False,
     }
-    if task_id not in {RUNFIX_010_TASK_ID, RUNFIX3_003_TASK_ID}:
+    if task_id not in {RUNFIX_010_TASK_ID, RUNFIX3_003_TASK_ID, NEWFIX_006_TASK_ID}:
         report["ready"] = requested_output_mode != "live_visible_thread"
         return report
 
@@ -1392,6 +1479,330 @@ def _runtime_control_dependency_report(value: object) -> JsonObject:
     ):
         output["status"] = "proven"
     return output
+
+
+def _newfix_start_gate_required(
+    *, task_id: str, requested_output_mode: str, request_source: str
+) -> bool:
+    return (
+        task_id == NEWFIX_006_TASK_ID
+        and requested_output_mode == "live_visible_thread"
+        and request_source.startswith("discord")
+    )
+
+
+def _newfix_control_dependency_report(value: object, *, expected_task_id: str) -> JsonObject:
+    output: JsonObject = {
+        "status": "unproven",
+        "task_id": None,
+        "dependency_status": None,
+        "evidence_ref": None,
+        "accepted_for_start": False,
+    }
+    if not isinstance(value, Mapping):
+        return output
+    dependency = _json_object(value, label="newfix.control_dependency")
+    task_id = dependency.get("task_id")
+    status = dependency.get("status")
+    evidence_ref = dependency.get("evidence_ref")
+    if _non_empty_string(task_id):
+        output["task_id"] = cast(str, task_id)
+    if _non_empty_string(status):
+        output["dependency_status"] = cast(str, status)
+    if _non_empty_string(evidence_ref):
+        output["evidence_ref"] = cast(str, evidence_ref)
+    if (
+        task_id == expected_task_id
+        and status in NEWFIX_CONSUMABLE_CONTROL_STATUSES
+        and _non_empty_string(evidence_ref)
+    ):
+        output["status"] = "proven"
+        output["accepted_for_start"] = status in NEWFIX_ACCEPTED_CONTROL_STATUSES
+    return output
+
+
+def _empty_newfix_prompt_evidence_report() -> JsonObject:
+    return {
+        "runfix_task_id": NEWFIX_006_TASK_ID,
+        "status": "not_required",
+        "control_dependency": _newfix_control_dependency_report(
+            {}, expected_task_id=NEWFIX_004_CONTROL_DEPENDENCY_TASK_ID
+        ),
+        "result": "unproven",
+        "prompt_context_sha256": None,
+        "own_history_source_event_ids": [],
+        "own_history_sources_present": False,
+        "evidence_ref": None,
+    }
+
+
+def _newfix_prompt_evidence_report(
+    value: object,
+    *,
+    task_id: str,
+    requested_output_mode: str,
+    request_source: str,
+    blockers: list[JsonObject],
+) -> JsonObject:
+    report = _empty_newfix_prompt_evidence_report()
+    if not _newfix_start_gate_required(
+        task_id=task_id,
+        requested_output_mode=requested_output_mode,
+        request_source=request_source,
+    ):
+        return report
+    report["status"] = "blocked"
+    if not isinstance(value, Mapping):
+        blockers.append(
+            _blocker(
+                code="newfix_prompt_evidence_missing",
+                owner="control/operator",
+                message=(
+                    "plugin/NEWFIX-006 requires explicit selected_runner_prompt_evidence from "
+                    "control/NEWFIX-004 before Discord-origin live-visible start can be reported."
+                ),
+            )
+        )
+        return report
+    prompt = _json_object(value, label="plan.selected_runner_prompt_evidence")
+    dependency = _newfix_control_dependency_report(
+        prompt, expected_task_id=NEWFIX_004_CONTROL_DEPENDENCY_TASK_ID
+    )
+    result = _optional_string_value(prompt.get("result")) or "unproven"
+    prompt_context_sha256 = _optional_string_value(prompt.get("prompt_context_sha256"))
+    own_history_source_event_ids = _optional_string_list(
+        prompt.get("own_history_source_event_ids") or prompt.get("own_history_source_ids")
+    )
+    report.update(
+        {
+            "control_dependency": dependency,
+            "result": result,
+            "prompt_context_sha256": prompt_context_sha256,
+            "own_history_source_event_ids": cast(list[JsonValue], own_history_source_event_ids),
+            "own_history_sources_present": bool(own_history_source_event_ids),
+            "evidence_ref": dependency["evidence_ref"],
+        }
+    )
+    if dependency["status"] != "proven":
+        blockers.append(
+            _blocker(
+                code="newfix_prompt_control_dependency_unproven",
+                owner="control",
+                message=(
+                    "selected_runner_prompt_evidence must cite control/NEWFIX-004 with a review-"
+                    "pending or completed status and evidence_ref."
+                ),
+            )
+        )
+        return report
+    if result == "blocked":
+        blockers.append(
+            _blocker(
+                code="newfix_prompt_evidence_blocked",
+                owner="control/operator",
+                message=(
+                    "selected_runner_prompt_evidence.result=blocked keeps Discord-origin live-"
+                    "visible NEWFIX start blocked."
+                ),
+            )
+        )
+        return report
+    if result != "pass":
+        blockers.append(
+            _blocker(
+                code="newfix_prompt_result_unproven",
+                owner="control/operator",
+                message=(
+                    "selected_runner_prompt_evidence.result must be pass for "
+                    "NEWFIX start authority."
+                ),
+            )
+        )
+        return report
+    if not own_history_source_event_ids:
+        blockers.append(
+            _blocker(
+                code="newfix_prompt_own_history_missing",
+                owner="control/operator",
+                message=(
+                    "selected_runner_prompt_evidence must include distinguishable selected-member "
+                    "own-history source ids before NEWFIX live-visible start can be reported."
+                ),
+            )
+        )
+        return report
+    if prompt_context_sha256 is None:
+        blockers.append(
+            _blocker(
+                code="newfix_prompt_hash_missing",
+                owner="control/operator",
+                message="selected_runner_prompt_evidence.prompt_context_sha256 is required.",
+            )
+        )
+        return report
+    report["status"] = "proven"
+    if dependency["accepted_for_start"] is not True:
+        blockers.append(
+            _blocker(
+                code="newfix_prompt_review_closeout_pending",
+                owner="control",
+                message=(
+                    "control/NEWFIX-004 remains review-pending, so prompt own-history proof may be "
+                    "reported provisionally but cannot unlock ready_to_start."
+                ),
+            )
+        )
+    return report
+
+
+def _empty_newfix_timeout_evidence_report() -> JsonObject:
+    return {
+        "runfix_task_id": NEWFIX_006_TASK_ID,
+        "status": "not_required",
+        "control_dependency": _newfix_control_dependency_report(
+            {}, expected_task_id=NEWFIX_005_CONTROL_DEPENDENCY_TASK_ID
+        ),
+        "policy_required": False,
+        "configured_timeout_sec": None,
+        "effective_timeout_sec": None,
+        "approved_alternative": False,
+        "approval_basis": None,
+        "compliant": False,
+        "drift_blocked": False,
+        "evidence_ref": None,
+    }
+
+
+def _newfix_timeout_evidence_report(
+    value: object,
+    *,
+    task_id: str,
+    requested_output_mode: str,
+    request_source: str,
+    blockers: list[JsonObject],
+) -> JsonObject:
+    report = _empty_newfix_timeout_evidence_report()
+    if not _newfix_start_gate_required(
+        task_id=task_id,
+        requested_output_mode=requested_output_mode,
+        request_source=request_source,
+    ):
+        return report
+    report["status"] = "blocked"
+    if not isinstance(value, Mapping):
+        blockers.append(
+            _blocker(
+                code="newfix_timeout_evidence_missing",
+                owner="control/operator",
+                message=(
+                    "plugin/NEWFIX-006 requires explicit selected_runner_timeout_evidence from "
+                    "control/NEWFIX-005 before Discord-origin live-visible start can be reported."
+                ),
+            )
+        )
+        return report
+    timeout_evidence = _json_object(value, label="plan.selected_runner_timeout_evidence")
+    dependency = _newfix_control_dependency_report(
+        timeout_evidence, expected_task_id=NEWFIX_005_CONTROL_DEPENDENCY_TASK_ID
+    )
+    policy_required = timeout_evidence.get("policy_required") is True
+    configured_timeout_sec = _non_negative_int_or_none(
+        timeout_evidence.get("configured_timeout_sec")
+    )
+    effective_timeout_sec = _non_negative_int_or_none(timeout_evidence.get("effective_timeout_sec"))
+    approved_alternative = timeout_evidence.get("approved_alternative") is True
+    approval_basis = _optional_string_value(timeout_evidence.get("approval_basis"))
+    compliant = timeout_evidence.get("compliant") is True
+    drift_blocked = (
+        timeout_evidence.get("drift_blocked") is True
+        or timeout_evidence.get("selected_runner_timeout_policy_blocked") is True
+    )
+    report.update(
+        {
+            "control_dependency": dependency,
+            "policy_required": policy_required,
+            "configured_timeout_sec": configured_timeout_sec,
+            "effective_timeout_sec": effective_timeout_sec,
+            "approved_alternative": approved_alternative,
+            "approval_basis": approval_basis,
+            "compliant": compliant,
+            "drift_blocked": drift_blocked,
+            "evidence_ref": dependency["evidence_ref"],
+        }
+    )
+    if dependency["status"] != "proven":
+        blockers.append(
+            _blocker(
+                code="newfix_timeout_control_dependency_unproven",
+                owner="control",
+                message=(
+                    "selected_runner_timeout_evidence must cite control/NEWFIX-005 with a review-"
+                    "pending or completed status and evidence_ref."
+                ),
+            )
+        )
+        return report
+    if drift_blocked:
+        blockers.append(
+            _blocker(
+                code="newfix_timeout_drift_blocked",
+                owner="control/operator",
+                message=(
+                    "selected_runner_timeout_evidence reports timeout-policy drift, so NEWFIX live-"
+                    "visible start remains blocked."
+                ),
+            )
+        )
+        return report
+    if not policy_required or not compliant:
+        blockers.append(
+            _blocker(
+                code="newfix_timeout_policy_invalid",
+                owner="control/operator",
+                message=(
+                    "selected_runner_timeout_evidence must be policy_required=true "
+                    "and compliant=true for NEWFIX live-visible start authority."
+                ),
+            )
+        )
+        return report
+    valid_default = (
+        configured_timeout_sec == NEWFIX_REQUIRED_TIMEOUT_SEC
+        and effective_timeout_sec == NEWFIX_REQUIRED_TIMEOUT_SEC
+        and not approved_alternative
+    )
+    valid_alternative = (
+        approved_alternative
+        and approval_basis is not None
+        and configured_timeout_sec is not None
+        and configured_timeout_sec > 0
+        and effective_timeout_sec == configured_timeout_sec
+    )
+    if not (valid_default or valid_alternative):
+        blockers.append(
+            _blocker(
+                code="newfix_timeout_policy_invalid",
+                owner="control/operator",
+                message=(
+                    "selected_runner_timeout_evidence must prove dispatch_timeout_sec=120 or an "
+                    "explicit approved alternative with approval_basis."
+                ),
+            )
+        )
+        return report
+    report["status"] = "proven"
+    if dependency["accepted_for_start"] is not True:
+        blockers.append(
+            _blocker(
+                code="newfix_timeout_review_closeout_pending",
+                owner="control",
+                message=(
+                    "control/NEWFIX-005 remains review-pending, so timeout proof may be reported "
+                    "provisionally but cannot unlock ready_to_start."
+                ),
+            )
+        )
+    return report
 
 
 def _empty_runtime_class_report(evidence_class: str) -> JsonObject:
@@ -4623,7 +5034,7 @@ def _start_status(
     ):
         return "not_ready"
     if (
-        task_id in {RUNFIX_010_TASK_ID, RUNFIX3_003_TASK_ID}
+        task_id in {RUNFIX_010_TASK_ID, RUNFIX3_003_TASK_ID, NEWFIX_006_TASK_ID}
         and requested_output_mode == "live_visible_thread"
         and request_source.startswith("discord")
     ):

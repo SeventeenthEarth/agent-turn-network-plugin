@@ -119,7 +119,7 @@ Development-class work may use the optional workflow graph when explicitly selec
 intake -> sot -> roadmap -> task-classification -> plan -> vet -> ask -> implement -> enhance-test -> ai-slop-cleaner -> optimize -> docs -> verify -> review -> request-feedback-1 -> handle-feedback-1 -> mar-review -> second-color-review -> final
 ```
 
-The local applied graph id is `graph-kkachi-project-kkachi-agent-network-plugin-kas-v017-kah-v013-20260621` and the KAH apply event is `evt-002514`. The graph is intentionally local/ignored and aligns this repo with KAS v0.1.7 / KAH v0.1.13 workflow-managed surfaces and the MAR review lane.
+The local applied graph id is `graph-kkachi-project-kkachi-agent-network-plugin-kas-v017-kah-v013-20260621` and the KAH apply event is `evt-002514`. That graph is historical local workflow state; current local toolchain metadata is `.kkachi/toolchain.yaml` and is refreshed for KAS v0.2.0 / KAH v0.2.0, with KAT v0.1.0 test-runner config in `.kkachi/tester.yaml`.
 
 Plan-stage default:
 
@@ -153,16 +153,15 @@ If an optional workflow graph is used, record explicit skipped-phase reasons for
 
 Do not silently force implementation phases on read-only work, and do not silently skip required phases for implementation work.
 
-## Backend and Codex boundary
+## Backend and GJC boundary
 
-Stage 1 ATN plugin implementation uses the local Codex app-server path when a backend lane is needed:
+For KAS/KAH v0.2 local development in this ATN plugin repo, use the GAJAE GJC delegated-execution lane as the default backend policy:
 
 ```text
-openai_codex.Codex / CodexConfig
-  -> codex app-server --listen stdio://
+KAS/KAH phase planning -> GJC delegated execution through KAH wrapper -> candidate design/plan/implementation artifacts
 ```
 
-Do not substitute `codex exec` for a lane labeled `codex app-server`. If the app-server SDK path is unavailable, report a blocker instead of falling back silently.
+KAB remains non-primary unless a later task explicitly selects KAB runtime/session control. Do not use direct `codex app-server` as the default backend lane or as a silent fallback for v0.2 ATN work. Legacy Codex app-server evidence remains historical only and is not current backend-policy authority.
 
 ## Verification commands
 
@@ -172,8 +171,9 @@ Use the repo Makefile targets rather than raw broad pytest when possible:
 HOME=/Users/draccoon /Users/draccoon/.local/bin/kkachi-agent-helper-toolchain graph validate --file .kkachi-workflow.yaml --json
 HOME=/Users/draccoon /Users/draccoon/.local/bin/kkachi-agent-helper-toolchain project doctor --json
 HOME=/Users/draccoon /Users/draccoon/.local/bin/kkachi-agent-skills-toolchain doctor --project . --workflow-graph --json
-HOME=/Users/draccoon make test-prepare
-HOME=/Users/draccoon make check-core-contract
+HOME=/Users/draccoon kkachi-agent-tester run test-prepare
+HOME=/Users/draccoon kkachi-agent-tester run check-core-contract
+HOME=/Users/draccoon kkachi-agent-tester run test
 HOME=/Users/draccoon make test
 ```
 

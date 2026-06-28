@@ -40,7 +40,8 @@ Only `start_blocker` findings block `council.new`. Treat these as start blockers
 - target Discord origin is unspecified or not proven as the exact requested `chat_id:thread_id`;
 - effective bot-to-bot or shared/default-author risk is positively detected and not approved;
 - proceeding requires provider/profile/gateway/auth/token mutation without explicit approval.
-- absent or `blocked` `selected_runner_prompt_evidence` before start for a long or live-visible council.
+- absent or `blocked` `selected_runner_prompt_evidence` before start for a long or live-visible council;
+- for `plugin/NEWFIX-006`, missing or `blocked` `selected_runner_timeout_evidence`, or review-pending `control/NEWFIX-004` / `control/NEWFIX-005` rows, before a Discord-origin `live_visible_thread` start.
 
 Treat these as `runtime_evidence_pending`, not automatic start blockers, when the start gate otherwise passes:
 - subscriber presence, cursor ack freshness, heartbeat freshness;
@@ -57,7 +58,7 @@ Treat these as `final_acceptance_unproven`, not start blockers:
 When using `atn_discussion_activation_plan`, materialize collected evidence into planner input fields such as `participant_profiles[].effective_discord.tools_visible`, `participant_profiles[].effective_discord.bot_to_bot_enabled`, `discord_parent_channel.allow_list_inheritance_proven`, and `visible_surface_readiness`; prose notes or prior human knowledge do not count. Treat `start_status: blocked` as the actual `council.new` stop signal. If top-level `status: blocked` while `start_status: ready_to_start`, only RUNFIX3 final acceptance is blocked; the start gate classification still governs whether `council.new` may proceed. Do not treat `atn_discussion_activation_plan.live_readiness=false` as a start blocker by itself because the planner is pure/local and never proves live readiness.
 
 If evidence is missing but can be collected without mutating profile/provider/gateway/auth/token state, collect the probe before asking the user. If collecting evidence requires mutation, credentials, or unavailable external permissions, stop and ask for approval.
-For long or live-visible councils, treat `selected_runner_prompt_evidence` as the named control-to-plugin content-plane handoff from `control/NEWFIX-001`. Plugin hints, visible messages, and participant responses are diagnostic only and cannot replace missing control prompt context.
+For long or live-visible councils, treat `selected_runner_prompt_evidence` as the named control-to-plugin content-plane handoff introduced by `control/NEWFIX-001` and extended with own-history authority by `control/NEWFIX-004`; for `plugin/NEWFIX-006`, the prompt proof must cite that `control/NEWFIX-004` extension and `selected_runner_timeout_evidence` must cite the timeout-policy handoff from `control/NEWFIX-005`. Review-pending `control/NEWFIX-004` / `control/NEWFIX-005` evidence may be reported provisionally but must not unlock `ready_to_start`. Plugin hints, visible messages, participant responses, and local/artifact/manual bridge paths are diagnostic only and cannot replace missing control prompt or timeout authority.
 
 If the first selected participant speech says the agenda or prior context is missing, intervene or cancel rather than treating that turn as normal discussion progress.
 

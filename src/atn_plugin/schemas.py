@@ -874,6 +874,7 @@ ATN_DISCUSSION_ACTIVATION_PLAN: Final[dict[str, object]] = {
                             "plugin/RUNFIX-019",
                             "plugin/RUNFIX2-005",
                             "plugin/RUNFIX3-003",
+                            "plugin/NEWFIX-006",
                             "plugin/ATN-005",
                         ],
                     },
@@ -884,7 +885,10 @@ ATN_DISCUSSION_ACTIVATION_PLAN: Final[dict[str, object]] = {
                             "Explicit control dependency completion evidence. "
                             "RUNFIX-006/007/008/010/015/017 require control/RUNFIX-005; "
                             "RUNFIX-012 requires control/RUNFIX-011 local participant-runtime "
-                            "readiness proof; "
+                            "readiness proof; NEWFIX-006 keeps this field as historical activation-"
+                            "planner evidence while its authoritative NEWFIX start-gate "
+                            "proof lives in "
+                            "selected_runner_prompt_evidence and selected_runner_timeout_evidence; "
                             "RUNFIX-019 requires control/RUNFIX-018 registry reconciliation proof; "
                             "ATN-005 preserves those IDs as historical dependency labels."
                         ),
@@ -1062,6 +1066,30 @@ ATN_DISCUSSION_ACTIVATION_PLAN: Final[dict[str, object]] = {
                             "selected_runner_pass remains evidence-derived only, live_readiness "
                             "stays false, and the planner does not invent control enforcement "
                             "semantics."
+                        ),
+                    },
+                    "selected_runner_prompt_evidence": {
+                        "type": "object",
+                        "additionalProperties": True,
+                        "description": (
+                            "Explicit-only plugin/NEWFIX-006 prompt own-history proof input from "
+                            "control/NEWFIX-004. For Discord-origin live_visible_thread requests, "
+                            "it must carry the control task/status/evidence ref, result, prompt "
+                            "hash, and distinguishable selected-member own-history source ids. "
+                            "Review-pending control status is provisional only and does not unlock "
+                            "ready_to_start by itself."
+                        ),
+                    },
+                    "selected_runner_timeout_evidence": {
+                        "type": "object",
+                        "additionalProperties": True,
+                        "description": (
+                            "Explicit-only plugin/NEWFIX-006 timeout-policy proof input from "
+                            "control/NEWFIX-005. For Discord-origin live_visible_thread requests, "
+                            "it must prove dispatch_timeout_sec=120 or an explicitly approved "
+                            "alternative, preserve the raw control status/evidence ref, and keep "
+                            "review-pending control status provisional rather than "
+                            "start-authorizing."
                         ),
                     },
                     "evidence_labels": {

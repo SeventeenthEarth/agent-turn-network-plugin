@@ -120,4 +120,7 @@ nexfix:
     - "control/NEWFIX-004"
     - "control/NEWFIX-005"
     - "plugin/NEWFIX-006"
-  boundary: "NEXFIX hardens selected-runner content-plane readiness and live-visible runtime delivery after the 2026-06-26 prompt-envelope defect and 2026-06-28 KLM delivery blocker. Plugin owns packaged moderator/participant guidance and activation-planner guardrails for envelope preflight, selected-member own-history prompt evidence, and live-visible timeout evidence while control owns the authoritative projection-backed prompt and timeout policy/evidence. No live Discord rollout, default Discord activation, daemon startup/discovery, production activation, profile/provider/gateway/auth/token/model mutation, hidden CLI fallback, package publication, push, or broad rollout is authorized."
+    - "control/NEWFIX-007"
+    - "plugin/NEWFIX-008"
+    - "cross-repo/NEWFIX-009"
+  boundary: "NEXFIX hardens selected-runner content-plane readiness, live-visible runtime delivery, and agenda required-context submission after the 2026-06-26 prompt-envelope defect, 2026-06-28 KLM delivery blocker, and 2026-06-29 cancelled-session agenda submission defect. Plugin owns packaged moderator/participant guidance, activation-planner guardrails for envelope preflight, selected-member own-history prompt evidence, live-visible timeout evidence, and the live command-submit representation/idempotency boundary while control owns the authoritative projection-backed prompt, structured agenda payload, and timeout policy/evidence. No live Discord rollout, default Discord activation, daemon startup/discovery, production activation, profile/provider/gateway/auth/token/model mutation, hidden CLI fallback, package publication, push, or broad rollout is authorized."

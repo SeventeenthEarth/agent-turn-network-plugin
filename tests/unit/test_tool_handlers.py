@@ -406,6 +406,123 @@ def test_discussion_activation_plan_handler_returns_local_doctor_report() -> Non
     assert result["data"]["evidence_labels"]["selected_runner_pass"] == "unproven"
 
 
+def test_discussion_activation_plan_handler_reports_newfix006_review_pending_block() -> None:
+    result = decode(
+        handle_discussion_activation_plan(
+            {
+                "plan": {
+                    "schema_version": 1,
+                    "task_id": "plugin/NEWFIX-006",
+                    "control_dependency": {
+                        "task_id": "control/RUNFIX-005",
+                        "status": "completed/local-control",
+                        "evidence_ref": "control-runfix-005",
+                    },
+                    "plugin_install": {
+                        "installed": True,
+                        "enabled": True,
+                        "tool_names": ["atn_discussion_activation_plan"],
+                    },
+                    "control_daemon": {
+                        "mode": "explicit",
+                        "socket_or_config_ref": "socket-config",
+                        "compatibility_ref": "version-read",
+                    },
+                    "participant_profiles": [
+                        {"profile": "macho", "tools_visible": True, "bot_to_bot_enabled": False},
+                        {"profile": "seohwang", "tools_visible": True, "bot_to_bot_enabled": False},
+                    ],
+                    "discord_parent_channel": {
+                        "channel_id": "parent-123",
+                        "allow_list_inheritance_proven": True,
+                        "proof_source": "gateway_parent_allow_list_inheritance",
+                        "proof_ref": "parent-proof",
+                    },
+                    "planned_changes": ["local proof only"],
+                    "rollback": {"steps": ["revert local proof fixtures"]},
+                    "verification_commands": ["make test-prepare"],
+                    "approval_gates": ["explicit apply approval"],
+                    "request_context": {
+                        "source": "discord_thread",
+                        "chat_id": "chat-123",
+                        "thread_id": "thread-456",
+                    },
+                    "visible_surface_readiness": {
+                        "surface_bound": True,
+                        "parent_channel_id": "parent-123",
+                        "thread_id": "thread-456",
+                        "observed_chat_id": "chat-123",
+                        "observed_thread_id": "thread-456",
+                        "exact_origin_binding": True,
+                        "origin_binding_evidence_ref": "discord/thread-origin-proof",
+                        "turn_posting_strategy": "selected_speaker_profile_send",
+                        "turn_delivery_probe_ref": "discord/thread-turn-probe",
+                        "visible_closeout_probe_ref": "discord/thread-closeout-probe",
+                        "real_profile_gateway_replies": True,
+                        "cli_actor_speech_only": False,
+                        "max_discussion_turns": 3,
+                        "participant_count": 2,
+                        "visible_turns_expected": 7,
+                        "visible_turns_posted": 7,
+                    },
+                    "daemon_registry_membership": {
+                        "registry_loaded": True,
+                        "selected_moderator_principal": "macho",
+                        "evidence_ref": "control/registry/show",
+                        "participants": [
+                            {
+                                "principal": "macho",
+                                "in_loaded_registry": True,
+                                "mapping_unambiguous": True,
+                                "planned_reconcile": False,
+                                "wrapper_resolves": True,
+                                "enabled": True,
+                            },
+                            {
+                                "principal": "seohwang",
+                                "in_loaded_registry": True,
+                                "mapping_unambiguous": True,
+                                "planned_reconcile": False,
+                                "wrapper_resolves": True,
+                                "enabled": True,
+                            },
+                        ],
+                    },
+                    "selected_runner_prompt_evidence": {
+                        "task_id": "control/NEWFIX-004",
+                        "status": "implementation_complete/review_pending",
+                        "evidence_ref": "control/status/newfix-004",
+                        "result": "pass",
+                        "prompt_context_sha256": "prompt-sha-256",
+                        "own_history_source_event_ids": ["evt-own-1"],
+                    },
+                    "selected_runner_timeout_evidence": {
+                        "task_id": "control/NEWFIX-005",
+                        "status": "implementation_complete/review_pending",
+                        "evidence_ref": "control/status/newfix-005",
+                        "policy_required": True,
+                        "configured_timeout_sec": 120,
+                        "effective_timeout_sec": 120,
+                        "approved_alternative": False,
+                        "approval_basis": None,
+                        "compliant": True,
+                        "drift_blocked": False,
+                    },
+                }
+            }
+        )
+    )
+
+    assert result["ok"] is False
+    assert result["tool"] == "atn_discussion_activation_plan"
+    assert result["live_readiness"] is False
+    assert result["data"]["task_id"] == "plugin/NEWFIX-006"
+    assert result["data"]["behavior_task_id"] == "plugin/NEWFIX-006"
+    assert result["data"]["start_status"] == "blocked"
+    assert result["data"]["selected_runner_prompt_evidence_report"]["status"] == "proven"
+    assert result["data"]["selected_runner_timeout_evidence_report"]["status"] == "proven"
+
+
 def test_discussion_activation_plan_handler_exposes_runfix3_live_thread_report() -> None:
     result = decode(
         handle_discussion_activation_plan(

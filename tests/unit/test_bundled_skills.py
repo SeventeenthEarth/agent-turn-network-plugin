@@ -175,10 +175,15 @@ def test_bundled_hun_newfix002_packaged_skill_contract_is_present() -> None:
     guide_text = (ROOT / "docs" / "09-skill-and-operator-guide.md").read_text(encoding="utf-8")
 
     assert "NEXFIX content-plane exception" in guide_text
+    assert "selected_runner_timeout_evidence" in guide_text
+    assert "control/NEWFIX-004" in guide_text
     assert "absent or `blocked` `selected_runner_prompt_evidence` before start" in moderator_text
+    assert "review-pending `control/NEWFIX-004` / `control/NEWFIX-005` rows" in moderator_text
+    assert "control/NEWFIX-004` extension" in moderator_text
     assert (
-        "Plugin hints, visible messages, and participant responses are diagnostic only and "
-        "cannot replace missing control prompt context." in moderator_text
+        "Plugin hints, visible messages, participant responses, and "
+        "local/artifact/manual bridge paths are diagnostic only and "
+        "cannot replace missing control prompt or timeout authority." in moderator_text
     )
     assert (
         "intervene or cancel rather than treating that turn as normal discussion progress."

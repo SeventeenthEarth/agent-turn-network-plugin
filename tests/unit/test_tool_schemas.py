@@ -318,6 +318,7 @@ def test_discussion_activation_plan_schema_is_pure_local_doctor_tool() -> None:
             "plugin/RUNFIX-019",
             "plugin/RUNFIX2-005",
             "plugin/RUNFIX3-003",
+            "plugin/NEWFIX-006",
             "plugin/ATN-005",
         ],
     }
@@ -346,6 +347,14 @@ def test_discussion_activation_plan_schema_is_pure_local_doctor_tool() -> None:
     assert "subscriber presence" in runtime_readiness["description"]
     assert "cursor ack freshness" in runtime_readiness["description"]
     assert "manual/fallback-profile-only" in runtime_readiness["description"]
+    prompt_evidence = plan_schema["properties"]["selected_runner_prompt_evidence"]
+    assert "plugin/NEWFIX-006" in prompt_evidence["description"]
+    assert "control/NEWFIX-004" in prompt_evidence["description"]
+    assert "own-history source ids" in prompt_evidence["description"]
+    timeout_evidence = plan_schema["properties"]["selected_runner_timeout_evidence"]
+    assert "plugin/NEWFIX-006" in timeout_evidence["description"]
+    assert "control/NEWFIX-005" in timeout_evidence["description"]
+    assert "dispatch_timeout_sec=120" in timeout_evidence["description"]
     visible_author_guard = plan_schema["properties"]["visible_author_guard"]
     assert "pre-council.new visible author guard" in visible_author_guard["description"]
     assert "expected_author_source" in visible_author_guard["description"]

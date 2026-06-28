@@ -590,6 +590,41 @@ def complete_runfix3_003_plan() -> dict[str, object]:
     return plan
 
 
+def complete_newfix_006_plan(
+    *,
+    prompt_status: str = "implementation_complete/review_pending",
+    timeout_status: str = "implementation_complete/review_pending",
+    configured_timeout_sec: int = 120,
+    effective_timeout_sec: int = 120,
+    approved_alternative: bool = False,
+    approval_basis: str | None = None,
+    drift_blocked: bool = False,
+) -> dict[str, object]:
+    plan = complete_runfix3_003_plan()
+    plan["task_id"] = "plugin/NEWFIX-006"
+    plan["selected_runner_prompt_evidence"] = {
+        "task_id": "control/NEWFIX-004",
+        "status": prompt_status,
+        "evidence_ref": "control/status/newfix-004",
+        "result": "pass",
+        "prompt_context_sha256": "prompt-sha-256",
+        "own_history_source_event_ids": ["evt-own-1", "evt-own-2"],
+    }
+    plan["selected_runner_timeout_evidence"] = {
+        "task_id": "control/NEWFIX-005",
+        "status": timeout_status,
+        "evidence_ref": "control/status/newfix-005",
+        "policy_required": True,
+        "configured_timeout_sec": configured_timeout_sec,
+        "effective_timeout_sec": effective_timeout_sec,
+        "approved_alternative": approved_alternative,
+        "approval_basis": approval_basis,
+        "compliant": True,
+        "drift_blocked": drift_blocked,
+    }
+    return plan
+
+
 def complete_runfix_015_plan() -> dict[str, object]:
     plan = complete_runfix_008_plan()
     plan["task_id"] = "plugin/RUNFIX-015"
@@ -1130,6 +1165,276 @@ def test_runfix3_003_complete_live_thread_proof_is_ready_without_live_readiness(
         "fail_closed": True,
         "evidence_ref": "plugin/surface/fail-closed-final",
     }
+
+
+def test_newfix_006_review_pending_evidence_stays_blocked_before_closeout() -> None:
+    report = build_discussion_activation_plan(complete_newfix_006_plan())
+
+    assert report["task_id"] == "plugin/NEWFIX-006"
+    assert report["behavior_task_id"] == "plugin/NEWFIX-006"
+    assert report["start_status"] == "blocked"
+    assert report["status"] == "blocked"
+    assert report["live_readiness"] is False
+    prompt_report = report["selected_runner_prompt_evidence_report"]
+    timeout_report = report["selected_runner_timeout_evidence_report"]
+    assert prompt_report["status"] == "proven"
+    assert timeout_report["status"] == "proven"
+    assert (
+        prompt_report["control_dependency"]["dependency_status"]
+        == "implementation_complete/review_pending"
+    )
+    assert (
+        timeout_report["control_dependency"]["dependency_status"]
+        == "implementation_complete/review_pending"
+    )
+    assert {blocker["code"] for blocker in report["blockers"]} >= {
+        "newfix_prompt_review_closeout_pending",
+        "newfix_timeout_review_closeout_pending",
+    }
+
+
+def test_newfix_006_completed_control_evidence_can_be_ready_to_start() -> None:
+    report = build_discussion_activation_plan(
+        complete_newfix_006_plan(prompt_status="completed", timeout_status="completed")
+    )
+
+    assert report["task_id"] == "plugin/NEWFIX-006"
+    assert report["behavior_task_id"] == "plugin/NEWFIX-006"
+    assert report["start_status"] == "ready_to_start"
+    assert report["status"] == "ready_to_start"
+    assert report["live_readiness"] is False
+    assert report["visible_surface_readiness_report"]["ready"] is True
+    assert report["daemon_registry_membership_report"]["required"] is True
+    assert report["daemon_registry_membership_report"]["ready"] is True
+    assert report["selected_runner_prompt_evidence_report"]["status"] == "proven"
+    assert report["selected_runner_timeout_evidence_report"]["status"] == "proven"
+    assert (
+        report["selected_runner_prompt_evidence_report"]["control_dependency"]["accepted_for_start"]
+        is True
+    )
+    assert (
+        report["selected_runner_timeout_evidence_report"]["control_dependency"][
+            "accepted_for_start"
+        ]
+        is True
+    )
+
+
+def test_newfix_006_missing_visible_surface_readiness_blocks() -> None:
+    plan = complete_newfix_006_plan(prompt_status="completed", timeout_status="completed")
+    plan.pop("visible_surface_readiness", None)
+
+    report = build_discussion_activation_plan(plan)
+
+    assert report["start_status"] == "blocked"
+    assert report["status"] == "blocked"
+    assert report["visible_surface_readiness_report"]["ready"] is False
+    assert any(
+        blocker["code"] == "visible_surface_readiness_missing" for blocker in report["blockers"]
+    )
+
+
+def test_newfix_006_missing_daemon_registry_membership_blocks() -> None:
+    plan = complete_newfix_006_plan(prompt_status="completed", timeout_status="completed")
+    plan.pop("daemon_registry_membership", None)
+
+    report = build_discussion_activation_plan(plan)
+
+    assert report["start_status"] == "blocked"
+    assert report["status"] == "blocked"
+    assert report["daemon_registry_membership_report"]["required"] is True
+    assert report["daemon_registry_membership_report"]["ready"] is False
+    assert any(
+        blocker["code"] == "daemon_registry_membership_missing" for blocker in report["blockers"]
+    )
+
+
+def test_newfix_006_missing_own_history_source_ids_blocks() -> None:
+    plan = complete_newfix_006_plan()
+    prompt = plan["selected_runner_prompt_evidence"]
+    assert isinstance(prompt, dict)
+    prompt["own_history_source_event_ids"] = []
+
+    report = build_discussion_activation_plan(plan)
+
+    assert report["start_status"] == "blocked"
+    assert report["selected_runner_prompt_evidence_report"]["status"] == "blocked"
+    assert any(
+        blocker["code"] == "newfix_prompt_own_history_missing" for blocker in report["blockers"]
+    )
+
+
+def test_newfix_006_prompt_result_blocked_blocks() -> None:
+    plan = complete_newfix_006_plan(prompt_status="completed", timeout_status="completed")
+    prompt = plan["selected_runner_prompt_evidence"]
+    assert isinstance(prompt, dict)
+    prompt["result"] = "blocked"
+
+    report = build_discussion_activation_plan(plan)
+
+    assert report["start_status"] == "blocked"
+    assert report["selected_runner_prompt_evidence_report"]["status"] == "blocked"
+    assert any(
+        blocker["code"] == "newfix_prompt_evidence_blocked" for blocker in report["blockers"]
+    )
+
+
+def test_newfix_006_wrong_prompt_control_task_id_blocks() -> None:
+    plan = complete_newfix_006_plan(prompt_status="completed", timeout_status="completed")
+    prompt = plan["selected_runner_prompt_evidence"]
+    assert isinstance(prompt, dict)
+    prompt["task_id"] = "control/RUNFIX-005"
+
+    report = build_discussion_activation_plan(plan)
+
+    assert report["start_status"] == "blocked"
+    assert report["selected_runner_prompt_evidence_report"]["status"] == "blocked"
+    assert any(
+        blocker["code"] == "newfix_prompt_control_dependency_unproven"
+        for blocker in report["blockers"]
+    )
+
+
+def test_newfix_006_missing_timeout_evidence_blocks() -> None:
+    plan = complete_newfix_006_plan()
+    plan.pop("selected_runner_timeout_evidence", None)
+
+    report = build_discussion_activation_plan(plan)
+
+    assert report["start_status"] == "blocked"
+    assert report["selected_runner_timeout_evidence_report"]["status"] == "blocked"
+    assert any(
+        blocker["code"] == "newfix_timeout_evidence_missing" for blocker in report["blockers"]
+    )
+
+
+def test_newfix_006_default_timeout_30_blocks() -> None:
+    report = build_discussion_activation_plan(
+        complete_newfix_006_plan(configured_timeout_sec=30, effective_timeout_sec=30)
+    )
+
+    assert report["start_status"] == "blocked"
+    assert report["selected_runner_timeout_evidence_report"]["status"] == "blocked"
+    assert any(blocker["code"] == "newfix_timeout_policy_invalid" for blocker in report["blockers"])
+
+
+def test_newfix_006_approved_alternative_requires_approval_basis() -> None:
+    report = build_discussion_activation_plan(
+        complete_newfix_006_plan(
+            configured_timeout_sec=90,
+            effective_timeout_sec=90,
+            approved_alternative=True,
+            approval_basis=None,
+        )
+    )
+
+    assert report["start_status"] == "blocked"
+    assert report["selected_runner_timeout_evidence_report"]["status"] == "blocked"
+    assert any(blocker["code"] == "newfix_timeout_policy_invalid" for blocker in report["blockers"])
+
+
+def test_newfix_006_approved_alternative_requires_matching_timeout_values() -> None:
+    report = build_discussion_activation_plan(
+        complete_newfix_006_plan(
+            prompt_status="completed",
+            timeout_status="completed",
+            configured_timeout_sec=90,
+            effective_timeout_sec=30,
+            approved_alternative=True,
+            approval_basis="approved by operator",
+        )
+    )
+
+    assert report["start_status"] == "blocked"
+    assert report["selected_runner_timeout_evidence_report"]["status"] == "blocked"
+    assert any(blocker["code"] == "newfix_timeout_policy_invalid" for blocker in report["blockers"])
+
+
+def test_newfix_006_approved_alternative_requires_positive_timeout_value() -> None:
+    report = build_discussion_activation_plan(
+        complete_newfix_006_plan(
+            prompt_status="completed",
+            timeout_status="completed",
+            configured_timeout_sec=0,
+            effective_timeout_sec=0,
+            approved_alternative=True,
+            approval_basis="approved by operator",
+        )
+    )
+
+    assert report["start_status"] == "blocked"
+    assert report["selected_runner_timeout_evidence_report"]["status"] == "blocked"
+    assert any(blocker["code"] == "newfix_timeout_policy_invalid" for blocker in report["blockers"])
+
+
+def test_newfix_006_timeout_policy_blocked_flag_blocks() -> None:
+    plan = complete_newfix_006_plan(prompt_status="completed", timeout_status="completed")
+    timeout = plan["selected_runner_timeout_evidence"]
+    assert isinstance(timeout, dict)
+    timeout["selected_runner_timeout_policy_blocked"] = True
+
+    report = build_discussion_activation_plan(plan)
+
+    assert report["start_status"] == "blocked"
+    assert report["selected_runner_timeout_evidence_report"]["status"] == "blocked"
+    assert report["selected_runner_timeout_evidence_report"]["drift_blocked"] is True
+    assert any(blocker["code"] == "newfix_timeout_drift_blocked" for blocker in report["blockers"])
+
+
+def test_newfix_006_wrong_timeout_control_task_id_blocks() -> None:
+    plan = complete_newfix_006_plan(prompt_status="completed", timeout_status="completed")
+    timeout = plan["selected_runner_timeout_evidence"]
+    assert isinstance(timeout, dict)
+    timeout["task_id"] = "control/NEWFIX-004"
+
+    report = build_discussion_activation_plan(plan)
+
+    assert report["start_status"] == "blocked"
+    assert report["selected_runner_timeout_evidence_report"]["status"] == "blocked"
+    assert any(
+        blocker["code"] == "newfix_timeout_control_dependency_unproven"
+        for blocker in report["blockers"]
+    )
+
+
+def test_newfix_006_manual_bridge_mode_blocks() -> None:
+    plan = complete_newfix_006_plan(prompt_status="completed", timeout_status="completed")
+    plan["request_context"] = {
+        "source": "discord_thread",
+        "requested_output_mode": "manual_bridge",
+        "explicit_non_visible_override": True,
+        "override_reason": "manual bridge diagnostic",
+    }
+
+    report = build_discussion_activation_plan(plan)
+
+    assert report["requested_output_mode"] == "manual_bridge"
+    assert report["start_status"] == "blocked"
+    assert report["status"] == "blocked"
+    assert report["visible_surface_readiness_report"]["ready"] is False
+    assert any(
+        blocker["code"] == "requested_output_mode_unsupported" for blocker in report["blockers"]
+    )
+
+
+def test_newfix_006_artifact_only_override_does_not_claim_ready_to_start() -> None:
+    plan = complete_newfix_006_plan(prompt_status="completed", timeout_status="completed")
+    plan["request_context"] = {
+        "source": "discord_thread",
+        "requested_output_mode": "artifact_only",
+        "explicit_non_visible_override": True,
+        "override_reason": "Operator requested diagnostic artifact-only output.",
+    }
+    plan.pop("visible_surface_readiness", None)
+
+    report = build_discussion_activation_plan(plan)
+
+    assert report["requested_output_mode"] == "artifact_only"
+    assert report["start_status"] == "ready_for_approval"
+    assert report["status"] == "ready_for_approval"
+    assert report["visible_surface_readiness_report"]["ready"] is True
+    assert report["selected_runner_prompt_evidence_report"]["status"] == "not_required"
+    assert report["selected_runner_timeout_evidence_report"]["status"] == "not_required"
 
 
 def test_runfix3_003_wrong_exact_origin_binding_fails_closed() -> None:

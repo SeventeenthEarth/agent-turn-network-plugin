@@ -268,7 +268,7 @@ Dependency gate: `plugin/NEWFIX-002` consumes the completed `control/NEWFIX-001`
 | NEWFIX-003 | Live-visible runtime delivery SOT and diagnosis lock | completed | Cross-repo docs-only lock records Jooyoo's 2026-06-28 KLM live-visible blocker, the 30-second effective timeout when no session `dispatch_timeout_sec` is set, the shared runner-generation/visible-delivery deadline bottleneck, and the selected-member prompt-continuity gap. Plugin mirrors the SOT and does not claim runtime mutation or live readiness. |
 | NEWFIX-006 | Live-visible planner/operator guardrail | planned | Plugin-owned follow-up must require `dispatch_timeout_sec=120` or an approved explicit alternative for Discord-origin live-visible selected-runner councils, consume `control/NEWFIX-004` own-history prompt evidence and `control/NEWFIX-005` timeout evidence, and keep local-only/artifact/manual bridge paths labeled as non-equivalent fallback. Positive and negative planner/schema/operator guidance tests are required. |
 
-Control-owned `control/NEWFIX-001` is listed in the control roadmap as completed after focused color review and traceability repair. `control/NEWFIX-004` and `control/NEWFIX-005` are planned control dependencies for the final `plugin/NEWFIX-006` guardrail and do not grant plugin authority over daemon prompt construction or timeout policy.
+Control-owned `control/NEWFIX-001` is listed in the control roadmap as completed after focused color review and traceability repair. `control/NEWFIX-004` and `control/NEWFIX-005` are now implementation_complete/review_pending, and neither control dependency grants plugin authority over daemon prompt construction or timeout policy.
 
 
 ## ATN: Agent Turn Network public rename

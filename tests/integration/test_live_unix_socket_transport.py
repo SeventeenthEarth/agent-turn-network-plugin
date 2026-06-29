@@ -320,6 +320,100 @@ def test_unix_socket_transport_unwraps_command_submit_to_canonical_daemon_comman
     ]
 
 
+def test_unix_socket_transport_preserves_structured_lock_agenda_payload_to_canonical_daemon_command(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    socket_path = "/var/run/atn-controld.sock"
+    socket_script = patch_unix_socket(
+        monkeypatch,
+        socket_path=socket_path,
+        responses={
+            "council.lock_agenda": {
+                "cursor": "cur_000000000006_evt_agenda_locked_cmd_lock_agenda_ltran004",
+                "event_id": "evt_agenda_locked_cmd_lock_agenda_ltran004",
+                "offset": 6,
+                "deduplicated": False,
+            },
+        },
+    )
+    client = DaemonClient(UnixSocketDaemonTransport(socket_path, timeout=1.0))
+    agenda_payload = {
+        "decision_question": "Which visible ATN agenda context must reach selected runners?",
+        "success_criteria": [
+            "selected-runner prompts include the locked decision question",
+            "selected-runner prompts include success criteria and out-of-scope policy",
+        ],
+        "out_of_scope_policy": "Defer provider, gateway, and Discord runtime mutation.",
+        "context": {"source": "control/NEWFIX-007"},
+    }
+    envelope = client.build_command_envelope(
+        command="council.lock_agenda",
+        payload={
+            "session_id": "sess-1",
+            "actor": "moderator-1",
+            "command_id": "cmd_lock_agenda_ltran004",
+            "payload": agenda_payload,
+        },
+        request_id="req-lock-agenda-ltran004",
+        idempotency_key="idem-cmd_lock_agenda_ltran004",
+    )
+
+    result = client.submit_command(envelope)
+
+    assert result.command_id == "cmd_lock_agenda_ltran004"
+    assert result.event_id == "evt_agenda_locked_cmd_lock_agenda_ltran004"
+    assert result.session_id == "sess-1"
+    assert result.request_id == "req-lock-agenda-ltran004"
+    assert socket_script.requests == [
+        {
+            "command": "council.lock_agenda",
+            "params": {
+                "actor": "moderator-1",
+                "command_id": "cmd_lock_agenda_ltran004",
+                "payload": agenda_payload,
+                "session_id": "sess-1",
+            },
+            "request_id": "req-lock-agenda-ltran004",
+            "schema_version": 1,
+        }
+    ]
+
+
+def test_unix_socket_transport_rejects_lock_agenda_unrepresentable_idempotency_before_socket(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    socket_path = "/var/run/atn-controld.sock"
+    socket_script = patch_unix_socket(
+        monkeypatch,
+        socket_path=socket_path,
+        responses={"council.lock_agenda": {"event_id": "unused"}},
+    )
+    client = DaemonClient(UnixSocketDaemonTransport(socket_path, timeout=1.0))
+    envelope = client.build_command_envelope(
+        command="council.lock_agenda",
+        payload={
+            "session_id": "sess-1",
+            "actor": "moderator-1",
+            "command_id": "cmd_lock_agenda_ltran005",
+            "payload": {
+                "decision_question": "Which agenda context is required?",
+                "success_criteria": ["required fields are preserved"],
+                "out_of_scope_policy": "No local ID generation or CLI fallback.",
+            },
+        },
+        request_id="req-lock-agenda-ltran005",
+        idempotency_key="different-idempotency-key",
+    )
+
+    with pytest.raises(DaemonTransportError) as exc_info:
+        client.submit_command(envelope)
+
+    assert "command.submit cannot be represented as daemon command_id" in str(exc_info.value)
+    assert "payload.command_id or idem-{payload.command_id}" in str(exc_info.value)
+    assert socket_script.requests == []
+    assert socket_script.connected_paths == []
+
+
 def test_unix_socket_transport_preserves_command_submit_structured_errors(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

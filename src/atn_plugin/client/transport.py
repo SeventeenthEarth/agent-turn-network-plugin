@@ -23,6 +23,11 @@ _LIVE_OPERATIONS: Final = frozenset(
     {"status.read", "version.read", "stream.tail", "stream.ack", "command.submit"}
 )
 _MAX_SOCKET_RESPONSE_BYTES: Final = 1024 * 1024
+_COMMAND_SUBMIT_IDEMPOTENCY_GUIDANCE: Final = (
+    "command.submit cannot be represented as daemon command_id; "
+    "live Unix socket transport only supports idempotency_key equal to "
+    "payload.command_id or idem-{payload.command_id}"
+)
 
 
 class DaemonTransport(Protocol):
@@ -131,7 +136,7 @@ def _live_request_payload(operation: str, body: JsonObject | None) -> JsonObject
         command_id = _command_id_for_daemon(payload)
         idempotency_key = _require_string(envelope.get("idempotency_key"), label="idempotency_key")
         if idempotency_key not in {command_id, f"idem-{command_id}"}:
-            raise DaemonTransportError("command.submit cannot be represented as daemon command_id")
+            raise DaemonTransportError(_COMMAND_SUBMIT_IDEMPOTENCY_GUIDANCE)
         return {
             "schema_version": 1,
             "request_id": request_id,
@@ -287,9 +292,7 @@ def _command_id_for_daemon(payload: JsonObject) -> str:
     try:
         return _require_string(payload.get("command_id"), label="payload command_id")
     except DaemonProtocolError as exc:
-        raise DaemonTransportError(
-            "command.submit cannot be represented as daemon command_id"
-        ) from exc
+        raise DaemonTransportError(_COMMAND_SUBMIT_IDEMPOTENCY_GUIDANCE) from exc
 
 
 def _validated_unix_socket_path(value: object) -> str:

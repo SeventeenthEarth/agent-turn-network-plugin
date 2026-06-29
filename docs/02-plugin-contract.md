@@ -93,6 +93,8 @@ Both tools require caller-supplied non-empty `request_id` and `idempotency_key`.
 
 Before `command.submit`, `atn_council_command` calls injected `version.read` and requires `council.lifecycle`; `atn_delivery_evidence` requires `delivery_evidence`. Missing feature groups return `compatibility` before submit. Unknown commands, missing IDs, non-object payloads, and command-specific missing payload fields return `validation` before the client factory or submit path is used.
 
+For explicitly configured live Unix socket transport, `command.submit` is represented as the canonical daemon command in `command` with the original command payload in `params`; structured `council.lock_agenda` payload fields such as `decision_question`, `success_criteria`, and `out_of_scope_policy` are preserved under `params.payload` for daemon authority. The live socket mapping keeps daemon `payload.command_id` as the only daemon command-id authority. It accepts public `idempotency_key` only when it is exactly `payload.command_id` or `idem-{payload.command_id}`; any other value fails closed before socket connect with operator guidance rather than generating a local ID, deduping locally, or falling back to CLI.
+
 This is fake/injected CNDIS readiness only. It does not prove live daemon, installed Hermes plugin-load, slash-command, Discord helper/send_message, gateway, auth, token, socket, localhost, CLI, or KAB readiness.
 
 ## RUNFIX-006/RUNFIX-007 discussion activation planner/doctor

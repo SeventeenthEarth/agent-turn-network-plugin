@@ -15,7 +15,12 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-_PLUGIN_ROOT = Path(__file__).resolve().parent
+# Keep the plugin root as the loader-visible directory rather than resolving
+# symlinks. Profile-local installs may symlink this entrypoint while keeping an
+# adjacent config.yaml with the explicit live_transport.unix_socket_path; using
+# resolve() would jump to the canonical repo and ignore that profile-local
+# config.
+_PLUGIN_ROOT = Path(__file__).absolute().parent
 _SRC_PATH = _PLUGIN_ROOT / "src"
 if _SRC_PATH.is_dir():
     _src = str(_SRC_PATH)

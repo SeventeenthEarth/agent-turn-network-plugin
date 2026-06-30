@@ -1142,6 +1142,10 @@ def _validate_argue_speech_payload(payload: Mapping[str, object], *, label: str)
 
 
 def _validate_argue_hand_raise_payload(payload: Mapping[str, object], *, label: str) -> None:
+    if not _non_empty_string(payload.get("intent")) and not _non_empty_string(
+        payload.get("reason")
+    ):
+        raise ValueError(f"{label}.intent or reason is required for council.hand_raise")
     if "target_links" in payload:
         _validate_argue_stance_links(payload["target_links"], label=f"{label}.target_links")
     if "target_event_ids" in payload:

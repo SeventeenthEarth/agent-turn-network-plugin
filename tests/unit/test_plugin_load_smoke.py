@@ -30,9 +30,50 @@ def copy_repo_fixture(tmp_path: Path) -> Path:
     return root
 
 
+class FakePluginContext:
+    def __init__(self) -> None:
+        self.handlers = {}
+        self.skills = {}
+
+    def register_tool(self, **kwargs: object) -> None:
+        self.handlers[str(kwargs["name"])] = kwargs["handler"]
+
+    def register_skill(self, **kwargs: object) -> None:
+        self.skills[str(kwargs["name"])] = kwargs
+
+
+def load_entrypoint_from_path(path: Path) -> ModuleType:
+    spec = importlib.util.spec_from_file_location("atn_plugin_symlink_smoke", path)
+    assert spec is not None
+    assert spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
 @pytest.fixture
 def plugin_load_smoke() -> ModuleType:
     return load_plugin_load_smoke()
+
+
+def test_symlinked_entrypoint_uses_profile_local_live_config(tmp_path: Path) -> None:
+    profile_plugin_root = tmp_path / "profile" / "plugins" / "atn-plugin"
+    profile_plugin_root.mkdir(parents=True)
+    (profile_plugin_root / "__init__.py").symlink_to(ROOT / "__init__.py")
+    (profile_plugin_root / "src").symlink_to(ROOT / "src", target_is_directory=True)
+    (profile_plugin_root / "config.yaml").write_text(
+        "live_transport:\n  unix_socket_path: relative.sock\n",
+        encoding="utf-8",
+    )
+
+    module = load_entrypoint_from_path(profile_plugin_root / "__init__.py")
+    ctx = FakePluginContext()
+    module.register(ctx)
+
+    raw = ctx.handlers["atn_daemon_status"]({})
+
+    assert "live_transport.unix_socket_path must be absolute" in raw
+    assert "explicit daemon client factory is required" not in raw
 
 
 def test_plugin_load_smoke_accepts_repository_local_isolated_load(

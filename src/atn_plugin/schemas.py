@@ -118,6 +118,22 @@ ARGUE_SPEECH_PAYLOAD_PROPERTIES: Final[dict[str, object]] = {
     },
 }
 ARGUE_HAND_RAISE_TARGET_LINK_PROPERTIES: Final[dict[str, object]] = {
+    "intent": {
+        "type": "string",
+        "minLength": 1,
+        "description": (
+            "Required unless reason is supplied; daemon derives selected-runner "
+            "stance_assignment from hand_raise intent first."
+        ),
+    },
+    "reason": {
+        "type": "string",
+        "minLength": 1,
+        "description": (
+            "Required unless intent is supplied; daemon derives selected-runner "
+            "stance_assignment from reason when intent is absent."
+        ),
+    },
     "target_links": {
         "type": "array",
         "items": ARGUE_STANCE_LINK_SCHEMA,

@@ -187,6 +187,24 @@ NEXFIX task order and current status:
 | 9 | cross-repo | NEWFIX-009 | completed | Cross-repo agenda-context acceptance proof after NEWFIX-007/008 now has focused local evidence plus post-feedback remediation: control tests show required agenda fields in `agenda_locked.payload`, selected-runner prompt evidence `included_context`, and agenda source refs, with missing, empty, and whitespace-only required fields rejected at storage/CLI submission and no-agenda selected-runner dispatch blocked with `selected_runner_dispatch_failed`; plugin focused live-transport tests show structured `council.lock_agenda` payload preservation under daemon-owned `params.payload`. Red approved initial review; Orange/Gray request-changes were remediated; focused Orange/Gray re-review and Blue synthesis approved MAR entry; all five MAR roles are covered and Blue MAR disposition allowed KAH `mar_review` completion. Post-MAR second-color review, final verification, and improve/lessons are complete; live Discord delivery, broad readiness, commit, and push remain unclaimed. |
 
 
+## COUNCIL-STAB selected-runner council stabilization
+
+COUNCIL-STAB records Jooyoo's 2026-06-30 KLM token/speed council blocker as diagnostic source evidence and locks the cross-repo local repair boundary for selected-runner council flow. The plugin-owned SOT responsibility is ingress validation and operator guidance: selected-runner `council.hand_raise` must include a non-empty `payload.intent` or `payload.reason` before submit, because control derives `speaker_selected.payload.stance_assignment` from the matching hand raise rather than from caller-supplied grant payload fields. The control-owned SOT remains `../agent-turn-network-control/docs/24-live-transport-control-sot.md`; plugin roadmap/status mirror remains `docs/06-implementation-epics-tasks.md`.
+
+Plugin-owned contract impact:
+
+- `atn_council_command(command="council.hand_raise")` preserves caller payload fields but fails closed before daemon feature probe/submit when neither `payload.intent` nor `payload.reason` is a non-empty string for selected-runner use.
+- Plugin schemas and bundled/operator guidance expose `intent` and `reason` as the selected-runner stance source that operators must provide before grant; ARGUE target/display hints cannot replace that stance source.
+- The plugin does not infer control lifecycle state, synthesize selected-runner stance from prose, create daemon IDs, dedupe locally, start a daemon, post Discord messages, or claim live readiness.
+- Local deterministic proof is bounded to transport/ingress validation plus control-side regression evidence. Historical failed sessions and fake/local visible-delivery evidence remain diagnostic or regression evidence only, not live Discord success.
+
+COUNCIL-STAB task order and current status:
+
+| Global Order | Repo | Task ID | Status | Plugin-owned acceptance |
+|---:|---|---|---|---|
+| 1 | cross-repo | COUNCIL-STAB-001 | completed/local-proof | Plugin ingress validation and guidance are implemented locally: `council.hand_raise` without non-empty `intent` or `reason` fails before daemon submit, schemas expose the stance-source fields, and operator/bundled guidance is aligned with control's hand_raise -> grant -> speaker_selected stance authority. Official Red `t_543a1a62` and Orange `t_7e1ac2c0` approved bounded local evidence; Gray `t_38b73a81` requested traceability changes because this plugin SOT/status section was missing; remediation restored status/SOT traceability; post-MAR second-color cards Red `t_9746263a`, Orange `t_3e11441a`, Gray `t_6fb1f968`, and Blue `t_e33a4835` approved proceeding to KAH `final_verify`; final verification gates passed; improve/lessons were recorded. No live daemon activation, Discord rerun/delivery, runtime readiness, push, production readiness, profile/provider/gateway/auth/token mutation, or broad rollout is claimed. |
+
+
 ### Profile and Discord eligibility policy
 
 ATN discussion channels are bot-to-bot-free by default. A profile whose effective Discord configuration allows bot-to-bot replies is excluded from the ATN discussion allow-list unless a later explicitly approved policy changes that rule. Activation planning must list candidate profiles as `eligible`, `excluded`, or `blocked/unknown`, with the reason for every exclusion. Eligible profiles only may be included in parent-channel allow-list dry-runs or applies.
@@ -476,7 +494,7 @@ Participant runtime actions:
 
 - observe `hand_raise_requested`;
 - research/fact-check if needed;
-- emit `council.hand_raise` when it has relevant input.
+- emit `council.hand_raise` when it has relevant input, including a non-empty `payload.intent` or `payload.reason` as the stance source for any later selected-runner grant. The plugin rejects stance-less `council.hand_raise` before daemon version probe or transport submit.
 
 Main agent grants floor:
 
@@ -486,6 +504,8 @@ atn-control council grant <session_id> \
   --mode relevance \
   --reason "<why this participant should speak now>"
 ```
+
+`--member <participant-id>` is the control CLI alias for `--to <participant-id>`; conflicting `--member`/`--to` values fail closed. Control derives the durable selected-runner stance assignment from the matching hand raise, not from a caller-supplied grant payload field.
 
 Daemon records `speaker_selected`.
 

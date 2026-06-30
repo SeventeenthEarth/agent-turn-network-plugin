@@ -108,10 +108,15 @@ This diagnostic is evidence of missing control context only. It does not authori
 
 ## Hand raise guidance
 
-When raising a hand before selection, prefer structured `target_links[]` over legacy target id lists:
+When raising a hand before selection, include a non-empty `intent` or `reason`;
+the control daemon derives the selected-runner grant `stance_assignment` from
+that matching hand raise. Prefer structured `target_links[]` over legacy target
+id lists:
 
 ```json
 {
+  "intent": "challenge",
+  "reason": "The prior claim omits the visible-surface identity risk.",
   "target_links": [
     {
       "target_event_id": "evt_speech_T01",
@@ -123,7 +128,7 @@ When raising a hand before selection, prefer structured `target_links[]` over le
 }
 ```
 
-Legacy `target_event_ids` and `target_claim_ids` are display hints only and must not be treated as ARGUE validation authority.
+Legacy `target_event_ids` and `target_claim_ids` are display hints only and must not be treated as ARGUE validation authority. A later moderator `grant.stance_assignment` cannot repair a missing hand-raise `intent`/`reason` source.
 
 ## Failure handling
 

@@ -60,7 +60,7 @@ Default work must stay local and fake/injected only:
    `visible_transcript` for operator-facing discussion text and keep raw
    cursor/event details in `audit_log`/`rows` evidence.
 6. Treat `atn_discussion_activation_plan` output as a dry-run planner/doctor report only. It can prepare an activation plan from explicit evidence, but it never proves live readiness. For RUNFIX3 live-visible start-gate behavior, output-mode handling, and downgrade decisions, use `atn-moderator/SKILL.md` and `docs/09-skill-and-operator-guide.md` rather than this boundary skill.
-7. Treat ARGUE argument-graph support as static/fake/injected schema and tool contract coverage only. The plugin preserves explicit `claims[]`, `stance_links[]`, `contribution_type`, `new_axis_reason`, `evidence[]`, and `hand_raise.target_links[]` fields for daemon/control validation. `responds_to_event_id` remains a legacy display hint and never overrides `stance_links[]`.
+7. Treat ARGUE argument-graph support as static/fake/injected schema and tool contract coverage only. The plugin preserves explicit `claims[]`, `stance_links[]`, `contribution_type`, `new_axis_reason`, `evidence[]`, `hand_raise.intent`, `hand_raise.reason`, and `hand_raise.target_links[]` fields for daemon/control validation. `responds_to_event_id` remains a legacy display hint and never overrides `stance_links[]`.
 
 ## Daemon registry membership boundary
 

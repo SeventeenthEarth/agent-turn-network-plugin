@@ -1554,7 +1554,7 @@ def _delivery_args(command: str, payload: JsonObject | None = None) -> JsonObjec
         ("council.attend", "agent-1", {"availability": "present"}),
         ("council.ready", "agent-1", {"summary": "ready"}),
         ("council.prepared_partial", "agent-2", {"summary": "partial", "blocked": True}),
-        ("council.hand_raise", "agent-2", {"topic": "risk"}),
+        ("council.hand_raise", "agent-2", {"topic": "risk", "intent": "challenge"}),
         ("council.speak", "agent-1", {"message": "bounded response"}),
         ("council.vote", "agent-2", {"choice": "approve"}),
     ],
@@ -1648,6 +1648,32 @@ def test_council_moderator_commands_submit_after_feature_probe(
     assert body is not None
     assert body["command"] == command
     assert cast(JsonObject, body["payload"])["session_id"] == "sess-council"
+
+
+def test_council_hand_raise_requires_intent_or_reason_before_submit() -> None:
+    transport = StaticDaemonTransport(
+        {OP_VERSION_READ: BASE_VERSION_WITH_CNDIS, OP_COMMAND_SUBMIT: BASE_COMMAND_SUCCESS}
+    )
+
+    result = decode(
+        handle_council_command(
+            _council_args(
+                "council.hand_raise",
+                {
+                    "actor": "agent-1",
+                    "command_id": "cmd-hand-raise-missing-stance",
+                    "payload": {"topic": "risk"},
+                },
+            ),
+            client_factory=factory_for_transport(transport),
+        )
+    )
+
+    assert result["ok"] is False
+    assert result["tool"] == "atn_council_command"
+    assert result["error"]["category"] == "validation"
+    assert "intent or reason" in result["error"]["message"]
+    assert transport.requests == []
 
 
 def test_council_new_fails_closed_without_output_intent_before_submit() -> None:

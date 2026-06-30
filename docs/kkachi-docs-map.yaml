@@ -124,3 +124,13 @@ nexfix:
     - "plugin/NEWFIX-008"
     - "cross-repo/NEWFIX-009"
   boundary: "NEXFIX hardens selected-runner content-plane readiness, live-visible runtime delivery, and agenda required-context submission after the 2026-06-26 prompt-envelope defect, 2026-06-28 KLM delivery blocker, and 2026-06-29 cancelled-session agenda submission defect. Plugin owns packaged moderator/participant guidance, activation-planner guardrails for envelope preflight, selected-member own-history prompt evidence, live-visible timeout evidence, and the live command-submit representation/idempotency boundary while control owns the authoritative projection-backed prompt, structured agenda payload, and timeout policy/evidence. No live Discord rollout, default Discord activation, daemon startup/discovery, production activation, profile/provider/gateway/auth/token/model mutation, hidden CLI fallback, package publication, push, or broad rollout is authorized."
+
+council_stab:
+  epic: "COUNCIL-STAB"
+  plugin_sot: "docs/10-live-transport-sot.md"
+  control_sot: "../agent-turn-network-control/docs/24-live-transport-control-sot.md"
+  operator_guide: "docs/09-skill-and-operator-guide.md"
+  blocker_report: "17thHermes:40_outputs/team/jooyoo/atn/2026-06-30-klm-token-speed-council-atn-blocker-report.md"
+  cross_repo_sequence:
+    - "cross-repo/COUNCIL-STAB-001"
+  boundary: "COUNCIL-STAB-001 repairs the 2026-06-30 selected-runner council blocker. Plugin owns ingress validation and packaged guidance requiring council.hand_raise payload.intent or payload.reason before submit; control owns grant stance derivation, selected-runner dispatch, terminal status, and regression proof. Historical failed sessions are diagnostic evidence only. No live Discord rerun, default activation, production readiness, profile/provider/gateway/auth/token mutation, package publication, push, or broad rollout is authorized by this docs-map row."

@@ -73,8 +73,9 @@ Default verification and operator rehearsal are local only:
    approval prompt.
 7. Treat ARGUE argument-graph support as static/fake/injected schema and tool
    contract coverage only. `claims[]`, `stance_links[]`, `contribution_type`,
-   `new_axis_reason`, `evidence[]`, and `hand_raise.target_links[]` are
-   preserved for daemon/control validation, while `responds_to_event_id` remains
+   `new_axis_reason`, `evidence[]`, `hand_raise.intent`, `hand_raise.reason`,
+   and `hand_raise.target_links[]` are preserved for daemon/control validation,
+   while `responds_to_event_id` remains
    a legacy display hint that never overrides `stance_links[]`.
 
 ## Daemon registry membership gate
@@ -125,6 +126,12 @@ nor `contribution_type: "new_axis"` with a non-empty `new_axis_reason`. In
 `discussion_quality_pass`. In `quality_warn`, the same condition is warning-only
 diagnostic evidence; the mechanical local lifecycle may pass while the
 deliberation-quality gate still requires changes.
+
+For selected-runner councils, every `council.hand_raise` must include a non-empty
+`intent` or `reason`. Control derives the subsequent grant `stance_assignment`
+only from the matching hand raise for the same member and turn; a caller-supplied
+`grant.stance_assignment` is ignored and cannot repair a missing hand-raise
+stance source.
 
 Compact prior-claim graph targets should include `event_id`, optional
 `claim_id`, and guidance-only fields such as `speaker`, `summary`, and

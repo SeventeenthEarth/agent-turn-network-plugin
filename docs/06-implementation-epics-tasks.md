@@ -284,6 +284,23 @@ The 2026-06-30 Jooyoo KLM token/speed council blocker is a release blocker for a
 Control-owned `control/NEWFIX-001` is listed in the control roadmap as completed after focused color review and traceability repair. `control/NEWFIX-004` and `control/NEWFIX-005` are now implementation_complete/review_pending; `control/NEWFIX-007` is completed for agenda required-context CLI/conformance repair after control MAR status-surface remediation, focused arch re-review, Blue MAR disposition, second-color acceptance, final verification pass, and improve/lessons completion. None of these control dependencies grants plugin authority over daemon prompt construction, agenda validation, command idempotency, or timeout policy.
 
 
+## LVCOR: Live-visible council one-pass reliability
+
+Epic ID: `LVCOR`
+
+LVCOR is the five-task cross-repo request-changes epic created from Jooyoo's 2026-06-30 one-pass live-visible council reliability report: `17thHermes:40_outputs/team/jooyoo/atn/2026-06-30-atn-developer-request-changes.md`. The epic fixes the standard operator path so live-visible council completion is parameterized by `max_discussion_turns = n` and `participant_count = p`: T0 moderator opening, T1..Tn selected participant discussion, T(n+1)..T(n+p) participant closeouts, and T(n+p+1) moderator synthesis / terminal closeout. Expected visible turns are `n + p + 2`; hard-coded T20 handling is invalid except for the specific 15-turn/4-participant instance.
+
+Exit: plugin surfaces must be able to drive the same full lifecycle envelopes as the CLI without owning daemon lifecycle, state, logs, cursors, locks, or dedupe. Plugin/operator guidance must consume the completed control lifecycle/finalization/schema/timeout evidence and must not downgrade Discord-origin live-visible requests to local-only, artifact-only, or transcript-only runs without explicit override. LVCOR does not authorize production activation, live Discord rollout, default Discord activation, daemon/profile/provider/gateway/auth/token/model mutation, package publication, push, or broad rollout.
+
+| Task ID | Task Title | Task Status | Task Description |
+|---|---|---|---|
+| LVCOR-001 | Dynamic lifecycle accounting guard | planned | Control-owned status/guard implementation for parameterized live-visible councils. Plugin records this as dependency traceability only and must consume the eventual status fields rather than inventing plugin-owned lifecycle state. |
+| LVCOR-002 | Parameterized terminal synthesis and finalize proof | planned | Control-owned terminal moderator synthesis/finalize path. Plugin records this as dependency traceability only; final synthesis is T(n+p+1), not a hard-coded T20. |
+| LVCOR-003 | CLI schema alignment and timeout semantics | planned | Control-owned CLI/daemon schema and timeout repair. Plugin records this as dependency traceability and must align typed tool docs/examples to the accepted canonical field names and timeout/pending semantics once stable. |
+| LVCOR-004 | Plugin lifecycle envelope golden tests | planned | Plugin-owned typed council command reconciliation. It must align `atn_council_command` validation with daemon-accepted lifecycle payloads, preserve caller-supplied `command_id`, `request_id`, and `idempotency_key`, add full lifecycle golden envelope tests, and keep daemon lifecycle/event/state authority outside the plugin. |
+| LVCOR-005 | Parameterized full-shape acceptance proof | planned | Cross-repo acceptance proof and operator checklist after owner fixes. Plugin owns bundled `atn-moderator`/operator guidance and planner/checklist updates needed to report both 15-turn/4-participant -> 21 visible turns and 5-turn/2-participant -> 9 visible turns without fixed T20 assumptions. |
+
+
 ## ATN: Agent Turn Network public rename
 
 Epic ID: `ATN`

@@ -24,6 +24,10 @@ Use this skill when you are the moderator/operator for an ATN council or live-vi
 
 ## Moderator preflight
 
+### Roster-scope confirmation pitfall
+
+When a user names a project/team plus color lanes or roles (for example, `KLM project의 Blue/Red/Orange/Gray`) and also uses culturally loaded labels such as `장수`, do **not** infer persona/roleplay participants or substitute similarly named registry personas. First resolve the actual project roster and role mapping from the authoritative team registry/Kanban/project source. If the exact Blue/Red/Orange/Gray principals are absent, ambiguous, or only implied by prose, stop before `council.new` with a `start_blocker` / `mis_scoped_roster` report instead of opening a council. A council opened with the wrong participant scope must be immediately marked `council.unresolved` and its outputs treated as invalid evidence.
+
 Before `council.new` or any visible council run, separate preflight findings into three categories:
 
 1. `start_blocker`: blocks `council.new`.
@@ -64,6 +68,7 @@ If the first selected participant speech says the agenda or prior context is mis
 
 For exact preflight and `council.new` schema pitfalls observed in live-visible ATN operation, see `references/live-visible-preflight-and-council-new.md`.
 For cross-team KLM/ATN participant onboarding and the evidence package needed before a live-visible run, see `references/cross-team-participant-preflight-evidence.md`.
+For live runtime council pitfalls learned from long selected-runner sessions, including user-scope corrections, heartbeat/ack refresh, CLI field names, and grant-timeout verification, see `references/live-runtime-council-operation-pitfalls.md`.
 
 ## Council lifecycle spine
 
@@ -135,6 +140,10 @@ Keep these fields separate in evidence:
 In `quality_required`, the first orphan non-opening speech blocks `discussion_quality_pass`. In `quality_warn`, the same condition is diagnostic/warning only.
 
 ## Closeout and reporting
+
+Do not report a `max_discussion_turns` council as complete immediately after T1 through T`max_discussion_turns`. For a live-visible council with `max_discussion_turns = n` and `participant_count = p`, the complete visible-turn shape is T0 moderator opening, T1..Tn selected participant discussion turns, T(n+1)..T(n+p) selected participant closeouts, then T(n+p+1) moderator synthesis/terminal conclusion. Expected visible turns are `n + p + 2`; for example, 15 turns / 4 participants means 21 expected visible turns, while 5 turns / 2 participants means 9. If only discussion turns are complete, report “discussion turns complete; closeouts/synthesis pending,” keep the session open, and continue unless the user explicitly stops it.
+
+If `finalize` is blocked after closeouts because visible closeout proof or linked surface evidence is missing, do not claim `finalized`. First preserve the T(n+p+1) synthesis text in an appropriate terminal action that the daemon accepts, such as `council.unresolved` with explicit timeout/block evidence when required, and report the exact terminal phase (`unresolved` vs `finalized`) separately from the completed parameterized visible-turn accounting.
 
 Final moderator closeout must separate:
 

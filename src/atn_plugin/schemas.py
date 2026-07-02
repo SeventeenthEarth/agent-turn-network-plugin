@@ -445,6 +445,8 @@ ATN_COUNCIL_COMMAND: Final[dict[str, object]] = {
                     "live_visible_thread with Discord surface/request_context evidence, "
                     "or a supported non-visible/local-daemon-only requested_output_mode "
                     "with explicit_non_visible_override=true and non-empty override_reason. "
+                    "Turn-bearing council.poll/council.hand_raise/council.grant/"
+                    "council.speak payloads require payload.turn and reject legacy payload.round. "
                     "For council.speak and council.hand_raise, ARGUE fields are "
                     "preserved without inferring state from legacy pointers."
                 ),

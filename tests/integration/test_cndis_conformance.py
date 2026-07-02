@@ -28,6 +28,15 @@ COUNCIL_CASES = tuple(
     )
     for command in schemas.COUNCIL_COMMANDS
 )
+
+TURN_BEARING_COUNCIL_COMMANDS = frozenset(
+    {
+        "council.poll",
+        "council.hand_raise",
+        "council.grant",
+        "council.speak",
+    }
+)
 DELIVERY_CASES = (
     (
         "delegate.escalation_delivered",
@@ -214,7 +223,8 @@ def test_council_conformance_fixtures_probe_then_submit_exact_fake_envelopes(
     assert result["ok"] is True
     assert result["live_readiness"] is False
     data = result["data"]
-    assert data["command_id"] == _mapping(request_fixture["params"], label="params")["command_id"]
+    params = _mapping(request_fixture["params"], label="params")
+    assert data["command_id"] == params["command_id"]
     assert data["request_id"] == response_fixture["request_id"]
     assert [operation for operation, _body in transport.requests] == [
         OP_VERSION_READ,
@@ -226,9 +236,11 @@ def test_council_conformance_fixtures_probe_then_submit_exact_fake_envelopes(
     assert body["request_id"] == request_fixture["request_id"]
     assert body["idempotency_key"] == _idempotency_key(request_fixture)
     payload = _mapping(body["payload"], label="body.payload")
-    assert (
-        payload["session_id"] == _mapping(request_fixture["params"], label="params")["session_id"]
-    )
+    assert payload == params
+    if command in TURN_BEARING_COUNCIL_COMMANDS:
+        nested_payload = _mapping(payload["payload"], label="body.payload.payload")
+        assert nested_payload["turn"] == _mapping(params["payload"], label="params.payload")["turn"]
+        assert "round" not in nested_payload
 
 
 @pytest.mark.parametrize(("command", "request_path"), ARGUE_COMMAND_CASES)

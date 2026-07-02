@@ -87,6 +87,14 @@ RUNTIME_NOISE_PREFIXES_LOWER: Final[tuple[str, ...]] = (
     "wrapper metadata:",
     "runner diagnostics:",
 )
+TURN_BEARING_COUNCIL_COMMANDS: Final[frozenset[str]] = frozenset(
+    {
+        "council.poll",
+        schemas.COUNCIL_HAND_RAISE_COMMAND,
+        "council.grant",
+        schemas.COUNCIL_SPEAK_COMMAND,
+    }
+)
 
 
 class ToolRegistrationContext(Protocol):
@@ -708,10 +716,29 @@ def _validate_council_payload(command: str, payload: Mapping[str, object]) -> No
         return
     _require_payload_string(payload, "actor")
     command_payload = _require_payload_object(payload, "payload")
+    _validate_turn_bearing_payload(command, command_payload)
     if command == schemas.COUNCIL_SPEAK_COMMAND:
         _validate_argue_speech_payload(command_payload, label="payload")
     elif command == schemas.COUNCIL_HAND_RAISE_COMMAND:
         _validate_argue_hand_raise_payload(command_payload, label="payload")
+
+
+def _validate_turn_bearing_payload(command: str, payload: Mapping[str, object]) -> None:
+    if command not in TURN_BEARING_COUNCIL_COMMANDS:
+        return
+    if "round" in payload:
+        raise ValueError(
+            "payload.payload.round is unsupported for turn-bearing council commands; "
+            "use payload.payload.turn"
+        )
+    turn = payload.get("turn")
+    if turn is None:
+        raise ValueError("payload.payload.turn is required for turn-bearing council commands")
+    if isinstance(turn, bool) or not isinstance(turn, int | str) or turn == "":
+        raise ValueError(
+            "payload.payload.turn must be a non-empty string or integer for "
+            "turn-bearing council commands"
+        )
 
 
 def _validate_council_new_output_intent(

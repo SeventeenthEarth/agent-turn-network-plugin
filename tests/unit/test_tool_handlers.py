@@ -1548,14 +1548,40 @@ def _delivery_args(command: str, payload: JsonObject | None = None) -> JsonObjec
     }
 
 
+TURN_BEARING_COUNCIL_CASES = (
+    (
+        "council.poll",
+        "agent-mod",
+        {"turn": 1, "research_timeout_sec": 600},
+    ),
+    (
+        "council.hand_raise",
+        "agent-1",
+        {
+            "turn": 2,
+            "intent": "support",
+            "reason": "The static fixture handoff is complete.",
+        },
+    ),
+    (
+        "council.grant",
+        "agent-mod",
+        {"turn": 3, "member": "agent-1", "selection_mode": "moderator_direct"},
+    ),
+    (
+        "council.speak",
+        "agent-1",
+        {"turn": 4, "speech": "Canonical turn-bearing payloads must use turn."},
+    ),
+)
+
+
 @pytest.mark.parametrize(
     ("command", "actor", "command_payload"),
     [
         ("council.attend", "agent-1", {"availability": "present"}),
         ("council.ready", "agent-1", {"summary": "ready"}),
         ("council.prepared_partial", "agent-2", {"summary": "partial", "blocked": True}),
-        ("council.hand_raise", "agent-2", {"topic": "risk", "intent": "challenge"}),
-        ("council.speak", "agent-1", {"message": "bounded response"}),
         ("council.vote", "agent-2", {"choice": "approve"}),
     ],
 )
@@ -1650,6 +1676,150 @@ def test_council_moderator_commands_submit_after_feature_probe(
     assert cast(JsonObject, body["payload"])["session_id"] == "sess-council"
 
 
+@pytest.mark.parametrize(
+    ("command", "actor", "nested_payload"),
+    TURN_BEARING_COUNCIL_CASES,
+)
+def test_council_turn_bearing_commands_preserve_turn_and_ids_without_round(
+    command: str, actor: str, nested_payload: JsonObject
+) -> None:
+    transport = StaticDaemonTransport(
+        {OP_VERSION_READ: BASE_VERSION_WITH_CNDIS, OP_COMMAND_SUBMIT: BASE_COMMAND_SUCCESS}
+    )
+    payload: JsonObject = {
+        "actor": actor,
+        "command_id": f"cmd-preserve-{command.replace('.', '-')}",
+        "payload": nested_payload,
+    }
+    args = _council_args(command, payload)
+    args["request_id"] = f"req-preserve-{command.replace('.', '-')}"
+    args["idempotency_key"] = f"idem-preserve-{command.replace('.', '-')}"
+
+    result = decode(
+        handle_council_command(
+            args,
+            client_factory=factory_for_transport(transport),
+        )
+    )
+
+    assert result["ok"] is True
+    submitted = transport.requests[1][1]
+    assert submitted is not None
+    assert submitted["request_id"] == args["request_id"]
+    assert submitted["idempotency_key"] == args["idempotency_key"]
+    submitted_payload = cast(JsonObject, submitted["payload"])
+    assert submitted_payload["command_id"] == payload["command_id"]
+    assert submitted_payload["session_id"] == args["session_id"]
+    daemon_payload = cast(JsonObject, submitted_payload["payload"])
+    assert daemon_payload["turn"] == nested_payload["turn"]
+    assert "round" not in daemon_payload
+
+
+@pytest.mark.parametrize(
+    ("command", "actor", "nested_payload"),
+    TURN_BEARING_COUNCIL_CASES,
+)
+def test_council_turn_bearing_legacy_round_fails_closed_before_transport(
+    command: str, actor: str, nested_payload: JsonObject
+) -> None:
+    client_factory_called = False
+
+    def client_factory() -> DaemonClient:
+        nonlocal client_factory_called
+        client_factory_called = True
+        raise AssertionError("client factory must not be called")
+
+    payload: JsonObject = {
+        "actor": actor,
+        "command_id": f"cmd-round-{command.replace('.', '-')}",
+        "payload": {**nested_payload, "round": nested_payload["turn"]},
+    }
+
+    result = decode(
+        handle_council_command(_council_args(command, payload), client_factory=client_factory)
+    )
+
+    assert result["ok"] is False
+    assert result["tool"] == "atn_council_command"
+    assert result["error"]["category"] == "validation"
+    assert (
+        result["error"]["message"]
+        == "payload.payload.round is unsupported for turn-bearing council commands; "
+        "use payload.payload.turn"
+    )
+    assert client_factory_called is False
+
+
+@pytest.mark.parametrize(
+    ("command", "actor", "nested_payload"),
+    TURN_BEARING_COUNCIL_CASES,
+)
+def test_council_turn_bearing_missing_turn_fails_closed_before_transport(
+    command: str, actor: str, nested_payload: JsonObject
+) -> None:
+    client_factory_called = False
+
+    def client_factory() -> DaemonClient:
+        nonlocal client_factory_called
+        client_factory_called = True
+        raise AssertionError("client factory must not be called")
+
+    payload_without_turn = dict(nested_payload)
+    payload_without_turn.pop("turn")
+    payload: JsonObject = {
+        "actor": actor,
+        "command_id": f"cmd-missing-turn-{command.replace('.', '-')}",
+        "payload": payload_without_turn,
+    }
+
+    result = decode(
+        handle_council_command(_council_args(command, payload), client_factory=client_factory)
+    )
+
+    assert result["ok"] is False
+    assert result["tool"] == "atn_council_command"
+    assert result["error"]["category"] == "validation"
+    assert (
+        result["error"]["message"]
+        == "payload.payload.turn is required for turn-bearing council commands"
+    )
+    assert client_factory_called is False
+
+
+@pytest.mark.parametrize("bad_turn", ["", True, {"turn": 1}])
+def test_council_turn_bearing_invalid_turn_fails_closed_before_transport(
+    bad_turn: object,
+) -> None:
+    client_factory_called = False
+
+    def client_factory() -> DaemonClient:
+        nonlocal client_factory_called
+        client_factory_called = True
+        raise AssertionError("client factory must not be called")
+
+    payload: JsonObject = {
+        "actor": "agent-mod",
+        "command_id": "cmd-invalid-turn",
+        "payload": cast(JsonObject, {"turn": bad_turn, "research_timeout_sec": 600}),
+    }
+
+    result = decode(
+        handle_council_command(
+            _council_args("council.poll", payload), client_factory=client_factory
+        )
+    )
+
+    assert result["ok"] is False
+    assert result["tool"] == "atn_council_command"
+    assert result["error"]["category"] == "validation"
+    assert (
+        result["error"]["message"]
+        == "payload.payload.turn must be a non-empty string or integer for "
+        "turn-bearing council commands"
+    )
+    assert client_factory_called is False
+
+
 def test_council_hand_raise_requires_intent_or_reason_before_submit() -> None:
     transport = StaticDaemonTransport(
         {OP_VERSION_READ: BASE_VERSION_WITH_CNDIS, OP_COMMAND_SUBMIT: BASE_COMMAND_SUCCESS}
@@ -1662,7 +1832,7 @@ def test_council_hand_raise_requires_intent_or_reason_before_submit() -> None:
                 {
                     "actor": "agent-1",
                     "command_id": "cmd-hand-raise-missing-stance",
-                    "payload": {"topic": "risk"},
+                    "payload": {"turn": 2, "topic": "risk"},
                 },
             ),
             client_factory=factory_for_transport(transport),

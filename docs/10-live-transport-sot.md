@@ -205,6 +205,28 @@ COUNCIL-STAB task order and current status:
 | 1 | cross-repo | COUNCIL-STAB-001 | completed/local-proof | Plugin ingress validation and guidance are implemented locally: `council.hand_raise` without non-empty `intent` or `reason` fails before daemon submit, schemas expose the stance-source fields, and operator/bundled guidance is aligned with control's hand_raise -> grant -> speaker_selected stance authority. Official Red `t_543a1a62` and Orange `t_7e1ac2c0` approved bounded local evidence; Gray `t_38b73a81` requested traceability changes because this plugin SOT/status section was missing; remediation restored status/SOT traceability; post-MAR second-color cards Red `t_9746263a`, Orange `t_3e11441a`, Gray `t_6fb1f968`, and Blue `t_e33a4835` approved proceeding to KAH `final_verify`; final verification gates passed; improve/lessons were recorded. No live daemon activation, Discord rerun/delivery, runtime readiness, push, production readiness, profile/provider/gateway/auth/token mutation, or broad rollout is claimed. |
 
 
+## LVCOR live-visible council one-pass reliability
+
+LVCOR records Jooyoo's 2026-06-30 request-changes package for one-pass live-visible council operation. Plugin-owned work remains downstream of the control-owned lifecycle/schema/status fixes and must not invent daemon lifecycle authority. The control companion SOT is `../../agent-turn-network-control/docs/24-live-transport-control-sot.md`.
+
+Plugin-owned contract impact:
+
+- `plugin/LVCOR-004` must consume control-accepted canonical lifecycle fields. The canonical turn field is `payload.turn`; legacy `payload.round` is diagnostic/migration input only and must not be emitted by plugin golden envelopes.
+- Plugin live `command.submit`/`atn_council_command` paths must preserve caller-supplied `command_id`, `request_id`, and `idempotency_key` while submitting daemon-owned `params.payload` shapes; the plugin still owns no lifecycle log, cursor state, locks, consensus, or dedupe state.
+- Plugin reports must preserve the distinction between daemon command failure and an accepted `council.grant` append followed by selected-runner timeout/status follow-up. Runner timeout is not `selected_runner_pass` and remains follow-up/blocking evidence until a linked canonical selected-member speech exists.
+- `plugin/LVCOR-005` acceptance proof must consume completed control/plugin rows before any one-pass success claim and must keep live Discord delivery, daemon/profile/provider/gateway/auth/token/model mutation, production readiness, push, and broad rollout outside scope unless separately approved.
+
+LVCOR task order and current status:
+
+| Global Order | Repo | Task ID | Status | Plugin-owned acceptance |
+|---:|---|---|---|---|
+| 1 | control | LVCOR-001 | completed/control-local | Dynamic lifecycle accounting/status guard is accepted in control; plugin records dependency only. |
+| 2 | control | LVCOR-002 | completed/control-local | Parameterized terminal moderator synthesis/finalize proof is accepted in control; plugin records dependency only. |
+| 3 | control | LVCOR-003 | completed/control-local | Control-owned CLI schema discoverability and `council.grant` timeout/status semantics are implemented, MAR-reviewed, post-MAR color-reviewed, and final-closed in bounded control KAH run `run-20260702T100541Z-519854f32aea`; post-MAR official second-color review completed at KAH event `evt-003600`, workflow revision 37, and final KAH closeout completed at `evt-003602`, revision 39. Plugin records dependency only and must consume the final reviewed contract before LVCOR-004 acceptance. |
+| 4 | plugin | LVCOR-004 | planned | Plugin-owned lifecycle envelope golden tests and schema reconciliation remain planned until the control LVCOR-003 contract is reviewed/closed. |
+| 5 | cross-repo | LVCOR-005 | planned | Cross-repo full-shape one-pass acceptance proof remains planned after LVCOR-004. |
+
+
 ### Profile and Discord eligibility policy
 
 ATN discussion channels are bot-to-bot-free by default. A profile whose effective Discord configuration allows bot-to-bot replies is excluded from the ATN discussion allow-list unless a later explicitly approved policy changes that rule. Activation planning must list candidate profiles as `eligible`, `excluded`, or `blocked/unknown`, with the reason for every exclusion. Eligible profiles only may be included in parent-channel allow-list dry-runs or applies.

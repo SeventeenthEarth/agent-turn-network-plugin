@@ -894,6 +894,7 @@ ATN_DISCUSSION_ACTIVATION_PLAN: Final[dict[str, object]] = {
                             "plugin/RUNFIX3-003",
                             "plugin/NEWFIX-006",
                             "plugin/ATN-005",
+                            "plugin/LVCOR-005",
                         ],
                     },
                     "control_dependency": {
@@ -1084,6 +1085,25 @@ ATN_DISCUSSION_ACTIVATION_PLAN: Final[dict[str, object]] = {
                             "selected_runner_pass remains evidence-derived only, live_readiness "
                             "stays false, and the planner does not invent control enforcement "
                             "semantics."
+                        ),
+                    },
+                    "lvcor_full_shape_acceptance_proof": {
+                        "type": "object",
+                        "additionalProperties": True,
+                        "description": (
+                            "Explicit-only plugin/LVCOR-005 full-shape one-pass acceptance "
+                            "proof input. When task_id is plugin/LVCOR-005, it must cite completed "
+                            "LVCOR-001 through LVCOR-004 dependency rows plus scenario_rows for "
+                            "both 15/4/21 and 5/2/9. finalized_success_candidate rows must keep "
+                            "expected_visible_turns equal to max_discussion_turns + "
+                            "participant_count + 2, prove posted or accepted visible-turn count "
+                            "equality, keep runnerless/manual selected turns at zero, prove full "
+                            "participant closeout coverage, and use "
+                            "terminal_synthesis_turn = max_discussion_turns + "
+                            "participant_count + 1 with terminal_phase=finalized. "
+                            "unresolved_terminal_blocked rows are blocker-path "
+                            "evidence only and must not satisfy one-pass success labels. "
+                            "live_readiness still stays false."
                         ),
                     },
                     "selected_runner_prompt_evidence": {

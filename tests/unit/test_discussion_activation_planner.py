@@ -590,6 +590,110 @@ def complete_runfix3_003_plan() -> dict[str, object]:
     return plan
 
 
+def complete_lvcor_005_plan() -> dict[str, object]:
+    plan = complete_runfix_017_plan()
+    plan["task_id"] = "plugin/LVCOR-005"
+    plan["participant_profiles"] = [
+        {
+            "profile": "macho",
+            "effective_hermes": {
+                "tools_visible": True,
+                "bot_to_bot_enabled": False,
+                "evidence_ref": "profile/macho/effective-hermes",
+            },
+        },
+        {
+            "profile": "seohwang",
+            "effective_hermes": {
+                "tools_visible": True,
+                "bot_to_bot_enabled": False,
+                "evidence_ref": "profile/seohwang/effective-hermes",
+            },
+        },
+        {
+            "profile": "jonghoe",
+            "effective_hermes": {
+                "tools_visible": True,
+                "bot_to_bot_enabled": False,
+                "evidence_ref": "profile/jonghoe/effective-hermes",
+            },
+        },
+        {
+            "profile": "manchong",
+            "effective_hermes": {
+                "tools_visible": True,
+                "bot_to_bot_enabled": False,
+                "evidence_ref": "profile/manchong/effective-hermes",
+            },
+        },
+    ]
+    plan["lvcor_full_shape_acceptance_proof"] = {
+        "dependency_rows": [
+            {
+                "task_id": "control/LVCOR-001",
+                "status": "completed/control-local",
+                "evidence_ref": "control/lvcor-001/final-report.md",
+            },
+            {
+                "task_id": "control/LVCOR-002",
+                "status": "completed/control-local",
+                "evidence_ref": "control/lvcor-002/final-report.md",
+            },
+            {
+                "task_id": "control/LVCOR-003",
+                "status": "completed/control-local",
+                "evidence_ref": "control/lvcor-003/final-report.md",
+            },
+            {
+                "task_id": "plugin/LVCOR-004",
+                "status": "completed/local-proof",
+                "evidence_ref": "plugin/lvcor-004/final-report.md",
+            },
+        ],
+        "scenario_rows": [
+            {
+                "scenario_id": "lvcor-15-4-21",
+                "acceptance_label": "finalized_success_candidate",
+                "max_discussion_turns": 15,
+                "participant_count": 4,
+                "expected_visible_turns": 21,
+                "accepted_visible_turns": 21,
+                "visible_turn_count_proven": True,
+                "discussion_turns_completed": 15,
+                "opening_turn": 0,
+                "opening_turn_proven": True,
+                "participant_closeout_count": 4,
+                "participant_closeout_complete": True,
+                "terminal_synthesis_turn": 20,
+                "terminal_phase": "finalized",
+                "moderator_synthesis_proven": True,
+                "runnerless_manual_selected_turn_count": 0,
+                "evidence_ref": "plugin/lvcor-005/15-4-21",
+            },
+            {
+                "scenario_id": "lvcor-5-2-9",
+                "acceptance_label": "finalized_success_candidate",
+                "max_discussion_turns": 5,
+                "participant_count": 2,
+                "expected_visible_turns": 9,
+                "posted_visible_turns": 9,
+                "visible_turn_count_proven": True,
+                "discussion_turns_completed": 5,
+                "opening_turn": 0,
+                "opening_turn_proven": True,
+                "participant_closeout_count": 2,
+                "participant_closeout_complete": True,
+                "terminal_synthesis_turn": 8,
+                "terminal_phase": "finalized",
+                "moderator_synthesis_proven": True,
+                "runnerless_manual_selected_turn_count": 0,
+                "evidence_ref": "plugin/lvcor-005/5-2-9",
+            },
+        ],
+    }
+    return plan
+
+
 def complete_newfix_006_plan(
     *,
     prompt_status: str = "implementation_complete/review_pending",
@@ -1165,6 +1269,154 @@ def test_runfix3_003_complete_live_thread_proof_is_ready_without_live_readiness(
         "fail_closed": True,
         "evidence_ref": "plugin/surface/fail-closed-final",
     }
+
+
+def test_lvcor_005_full_shape_acceptance_proof_requires_both_success_shapes() -> None:
+    report = build_discussion_activation_plan(complete_lvcor_005_plan())
+
+    assert report["status"] == "ready_for_approval"
+    assert report["start_status"] == "ready_for_approval"
+    assert report["task_id"] == "plugin/LVCOR-005"
+    assert report["behavior_task_id"] == "plugin/LVCOR-005"
+    assert report["live_readiness"] is False
+    proof = report["lvcor_full_shape_acceptance_proof_report"]
+    assert proof["status"] == "proven"
+    assert proof["label_statuses"]["finalized_success_candidate"] == {
+        "status": "proven",
+        "covered_shapes": ["15/4/21", "5/2/9"],
+        "missing_shapes": [],
+    }
+    assert proof["label_statuses"]["unresolved_terminal_blocked"] == {
+        "status": "not_supplied",
+        "scenario_ids": [],
+    }
+
+
+def test_lvcor_005_missing_5_2_9_shape_fails_closed() -> None:
+    plan = complete_lvcor_005_plan()
+    proof = plan["lvcor_full_shape_acceptance_proof"]
+    assert isinstance(proof, dict)
+    rows = proof["scenario_rows"]
+    assert isinstance(rows, list)
+    rows.pop()
+
+    report = build_discussion_activation_plan(plan)
+
+    assert report["status"] == "blocked"
+    assert report["lvcor_full_shape_acceptance_proof_report"]["status"] == "blocked"
+    assert any(blocker["code"] == "lvcor_required_shape_missing" for blocker in report["blockers"])
+
+
+def test_lvcor_005_hard_coded_t20_assumption_for_5_2_fails_closed() -> None:
+    plan = complete_lvcor_005_plan()
+    proof = plan["lvcor_full_shape_acceptance_proof"]
+    assert isinstance(proof, dict)
+    rows = proof["scenario_rows"]
+    assert isinstance(rows, list)
+    second_row = rows[1]
+    assert isinstance(second_row, dict)
+    second_row["terminal_synthesis_turn"] = 20
+
+    report = build_discussion_activation_plan(plan)
+
+    assert report["status"] == "blocked"
+    assert (
+        report["lvcor_full_shape_acceptance_proof_report"]["required_shapes"][1]["status"]
+        == "missing"
+    )
+    assert any(
+        blocker["code"] == "lvcor_terminal_synthesis_turn_mismatch"
+        for blocker in report["blockers"]
+    )
+
+
+@pytest.mark.parametrize(
+    ("field", "value"),
+    [
+        ("posted_visible_turns", 8),
+        ("visible_turn_count_proven", False),
+    ],
+)
+def test_lvcor_005_visible_turn_count_mismatch_or_unproven_fails_closed(
+    field: str, value: object
+) -> None:
+    plan = complete_lvcor_005_plan()
+    proof = plan["lvcor_full_shape_acceptance_proof"]
+    assert isinstance(proof, dict)
+    rows = proof["scenario_rows"]
+    assert isinstance(rows, list)
+    second_row = rows[1]
+    assert isinstance(second_row, dict)
+    second_row.pop("accepted_visible_turns", None)
+    second_row[field] = value
+
+    report = build_discussion_activation_plan(plan)
+
+    assert report["status"] == "blocked"
+    assert any(
+        blocker["code"] == "lvcor_visible_turn_count_unproven" for blocker in report["blockers"]
+    )
+
+
+def test_lvcor_005_runnerless_manual_selected_turns_nonzero_fails_closed() -> None:
+    plan = complete_lvcor_005_plan()
+    proof = plan["lvcor_full_shape_acceptance_proof"]
+    assert isinstance(proof, dict)
+    rows = proof["scenario_rows"]
+    assert isinstance(rows, list)
+    first_row = rows[0]
+    assert isinstance(first_row, dict)
+    first_row["runnerless_manual_selected_turn_count"] = 1
+
+    report = build_discussion_activation_plan(plan)
+
+    assert report["status"] == "blocked"
+    assert any(
+        blocker["code"] == "lvcor_runnerless_manual_selected_turns_nonzero"
+        for blocker in report["blockers"]
+    )
+
+
+def test_lvcor_005_participant_closeout_incomplete_fails_closed() -> None:
+    plan = complete_lvcor_005_plan()
+    proof = plan["lvcor_full_shape_acceptance_proof"]
+    assert isinstance(proof, dict)
+    rows = proof["scenario_rows"]
+    assert isinstance(rows, list)
+    first_row = rows[0]
+    assert isinstance(first_row, dict)
+    first_row["participant_closeout_count"] = 3
+
+    report = build_discussion_activation_plan(plan)
+
+    assert report["status"] == "blocked"
+    assert any(
+        blocker["code"] == "lvcor_participant_closeout_incomplete" for blocker in report["blockers"]
+    )
+
+
+def test_lvcor_005_unresolved_terminal_cannot_claim_success_like_label() -> None:
+    plan = complete_lvcor_005_plan()
+    proof = plan["lvcor_full_shape_acceptance_proof"]
+    assert isinstance(proof, dict)
+    rows = proof["scenario_rows"]
+    assert isinstance(rows, list)
+    second_row = rows[1]
+    assert isinstance(second_row, dict)
+    second_row["terminal_phase"] = "unresolved"
+
+    report = build_discussion_activation_plan(plan)
+
+    assert report["status"] == "blocked"
+    assert (
+        report["lvcor_full_shape_acceptance_proof_report"]["label_statuses"][
+            "finalized_success_candidate"
+        ]["status"]
+        == "blocked"
+    )
+    assert any(
+        blocker["code"] == "lvcor_success_terminal_phase_invalid" for blocker in report["blockers"]
+    )
 
 
 def test_newfix_006_review_pending_evidence_stays_blocked_before_closeout() -> None:

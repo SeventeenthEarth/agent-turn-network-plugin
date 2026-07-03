@@ -25,6 +25,7 @@ RUNFIX2_005_TASK_ID: Final = "plugin/RUNFIX2-005"
 RUNFIX3_003_TASK_ID: Final = "plugin/RUNFIX3-003"
 NEWFIX_006_TASK_ID: Final = "plugin/NEWFIX-006"
 ATN_005_TASK_ID: Final = "plugin/ATN-005"
+LVCOR_005_TASK_ID: Final = "plugin/LVCOR-005"
 SUPPORTED_TASK_IDS: Final[frozenset[str]] = frozenset(
     {
         RUNFIX_006_TASK_ID,
@@ -39,6 +40,7 @@ SUPPORTED_TASK_IDS: Final[frozenset[str]] = frozenset(
         RUNFIX3_003_TASK_ID,
         NEWFIX_006_TASK_ID,
         ATN_005_TASK_ID,
+        LVCOR_005_TASK_ID,
     }
 )
 TASK_ID: Final = RUNFIX_010_TASK_ID
@@ -80,6 +82,16 @@ ATN_005_CONTROL_DEPENDENCY_TASK_IDS: Final[frozenset[str]] = frozenset(
 )
 ATN_005_CONTROL_DEPENDENCY_STATUSES: Final[frozenset[str]] = frozenset(
     {"completed/local-control", "local implementation proof", "local-control"}
+)
+LVCOR_REQUIRED_DEPENDENCY_TASK_IDS: Final[tuple[str, ...]] = (
+    "control/LVCOR-001",
+    "control/LVCOR-002",
+    "control/LVCOR-003",
+    "plugin/LVCOR-004",
+)
+LVCOR_REQUIRED_SCENARIO_SHAPES: Final[tuple[tuple[int, int, int], ...]] = (
+    (15, 4, 21),
+    (5, 2, 9),
 )
 RUNFIX3_ACCEPTANCE_ONLY_CODES: Final[frozenset[str]] = frozenset(
     {
@@ -129,8 +141,8 @@ def build_discussion_activation_plan(plan: Mapping[str, object]) -> JsonObject:
             "plan.task_id must be plugin/RUNFIX-006, plugin/RUNFIX-007, "
             "plugin/RUNFIX-008, plugin/RUNFIX-010, plugin/RUNFIX-012, "
             "plugin/RUNFIX-015, plugin/RUNFIX-017, plugin/RUNFIX-019, "
-            "plugin/RUNFIX2-005, plugin/RUNFIX3-003, plugin/NEWFIX-006, or "
-            "plugin/ATN-005"
+            "plugin/RUNFIX2-005, plugin/RUNFIX3-003, plugin/NEWFIX-006, "
+            "plugin/ATN-005, or plugin/LVCOR-005"
         )
 
     blockers: list[JsonObject] = []
@@ -259,6 +271,11 @@ def build_discussion_activation_plan(plan: Mapping[str, object]) -> JsonObject:
         ),
         blockers=blockers,
     )
+    lvcor_full_shape_acceptance_proof = _lvcor_full_shape_acceptance_proof_report(
+        source.get("lvcor_full_shape_acceptance_proof"),
+        task_id=task_id,
+        blockers=blockers,
+    )
 
     if not eligible_profiles:
         blockers.append(
@@ -325,6 +342,7 @@ def build_discussion_activation_plan(plan: Mapping[str, object]) -> JsonObject:
         "visible_author_guard_report": visible_author_guard,
         "integrated_discussion_proof_report": integrated_discussion_proof,
         "runfix3_live_thread_proof_report": runfix3_live_thread_proof,
+        "lvcor_full_shape_acceptance_proof_report": lvcor_full_shape_acceptance_proof,
         "final_report_contract": _final_report_contract(),
         "fallback_audit": cast(list[JsonValue], _fallback_audit()),
         "required_approvals": cast(list[JsonValue], required_approvals),
@@ -357,6 +375,7 @@ def _behavior_task_id(task_id: str) -> str:
         RUNFIX3_003_TASK_ID,
         NEWFIX_006_TASK_ID,
         ATN_005_TASK_ID,
+        LVCOR_005_TASK_ID,
     }:
         return task_id
     return RUNFIX_007_TASK_ID
@@ -3425,6 +3444,521 @@ def _append_runfix3_blocker(
     report["status"] = "blocked"
     if "pass" in report:
         report["pass"] = False
+
+
+def _lvcor_full_shape_acceptance_proof_report(
+    value: object,
+    *,
+    task_id: str,
+    blockers: list[JsonObject],
+) -> JsonObject:
+    report: JsonObject = {
+        "runfix_task_id": LVCOR_005_TASK_ID,
+        "status": "not_required",
+        "dependency_rows": [],
+        "missing_dependencies": [],
+        "required_shapes": [],
+        "scenario_rows": [],
+        "label_statuses": {
+            "finalized_success_candidate": {
+                "status": "blocked",
+                "covered_shapes": [],
+                "missing_shapes": [],
+            },
+            "unresolved_terminal_blocked": {
+                "status": "not_supplied",
+                "scenario_ids": [],
+            },
+        },
+    }
+    if task_id != LVCOR_005_TASK_ID:
+        return report
+
+    report["status"] = "blocked"
+    initial_blocker_count = len(blockers)
+    if not isinstance(value, Mapping):
+        blockers.append(
+            _blocker(
+                code="lvcor_full_shape_acceptance_proof_missing",
+                owner="operator/control",
+                message=(
+                    "plugin/LVCOR-005 requires explicit lvcor_full_shape_acceptance_proof evidence."
+                ),
+            )
+        )
+        return report
+
+    proof = _json_object(value, label="plan.lvcor_full_shape_acceptance_proof")
+    dependency_report = _lvcor_dependency_rows_report(
+        proof.get("dependency_rows") or proof.get("consumed_dependencies"),
+        blockers=blockers,
+    )
+    report["dependency_rows"] = dependency_report["rows"]
+    report["missing_dependencies"] = dependency_report["missing_dependencies"]
+
+    rows_value = proof.get("scenario_rows")
+    if not isinstance(rows_value, list) or not rows_value:
+        blockers.append(
+            _blocker(
+                code="lvcor_scenario_rows_missing",
+                owner="operator/control",
+                message=(
+                    "lvcor_full_shape_acceptance_proof.scenario_rows must list explicit "
+                    "parameterized scenario evidence."
+                ),
+            )
+        )
+        report["required_shapes"] = [
+            {
+                "scenario_key": (
+                    f"{max_discussion_turns}/{participant_count}/{expected_visible_turns}"
+                ),
+                "max_discussion_turns": max_discussion_turns,
+                "participant_count": participant_count,
+                "expected_visible_turns": expected_visible_turns,
+                "status": "missing",
+            }
+            for (
+                max_discussion_turns,
+                participant_count,
+                expected_visible_turns,
+            ) in LVCOR_REQUIRED_SCENARIO_SHAPES
+        ]
+        return report
+
+    scenario_rows: list[JsonObject] = []
+    proven_success_shapes: set[str] = set()
+    unresolved_scenario_ids: list[str] = []
+    for index, item in enumerate(rows_value):
+        row = _lvcor_scenario_row_report(item, index=index, blockers=blockers)
+        scenario_rows.append(row)
+        if (
+            row["acceptance_label"] == "finalized_success_candidate"
+            and row["status"] == "proven"
+            and isinstance(row["scenario_key"], str)
+        ):
+            proven_success_shapes.add(row["scenario_key"])
+        if (
+            row["acceptance_label"] == "unresolved_terminal_blocked"
+            and row["status"] == "diagnostic_only"
+            and isinstance(row["scenario_id"], str)
+        ):
+            unresolved_scenario_ids.append(row["scenario_id"])
+    report["scenario_rows"] = cast(list[JsonValue], scenario_rows)
+
+    required_shapes: list[JsonObject] = []
+    missing_shapes: list[str] = []
+    for (
+        max_discussion_turns,
+        participant_count,
+        expected_visible_turns,
+    ) in LVCOR_REQUIRED_SCENARIO_SHAPES:
+        scenario_key = f"{max_discussion_turns}/{participant_count}/{expected_visible_turns}"
+        status = "proven" if scenario_key in proven_success_shapes else "missing"
+        required_shapes.append(
+            {
+                "scenario_key": scenario_key,
+                "max_discussion_turns": max_discussion_turns,
+                "participant_count": participant_count,
+                "expected_visible_turns": expected_visible_turns,
+                "status": status,
+            }
+        )
+        if status != "proven":
+            missing_shapes.append(scenario_key)
+            blockers.append(
+                _blocker(
+                    code="lvcor_required_shape_missing",
+                    owner="operator/control",
+                    message=(
+                        "LVCOR-005 requires finalized_success_candidate proof for scenario "
+                        f"{scenario_key}."
+                    ),
+                )
+            )
+    report["required_shapes"] = cast(list[JsonValue], required_shapes)
+
+    label_statuses = cast(JsonObject, report["label_statuses"])
+    label_statuses["finalized_success_candidate"] = {
+        "status": "proven"
+        if dependency_report["status"] == "proven" and not missing_shapes
+        else "blocked",
+        "covered_shapes": cast(list[JsonValue], sorted(proven_success_shapes)),
+        "missing_shapes": cast(list[JsonValue], missing_shapes),
+    }
+    label_statuses["unresolved_terminal_blocked"] = {
+        "status": "diagnostic_only" if unresolved_scenario_ids else "not_supplied",
+        "scenario_ids": cast(list[JsonValue], unresolved_scenario_ids),
+    }
+
+    if (
+        dependency_report["status"] == "proven"
+        and not missing_shapes
+        and len(blockers) == initial_blocker_count
+    ):
+        report["status"] = "proven"
+    return report
+
+
+def _lvcor_dependency_rows_report(value: object, *, blockers: list[JsonObject]) -> JsonObject:
+    report: JsonObject = {"status": "blocked", "rows": [], "missing_dependencies": []}
+    if not isinstance(value, list) or not value:
+        blockers.append(
+            _blocker(
+                code="lvcor_dependency_rows_missing",
+                owner="operator/control",
+                message=(
+                    "lvcor_full_shape_acceptance_proof.dependency_rows must cite completed "
+                    "LVCOR-001 through LVCOR-004 evidence."
+                ),
+            )
+        )
+        report["missing_dependencies"] = list(LVCOR_REQUIRED_DEPENDENCY_TASK_IDS)
+        return report
+
+    rows: list[JsonObject] = []
+    proven_dependencies: set[str] = set()
+    for index, item in enumerate(value):
+        row: JsonObject = {
+            "status": "blocked",
+            "task_id": None,
+            "completed": False,
+            "evidence_ref": None,
+        }
+        if not isinstance(item, Mapping):
+            blockers.append(
+                _blocker(
+                    code="lvcor_dependency_row_invalid",
+                    owner="operator/control",
+                    message=f"dependency_rows[{index}] must be an object.",
+                )
+            )
+            rows.append(row)
+            continue
+        dependency = _json_object(
+            item, label=f"plan.lvcor_full_shape_acceptance_proof.dependency_rows[{index}]"
+        )
+        task_id = _optional_string_value(dependency.get("task_id"))
+        status_value = _optional_string_value(dependency.get("status")) or "unknown"
+        evidence_ref = _optional_string_value(dependency.get("evidence_ref"))
+        completed = task_id in LVCOR_REQUIRED_DEPENDENCY_TASK_IDS and status_value.startswith(
+            "completed"
+        )
+        row.update(
+            {
+                "task_id": task_id,
+                "completed": completed,
+                "evidence_ref": evidence_ref,
+                "status": "proven" if completed and evidence_ref is not None else "blocked",
+            }
+        )
+        if row["status"] == "proven" and task_id is not None:
+            proven_dependencies.add(task_id)
+        else:
+            blockers.append(
+                _blocker(
+                    code="lvcor_dependency_unproven",
+                    owner="operator/control",
+                    message=(
+                        f"dependency_rows[{index}] must cite completed LVCOR predecessor evidence "
+                        "with task_id, completed status, and evidence_ref."
+                    ),
+                )
+            )
+        rows.append(row)
+
+    missing_dependencies = [
+        task_id
+        for task_id in LVCOR_REQUIRED_DEPENDENCY_TASK_IDS
+        if task_id not in proven_dependencies
+    ]
+    if missing_dependencies:
+        blockers.append(
+            _blocker(
+                code="lvcor_dependency_missing",
+                owner="operator/control",
+                message=(
+                    "LVCOR-005 must consume completed predecessor rows: "
+                    + ", ".join(missing_dependencies)
+                    + "."
+                ),
+            )
+        )
+    report["rows"] = cast(list[JsonValue], rows)
+    report["missing_dependencies"] = cast(list[JsonValue], missing_dependencies)
+    if not missing_dependencies and all(row["status"] == "proven" for row in rows):
+        report["status"] = "proven"
+    return report
+
+
+def _lvcor_scenario_row_report(
+    value: object,
+    *,
+    index: int,
+    blockers: list[JsonObject],
+) -> JsonObject:
+    report: JsonObject = {
+        "status": "blocked",
+        "scenario_id": None,
+        "scenario_key": None,
+        "acceptance_label": None,
+        "max_discussion_turns": None,
+        "participant_count": None,
+        "expected_visible_turns": None,
+        "accepted_visible_turns": None,
+        "visible_turn_count_source": None,
+        "discussion_turns_completed": None,
+        "participant_closeout_count": None,
+        "runnerless_manual_selected_turn_count": None,
+        "terminal_synthesis_turn": None,
+        "terminal_phase": None,
+        "opening_turn_proven": False,
+        "moderator_synthesis_proven": False,
+        "visible_turn_count_proven": False,
+        "visible_turn_count_stale": False,
+        "participant_closeout_complete": False,
+        "evidence_ref": None,
+    }
+    if not isinstance(value, Mapping):
+        blockers.append(
+            _blocker(
+                code="lvcor_scenario_row_invalid",
+                owner="operator/control",
+                message=f"scenario_rows[{index}] must be an object.",
+            )
+        )
+        return report
+
+    row = _json_object(
+        value, label=f"plan.lvcor_full_shape_acceptance_proof.scenario_rows[{index}]"
+    )
+    max_discussion_turns = _non_negative_int_or_none(row.get("max_discussion_turns"))
+    participant_count = _non_negative_int_or_none(row.get("participant_count"))
+    expected_visible_turns = _non_negative_int_or_none(row.get("expected_visible_turns"))
+    accepted_visible_turns = _non_negative_int_or_none(row.get("accepted_visible_turns"))
+    posted_visible_turns = _non_negative_int_or_none(
+        row.get("posted_visible_turns") or row.get("visible_turns_posted")
+    )
+    selected_visible_turns = (
+        accepted_visible_turns if accepted_visible_turns is not None else posted_visible_turns
+    )
+    visible_turn_count_source = (
+        "accepted_visible_turns"
+        if accepted_visible_turns is not None
+        else "posted_visible_turns"
+        if posted_visible_turns is not None
+        else None
+    )
+    discussion_turns_completed = _non_negative_int_or_none(row.get("discussion_turns_completed"))
+    participant_closeout_count = _non_negative_int_or_none(row.get("participant_closeout_count"))
+    runnerless_manual_selected_turn_count = _non_negative_int_or_none(
+        row.get("runnerless_manual_selected_turn_count")
+    )
+    terminal_synthesis_turn = _non_negative_int_or_none(row.get("terminal_synthesis_turn"))
+    terminal_phase = _optional_string_value(row.get("terminal_phase"))
+    acceptance_label = _optional_string_value(row.get("acceptance_label"))
+    opening_turn = _non_negative_int_or_none(row.get("opening_turn"))
+    opening_turn_proven = row.get("opening_turn_proven") is True
+    moderator_synthesis_proven = row.get("moderator_synthesis_proven") is True
+    visible_turn_count_proven = row.get("visible_turn_count_proven") is True
+    visible_turn_count_stale = row.get("visible_turn_count_stale") is True
+    participant_closeout_complete = row.get("participant_closeout_complete") is True
+    evidence_ref = _optional_string_value(row.get("evidence_ref"))
+    scenario_id = _optional_string_value(row.get("scenario_id"))
+    scenario_key = (
+        f"{max_discussion_turns}/{participant_count}/{expected_visible_turns}"
+        if max_discussion_turns is not None
+        and participant_count is not None
+        and expected_visible_turns is not None
+        else None
+    )
+    expected_formula = (
+        max_discussion_turns + participant_count + 2
+        if max_discussion_turns is not None and participant_count is not None
+        else None
+    )
+    expected_terminal_turn = (
+        max_discussion_turns + participant_count + 1
+        if max_discussion_turns is not None and participant_count is not None
+        else None
+    )
+    report.update(
+        {
+            "scenario_id": scenario_id,
+            "scenario_key": scenario_key,
+            "acceptance_label": acceptance_label,
+            "max_discussion_turns": max_discussion_turns,
+            "participant_count": participant_count,
+            "expected_visible_turns": expected_visible_turns,
+            "accepted_visible_turns": selected_visible_turns,
+            "visible_turn_count_source": visible_turn_count_source,
+            "discussion_turns_completed": discussion_turns_completed,
+            "participant_closeout_count": participant_closeout_count,
+            "runnerless_manual_selected_turn_count": runnerless_manual_selected_turn_count,
+            "terminal_synthesis_turn": terminal_synthesis_turn,
+            "terminal_phase": terminal_phase,
+            "opening_turn_proven": opening_turn_proven,
+            "moderator_synthesis_proven": moderator_synthesis_proven,
+            "visible_turn_count_proven": visible_turn_count_proven,
+            "visible_turn_count_stale": visible_turn_count_stale,
+            "participant_closeout_complete": participant_closeout_complete,
+            "evidence_ref": evidence_ref,
+        }
+    )
+
+    if acceptance_label not in {"finalized_success_candidate", "unresolved_terminal_blocked"}:
+        blockers.append(
+            _blocker(
+                code="lvcor_acceptance_label_invalid",
+                owner="operator/control",
+                message=(
+                    f"scenario_rows[{index}].acceptance_label must be "
+                    "finalized_success_candidate or unresolved_terminal_blocked."
+                ),
+            )
+        )
+        return report
+
+    if acceptance_label == "unresolved_terminal_blocked":
+        if terminal_phase == "unresolved" and evidence_ref is not None:
+            report["status"] = "diagnostic_only"
+            return report
+        blockers.append(
+            _blocker(
+                code="lvcor_unresolved_terminal_invalid",
+                owner="operator/control",
+                message=(
+                    f"scenario_rows[{index}] labeled unresolved_terminal_blocked must use "
+                    "terminal_phase=unresolved with evidence_ref."
+                ),
+            )
+        )
+        return report
+
+    if terminal_phase != "finalized":
+        blockers.append(
+            _blocker(
+                code="lvcor_success_terminal_phase_invalid",
+                owner="operator/control",
+                message=(
+                    f"scenario_rows[{index}] finalized_success_candidate rows require "
+                    "terminal_phase=finalized."
+                ),
+            )
+        )
+        return report
+
+    if expected_formula is None or expected_visible_turns != expected_formula:
+        blockers.append(
+            _blocker(
+                code="lvcor_expected_visible_turn_formula_mismatch",
+                owner="operator/control",
+                message=(
+                    f"scenario_rows[{index}] expected_visible_turns must equal "
+                    "max_discussion_turns + participant_count + 2."
+                ),
+            )
+        )
+        return report
+
+    if (
+        not visible_turn_count_proven
+        or visible_turn_count_stale
+        or selected_visible_turns != expected_visible_turns
+        or evidence_ref is None
+    ):
+        blockers.append(
+            _blocker(
+                code="lvcor_visible_turn_count_unproven",
+                owner="operator/control",
+                message=(
+                    f"scenario_rows[{index}] must prove a non-stale posted or accepted visible "
+                    "turn count equal to expected_visible_turns with evidence_ref."
+                ),
+            )
+        )
+        return report
+
+    if terminal_synthesis_turn != expected_terminal_turn:
+        blockers.append(
+            _blocker(
+                code="lvcor_terminal_synthesis_turn_mismatch",
+                owner="operator/control",
+                message=(
+                    f"scenario_rows[{index}] terminal_synthesis_turn must equal "
+                    "max_discussion_turns + participant_count + 1."
+                ),
+            )
+        )
+        return report
+
+    if discussion_turns_completed != max_discussion_turns:
+        blockers.append(
+            _blocker(
+                code="lvcor_discussion_turn_coverage_incomplete",
+                owner="operator/control",
+                message=(
+                    f"scenario_rows[{index}] must prove discussion_turns_completed equals "
+                    "max_discussion_turns."
+                ),
+            )
+        )
+        return report
+
+    if not opening_turn_proven or opening_turn != 0:
+        blockers.append(
+            _blocker(
+                code="lvcor_opening_turn_unproven",
+                owner="operator/control",
+                message=(
+                    f"scenario_rows[{index}] must prove the moderator opening at T0 for "
+                    "full-shape acceptance."
+                ),
+            )
+        )
+        return report
+
+    if not participant_closeout_complete or participant_closeout_count != participant_count:
+        blockers.append(
+            _blocker(
+                code="lvcor_participant_closeout_incomplete",
+                owner="operator/control",
+                message=(
+                    f"scenario_rows[{index}] must prove complete participant closeout coverage "
+                    "for every selected participant."
+                ),
+            )
+        )
+        return report
+
+    if not moderator_synthesis_proven:
+        blockers.append(
+            _blocker(
+                code="lvcor_moderator_synthesis_unproven",
+                owner="operator/control",
+                message=(
+                    f"scenario_rows[{index}] must prove terminal moderator synthesis before "
+                    "one-pass success can be reported."
+                ),
+            )
+        )
+        return report
+
+    if runnerless_manual_selected_turn_count != 0:
+        blockers.append(
+            _blocker(
+                code="lvcor_runnerless_manual_selected_turns_nonzero",
+                owner="operator/control",
+                message=(
+                    f"scenario_rows[{index}] must keep runnerless/manual selected-turn count at "
+                    "exactly zero for one-pass success."
+                ),
+            )
+        )
+        return report
+
+    report["status"] = "proven"
+    return report
 
 
 def _integrated_discussion_proof_report(

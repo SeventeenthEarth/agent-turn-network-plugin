@@ -320,6 +320,7 @@ def test_discussion_activation_plan_schema_is_pure_local_doctor_tool() -> None:
             "plugin/RUNFIX3-003",
             "plugin/NEWFIX-006",
             "plugin/ATN-005",
+            "plugin/LVCOR-005",
         ],
     }
     assert (
@@ -376,6 +377,12 @@ def test_discussion_activation_plan_schema_is_pure_local_doctor_tool() -> None:
     assert "dialogue mode" in runfix3_live_thread_proof["description"]
     assert "drift" in runfix3_live_thread_proof["description"]
     assert "fail-closed final status" in runfix3_live_thread_proof["description"]
+    lvcor_proof = plan_schema["properties"]["lvcor_full_shape_acceptance_proof"]
+    assert "plugin/LVCOR-005" in lvcor_proof["description"]
+    assert "15/4/21" in lvcor_proof["description"]
+    assert "5/2/9" in lvcor_proof["description"]
+    assert "runnerless/manual selected turns at zero" in lvcor_proof["description"]
+    assert "unresolved_terminal_blocked" in lvcor_proof["description"]
     evidence_labels = plan_schema["properties"]["evidence_labels"]
     assert set(evidence_labels["properties"]) == {
         "lifecycle_pass",

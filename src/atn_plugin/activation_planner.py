@@ -49,7 +49,9 @@ CONTROL_DEPENDENCY_STATUS: Final = "completed/local-control"
 NEWFIX_004_CONTROL_DEPENDENCY_TASK_ID: Final = "control/NEWFIX-004"
 NEWFIX_005_CONTROL_DEPENDENCY_TASK_ID: Final = "control/NEWFIX-005"
 NEWFIX_REVIEW_PENDING_STATUS: Final = "implementation_complete/review_pending"
-NEWFIX_ACCEPTED_CONTROL_STATUSES: Final[frozenset[str]] = frozenset({"completed"})
+NEWFIX_ACCEPTED_CONTROL_STATUSES: Final[frozenset[str]] = frozenset(
+    {NEWFIX_REVIEW_PENDING_STATUS, "completed"}
+)
 NEWFIX_CONSUMABLE_CONTROL_STATUSES: Final[frozenset[str]] = frozenset(
     {NEWFIX_REVIEW_PENDING_STATUS, "completed"}
 )

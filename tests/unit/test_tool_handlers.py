@@ -406,7 +406,7 @@ def test_discussion_activation_plan_handler_returns_local_doctor_report() -> Non
     assert result["data"]["evidence_labels"]["selected_runner_pass"] == "unproven"
 
 
-def test_discussion_activation_plan_handler_reports_newfix006_review_pending_block() -> None:
+def test_discussion_activation_plan_handler_accepts_newfix006_review_pending() -> None:
     result = decode(
         handle_discussion_activation_plan(
             {
@@ -513,14 +513,27 @@ def test_discussion_activation_plan_handler_reports_newfix006_review_pending_blo
         )
     )
 
-    assert result["ok"] is False
+    assert result["ok"] is True
     assert result["tool"] == "atn_discussion_activation_plan"
     assert result["live_readiness"] is False
     assert result["data"]["task_id"] == "plugin/NEWFIX-006"
     assert result["data"]["behavior_task_id"] == "plugin/NEWFIX-006"
-    assert result["data"]["start_status"] == "blocked"
+    assert result["data"]["start_status"] == "ready_to_start"
+    assert result["data"]["status"] == "ready_to_start"
     assert result["data"]["selected_runner_prompt_evidence_report"]["status"] == "proven"
     assert result["data"]["selected_runner_timeout_evidence_report"]["status"] == "proven"
+    assert (
+        result["data"]["selected_runner_prompt_evidence_report"]["control_dependency"][
+            "accepted_for_start"
+        ]
+        is True
+    )
+    assert (
+        result["data"]["selected_runner_timeout_evidence_report"]["control_dependency"][
+            "accepted_for_start"
+        ]
+        is True
+    )
 
 
 def test_discussion_activation_plan_handler_exposes_runfix3_live_thread_report() -> None:

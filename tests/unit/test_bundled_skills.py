@@ -178,7 +178,7 @@ def test_bundled_hun_newfix002_packaged_skill_contract_is_present() -> None:
     assert "selected_runner_timeout_evidence" in guide_text
     assert "control/NEWFIX-004" in guide_text
     assert "absent or `blocked` `selected_runner_prompt_evidence` before start" in moderator_text
-    assert "review-pending `control/NEWFIX-004` / `control/NEWFIX-005` rows" in moderator_text
+    assert "implementation_complete/review_pending` control rows may unlock start" in moderator_text
     assert "control/NEWFIX-004` extension" in moderator_text
     assert (
         "Plugin hints, visible messages, participant responses, and "

@@ -1419,16 +1419,18 @@ def test_lvcor_005_unresolved_terminal_cannot_claim_success_like_label() -> None
     )
 
 
-def test_newfix_006_review_pending_evidence_stays_blocked_before_closeout() -> None:
+def test_newfix_006_review_pending_concrete_evidence_can_be_ready_to_start() -> None:
     report = build_discussion_activation_plan(complete_newfix_006_plan())
 
     assert report["task_id"] == "plugin/NEWFIX-006"
     assert report["behavior_task_id"] == "plugin/NEWFIX-006"
-    assert report["start_status"] == "blocked"
-    assert report["status"] == "blocked"
+    assert report["start_status"] == "ready_to_start"
+    assert report["status"] == "ready_to_start"
     assert report["live_readiness"] is False
     prompt_report = report["selected_runner_prompt_evidence_report"]
     timeout_report = report["selected_runner_timeout_evidence_report"]
+    assert isinstance(prompt_report, dict)
+    assert isinstance(timeout_report, dict)
     assert prompt_report["status"] == "proven"
     assert timeout_report["status"] == "proven"
     assert (
@@ -1439,9 +1441,13 @@ def test_newfix_006_review_pending_evidence_stays_blocked_before_closeout() -> N
         timeout_report["control_dependency"]["dependency_status"]
         == "implementation_complete/review_pending"
     )
-    assert {blocker["code"] for blocker in report["blockers"]} >= {
-        "newfix_prompt_review_closeout_pending",
-        "newfix_timeout_review_closeout_pending",
+    assert prompt_report["control_dependency"]["accepted_for_start"] is True
+    assert timeout_report["control_dependency"]["accepted_for_start"] is True
+    assert "newfix_prompt_review_closeout_pending" not in {
+        blocker["code"] for blocker in report["blockers"]
+    }
+    assert "newfix_timeout_review_closeout_pending" not in {
+        blocker["code"] for blocker in report["blockers"]
     }
 
 

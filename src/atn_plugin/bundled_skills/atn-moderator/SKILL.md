@@ -16,7 +16,7 @@ Use this skill when you are the moderator/operator for an ATN council or live-vi
 
 ## Authority and boundary
 
-- Canonical live-thread procedure owners for this topic: this skill and `agent-turn-network-plugin/docs/09-skill-and-operator-guide.md`. `src/atn_plugin/bundled_skills/atn-plugin/SKILL.md` is boundary/cross-link only for these live-thread semantics.
+- Canonical live-thread procedure owners for this topic: this skill and `agent-turn-network-plugin/docs/spec/skill-and-operator-guide.md`. `src/atn_plugin/bundled_skills/atn-plugin/SKILL.md` is boundary/cross-link only for these live-thread semantics.
 - ATN control daemon remains lifecycle, event, stream, cursor, lock, and state authority.
 - Plugin tools are typed client surfaces. They must not own lifecycle state, logs, locks, consensus, cursors, idempotency, Discord state, or fallback discovery.
 - Discord/Hermes messages are visible/evidence surfaces only. They become council state only when backed by daemon-owned typed events.
@@ -82,7 +82,7 @@ Use daemon-owned `atn_council_command` commands with caller-supplied `command_id
 
 ## ATN council moderation hard rules
 
-For any live ATN council, the moderator must preserve the daemon-governed council loop and the live-thread contract. These rules are hard guardrails for ATN moderator guidance; they do not authorize live daemon/runtime activation by themselves. The numbered `[RUNFIX3-R##]` rule set below must stay text-identical with `agent-turn-network-plugin/docs/09-skill-and-operator-guide.md`.
+For any live ATN council, the moderator must preserve the daemon-governed council loop and the live-thread contract. These rules are hard guardrails for ATN moderator guidance; they do not authorize live daemon/runtime activation by themselves. The numbered `[RUNFIX3-R##]` rule set below must stay text-identical with `agent-turn-network-plugin/docs/spec/skill-and-operator-guide.md`.
 
 1. [RUNFIX3-R01] Do not predeclare or hard-code a complete live speaker order. A visible discussion must not become a fixed-order Discord/Hermes debate transcript.
 2. [RUNFIX3-R02] Complete lifecycle prerequisites before turn discussion: `council.new`, `request_attendance`, terminal attendance records for required participants, `lock_agenda`, `prepare`, then `ready` or `prepared_partial` evidence.

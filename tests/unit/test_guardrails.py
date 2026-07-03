@@ -11,15 +11,14 @@ SCRIPT = ROOT / "scripts" / "guardrails.py"
 
 REQUIRED_DOCS = [
     "README.md",
-    "00-overview.md",
-    "01-architecture.md",
-    "02-plugin-contract.md",
-    "03-testing-strategy.md",
-    "04-tooling.md",
-    "05-discord-surface.md",
-    "08-unsupported-surfaces.md",
-    "09-skill-and-operator-guide.md",
-    "07-core-compatibility.md",
+    "spec/overview.md",
+    "spec/architecture.md",
+    "spec/compatibility-and-operations.md",
+    "roadmap.md",
+    "spec/skill-and-operator-guide.md",
+    "spec/live-transport-sot.md",
+    "spec/council-argument-graph-sot.md",
+    "spec/agent-turn-network-plugin-naming-sot.md",
 ]
 
 RUNFIX3_RULE_LINES = [
@@ -120,10 +119,10 @@ def write_docs(root: Path, *, include_fail_closed: bool = True) -> None:
                 "---",
                 "# ATN Moderator Skill",
                 "Canonical live-thread procedure owners for this topic: this skill and "
-                "`agent-turn-network-plugin/docs/09-skill-and-operator-guide.md`.",
+                "`agent-turn-network-plugin/docs/spec/skill-and-operator-guide.md`.",
                 "## ATN council moderation hard rules",
                 "The numbered `[RUNFIX3-R##]` rule set below must stay text-identical with "
-                "`agent-turn-network-plugin/docs/09-skill-and-operator-guide.md`.",
+                "`agent-turn-network-plugin/docs/spec/skill-and-operator-guide.md`.",
                 *RUNFIX3_RULE_LINES,
             ]
         )
@@ -131,7 +130,9 @@ def write_docs(root: Path, *, include_fail_closed: bool = True) -> None:
         encoding="utf-8",
     )
     for name in REQUIRED_DOCS:
-        (docs / name).write_text(f"# {name}\n", encoding="utf-8")
+        path = docs / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(f"# {name}\n", encoding="utf-8")
     required_text = "\n".join(
         [
             "plugin is not the source of truth",
@@ -143,7 +144,7 @@ def write_docs(root: Path, *, include_fail_closed: bool = True) -> None:
         ]
     )
     (docs / "README.md").write_text(required_text, encoding="utf-8")
-    (docs / "09-skill-and-operator-guide.md").write_text(
+    (docs / "spec" / "skill-and-operator-guide.md").write_text(
         "\n".join(
             [
                 "No-live defaults",
@@ -165,11 +166,11 @@ def write_docs(root: Path, *, include_fail_closed: bool = True) -> None:
         + "\n",
         encoding="utf-8",
     )
-    (docs / "06-implementation-epics-tasks.md").write_text(
+    (docs / "roadmap.md").write_text(
         "Mirror-only status row:\n",
         encoding="utf-8",
     )
-    (docs / "10-live-transport-sot.md").write_text(
+    (docs / "spec" / "live-transport-sot.md").write_text(
         "this SOT section remains traceability/status only and must not become "
         "another procedure owner.\n",
         encoding="utf-8",
@@ -194,7 +195,7 @@ def test_docs_guardrails_reject_missing_required_phrase(tmp_path: Path) -> None:
 def test_docs_guardrails_reject_stale_sibling_path(tmp_path: Path) -> None:
     guardrails = load_guardrails()
     write_docs(tmp_path)
-    overview = tmp_path / "docs" / "00-overview.md"
+    overview = tmp_path / "docs" / "spec" / "overview.md"
     overview.write_text("stale `../kkachi-agent-network path", encoding="utf-8")
 
     with pytest.raises(SystemExit, match="stale docs-relative sibling path"):
@@ -204,7 +205,7 @@ def test_docs_guardrails_reject_stale_sibling_path(tmp_path: Path) -> None:
 def test_docs_guardrails_reject_stale_sibling_path_in_extra_doc(tmp_path: Path) -> None:
     guardrails = load_guardrails()
     write_docs(tmp_path)
-    (tmp_path / "docs" / "06-implementation-epics-tasks.md").write_text(
+    (tmp_path / "docs" / "roadmap.md").write_text(
         "stale `../kkachi-agent-network path",
         encoding="utf-8",
     )
@@ -216,7 +217,7 @@ def test_docs_guardrails_reject_stale_sibling_path_in_extra_doc(tmp_path: Path) 
 def test_docs_guardrails_reject_operator_guide_overclaim(tmp_path: Path) -> None:
     guardrails = load_guardrails()
     write_docs(tmp_path)
-    guide = tmp_path / "docs" / "09-skill-and-operator-guide.md"
+    guide = tmp_path / "docs" / "spec" / "skill-and-operator-guide.md"
     guide.write_text(
         guide.read_text(encoding="utf-8") + "\nplugin-load smoke passes\n",
         encoding="utf-8",
@@ -245,7 +246,7 @@ def test_docs_guardrails_reject_missing_runfix3_owner_marker(tmp_path: Path) -> 
 def test_docs_guardrails_reject_runfix3_rule_parity_drift(tmp_path: Path) -> None:
     guardrails = load_guardrails()
     write_docs(tmp_path)
-    guide = tmp_path / "docs" / "09-skill-and-operator-guide.md"
+    guide = tmp_path / "docs" / "spec" / "skill-and-operator-guide.md"
     guide.write_text(
         guide.read_text(encoding="utf-8").replace(
             "operator hints only and never origin proof",
@@ -262,7 +263,7 @@ def test_docs_guardrails_reject_runfix3_rule_parity_drift(tmp_path: Path) -> Non
 def test_docs_guardrails_reject_runfix3_rule_id_outside_owner(tmp_path: Path) -> None:
     guardrails = load_guardrails()
     write_docs(tmp_path)
-    epics = tmp_path / "docs" / "06-implementation-epics-tasks.md"
+    epics = tmp_path / "docs" / "roadmap.md"
     epics.write_text(
         epics.read_text(encoding="utf-8") + "[RUNFIX3-R01] leaked mirror rule id\n",
         encoding="utf-8",
@@ -287,7 +288,7 @@ def test_docs_guardrails_reject_runfix3_rule_id_in_nested_docs_evidence(tmp_path
     ("path", "text", "token"),
     [
         (
-            "docs/09-skill-and-operator-guide.md",
+            "docs/spec/skill-and-operator-guide.md",
             "\ndisplay-name labels satisfy exact-origin proof.\n",
             "display-name labels satisfy exact-origin proof",
         ),
@@ -297,12 +298,12 @@ def test_docs_guardrails_reject_runfix3_rule_id_in_nested_docs_evidence(tmp_path
             "`selected_runner_pass` is a selection mode",
         ),
         (
-            "docs/09-skill-and-operator-guide.md",
+            "docs/spec/skill-and-operator-guide.md",
             "\n`selected_runner_pass` is satisfied by fallback/manual speech.\n",
             "`selected_runner_pass` is satisfied by fallback/manual speech",
         ),
         (
-            "docs/00-overview.md",
+            "docs/spec/overview.md",
             "\n`live_readiness=true` proves live-visible council readiness.\n",
             "`live_readiness=true` proves live-visible council readiness",
         ),
@@ -369,12 +370,12 @@ def test_docs_guardrails_reject_bundled_skill_without_frontmatter(tmp_path: Path
             "pure RUNFIX discussion activation planner/doctor",
         ),
         (
-            "docs/00-overview.md",
+            "docs/spec/overview.md",
             "The package keeps a legacy wrapper for compatibility.\n",
             "legacy wrapper",
         ),
         (
-            "docs/00-overview.md",
+            "docs/spec/overview.md",
             "gateway/auth/token/provider mutation is supported for operators.\n",
             "gateway/auth/token/provider mutation is supported",
         ),
@@ -400,7 +401,7 @@ def test_docs_guardrails_allow_occurrence_specific_historical_provenance(
 ) -> None:
     guardrails = load_guardrails()
     write_docs(tmp_path)
-    roadmap = tmp_path / "docs" / "06-implementation-epics-tasks.md"
+    roadmap = tmp_path / "docs" / "roadmap.md"
     roadmap.write_text(
         "Mirror-only status row:\n"
         "| HPLUG-2 | completed | Implemented the fake/injected "
@@ -416,7 +417,7 @@ def test_docs_guardrails_reject_same_token_outside_allowed_occurrence(
 ) -> None:
     guardrails = load_guardrails()
     write_docs(tmp_path)
-    roadmap = tmp_path / "docs" / "06-implementation-epics-tasks.md"
+    roadmap = tmp_path / "docs" / "roadmap.md"
     roadmap.write_text(
         "New public docs should call `kan_stream_tail` directly.\n",
         encoding="utf-8",

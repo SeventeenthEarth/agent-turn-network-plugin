@@ -76,10 +76,13 @@ def main(*, plugin: Path = PLUGIN, core: Path = CORE) -> None:
     if missing_argue_fixtures:
         raise SystemExit(f"control manifest missing ARGUE fixtures: {missing_argue_fixtures}")
 
-    cross = require(core / "docs" / "21-cross-repo-development.md", "control cross-repo development doc")
-    dist = require(core / "docs" / "11-distribution-and-plugin.md", "control distribution/plugin doc")
+    cross = require(core / "docs" / "spec" / "cross-repo-contract.md", "control cross-repo development doc")
+    dist = require(core / "docs" / "spec" / "cross-repo-contract.md", "control distribution/plugin doc")
     makefile = require(core / "Makefile", "control Makefile")
-    compat = require(plugin / "docs" / "07-core-compatibility.md", "plugin control compatibility doc")
+    compat = require(
+        plugin / "docs" / "spec" / "compatibility-and-operations.md",
+        "plugin control compatibility doc",
+    )
 
     for phrase in REQUIRED_CONTROL_PHRASES:
         if phrase not in cross:

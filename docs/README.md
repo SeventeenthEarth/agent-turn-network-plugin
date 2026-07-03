@@ -1,35 +1,30 @@
 # atn-plugin Documentation
 
-This directory is the source of truth for the **Python Hermes plugin adapter** for Agent Turn Network (ATN). Public docs, checked-in package/import/manifest surfaces, Hermes tools, and bundled skills now use the ATN repo/tool/skill labels.
+This directory is the source of truth for the Python Hermes plugin adapter for Agent Turn Network (ATN). The plugin is not the control source of truth; in guardrail terms, plugin is not the source of truth. It adapts Hermes-facing tools and packaged skills to the daemon protocol owned by `atn-control`.
 
-Control daemon/CLI authority is public-facing as `atn-control` and currently lives at the local compatibility path `../../agent-turn-network-control/docs/`. The plugin is not the source of truth. Its current surface is fake/injected Hermes tools over the daemon protocol contract, including CNDIS council and delivery-evidence command submission plus an injected-only Discord helper. SKILL-2 adds a packaged operator skill guide, compatibility matrix, and local isolated plugin-load smoke gate. `plugin/LTRAN-002` adds an explicit `live_transport.unix_socket_path` Unix-socket transport for `status.read` and `version.read` smoke only. `plugin/LTRAN-003` adds bounded explicit Unix-socket `stream.tail`/`command.submit` equivalence and dedupe proof, with evidence at `docs/evidence/ltran-003-plugin-equivalence-evidence.json`. `docs/11-council-argument-graph-sot.md` is the plugin-side `ARGUE` SOT for relation-aware participant response, schema, handler, rendering, and packaged guidance work; its control companion is `../../agent-turn-network-control/docs/25-council-argument-graph-sot.md`. Slash commands, live daemon discovery, production activation, KAB bridge behavior, long-lived member runtime readiness, broad command coverage, and live/default Discord visible-surface wiring remain unsupported.
+`roadmap.md` is the SSOT for plugin epic/task status, sequencing, and evidence pointers. Other docs describe stable architecture, contracts, compatibility, or operator procedure and should reference the roadmap instead of duplicating current task state.
 
-## Documents
+## Structure
 
-1. `00-overview.md` — plugin purpose, repo boundary, non-goals
-2. `01-architecture.md` — Python plugin architecture and daemon boundary
-3. `02-plugin-contract.md` — tool/slash-command/client compatibility contract
-4. `03-testing-strategy.md` — plugin test layers and isolated E2E policy
-5. `04-tooling.md` — Python packaging and Makefile target contract
-6. `05-discord-surface.md` — Discord helper behavior and evidence rules
-7. `06-implementation-epics-tasks.md` — plugin implementation roadmap and task backlog
-8. `07-core-compatibility.md` — control protocol compatibility, milestone matrix, and cross-repo checks
-9. `08-unsupported-surfaces.md` — unsupported Hermes/plugin surfaces and future binding requirements
-10. `09-skill-and-operator-guide.md` — bundled ATN skill install, enable, rollback, troubleshooting, and local isolated plugin-load smoke boundary
-11. `10-live-transport-sot.md` — plugin-side live transport SOT for `LTRAN` / `PARTC` / `SURFD`: main-agent CLI control, participant-agent plugin transport, member runtime response flow, daemon authority boundaries, completed docs-only `plugin/LTRAN-001` mapping, and control companion SOT dependencies
-12. `11-council-argument-graph-sot.md` — plugin-side `ARGUE` SOT for council argument graph schemas, selected participant response, fail-closed handler behavior, visible relation rendering, packaged guidance, and sequential control/plugin implementation DAG
-13. `13-agent-turn-network-plugin-naming-sot.md` — plugin-side Agent Turn Network naming SOT for `ATN`, package/import/tool/skill names, clean no-alias policy, and ATN-001..ATN-005 task sequencing
+1. `roadmap.md` - plugin epic/task status, sequencing, and evidence-pointer SSOT
+2. `spec/overview.md` - plugin purpose, repo boundary, and non-goals
+3. `spec/architecture.md` - plugin architecture, tool contract, and Discord helper surface
+4. `spec/compatibility-and-operations.md` - control compatibility, testing policy, tooling, and unsupported surfaces
+5. `spec/skill-and-operator-guide.md` - bundled ATN skill install, enable, rollback, troubleshooting, and local isolated plugin-load smoke boundary
+6. `spec/live-transport-sot.md` - plugin-side live transport SOT
+7. `spec/council-argument-graph-sot.md` - plugin-side council argument graph SOT
+8. `spec/agent-turn-network-plugin-naming-sot.md` - plugin-side ATN naming SOT
 
-## Required Makefile targets
+## Required Makefile Targets
 
 ```bash
-make test-prepare  # ruff format/check, mypy/typecheck, guardrails; no live external resources
-make check-plugin-load-smoke  # local isolated plugin-load smoke; no live external resources
-make test-unit     # Python unit tests
-make test-int      # integration tests using fake daemon/Hermes/gateway only
-make test-e2e      # real external tests only in isolated test environment
-make test          # sequential: prepare -> unit -> int -> e2e
-make check-core-contract  # verify companion control milestone/contract readiness
+make test-prepare
+make check-plugin-load-smoke
+make test-unit
+make test-int
+make test-e2e
+make test
+make check-core-contract
 ```
 
-Python package scaffolding, the minimal Hermes plugin manifest/entrypoint, the packaged operator skill, and the local isolated plugin-load smoke gate now exist. Makefile code checks are active when `uv` and `pyproject.toml` are available; docs guardrails must always run.
+Slash commands, live daemon discovery, production activation, KAB bridge behavior, long-lived member runtime readiness, broad command coverage, and live/default Discord visible-surface wiring remain unsupported.

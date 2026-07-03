@@ -72,16 +72,15 @@ Use this order when claims conflict:
 1. 주군's current instruction.
 2. Team registry SOT: `/Users/draccoon/Workspace/Hermes/17thHermes/01_references/team/team-agent-registry.yaml`.
 3. ATN plugin SOT:
-   - `docs/11-council-argument-graph-sot.md`
-   - `docs/10-live-transport-sot.md`
-   - `docs/06-implementation-epics-tasks.md`
-   - `docs/02-plugin-contract.md`
-   - `docs/01-architecture.md`
-   - `docs/07-core-compatibility.md`
-   - `docs/09-skill-and-operator-guide.md`
+   - `docs/spec/council-argument-graph-sot.md`
+   - `docs/spec/live-transport-sot.md`
+   - `docs/roadmap.md`
+   - `docs/spec/architecture.md`
+   - `docs/spec/compatibility-and-operations.md`
+   - `docs/spec/skill-and-operator-guide.md`
 4. ATN control dependency SOT:
-   - `../agent-turn-network-control/docs/25-council-argument-graph-sot.md`
-   - `../agent-turn-network-control/docs/24-live-transport-control-sot.md`
+   - `../agent-turn-network-control/docs/spec/council-argument-graph-sot.md`
+   - `../agent-turn-network-control/docs/spec/live-transport-control-sot.md`
    - `../agent-turn-network-control/docs/roadmap.md`
 5. Optional workflow helper state under `.kkachi/` only when that helper is explicitly selected and available.
 

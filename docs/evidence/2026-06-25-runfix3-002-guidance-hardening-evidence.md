@@ -22,15 +22,15 @@
 
 ## Changed files
 - `agent-turn-network-plugin/docs/06-implementation-epics-tasks.md`
-- `agent-turn-network-plugin/docs/09-skill-and-operator-guide.md`
-- `agent-turn-network-plugin/docs/10-live-transport-sot.md`
+- `agent-turn-network-plugin/docs/spec/skill-and-operator-guide.md`
+- `agent-turn-network-plugin/docs/spec/live-transport-sot.md`
 - `agent-turn-network-plugin/scripts/guardrails.py`
 - `agent-turn-network-plugin/src/atn_plugin/bundled_skills/atn-moderator/SKILL.md`
 - `agent-turn-network-plugin/src/atn_plugin/bundled_skills/atn-plugin/SKILL.md`
 - `agent-turn-network-plugin/tests/unit/test_bundled_skills.py`
 - `agent-turn-network-plugin/tests/unit/test_guardrails.py`
-- `agent-turn-network-control/docs/09-implementation-epics.md`
-- `agent-turn-network-control/docs/24-live-transport-control-sot.md`
+- `agent-turn-network-control/docs/todo/implementation-decomposition.md`
+- `agent-turn-network-control/docs/spec/live-transport-control-sot.md`
 - `agent-turn-network-control/docs/roadmap.md`
 
 ## Hardened contract points
@@ -78,9 +78,9 @@
 
 ## Cross-repo status mirror refs
 - `agent-turn-network-plugin/docs/06-implementation-epics-tasks.md` — `RUNFIX3-002 | implementation_complete/review_pending`
-- `agent-turn-network-plugin/docs/10-live-transport-sot.md` — `RUNFIX3-002 | implementation_complete/review_pending`
-- `agent-turn-network-control/docs/09-implementation-epics.md` — `RUNFIX3-002 | implementation_complete/review_pending`
-- `agent-turn-network-control/docs/24-live-transport-control-sot.md` — `RUNFIX3-002 | implementation_complete/review_pending`
+- `agent-turn-network-plugin/docs/spec/live-transport-sot.md` — `RUNFIX3-002 | implementation_complete/review_pending`
+- `agent-turn-network-control/docs/todo/implementation-decomposition.md` — `RUNFIX3-002 | implementation_complete/review_pending`
+- `agent-turn-network-control/docs/spec/live-transport-control-sot.md` — `RUNFIX3-002 | implementation_complete/review_pending`
 - `agent-turn-network-control/docs/roadmap.md` — RUNFIX3 table now includes `RUNFIX3-002` as `implementation_complete/review_pending` and restores the four-task table shape.
 
 ## Non-goals preserved

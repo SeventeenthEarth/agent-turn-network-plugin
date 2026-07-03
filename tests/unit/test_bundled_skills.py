@@ -46,7 +46,9 @@ def bundled_skill_text(name: str) -> str:
 
 def test_bundled_hun_runfix3_002_normative_procedure_has_correct_owners() -> None:
     moderator_text = bundled_skill_text("atn-moderator")
-    guide_text = (ROOT / "docs" / "09-skill-and-operator-guide.md").read_text(encoding="utf-8")
+    guide_text = (ROOT / "docs" / "spec" / "skill-and-operator-guide.md").read_text(
+        encoding="utf-8"
+    )
     plugin_text = bundled_skill_text("atn-plugin")
 
     assert "Canonical live-thread procedure owners for this topic:" in moderator_text
@@ -65,8 +67,8 @@ def test_bundled_hun_runfix3_002_normative_procedure_has_correct_owners() -> Non
     assert (
         "This skill is boundary/cross-link only for RUNFIX3 live-thread semantics." in plugin_text
     )
-    mirror_epics = (ROOT / "docs" / "06-implementation-epics-tasks.md").read_text(encoding="utf-8")
-    mirror_sot = (ROOT / "docs" / "10-live-transport-sot.md").read_text(encoding="utf-8")
+    mirror_epics = (ROOT / "docs" / "roadmap.md").read_text(encoding="utf-8")
+    mirror_sot = (ROOT / "docs" / "spec" / "live-transport-sot.md").read_text(encoding="utf-8")
     assert "Mirror-only status row" in mirror_epics
     assert (
         "this SOT section remains traceability/status only and must not become another "
@@ -117,7 +119,9 @@ def test_bundled_hun_skill_resource_is_import_safe_and_readable() -> None:
 def test_bundled_hun_moderator_skill_ships_council_moderation_hard_rules() -> None:
     plugin_text = read_bundled_skill_text("atn-plugin")
     moderator_text = read_bundled_skill_text("atn-moderator")
-    guide_text = (ROOT / "docs" / "09-skill-and-operator-guide.md").read_text(encoding="utf-8")
+    guide_text = (ROOT / "docs" / "spec" / "skill-and-operator-guide.md").read_text(
+        encoding="utf-8"
+    )
 
     assert "For RUNFIX3 live-thread semantics, the normative procedure owners are" in plugin_text
     assert "Do not predeclare or hard-code a complete live speaker order" not in plugin_text
@@ -156,7 +160,9 @@ def test_bundled_hun_skills_define_runner_jsonl_framing_contract() -> None:
     plugin_text = read_bundled_skill_text("atn-plugin")
     moderator_text = read_bundled_skill_text("atn-moderator")
     participant_text = read_bundled_skill_text("atn-participant")
-    guide_text = (ROOT / "docs" / "09-skill-and-operator-guide.md").read_text(encoding="utf-8")
+    guide_text = (ROOT / "docs" / "spec" / "skill-and-operator-guide.md").read_text(
+        encoding="utf-8"
+    )
     combined = "\n".join([plugin_text, moderator_text, participant_text, guide_text])
     normalized = " ".join(combined.split())
 
@@ -172,7 +178,9 @@ def test_bundled_hun_skills_define_runner_jsonl_framing_contract() -> None:
 def test_bundled_hun_newfix002_packaged_skill_contract_is_present() -> None:
     moderator_text = read_bundled_skill_text("atn-moderator")
     participant_text = read_bundled_skill_text("atn-participant")
-    guide_text = (ROOT / "docs" / "09-skill-and-operator-guide.md").read_text(encoding="utf-8")
+    guide_text = (ROOT / "docs" / "spec" / "skill-and-operator-guide.md").read_text(
+        encoding="utf-8"
+    )
 
     assert "NEXFIX content-plane exception" in guide_text
     assert "selected_runner_timeout_evidence" in guide_text
@@ -219,7 +227,9 @@ def test_bundled_skill_reader_rejects_unknown_names() -> None:
 
 def test_bundled_skill_and_operator_docs_do_not_overclaim_unsupported_surfaces() -> None:
     skill_text = read_bundled_skill_text("atn-plugin")
-    guide_text = (ROOT / "docs" / "09-skill-and-operator-guide.md").read_text(encoding="utf-8")
+    guide_text = (ROOT / "docs" / "spec" / "skill-and-operator-guide.md").read_text(
+        encoding="utf-8"
+    )
     combined = f"{skill_text}\n{guide_text}"
 
     for phrase in [

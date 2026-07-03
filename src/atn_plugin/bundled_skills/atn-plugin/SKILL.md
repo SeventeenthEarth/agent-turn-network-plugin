@@ -59,16 +59,16 @@ Default work must stay local and fake/injected only:
    over explicit daemon/control event JSON, never as lifecycle authority. Use
    `visible_transcript` for operator-facing discussion text and keep raw
    cursor/event details in `audit_log`/`rows` evidence.
-6. Treat `atn_discussion_activation_plan` output as a dry-run planner/doctor report only. It can prepare an activation plan from explicit evidence, but it never proves live readiness. For RUNFIX3 live-visible start-gate behavior, output-mode handling, and downgrade decisions, use `atn-moderator/SKILL.md` and `docs/09-skill-and-operator-guide.md` rather than this boundary skill.
+6. Treat `atn_discussion_activation_plan` output as a dry-run planner/doctor report only. It can prepare an activation plan from explicit evidence, but it never proves live readiness. For RUNFIX3 live-visible start-gate behavior, output-mode handling, and downgrade decisions, use `atn-moderator/SKILL.md` and `docs/spec/skill-and-operator-guide.md` rather than this boundary skill.
 7. Treat ARGUE argument-graph support as static/fake/injected schema and tool contract coverage only. The plugin preserves explicit `claims[]`, `stance_links[]`, `contribution_type`, `new_axis_reason`, `evidence[]`, `hand_raise.intent`, `hand_raise.reason`, and `hand_raise.target_links[]` fields for daemon/control validation. `responds_to_event_id` remains a legacy display hint and never overrides `stance_links[]`.
 
 ## Daemon registry membership boundary
 
-Daemon registry authority remains separate from profile/Discord readiness. For RUNFIX3 live-visible roster validation, planned reconcile requirements, and `council.new` start-gate handling, use `atn-moderator/SKILL.md` and `docs/09-skill-and-operator-guide.md`; this skill keeps only the plugin-surface boundary that registry evidence must come from explicit caller-provided inputs and control-owned reconcile outcomes, not inferred Discord/profile state.
+Daemon registry authority remains separate from profile/Discord readiness. For RUNFIX3 live-visible roster validation, planned reconcile requirements, and `council.new` start-gate handling, use `atn-moderator/SKILL.md` and `docs/spec/skill-and-operator-guide.md`; this skill keeps only the plugin-surface boundary that registry evidence must come from explicit caller-provided inputs and control-owned reconcile outcomes, not inferred Discord/profile state.
 
 ## Moderator live-thread contract owner
 
-For RUNFIX3 live-thread semantics, the normative procedure owners are `src/atn_plugin/bundled_skills/atn-moderator/SKILL.md` and `agent-turn-network-plugin/docs/09-skill-and-operator-guide.md`.
+For RUNFIX3 live-thread semantics, the normative procedure owners are `src/atn_plugin/bundled_skills/atn-moderator/SKILL.md` and `agent-turn-network-plugin/docs/spec/skill-and-operator-guide.md`.
 Use this skill for plugin-surface boundaries and cross-links only. Do not create or require a fourth packaged moderation skill, external profile-local flat skill, or legacy `kan-*` bundled skill alias.
 
 ## ARGUE relation-aware response guidance
@@ -190,7 +190,7 @@ Historical proof references kept for provenance:
 3. `control/RUNFIX-016` summary robustness.
 4. `plugin/RUNFIX-017` ARGUE quality-required prompts.
 
-For current live-thread report labels, expected turn accounting, selected-runner downgrade handling, and repair-forward versus unresolved closeout, use `atn-moderator/SKILL.md` and `docs/09-skill-and-operator-guide.md`.
+For current live-thread report labels, expected turn accounting, selected-runner downgrade handling, and repair-forward versus unresolved closeout, use `atn-moderator/SKILL.md` and `docs/spec/skill-and-operator-guide.md`.
 
 ## Required ATN companion skills
 
@@ -229,7 +229,7 @@ correct fail-closed `unknown` result.
 
 This skill is boundary/cross-link only for RUNFIX3 live-thread semantics. For exact preflight, live-thread procedure, dialogue-mode requirements, lifecycle turn formula, selected-runner versus fallback reporting, content/audit separation, and repair-forward versus unresolved closeout, use:
 - `src/atn_plugin/bundled_skills/atn-moderator/SKILL.md`
-- `agent-turn-network-plugin/docs/09-skill-and-operator-guide.md`
+- `agent-turn-network-plugin/docs/spec/skill-and-operator-guide.md`
 
 Plugin-surface boundaries for this topic:
 - `atn_discussion_activation_plan` remains a dry-run/local planner-doctor surface from explicit caller-provided evidence only. It does not prove live readiness, inspect current Hermes/Discord state, start daemons, or mutate profiles/gateway/Discord/auth/token/provider/model settings.
@@ -242,7 +242,7 @@ Plugin-surface boundaries for this topic:
 
 1. Inspect `plugin.yaml` and confirm the tool list plus
    `provides_commands: []`.
-2. Read `docs/09-skill-and-operator-guide.md` for install, enable, rollback,
+2. Read `docs/spec/skill-and-operator-guide.md` for install, enable, rollback,
    troubleshooting, and the SKILL-2 local isolated plugin-load smoke boundary.
 3. Run local verification before claiming the packaged skill/docs are usable:
 

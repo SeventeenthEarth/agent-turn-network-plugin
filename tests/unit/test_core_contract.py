@@ -26,8 +26,8 @@ def write_contract_fixture(
 ) -> tuple[Path, Path]:
     plugin = root / "plugin"
     core = root / "core"
-    (plugin / "docs").mkdir(parents=True)
-    (core / "docs").mkdir(parents=True)
+    (plugin / "docs" / "spec").mkdir(parents=True)
+    (core / "docs" / "spec").mkdir(parents=True)
     (core / "testdata" / "conformance").mkdir(parents=True)
 
     check_core_contract = load_check_core_contract()
@@ -41,23 +41,20 @@ def write_contract_fixture(
         ),
         encoding="utf-8",
     )
-    (core / "docs" / "21-cross-repo-development.md").write_text(
+    (core / "docs" / "spec" / "cross-repo-contract.md").write_text(
         "\n".join(
             [
                 protocol,
                 "Milestone unlock matrix",
                 "make check-plugin-contract",
                 "testdata/conformance/manifest.json",
+                "conformance fixture handoff",
             ]
         ),
         encoding="utf-8",
     )
-    (core / "docs" / "11-distribution-and-plugin.md").write_text(
-        "conformance fixture handoff",
-        encoding="utf-8",
-    )
     (core / "Makefile").write_text("check-plugin-contract:\n\t@echo ok\n", encoding="utf-8")
-    (plugin / "docs" / "07-core-compatibility.md").write_text(
+    (plugin / "docs" / "spec" / "compatibility-and-operations.md").write_text(
         PROTOCOL if include_plugin_protocol else "missing protocol declaration",
         encoding="utf-8",
     )

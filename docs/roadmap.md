@@ -1,8 +1,10 @@
-# Plugin Implementation Epics and Tasks
+# Plugin Roadmap
 
 ## Scope
 
-This roadmap and task backlog is for `atn-plugin`. Control daemon/CLI roadmap lives in `../../agent-turn-network-control/docs/09-implementation-epics.md` and `../../agent-turn-network-control/docs/roadmap.md`; those sibling paths are current local compatibility paths for public `atn-control` references.
+This roadmap is the SSOT for `atn-plugin` epic/task status, sequencing, and evidence pointers. Control daemon/CLI roadmap status lives in `../../agent-turn-network-control/docs/roadmap.md`; `../../agent-turn-network-control/docs/todo/implementation-decomposition.md` remains a decomposition/reference document, not the cross-repo status owner.
+
+Other plugin docs may cite task IDs for context, but current task status must be read from this file. When a task ID is cited outside its repo-local roadmap or SOT table, qualify it as `plugin/<task-id>` or `control/<task-id>`.
 
 Task status values are limited to:
 
@@ -33,7 +35,7 @@ The plugin may develop ahead of `agent-turn-network-control` only when a task ca
 
 Historical completed plugin tasks before the post-Release live-local work preserve their original short task IDs such as `SCAFF-1`, `DAEMN-1`, and `SKILL-2` for audit continuity. New post-Release cross-repo live-local epics normally use five-letter uppercase epic IDs and three-digit task IDs. `ATN` is the current public rename epic for Agent Turn Network. Explicit user-approved exceptions include `RUNFIX2`, `RUNFIX3`, and the `NEXFIX` epic whose requested task id prefix is `NEWFIX-*`. When a capability spans control and plugin, both repositories use the same epic ID and one globally sequential task number stream; cite tasks with repo-qualified notation such as `control/RUNFIX-001` or `plugin/RUNFIX-002`. A repo-local roadmap may therefore skip numbers owned by the sibling repo.
 
-Use `docs/07-core-compatibility.md` as the compatibility SOT. The short rule is:
+Use `docs/spec/compatibility-and-operations.md` as the compatibility SOT. The short rule is:
 
 - `SCAFF` can complete before control implementation because it is scaffold/docs/test harness work; its upstream scaffold gate is `BOOTS-001`.
 - `DAEMN` can progress with fixtures and fake daemon responses; live/client completion waits for stable control protocol fixtures and daemon status/version surfaces from `DAEMN-002`.
@@ -132,13 +134,13 @@ Epic ID: `LTRAN`
 
 Exit: the plugin has an explicit, locally verified live daemon transport that preserves daemon authority, keeps the CLI as the main-agent control plane, keeps the plugin as the participant-agent ATN client surface, and proves plugin reads/writes address the same daemon contract as the CLI. This exit is not production activation, live/default Discord delivery, gateway/auth/token mutation, or KAB bridge readiness.
 
-SOT: `docs/10-live-transport-sot.md`. Control companion SOT: `../../agent-turn-network-control/docs/24-live-transport-control-sot.md`.
+SOT: `docs/spec/live-transport-sot.md`. Control companion SOT: `../../agent-turn-network-control/docs/spec/live-transport-control-sot.md`.
 
 Dependency gate: complete the control `LTRAN` epic before starting the plugin `LTRAN` implementation epic. Do not switch from plugin `LTRAN` to control tasks mid-epic; if a missing control capability is discovered, block the plugin epic and open/complete the needed control epic before resuming plugin work.
 
 | Task ID | Task Title | Task Status | Task Description |
 |---|---|---|---|
-| LTRAN-001 | Lock plugin live transport SOT and mapping | completed | Docs-only SOT/mapping closeout: `docs/10-live-transport-sot.md`, `docs/README.md`, `docs/kkachi-docs-map.yaml`, and `docs/07-core-compatibility.md` record the plugin-side daemon/plugin/CLI relationship, main-agent CLI control-plane policy, participant-agent plugin path, operation mapping, ID/idempotency rules, non-scope boundaries, and the control companion SOT dependency. No backend/source/test code changed, no live transport was implemented, and no live/production/Discord/gateway/auth/token/KAB/hidden CLI fallback readiness is claimed. Repo-qualified dependency evidence: control `docs/24-live-transport-control-sot.md` and control `docs/roadmap.md` mark `control/LTRAN-001`, `control/LTRAN-002`, and `control/LTRAN-003` completed; plugin implementation remains handed off to `plugin/LTRAN-002` as the first implementation task. |
+| LTRAN-001 | Lock plugin live transport SOT and mapping | completed | Docs-only SOT/mapping closeout: `docs/spec/live-transport-sot.md`, `docs/README.md`, `docs/kkachi-docs-map.yaml`, and `docs/spec/compatibility-and-operations.md` record the plugin-side daemon/plugin/CLI relationship, main-agent CLI control-plane policy, participant-agent plugin path, operation mapping, ID/idempotency rules, non-scope boundaries, and the control companion SOT dependency. No backend/source/test code changed, no live transport was implemented, and no live/production/Discord/gateway/auth/token/KAB/hidden CLI fallback readiness is claimed. Repo-qualified dependency evidence: control `docs/spec/live-transport-control-sot.md` and control `docs/roadmap.md` mark `control/LTRAN-001`, `control/LTRAN-002`, and `control/LTRAN-003` completed; plugin implementation remains handed off to `plugin/LTRAN-002` as the first implementation task. |
 | LTRAN-002 | Add explicit plugin live daemon transport | completed | Implemented explicit `live_transport.unix_socket_path` register-time Unix-socket client factory for `status.read` and `version.read` live smoke only. No-config still fails closed; empty, relative, `~`, URL/scheme, localhost/TCP, missing, regular-file, directory, symlink, permission, malformed-response, and unsupported-operation paths fail closed without CLI, localhost/TCP, Discord, Hermes, gateway, auth, token, KAB, provider/profile mutation, or production activation fallback. |
 | LTRAN-003 | Prove plugin/CLI/daemon equivalence | completed | Implemented bounded explicit Unix-socket equivalence for `stream.tail` and `command.submit`: plugin `stream.tail` maps to daemon `stream.replay`, plugin `command.submit` unwraps to concrete daemon commands when public `idempotency_key` is representable as daemon `command_id`, and unrepresentable idempotency fails closed before socket connect. Evidence includes targeted integration coverage, full plugin gates, core contract check, and durable isolated real-daemon smoke at `docs/evidence/ltran-003-plugin-equivalence-evidence.json`. This remains local-only live-daemon equivalence and does not claim production activation, live/default Discord, gateway/auth/token/provider/profile mutation, KAB readiness, long-lived member runtime readiness, broad command coverage, or hidden CLI fallback. |
 
@@ -148,7 +150,7 @@ Epic ID: `PARTC`
 
 Exit: participant agents can observe actionable daemon events and submit participant-originated council writes through the plugin/protocol-client path, with member runtime invocation evidence supplied by the completed control `MEMBR` epic. This exit does not claim always-on production runtimes or simulated role substitution.
 
-SOT: `docs/10-live-transport-sot.md`. Control companion SOT: `../../agent-turn-network-control/docs/24-live-transport-control-sot.md`.
+SOT: `docs/spec/live-transport-sot.md`. Control companion SOT: `../../agent-turn-network-control/docs/spec/live-transport-control-sot.md`.
 
 Dependency gate: complete the control `MEMBR` epic before starting plugin `PARTC`. Active task transfer between repos happens only at the epic boundary.
 
@@ -163,7 +165,7 @@ Epic ID: `SURFD`
 
 Exit: the plugin-side visible-surface helper/rendering boundary can present daemon event data and record evidence pointers without becoming lifecycle state authority or enabling live/default Discord from plugin registration.
 
-SOT: `docs/10-live-transport-sot.md`. Control companion SOT: `../../agent-turn-network-control/docs/24-live-transport-control-sot.md`.
+SOT: `docs/spec/live-transport-sot.md`. Control companion SOT: `../../agent-turn-network-control/docs/spec/live-transport-control-sot.md`.
 
 Dependency gate: complete the control `SURFD` epic before starting plugin `SURFD`. Active task transfer between repos happens only at the epic boundary.
 
@@ -177,7 +179,7 @@ Epic ID: `ARGUE`
 
 Exit: the plugin can accept, validate where deterministically possible, submit, and render relation-aware council discussion evidence without becoming lifecycle authority. ARGUE completion means participant-agent tool schemas, selected participant response handling, visible projection rendering, and packaged operator guidance preserve `claims[]`, `stance_links[]`, `contribution_type`, `new_axis_reason`, and quality diagnostics supplied by control. This exit is not production activation, live/default Discord delivery, gateway/auth/token/provider/profile mutation, KAB bridge readiness, or a live-local pilot claim.
 
-SOT: `docs/11-council-argument-graph-sot.md`. Control companion SOT: `../../agent-turn-network-control/docs/25-council-argument-graph-sot.md`.
+SOT: `docs/spec/council-argument-graph-sot.md`. Control companion SOT: `../../agent-turn-network-control/docs/spec/council-argument-graph-sot.md`.
 
 Dependency gate: develop ARGUE sequentially through the control/plugin DAG. Control owns protocol/event/state/validation fixtures; plugin implementation starts only after the relevant control ARGUE fixture or gate exists, unless a task explicitly records local fake-fixture scope and keeps control compatibility completion blocked.
 
@@ -195,7 +197,7 @@ Epic ID: `RUNFIX`
 
 Exit: an approved live-local ATN discussion can be installed/activated only with explicit control dependency evidence, eligible real participant profiles, bot-to-bot-free Discord channel policy, selected-speaker runner evidence, visible-surface evidence, canonical speech linkage, fallback disclosure, and ARGUE discussion-quality diagnostics. This exit is not a production activation, arbitrary Discord deployment, KAB bridge readiness, or permission to mutate profiles/gateway/auth/token/provider state without separate approval.
 
-SOT: `docs/10-live-transport-sot.md`. Control companion SOT: `../../agent-turn-network-control/docs/24-live-transport-control-sot.md`.
+SOT: `docs/spec/live-transport-sot.md`. Control companion SOT: `../../agent-turn-network-control/docs/spec/live-transport-control-sot.md`.
 
 Dependency gate: RUNFIX uses one global cross-repo task sequence. `plugin/RUNFIX-002` follows `control/RUNFIX-001`; `plugin/RUNFIX-006` follows `control/RUNFIX-005`; `control/RUNFIX-009` follows `plugin/RUNFIX-008`; `plugin/RUNFIX-010` follows `control/RUNFIX-009`; `plugin/RUNFIX-012` follows `control/RUNFIX-011`; `plugin/RUNFIX-013` may proceed after the RUNFIX-013 plan records the moderation-skill evidence and control-policy references. `control/RUNFIX-014` precedes `plugin/RUNFIX-015` where reports consume selected-runner labels; `control/RUNFIX-016` provides the canonical summary helper that plugin visible runners should call or match; `plugin/RUNFIX-017` depends on control/RUNFIX-005 quality diagnostics and the post-pilot report labels; `plugin/RUNFIX-019` depends on `control/RUNFIX-018` daemon registry reconcile semantics.
 
@@ -219,7 +221,7 @@ Epic ID: `RUNFIX2`
 
 Exit: an approved live-local ATN discussion can run with production-friendly defaults and clean visible UX only when the daemon-selected runner path succeeds, participant runtime readiness is proven at grant/turn time, visible turns match the lifecycle formula, Discord messages hide audit identifiers, and final labels remain evidence-derived. RUNFIX2 did not by itself authorize production activation, live/default Discord outside an approved pilot, gateway/auth/token/provider/profile mutation, KAB readiness, push, or broad rollout; the later default-setting update consumes the completed successor evidence and keeps those runtime/production gates separate.
 
-SOT: `docs/10-live-transport-sot.md`. Control companion SOT: `../../agent-turn-network-control/docs/24-live-transport-control-sot.md`.
+SOT: `docs/spec/live-transport-sot.md`. Control companion SOT: `../../agent-turn-network-control/docs/spec/live-transport-control-sot.md`.
 
 Dependency gate: `control/RUNFIX2-001` locks evidence/config semantics before implementation claims. `control/RUNFIX2-002` is completed/control-local for selected-runner response generation, runner-success accounting, compact JSONL stdout framing, and pretty/multiline JSON compatibility before `plugin/RUNFIX2-005` can claim `selected_runner_pass`. `control/RUNFIX2-003` is completed/control-local for the lifecycle turn formula before `plugin/RUNFIX2-004` and `plugin/RUNFIX2-005` claim expected visible turn counts.
 
@@ -246,7 +248,7 @@ Dependency gate: `RUNFIX3-001` locks the cross-repo SOT and roadmaps before impl
 | Task ID | Task Title | Task Status | Task Description |
 |---|---|---|---|
 | RUNFIX3-001 | Live-visible council contract SOT and roadmap lock | completed | Docs-only cross-repo SOT lock in `17thHermes:40_outputs` records `sess_klm_selected_runner_20260625T085557Z` as failed live-visible council contract evidence, fixes the expected T0/T1..TN/TN+1..TN+P/TN+P+1 lifecycle, and defines the four-PR sequence. Review evidence is recorded in the SOT color review log. |
-| RUNFIX3-002 | Moderator/operator live-thread contract hardening | implementation_complete/review_pending | Mirror-only status row for the current RUNFIX3-002 implementation: normative live-thread procedure ownership stays in `src/atn_plugin/bundled_skills/atn-moderator/SKILL.md` and `docs/09-skill-and-operator-guide.md`, while `atn-plugin` stays boundary/cross-link only and this roadmap row stays traceability-only. Verification, tests/guardrails, and evidence remain bounded to plugin-owned guidance work; planner/schema/runtime fields stay deferred to `plugin/RUNFIX3-003` and control diagnostics/enforcement stay deferred to `control/RUNFIX3-004`. Fixed minimum plugin gates have passed, and cross-repo status mirrors now align on implementation-complete / re-review-pending state pending focused reviewer acceptance. |
+| RUNFIX3-002 | Moderator/operator live-thread contract hardening | implementation_complete/review_pending | Mirror-only status row for the current RUNFIX3-002 implementation: normative live-thread procedure ownership stays in `src/atn_plugin/bundled_skills/atn-moderator/SKILL.md` and `docs/spec/skill-and-operator-guide.md`, while `atn-plugin` stays boundary/cross-link only and this roadmap row stays traceability-only. Verification, tests/guardrails, and evidence remain bounded to plugin-owned guidance work; planner/schema/runtime fields stay deferred to `plugin/RUNFIX3-003` and control diagnostics/enforcement stay deferred to `control/RUNFIX3-004`. Fixed minimum plugin gates have passed, and cross-repo status mirrors now align on implementation-complete / re-review-pending state pending focused reviewer acceptance. |
 | RUNFIX3-003 | Planner and evidence schema for live-thread proof axes | implementation_complete/review_pending | Plugin-owned planner/schema/operator-evidence support against the frozen control evidence contract is implemented and awaiting focused reviewer acceptance. The planner/report surface now adds `plugin/RUNFIX3-003` task support, exact-origin fail-closed proof, formula-grounded visible-turn accounting, separate `start_status` versus overall `status`, explicit `runfix3_acceptance_status`, a dedicated selected-runner proof-chain acceptance axis, start-gated daemon registry membership, and RUNFIX3-specific closeout/synthesis/delivery-target/prompt-envelope/dialogue/drift/fail-closed reports without promoting live readiness. Fixed minimum gates have passed, with `make test-unit` run as a deliberate tightening over the older waiver wording. Durable verification evidence: `docs/evidence/2026-06-26-runfix3-003-planner-proof-evidence.md`. |
 
 Control-owned RUNFIX3 follow-up `control/RUNFIX3-004` is now implementation_complete/review_pending in the control roadmap; plugin mirrors it as a dependency/status trace only.

@@ -3,18 +3,17 @@ project: "atn-plugin"
 public_control_repo: "atn-control"
 local_control_workspace: "../agent-turn-network-control"
 path_note: "ATN-001 locks the public rename, ATN-003 scrubs plugin docs, ATN-004 completes control code/runtime naming, and ATN-005 now completes the final plugin package/tool/skill/guardrail rename work."
-roadmap: "docs/06-implementation-epics-tasks.md"
+roadmap: "docs/roadmap.md"
 sot_docs:
-  - "docs/11-council-argument-graph-sot.md"
-  - "docs/10-live-transport-sot.md"
-  - "docs/02-plugin-contract.md"
-  - "docs/01-architecture.md"
-  - "docs/07-core-compatibility.md"
-  - "docs/09-skill-and-operator-guide.md"
-  - "docs/13-agent-turn-network-plugin-naming-sot.md"
-adr_dir: "docs"
-todo_dir: "docs"
-spec_dir: "docs"
+  - "docs/spec/council-argument-graph-sot.md"
+  - "docs/spec/live-transport-sot.md"
+  - "docs/spec/architecture.md"
+  - "docs/spec/compatibility-and-operations.md"
+  - "docs/spec/skill-and-operator-guide.md"
+  - "docs/spec/agent-turn-network-plugin-naming-sot.md"
+adr_dir: "docs/adr"
+todo_dir: "docs/todo"
+spec_dir: "docs/spec"
 test_commands:
   - "make test-prepare"
   - "make check-core-contract"
@@ -40,8 +39,8 @@ workflow:
   proposal_id: "gprop-000004"
   approval_ref: "주군-discord-kan-plugin-workflow-graph-refresh-approval-20260621"
 live_transport:
-  plugin_sot: "docs/10-live-transport-sot.md"
-  control_sot: "../agent-turn-network-control/docs/24-live-transport-control-sot.md"
+  plugin_sot: "docs/spec/live-transport-sot.md"
+  control_sot: "../agent-turn-network-control/docs/spec/live-transport-control-sot.md"
   completed_docs_only_task: "plugin/LTRAN-001"
   completed_first_implementation_task: "plugin/LTRAN-002"
   completed_equivalence_task: "plugin/LTRAN-003"
@@ -54,8 +53,8 @@ live_transport:
     - "control/SURFD"
   boundary: "Plugin is participant-agent Hermes tool surface; CLI is main-agent/operator control plane; daemon remains event/state authority. No hidden CLI fallback, live/default Discord delivery, gateway/auth/token/provider/profile mutation, KAB readiness, production activation, or lifecycle authority claim is authorized by this docs map."
 argument_graph:
-  plugin_sot: "docs/11-council-argument-graph-sot.md"
-  control_sot: "../agent-turn-network-control/docs/25-council-argument-graph-sot.md"
+  plugin_sot: "docs/spec/council-argument-graph-sot.md"
+  control_sot: "../agent-turn-network-control/docs/spec/council-argument-graph-sot.md"
   dependency_evidence:
     - "control/ARGUE-001"
     - "control/ARGUE-002"
@@ -66,9 +65,9 @@ argument_graph:
 
 runfix:
   epic: "RUNFIX"
-  plugin_sot: "docs/10-live-transport-sot.md"
-  control_sot: "../agent-turn-network-control/docs/24-live-transport-control-sot.md"
-  operator_guide: "docs/09-skill-and-operator-guide.md"
+  plugin_sot: "docs/spec/live-transport-sot.md"
+  control_sot: "../agent-turn-network-control/docs/spec/live-transport-control-sot.md"
+  operator_guide: "docs/spec/skill-and-operator-guide.md"
   bundled_skill: "src/atn_plugin/bundled_skills/atn-plugin/SKILL.md"
   cross_repo_dag:
     - "control/RUNFIX-001"
@@ -93,8 +92,8 @@ runfix:
 
 atn:
   epic: "ATN"
-  plugin_sot: "docs/13-agent-turn-network-plugin-naming-sot.md"
-  control_sot: "../agent-turn-network-control/docs/27-agent-turn-network-control-naming-sot.md"
+  plugin_sot: "docs/spec/agent-turn-network-plugin-naming-sot.md"
+  control_sot: "../agent-turn-network-control/docs/spec/agent-turn-network-control-naming-sot.md"
   cross_repo_sequence:
     - "control/ATN-002"
     - "plugin/ATN-003"
@@ -105,12 +104,12 @@ atn:
 nexfix:
   epic: "NEXFIX"
   task_prefix_exception: "NEWFIX"
-  plugin_sot: "docs/10-live-transport-sot.md"
-  control_sot: "../agent-turn-network-control/docs/24-live-transport-control-sot.md"
+  plugin_sot: "docs/spec/live-transport-sot.md"
+  control_sot: "../agent-turn-network-control/docs/spec/live-transport-control-sot.md"
   vault_sot: "17thHermes:40_outputs/team/macho/atn/2026-06-26-atn-selected-runner-prompt-envelope-nexfix-sot.md"
   runtime_delivery_sot: "17thHermes:40_outputs/team/macho/atn/2026-06-28-atn-live-visible-selected-runner-runtime-delivery-newfix003-sot.md"
   prompt_evidence_contract: "selected_runner_prompt_evidence"
-  operator_guide: "docs/09-skill-and-operator-guide.md"
+  operator_guide: "docs/spec/skill-and-operator-guide.md"
   moderator_skill: "src/atn_plugin/bundled_skills/atn-moderator/SKILL.md"
   participant_skill: "src/atn_plugin/bundled_skills/atn-participant/SKILL.md"
   cross_repo_sequence:
@@ -127,9 +126,9 @@ nexfix:
 
 council_stab:
   epic: "COUNCIL-STAB"
-  plugin_sot: "docs/10-live-transport-sot.md"
-  control_sot: "../agent-turn-network-control/docs/24-live-transport-control-sot.md"
-  operator_guide: "docs/09-skill-and-operator-guide.md"
+  plugin_sot: "docs/spec/live-transport-sot.md"
+  control_sot: "../agent-turn-network-control/docs/spec/live-transport-control-sot.md"
+  operator_guide: "docs/spec/skill-and-operator-guide.md"
   blocker_report: "17thHermes:40_outputs/team/jooyoo/atn/2026-06-30-klm-token-speed-council-atn-blocker-report.md"
   cross_repo_sequence:
     - "cross-repo/COUNCIL-STAB-001"

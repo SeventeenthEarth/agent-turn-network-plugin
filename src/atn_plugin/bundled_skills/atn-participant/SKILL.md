@@ -16,7 +16,7 @@ Use this skill when you are a selected ATN participant, selected-speaker runner,
 
 ## Authority and boundary
 
-- Canonical ATN discussion/operator sources: `atn-plugin/src/atn_plugin/bundled_skills/atn-plugin/SKILL.md` for plugin boundaries; `atn-plugin/src/atn_plugin/bundled_skills/atn-moderator/SKILL.md` and `atn-plugin/docs/09-skill-and-operator-guide.md` for live-thread/content-plane readiness procedure; daemon/control projection remains authoritative for lifecycle, selection, and selected-runner prompt context.
+- Canonical ATN discussion/operator sources: `atn-plugin/src/atn_plugin/bundled_skills/atn-plugin/SKILL.md` for plugin boundaries; `atn-plugin/src/atn_plugin/bundled_skills/atn-moderator/SKILL.md` and `atn-plugin/docs/spec/skill-and-operator-guide.md` for live-thread/content-plane readiness procedure; daemon/control projection remains authoritative for lifecycle, selection, and selected-runner prompt context.
 - The daemon owns council lifecycle, selection, stream cursors, speech events, and validation.
 - The participant must not simulate another member, substitute a role prompt, or turn wrapper/runtime logs into speech.
 - A Discord/Hermes chat message alone is not council speech. It must be submitted as canonical daemon `speech` through the selected participant path.

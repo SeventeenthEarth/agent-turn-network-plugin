@@ -9,15 +9,14 @@ import yaml
 ROOT = Path(__file__).resolve().parents[1]
 REQUIRED_DOCS = [
     "README.md",
-    "00-overview.md",
-    "01-architecture.md",
-    "02-plugin-contract.md",
-    "03-testing-strategy.md",
-    "04-tooling.md",
-    "05-discord-surface.md",
-    "08-unsupported-surfaces.md",
-    "09-skill-and-operator-guide.md",
-    "07-core-compatibility.md",
+    "spec/overview.md",
+    "spec/architecture.md",
+    "spec/compatibility-and-operations.md",
+    "roadmap.md",
+    "spec/skill-and-operator-guide.md",
+    "spec/live-transport-sot.md",
+    "spec/council-argument-graph-sot.md",
+    "spec/agent-turn-network-plugin-naming-sot.md",
 ]
 REQUIRED_PHRASES = [
     "plugin is not the source of truth",
@@ -141,15 +140,15 @@ RUNFIX3_INVARIANT_CLAIMS = [
 ]
 
 RUNFIX3_OWNER_MARKERS = {
-    "docs/09-skill-and-operator-guide.md": "For RUNFIX3 live-thread semantics, this guide and `src/atn_plugin/bundled_skills/atn-moderator/SKILL.md` are the normative procedure owners.",
+    "docs/spec/skill-and-operator-guide.md": "For RUNFIX3 live-thread semantics, this guide and `src/atn_plugin/bundled_skills/atn-moderator/SKILL.md` are the normative procedure owners.",
     "src/atn_plugin/bundled_skills/atn-moderator/SKILL.md": "Canonical live-thread procedure owners for this topic:",
     "src/atn_plugin/bundled_skills/atn-plugin/SKILL.md": "This skill is boundary/cross-link only for RUNFIX3 live-thread semantics.",
-    "docs/06-implementation-epics-tasks.md": "Mirror-only status row",
-    "docs/10-live-transport-sot.md": "this SOT section remains traceability/status only and must not become another procedure owner.",
+    "docs/roadmap.md": "Mirror-only status row",
+    "docs/spec/live-transport-sot.md": "this SOT section remains traceability/status only and must not become another procedure owner.",
 }
 RUNFIX3_NORMATIVE_OWNER_PATHS = (
     "src/atn_plugin/bundled_skills/atn-moderator/SKILL.md",
-    "docs/09-skill-and-operator-guide.md",
+    "docs/spec/skill-and-operator-guide.md",
 )
 RUNFIX3_RULE_OWNER_ONLY_PATHS = RUNFIX3_NORMATIVE_OWNER_PATHS
 RUNFIX3_RULE_IDS = tuple(f"RUNFIX3-R{index:02d}" for index in range(1, 11))
@@ -159,181 +158,181 @@ RUNFIX3_RULE_RE = re.compile(r"^\d+\. \[(RUNFIX3-R\d{2})\] (.+\S)$")
 
 ALLOWED_PUBLIC_OCCURRENCES = [
     AllowedOccurrence(
-        "docs/03-testing-strategy.md",
+        "docs/spec/compatibility-and-operations.md",
         "provides_commands: [kan",
         "rejects command-registering entrypoints or `provides_commands: [kan]`",
         "negative guardrail example, not a supported command surface",
     ),
     AllowedOccurrence(
-        "docs/07-core-compatibility.md",
+        "docs/spec/compatibility-and-operations.md",
         "provides_commands: [kan",
         "Any `provides_commands: [kan]` historical alias or `register_command` drift fails local smoke.",
         "negative compatibility guardrail, not a supported command surface",
     ),
     AllowedOccurrence(
-        "docs/07-core-compatibility.md",
+        "docs/spec/compatibility-and-operations.md",
         "provides_commands: [kan",
         "`provides_commands: [kan]` manifest",
         "negative plugin-load smoke fixture, not a supported command surface",
     ),
     AllowedOccurrence(
-        "docs/04-tooling.md",
+        "docs/spec/compatibility-and-operations.md",
         "kan-plugin",
         "/references/kan-plugin-readiness-and-activation.md",
         "historical installed-profile reference path retained for KAS/KAH provenance",
     ),
     AllowedOccurrence(
-        "docs/04-tooling.md",
+        "docs/spec/compatibility-and-operations.md",
         "kan-plugin",
         "SKILL-1 originally packaged the historical `kan-plugin` operator skill",
         "historical SKILL-1 provenance before ATN-005 rename",
     ),
     AllowedOccurrence(
-        "docs/06-implementation-epics-tasks.md",
+        "docs/roadmap.md",
         "kan_session_status",
         "`kan_session_status` is deferred because core `session.status.read`",
         "historical HPLUG-1/HPLUG-2 row before ATN tool rename",
     ),
     AllowedOccurrence(
-        "docs/06-implementation-epics-tasks.md",
+        "docs/roadmap.md",
         "kan_session_status",
         "`kan_session_status` remains deferred because matching core `session.status.read`",
         "historical HPLUG-2 row before ATN tool rename",
     ),
     AllowedOccurrence(
-        "docs/06-implementation-epics-tasks.md",
+        "docs/roadmap.md",
         "kan_stream_tail",
         "Implemented the fake/injected `kan_stream_tail` read-only plugin tool",
         "historical HPLUG-2 row before ATN tool rename",
     ),
     AllowedOccurrence(
-        "docs/06-implementation-epics-tasks.md",
+        "docs/roadmap.md",
         "kan_delegate_new",
         "`kan_delegate_new` -> `delegate.new`",
         "historical DELRV-1 row before ATN tool rename",
     ),
     AllowedOccurrence(
-        "docs/06-implementation-epics-tasks.md",
+        "docs/roadmap.md",
         "kan_delegate_action",
         "`kan_delegate_action` -> exact implemented",
         "historical DELRV-1 row before ATN tool rename",
     ),
     AllowedOccurrence(
-        "docs/06-implementation-epics-tasks.md",
+        "docs/roadmap.md",
         "kan_discord_send_message",
         "Added the injected-only `kan_discord_send_message` helper",
         "historical CNDIS-2 row before ATN tool rename",
     ),
     AllowedOccurrence(
-        "docs/06-implementation-epics-tasks.md",
+        "docs/roadmap.md",
         "kan-plugin",
         "Historical row: added the then-current bundled `kan-plugin` skill surface",
         "historical SKILL-1 row before ATN skill rename",
     ),
     AllowedOccurrence(
-        "docs/06-implementation-epics-tasks.md",
+        "docs/roadmap.md",
         "kan_selected_participant_response",
         "fake/injected `kan_selected_participant_response` tool",
         "historical PARTC-002 row before ATN tool rename",
     ),
     AllowedOccurrence(
-        "docs/06-implementation-epics-tasks.md",
+        "docs/roadmap.md",
         "kan_selected_participant_response",
         "updates `kan_selected_participant_response` framing",
         "historical ARGUE-002 row before ATN tool rename",
     ),
     AllowedOccurrence(
-        "docs/06-implementation-epics-tasks.md",
+        "docs/roadmap.md",
         "kan_selected_participant_response",
         "ARGUE fields are preserved through `kan_selected_participant_response`",
         "historical RUNFIX-017 row before ATN tool rename",
     ),
     AllowedOccurrence(
-        "docs/06-implementation-epics-tasks.md",
+        "docs/roadmap.md",
         "kan_surface_render_projection",
         "pure/local `kan_surface_render_projection` rendering",
         "historical SURFD-001 row before ATN tool rename",
     ),
     AllowedOccurrence(
-        "docs/06-implementation-epics-tasks.md",
+        "docs/roadmap.md",
         "kan_surface_render_projection",
         "updates `kan_surface_render_projection` so visible rows render",
         "historical ARGUE-003 row before ATN tool rename",
     ),
     AllowedOccurrence(
-        "docs/06-implementation-epics-tasks.md",
+        "docs/roadmap.md",
         "kan_discussion_activation_plan",
         "Historical row: added pure/local `kan_discussion_activation_plan`",
         "historical RUNFIX-006 row before ATN tool rename",
     ),
     AllowedOccurrence(
-        "docs/06-implementation-epics-tasks.md",
+        "docs/roadmap.md",
         "kan_discussion_activation_plan",
         "Extended the existing pure/local `kan_discussion_activation_plan` dry-run tool",
         "historical RUNFIX-007 row before ATN tool rename",
     ),
     AllowedOccurrence(
-        "docs/06-implementation-epics-tasks.md",
+        "docs/roadmap.md",
         "kan_discussion_activation_plan",
         "Extended the existing pure/local `kan_discussion_activation_plan` and packaged",
         "historical RUNFIX-008 row before ATN tool rename",
     ),
     AllowedOccurrence(
-        "docs/06-implementation-epics-tasks.md",
+        "docs/roadmap.md",
         "kan_discussion_activation_plan",
         "implements local pre-`council.new` visible author guard proof in `kan_discussion_activation_plan`",
         "historical RUNFIX-015 row before ATN tool rename",
     ),
     AllowedOccurrence(
-        "docs/06-implementation-epics-tasks.md",
+        "docs/roadmap.md",
         "kan_discussion_activation_plan",
         "extended the then-current `kan_discussion_activation_plan`, schema",
         "historical RUNFIX-019 row before ATN tool rename",
     ),
     AllowedOccurrence(
-        "docs/06-implementation-epics-tasks.md",
+        "docs/roadmap.md",
         "kan-plugin",
         "bundled `kan-plugin`/`kan-moderator` skills",
         "historical RUNFIX-019 row before ATN skill rename",
     ),
     AllowedOccurrence(
-        "docs/06-implementation-epics-tasks.md",
+        "docs/roadmap.md",
         "kan-moderator",
         "bundled `kan-plugin`/`kan-moderator` skills",
         "historical RUNFIX-019 row before ATN skill rename",
     ),
     AllowedOccurrence(
-        "docs/06-implementation-epics-tasks.md",
+        "docs/roadmap.md",
         "legacy wrapper",
         "with no legacy wrapper",
         "negative ATN-005 no-wrapper proof, not a compatibility claim",
     ),
     AllowedOccurrence(
-        "docs/06-implementation-epics-tasks.md",
+        "docs/roadmap.md",
         "dual registration",
         "with no legacy aliases, dual registration, or fallback acceptance",
         "negative ATN-005 no-dual-registration proof, not a compatibility claim",
     ),
     AllowedOccurrence(
-        "docs/06-implementation-epics-tasks.md",
+        "docs/roadmap.md",
         "fallback acceptance",
         "with no legacy aliases, dual registration, or fallback acceptance",
         "negative ATN-005 no-fallback-acceptance proof, not a compatibility claim",
     ),
     AllowedOccurrence(
-        "docs/10-live-transport-sot.md",
+        "docs/spec/live-transport-sot.md",
         "kan_discussion_activation_plan",
         "implemented as pure/local `kan_discussion_activation_plan`",
         "historical RUNFIX-006 row before ATN tool rename",
     ),
     AllowedOccurrence(
-        "docs/10-live-transport-sot.md",
+        "docs/spec/live-transport-sot.md",
         "kan_discussion_activation_plan",
         "extends the pure/local `kan_discussion_activation_plan` with a pre-`council.new`",
         "historical RUNFIX-015 row before ATN tool rename",
     ),
     AllowedOccurrence(
-        "docs/10-live-transport-sot.md",
+        "docs/spec/live-transport-sot.md",
         "kan_discussion_activation_plan",
         "extends `kan_discussion_activation_plan`, schema",
         "historical RUNFIX-019 row before ATN tool rename",
@@ -351,7 +350,7 @@ def read_required_docs(root: Path) -> str:
 
 def read_all_docs(root: Path) -> str:
     docs = root / "docs"
-    return "\n".join(path.read_text(encoding="utf-8") for path in sorted(docs.glob("*.md")))
+    return "\n".join(path.read_text(encoding="utf-8") for path in sorted(docs.rglob("*.md")))
 
 
 def normalize_markdown(text: str) -> str:
@@ -512,7 +511,7 @@ def require_bundled_skill_frontmatter(root: Path) -> None:
 def main(*, root: Path = ROOT) -> None:
     required_text = read_required_docs(root)
     all_docs_text = read_all_docs(root)
-    operator_guide = (root / "docs" / "09-skill-and-operator-guide.md").read_text(encoding="utf-8")
+    operator_guide = (root / "docs" / "spec" / "skill-and-operator-guide.md").read_text(encoding="utf-8")
 
     for phrase in REQUIRED_PHRASES:
         if phrase not in required_text:

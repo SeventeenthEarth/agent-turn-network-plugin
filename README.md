@@ -33,14 +33,11 @@ Start at [`docs/README.md`](docs/README.md).
 
 Key docs:
 
-- [`docs/00-overview.md`](docs/00-overview.md) — plugin purpose and non-goals
-- [`docs/01-architecture.md`](docs/01-architecture.md) — plugin architecture
-- [`docs/02-plugin-contract.md`](docs/02-plugin-contract.md) — compatibility and fail closed behavior
-- [`docs/03-testing-strategy.md`](docs/03-testing-strategy.md) — fake-only integration and isolated E2E policy
-- [`docs/04-tooling.md`](docs/04-tooling.md) — Python tooling and Makefile contract
-- [`docs/09-skill-and-operator-guide.md`](docs/09-skill-and-operator-guide.md) — bundled skill install, enable, rollback, troubleshooting, and local isolated plugin-load smoke boundary
-- [`docs/08-unsupported-surfaces.md`](docs/08-unsupported-surfaces.md) — unsupported surfaces and future binding requirements
-- [`docs/11-council-argument-graph-sot.md`](docs/11-council-argument-graph-sot.md) — plugin-side ARGUE council argument graph SOT and implementation DAG
+- [`docs/spec/overview.md`](docs/spec/overview.md) — plugin purpose and non-goals
+- [`docs/spec/architecture.md`](docs/spec/architecture.md) — plugin architecture
+- [`docs/spec/compatibility-and-operations.md`](docs/spec/compatibility-and-operations.md) — compatibility, testing, tooling, and unsupported surfaces
+- [`docs/spec/skill-and-operator-guide.md`](docs/spec/skill-and-operator-guide.md) — bundled skill install, enable, rollback, troubleshooting, and local isolated plugin-load smoke boundary
+- [`docs/spec/council-argument-graph-sot.md`](docs/spec/council-argument-graph-sot.md) — plugin-side ARGUE council argument graph SOT and implementation DAG
 
 ## Current state
 

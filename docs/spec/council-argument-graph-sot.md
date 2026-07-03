@@ -4,7 +4,7 @@ Status: Blue-authored plugin SOT draft for `ARGUE` implementation planning. This
 
 Date: 2026-06-15
 Owner: 마초 / `macho` for the bounded ATN plugin lane
-Companion control SOT: `../../agent-turn-network-control/docs/25-council-argument-graph-sot.md`
+Companion control SOT: `../../agent-turn-network-control/docs/spec/council-argument-graph-sot.md`
 
 ## 1. Purpose
 

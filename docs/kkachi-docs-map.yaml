@@ -133,3 +133,21 @@ council_stab:
   cross_repo_sequence:
     - "cross-repo/COUNCIL-STAB-001"
   boundary: "COUNCIL-STAB-001 repairs the 2026-06-30 selected-runner council blocker. Plugin owns ingress validation and packaged guidance requiring council.hand_raise payload.intent or payload.reason before submit; control owns grant stance derivation, selected-runner dispatch, terminal status, and regression proof. Historical failed sessions are diagnostic evidence only. No live Discord rerun, default activation, production readiness, profile/provider/gateway/auth/token mutation, package publication, push, or broad rollout is authorized by this docs-map row."
+
+prslr:
+  epic: "PRSLR"
+  title: "Persistent runtime session latency repair"
+  vault_sot: "17thHermes:40_outputs/team/macho/atn/2026-07-04-atn-persistent-participant-runtime-design-sot.md"
+  plugin_sot: "docs/spec/live-transport-sot.md"
+  control_sot: "../agent-turn-network-control/docs/spec/live-transport-control-sot.md"
+  operator_guide: "docs/spec/skill-and-operator-guide.md"
+  evidence_handoff: "persistent_participant_runtime_evidence"
+  cross_repo_sequence:
+    - "cross-repo/PRSLR-001"
+    - "control/PRSLR-002"
+    - "control/PRSLR-003"
+    - "control/PRSLR-004"
+    - "control/PRSLR-005"
+    - "plugin/PRSLR-006"
+    - "cross-repo/PRSLR-007"
+  boundary: "Plugin PRSLR work is a typed command/evidence consumer lane. It may expose council.drop and planner/operator evidence only after or against explicit control fixtures, and must not own daemon lifecycle, event logs, cursor/window state, session handles, dedupe, rehydrate, delivery, auto-drop, or fallback semantics. Plugin-local fake/injected PRSLR-006 fixtures are not final acceptance evidence; PRSLR-007 final acceptance requires control-produced persistent_participant_runtime_evidence. No live Discord rollout, production activation, daemon/profile/provider/gateway/auth/token mutation, push, or broad readiness is authorized."

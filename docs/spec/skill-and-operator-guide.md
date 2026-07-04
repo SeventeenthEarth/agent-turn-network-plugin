@@ -104,6 +104,29 @@ For RUNFIX3 live-thread semantics, this guide and `src/atn_plugin/bundled_skills
 8. [RUNFIX3-R08] Keep content and audit separate. Visible prompt/speech text is discussion content only; event ids, delivery ids, cursors, runner ids, control metadata, and audit commentary stay in audit/evidence surfaces.
 9. [RUNFIX3-R09] `selected_runner_pass` remains an evidence-derived label and stays false when the selected runner fails and the session continues through `moderator_direct`, manual profile text, fallback profile text, or moderator reposting. Treat that downgrade as lifecycle/fallback evidence only until a later selected-runner success produces canonical linked speech.
 10. [RUNFIX3-R10] If fixed-order flow, topic drift, wrong-thread delivery, or control-metadata leakage is detected before any affected `speech`, cancel/restart the affected step or session. If canonical `speech` already exists, repair forward with an explicit moderator intervention when possible; if the contract cannot be restored, close unresolved rather than overclaim success.
+
+## Persistent participant runtime planning note
+
+SSOT: `17thHermes:40_outputs/team/macho/atn/2026-07-04-atn-persistent-participant-runtime-design-sot.md`.
+
+PRSLR is intended, after PRSLR-007 acceptance and explicit implementation gates, to change the standard council discussion runtime from per-turn fresh participant invocations to council-scoped persistent participant sessions. Until PRSLR tasks complete, operators must treat this as planned/default-off/local-only, not live readiness or an enabled runtime. The intended operator-facing contract is:
+
+- every public speech must reach all-member cursor coverage;
+- non-speakers observe deltas, while the speaker receives authored canonical commit/self-ack;
+- each participant must answer the response window with `council.hand_raise` or first-class `council.drop`;
+- all-responded windows close before the 120-second deadline;
+- timeout non-response becomes daemon-owned `drop(auto=true, reason=timeout)`;
+- observe/ack/cursor/rehydrate failures are runtime consistency failures, not drops;
+- recovery is `rehydrate` only, and stateless fallback must not be reported as participant continuity;
+- participant sessions are council-scoped only; cross-council reuse is prohibited;
+- rehydrate/observe/ack failures default to whole participant runtime/council blocked; affected-member degraded continuation requires later explicit approval;
+- plugin/operator guidance must not submit or synthesize daemon-owned `auto=true` timeout drops.
+
+Plugin guidance may consume `persistent_participant_runtime_evidence` after control provides it, but it must not infer that evidence from visible messages, transcript/export rows, manual profile text, or fake local planner inputs.
+
+A PRSLR operator report is not complete unless it shows the control-produced `persistent_participant_runtime_evidence` source and the following minimum fields: readiness label, evidence paths, session reuse reference or redacted handle hash, mode, omitted-full-history proof, `stateless_fallback=false`, all-member cursor coverage, response-window close reason and elapsed time, auto-drop/late-ignore accounting, rehydrate status or fail-close event, next owner/gate, and non-claims. Fake/injected plugin planner inputs may test rendering only; they do not prove runtime continuity.
+
+
 ## ARGUE relation-aware response guidance
 
 ARGUE relation evidence is the structured link between visible participant speech

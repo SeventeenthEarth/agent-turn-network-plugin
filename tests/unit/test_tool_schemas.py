@@ -552,6 +552,7 @@ def test_cndis_tool_schemas_use_closed_control_command_enums() -> None:
         "council.prepared_partial",
         "council.poll",
         "council.hand_raise",
+        "council.drop",
         "council.grant",
         "council.speak",
         "council.intervene",

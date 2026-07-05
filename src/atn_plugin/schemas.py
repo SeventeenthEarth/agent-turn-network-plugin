@@ -37,6 +37,7 @@ COUNCIL_COMMANDS: Final[tuple[str, ...]] = (
     "council.prepared_partial",
     "council.poll",
     "council.hand_raise",
+    "council.drop",
     "council.grant",
     "council.speak",
     "council.intervene",
@@ -49,6 +50,7 @@ COUNCIL_COMMANDS: Final[tuple[str, ...]] = (
 )
 COUNCIL_SPEAK_COMMAND: Final = "council.speak"
 COUNCIL_HAND_RAISE_COMMAND: Final = "council.hand_raise"
+COUNCIL_DROP_COMMAND: Final = "council.drop"
 ARGUE_CLAIM_KINDS: Final[tuple[str, ...]] = (
     "observation",
     "requirement",
@@ -445,8 +447,11 @@ ATN_COUNCIL_COMMAND: Final[dict[str, object]] = {
                     "live_visible_thread with Discord surface/request_context evidence, "
                     "or a supported non-visible/local-daemon-only requested_output_mode "
                     "with explicit_non_visible_override=true and non-empty override_reason. "
-                    "Turn-bearing council.poll/council.hand_raise/council.grant/"
-                    "council.speak payloads require payload.turn and reject legacy payload.round. "
+                    "Turn-bearing council.poll/council.hand_raise/council.drop/"
+                    "council.grant/council.speak payloads require payload.turn and reject "
+                    "legacy payload.round. For manual council.drop, payload.payload.reason "
+                    "and payload.payload.request_event_id are required; caller/plugin "
+                    "auto=true drops are rejected because timeout auto-drops are daemon-owned. "
                     "For council.speak and council.hand_raise, ARGUE fields are "
                     "preserved without inferring state from legacy pointers."
                 ),
@@ -1198,6 +1203,7 @@ __all__ = [
     "ARGUE_STANCES",
     "ARGUE_STANCE_LINK_SCHEMA",
     "COUNCIL_COMMANDS",
+    "COUNCIL_DROP_COMMAND",
     "COUNCIL_HAND_RAISE_COMMAND",
     "COUNCIL_SPEAK_COMMAND",
     "DELIVERY_EVIDENCE_COMMANDS",

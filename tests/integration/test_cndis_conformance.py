@@ -33,6 +33,7 @@ TURN_BEARING_COUNCIL_COMMANDS = frozenset(
     {
         "council.poll",
         "council.hand_raise",
+        "council.drop",
         "council.grant",
         "council.speak",
     }

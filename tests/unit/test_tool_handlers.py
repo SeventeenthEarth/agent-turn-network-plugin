@@ -1577,6 +1577,15 @@ TURN_BEARING_COUNCIL_CASES = (
         },
     ),
     (
+        "council.drop",
+        "agent-2",
+        {
+            "turn": 2,
+            "request_event_id": "evt-hand-raise-requested-2",
+            "reason": "No new contribution for this response window.",
+        },
+    ),
+    (
         "council.grant",
         "agent-mod",
         {"turn": 3, "member": "agent-1", "selection_mode": "moderator_direct"},
@@ -1595,6 +1604,15 @@ TURN_BEARING_COUNCIL_CASES = (
         ("council.attend", "agent-1", {"availability": "present"}),
         ("council.ready", "agent-1", {"summary": "ready"}),
         ("council.prepared_partial", "agent-2", {"summary": "partial", "blocked": True}),
+        (
+            "council.drop",
+            "agent-2",
+            {
+                "turn": 2,
+                "request_event_id": "evt-hand-raise-requested-2",
+                "reason": "No new contribution for this response window.",
+            },
+        ),
         ("council.vote", "agent-2", {"choice": "approve"}),
     ],
 )
@@ -1830,6 +1848,80 @@ def test_council_turn_bearing_invalid_turn_fails_closed_before_transport(
         == "payload.payload.turn must be a non-empty string or integer for "
         "turn-bearing council commands"
     )
+    assert client_factory_called is False
+
+
+@pytest.mark.parametrize(
+    ("missing_key", "expected_message"),
+    [
+        ("request_event_id", "payload.payload.request_event_id must be a non-empty string"),
+        ("reason", "payload.payload.reason must be a non-empty string"),
+    ],
+)
+def test_council_drop_requires_manual_request_event_and_reason_before_transport(
+    missing_key: str, expected_message: str
+) -> None:
+    client_factory_called = False
+
+    def client_factory() -> DaemonClient:
+        nonlocal client_factory_called
+        client_factory_called = True
+        raise AssertionError("client factory must not be called")
+
+    command_payload: JsonObject = {
+        "turn": 2,
+        "request_event_id": "evt-hand-raise-requested-2",
+        "reason": "No new contribution for this response window.",
+    }
+    command_payload.pop(missing_key)
+    payload: JsonObject = {
+        "actor": "agent-2",
+        "command_id": "cmd-drop-missing-field",
+        "payload": command_payload,
+    }
+
+    result = decode(
+        handle_council_command(
+            _council_args("council.drop", payload), client_factory=client_factory
+        )
+    )
+
+    assert result["ok"] is False
+    assert result["tool"] == "atn_council_command"
+    assert result["error"]["category"] == "validation"
+    assert result["error"]["message"] == expected_message
+    assert client_factory_called is False
+
+
+def test_council_drop_rejects_caller_auto_true_before_transport() -> None:
+    client_factory_called = False
+
+    def client_factory() -> DaemonClient:
+        nonlocal client_factory_called
+        client_factory_called = True
+        raise AssertionError("client factory must not be called")
+
+    payload: JsonObject = {
+        "actor": "agent-2",
+        "command_id": "cmd-drop-auto-true",
+        "payload": {
+            "turn": 2,
+            "request_event_id": "evt-hand-raise-requested-2",
+            "reason": "No new contribution for this response window.",
+            "auto": True,
+        },
+    }
+
+    result = decode(
+        handle_council_command(
+            _council_args("council.drop", payload), client_factory=client_factory
+        )
+    )
+
+    assert result["ok"] is False
+    assert result["tool"] == "atn_council_command"
+    assert result["error"]["category"] == "validation"
+    assert "auto=true is daemon-owned" in result["error"]["message"]
     assert client_factory_called is False
 
 

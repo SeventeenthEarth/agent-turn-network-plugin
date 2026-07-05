@@ -91,6 +91,7 @@ TURN_BEARING_COUNCIL_COMMANDS: Final[frozenset[str]] = frozenset(
     {
         "council.poll",
         schemas.COUNCIL_HAND_RAISE_COMMAND,
+        schemas.COUNCIL_DROP_COMMAND,
         "council.grant",
         schemas.COUNCIL_SPEAK_COMMAND,
     }
@@ -721,6 +722,8 @@ def _validate_council_payload(command: str, payload: Mapping[str, object]) -> No
         _validate_argue_speech_payload(command_payload, label="payload")
     elif command == schemas.COUNCIL_HAND_RAISE_COMMAND:
         _validate_argue_hand_raise_payload(command_payload, label="payload")
+    elif command == schemas.COUNCIL_DROP_COMMAND:
+        _validate_council_drop_payload(command_payload)
 
 
 def _validate_turn_bearing_payload(command: str, payload: Mapping[str, object]) -> None:
@@ -738,6 +741,16 @@ def _validate_turn_bearing_payload(command: str, payload: Mapping[str, object]) 
         raise ValueError(
             "payload.payload.turn must be a non-empty string or integer for "
             "turn-bearing council commands"
+        )
+
+
+def _validate_council_drop_payload(payload: Mapping[str, object]) -> None:
+    _required_string(payload.get("request_event_id"), label="payload.payload.request_event_id")
+    _required_string(payload.get("reason"), label="payload.payload.reason")
+    if _optional_bool(payload.get("auto")):
+        raise ValueError(
+            "payload.payload.auto=true is daemon-owned for timeout auto-drops; "
+            "plugin/caller-submitted council.drop must be a manual drop with reason"
         )
 
 

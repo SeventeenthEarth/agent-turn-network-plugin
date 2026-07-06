@@ -109,7 +109,7 @@ For RUNFIX3 live-thread semantics, this guide and `src/atn_plugin/bundled_skills
 
 SSOT: `17thHermes:40_outputs/team/macho/atn/2026-07-04-atn-persistent-participant-runtime-design-sot.md`.
 
-PRSLR is intended, after PRSLR-007 acceptance and explicit implementation gates, to change the standard council discussion runtime from per-turn fresh participant invocations to council-scoped persistent participant sessions. Until PRSLR tasks complete, operators must treat this as planned/default-off/local-only, not live readiness or an enabled runtime. The intended operator-facing contract is:
+PRSLR local/default-off proof through PRSLR-011 has completed the change from per-turn fresh participant invocations toward council-scoped persistent participant sessions. Operators must still treat this as bounded local/default-off proof unless a separate live-runtime activation gate approves and evidences an enabled runtime. The operator-facing contract is:
 
 - every public speech must reach all-member cursor coverage;
 - non-speakers observe deltas, while the speaker receives authored canonical commit/self-ack;
@@ -165,8 +165,7 @@ must name and engage at least one previous speaker through a valid
 `contribution_type: "new_axis"` with a non-empty `new_axis_reason`. Textual
 mentions, Discord order, Hermes messages, `target_event_ids`,
 `target_claim_ids`, `responds_to_event_id`, and moderator summaries remain
-display hints only. PRSLR-011 remains the separate cross-repo E2E acceptance
-proof before any broader dialogue-quality closeout claim.
+display hints only. PRSLR-011 now carries a bounded local/default-off control E2E proof candidate for the final dialogue-quality closeout; implementation, enhance-test, optimize, docs/status update, official implementation review/request_feedback, focused Orange remediation, handle_feedback, MAR, and second-color review are complete through control KAH `evt-004059`, control final verification completed at `evt-004062` and improve/status closeout completed at `evt-004064`; this local commit records the bounded proof while explicit non-live reporting remains bounded local/default-off.
 
 For selected-runner councils, every `council.hand_raise` must include a non-empty
 `intent` or `reason`. Control derives the subsequent grant `stance_assignment`

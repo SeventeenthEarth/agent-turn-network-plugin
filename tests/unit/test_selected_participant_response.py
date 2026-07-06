@@ -719,6 +719,29 @@ def test_selected_participant_response_quality_warn_orphan_passes() -> None:
     assert result["ok"] is True
 
 
+def test_selected_participant_response_default_quality_orphan_passes() -> None:
+    transport = StaticDaemonTransport(
+        {
+            OP_VERSION_READ: BASE_VERSION_WITH_PARTC,
+            OP_COMMAND_SUBMIT: BASE_COMMAND_SUCCESS,
+            OP_STREAM_ACK: BASE_ACK_SUCCESS,
+        }
+    )
+    args = _args()
+    args["caller_validation_context"] = {
+        "quality_mode": "default",
+        "local_context_sufficient": True,
+        "is_opening_speech": False,
+        "prior_claims": [{"event_id": "evt-prior", "claim_id": "T02.C1"}],
+    }
+
+    result = decode(
+        handle_selected_participant_response(args, client_factory=factory_for_transport(transport))
+    )
+
+    assert result["ok"] is True
+
+
 def test_selected_participant_response_quality_warn_unknown_target_is_warning_only() -> None:
     transport = StaticDaemonTransport(
         {
@@ -763,6 +786,40 @@ def test_selected_participant_response_responds_to_event_id_does_not_satisfy_rel
             "claims": [{"claim_id": "T03.C1", "summary": "Legacy hints are display-only."}],
             "contribution_type": "support",
             "responds_to_event_id": "evt-prior",
+        }
+    )
+    args["caller_validation_context"] = {
+        "quality_mode": "quality_required",
+        "local_context_sufficient": True,
+        "is_opening_speech": False,
+        "prior_claims": [{"event_id": "evt-prior", "claim_id": "T02.C1"}],
+    }
+
+    result = decode(handle_selected_participant_response(args, client_factory=never_client_factory))
+
+    assert result["ok"] is False
+    assert result["error"] == {
+        "category": "validation",
+        "message": (
+            "participant_response is orphan speech in quality_required caller_validation_context"
+        ),
+        "retryable": False,
+    }
+
+
+def test_selected_participant_response_display_hints_do_not_satisfy_relation() -> None:
+    args = _args()
+    cast(JsonObject, args["participant_response"]).update(
+        {
+            "claims": [{"claim_id": "T03.C1", "summary": "Display hints are not links."}],
+            "contribution_type": "support",
+            "responds_to_event_id": "evt-prior",
+            "target_event_ids": ["evt-prior"],
+            "target_claim_ids": ["T02.C1"],
+            "prose": "I agree with the prior KAS point.",
+            "keywords": ["agree", "prior"],
+            "discord_order": ["msg-1", "msg-2"],
+            "hermes_messages": [{"id": "msg-1", "content": "prior claim"}],
         }
     )
     args["caller_validation_context"] = {

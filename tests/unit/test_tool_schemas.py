@@ -208,6 +208,8 @@ def test_selected_participant_response_schema_accepts_explicit_argue_fields() ->
     assert "non-authoritative" in str(caller_context["description"])
     assert "event_id and, when present, claim_id" in str(caller_context["description"])
     assert "responds_to_event_id" in str(caller_context["description"])
+    assert "target_event_ids" in str(caller_context["description"])
+    assert "target_claim_ids" in str(caller_context["description"])
     assert caller_context["properties"]["quality_mode"]["enum"] == [
         "default",
         "quality_warn",

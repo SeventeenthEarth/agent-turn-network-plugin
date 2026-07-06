@@ -158,14 +158,15 @@ nor `contribution_type: "new_axis"` with a non-empty `new_axis_reason`. In
 diagnostic evidence; the mechanical local lifecycle may pass while the
 deliberation-quality gate still requires changes.
 
-Planned PRSLR-010 hardening tightens the operator target for live-visible or
-quality-required councils: every non-opening participant speech should name and
-engage at least one previous speaker through a valid `stance_links[]` target
-when sufficient prior context exists. Textual mentions, Discord order,
-`responds_to_event_id`, and moderator summaries remain display hints only. A
-`new_axis` response should be rare and explicitly justified; PRSLR-009/011 will
-define and prove the exact daemon acceptance and E2E evidence contract before
-this becomes a completed PRSLR closeout claim.
+PRSLR-010 local implementation hardening preserves the operator target for
+live-visible or quality-required councils: every non-opening participant speech
+must name and engage at least one previous speaker through a valid
+`stance_links[]` target when sufficient prior context exists, unless it uses
+`contribution_type: "new_axis"` with a non-empty `new_axis_reason`. Textual
+mentions, Discord order, Hermes messages, `target_event_ids`,
+`target_claim_ids`, `responds_to_event_id`, and moderator summaries remain
+display hints only. PRSLR-011 remains the separate cross-repo E2E acceptance
+proof before any broader dialogue-quality closeout claim.
 
 For selected-runner councils, every `council.hand_raise` must include a non-empty
 `intent` or `reason`. Control derives the subsequent grant `stance_assignment`

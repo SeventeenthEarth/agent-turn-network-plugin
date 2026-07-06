@@ -636,8 +636,9 @@ ATN_SELECTED_PARTICIPANT_RESPONSE: Final[dict[str, object]] = {
                     "context must include a stance_links[] entry that validates against "
                     "caller_validation_context.prior_claims by event_id and, when present, "
                     "claim_id, or contribution_type=new_axis with a non-empty "
-                    "new_axis_reason. responds_to_event_id, prose, keywords, Discord "
-                    "order, Hermes messages, and display hints are not relation authority."
+                    "new_axis_reason. responds_to_event_id, target_event_ids, "
+                    "target_claim_ids, prose, keywords, Discord order, Hermes messages, "
+                    "and display hints are not relation authority."
                 ),
                 "properties": {
                     "quality_mode": {

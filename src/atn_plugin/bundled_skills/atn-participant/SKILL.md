@@ -100,8 +100,8 @@ This diagnostic is evidence of missing control context only. It does not authori
 
 - `speech` is the only human-visible answer. It must not contain tool diagnostics, max-iteration notices, wrapper summaries, fallback disclosures as if they were participant reasoning, or “I am role-playing X” text.
 - `claims[]` must summarize actual claims in the speech.
-- `stance_links[]` must target caller-provided prior `event_id` and optional `claim_id`. Guidance-only `speaker`, `summary`, Discord order, prose references, or `responds_to_event_id` are not validation authority.
-- `responds_to_event_id` is a legacy display hint only; it never replaces `stance_links[]`.
+- `stance_links[]` must target caller-provided prior `event_id` and optional `claim_id`. Guidance-only `speaker`, `summary`, Discord order, Hermes messages, prose references, keywords, `target_event_ids`, `target_claim_ids`, or `responds_to_event_id` are not validation authority.
+- `responds_to_event_id`, `target_event_ids`, and `target_claim_ids` are legacy/display hints only; they never replace `stance_links[]`.
 - If this is a non-opening speech in `quality_required` mode and sufficient prior claim targets exist, include at least one valid `stance_links[]` entry or set `contribution_type: "new_axis"` with a non-empty `new_axis_reason`.
 - Use `new_axis` sparingly: only when opening a necessary new line of argument that cannot honestly link to current prior claims.
 - If citing outside material or runtime observations, place pointers in `evidence[]` rather than bloating visible speech.

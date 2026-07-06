@@ -134,6 +134,12 @@ For quality-required councils, require each non-opening speech with sufficient l
 - valid `stance_links[]` to caller-provided prior `event_id` / optional `claim_id`; or
 - `contribution_type: "new_axis"` with a non-empty `new_axis_reason`.
 
+Display/prose hints such as `responds_to_event_id`, `target_event_ids`,
+`target_claim_ids`, keywords, Discord order, Hermes messages, speaker names,
+and summaries never satisfy the prior-speaker relation requirement. Only
+structured `stance_links[]` targeting caller-provided prior `event_id` and
+optional `claim_id` count for local relation validation.
+
 Keep these fields separate in evidence:
 
 - `speech`: visible answer only;

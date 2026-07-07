@@ -357,7 +357,7 @@ def test_discussion_activation_plan_schema_is_pure_local_doctor_tool() -> None:
     timeout_evidence = plan_schema["properties"]["selected_runner_timeout_evidence"]
     assert "plugin/NEWFIX-006" in timeout_evidence["description"]
     assert "control/NEWFIX-005" in timeout_evidence["description"]
-    assert "dispatch_timeout_sec=120" in timeout_evidence["description"]
+    assert "dispatch_timeout_sec=150" in timeout_evidence["description"]
     visible_author_guard = plan_schema["properties"]["visible_author_guard"]
     assert "pre-council.new visible author guard" in visible_author_guard["description"]
     assert "expected_author_source" in visible_author_guard["description"]

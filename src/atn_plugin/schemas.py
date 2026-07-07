@@ -1130,7 +1130,7 @@ ATN_DISCUSSION_ACTIVATION_PLAN: Final[dict[str, object]] = {
                         "description": (
                             "Explicit-only plugin/NEWFIX-006 timeout-policy proof input from "
                             "control/NEWFIX-005. For Discord-origin live_visible_thread requests, "
-                            "it must prove dispatch_timeout_sec=120 or an explicitly approved "
+                            "it must prove dispatch_timeout_sec=150 or an explicitly approved "
                             "alternative, preserve the raw control status/evidence ref, and keep "
                             "review-pending control status provisional rather than "
                             "start-authorizing."

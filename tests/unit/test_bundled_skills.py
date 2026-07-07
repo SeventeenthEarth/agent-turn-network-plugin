@@ -216,6 +216,12 @@ def test_bundled_hun_newfix002_packaged_skill_contract_is_present() -> None:
 
     assert "NEXFIX content-plane exception" in guide_text
     assert "selected_runner_timeout_evidence" in guide_text
+    assert "dispatch timeout defaulted to 150 seconds" in moderator_text
+    assert "dispatch timeout defaulted to 150 seconds" in guide_text
+    assert (
+        "After the final configured discussion turn, continue with selected "
+        "participant closeout turns" in moderator_text
+    )
     assert "control/NEWFIX-004" in guide_text
     assert "absent or `blocked` `selected_runner_prompt_evidence` before start" in moderator_text
     assert "implementation_complete/review_pending` control rows may unlock start" in moderator_text

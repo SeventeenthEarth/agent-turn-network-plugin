@@ -65,7 +65,7 @@ NEWFIX_006_CONTROL_DEPENDENCY_TASK_IDS: Final[frozenset[str]] = frozenset(
 NEWFIX_006_CONTROL_DEPENDENCY_STATUSES: Final[frozenset[str]] = frozenset(
     {CONTROL_DEPENDENCY_STATUS, NEWFIX_REVIEW_PENDING_STATUS, "completed"}
 )
-NEWFIX_REQUIRED_TIMEOUT_SEC: Final = 120
+NEWFIX_REQUIRED_TIMEOUT_SEC: Final = 150
 RUNFIX_012_CONTROL_DEPENDENCY_TASK_ID: Final = "control/RUNFIX-011"
 RUNFIX_012_CONTROL_DEPENDENCY_STATUSES: Final[frozenset[str]] = frozenset(
     {"local implementation proof", "completed/local-control", "local-control"}
@@ -1805,7 +1805,7 @@ def _newfix_timeout_evidence_report(
                 code="newfix_timeout_policy_invalid",
                 owner="control/operator",
                 message=(
-                    "selected_runner_timeout_evidence must prove dispatch_timeout_sec=120 or an "
+                    "selected_runner_timeout_evidence must prove dispatch_timeout_sec=150 or an "
                     "explicit approved alternative with approval_basis."
                 ),
             )

@@ -175,6 +175,38 @@ def test_bundled_hun_skills_define_runner_jsonl_framing_contract() -> None:
     assert "malformed JSON remains malformed_or_missing_response" in normalized
 
 
+def test_bundled_hun_prslr013_live_selected_runner_schema_echo_closeout_guardrails() -> None:
+    plugin_text = read_bundled_skill_text("atn-plugin")
+    moderator_text = read_bundled_skill_text("atn-moderator")
+    participant_text = read_bundled_skill_text("atn-participant")
+    guide_text = (ROOT / "docs" / "spec" / "skill-and-operator-guide.md").read_text(
+        encoding="utf-8"
+    )
+    bundled_texts = [plugin_text, moderator_text, participant_text]
+    combined = "\n".join([*bundled_texts, guide_text])
+    normalized = " ".join(combined.split())
+    claim_kind_sentence = (
+        "Allowed `claims[].kind` values: `observation`, `requirement`, `risk`, "
+        "`decision_frame`, `evidence`, `open_question`, `proposal`."
+    )
+
+    for text in [*bundled_texts, guide_text]:
+        normalized_text = " ".join(text.split())
+        assert claim_kind_sentence in normalized_text
+        assert "unsupported `claims[].kind`" in normalized_text
+        assert "must fail before canonical `speech` submission" in normalized_text
+    assert "unsupported `claims[].kind`" in normalized
+    assert "must fail before canonical `speech` submission" in normalized
+    assert "do not record a second runnerless `council.speak`" in normalized
+    assert "visible_delivery_echo" in normalized
+    assert "surface_evidence.references_event_id" in normalized
+    assert "surface_evidence.message_id" in normalized
+    assert "claims=[] visible-delivery echo" in normalized
+    assert "participant closeout for every required member" in normalized
+    assert "proposal and required votes" in normalized
+    assert "terminal `council.finalize`" in normalized
+
+
 def test_bundled_hun_newfix002_packaged_skill_contract_is_present() -> None:
     moderator_text = read_bundled_skill_text("atn-moderator")
     participant_text = read_bundled_skill_text("atn-participant")

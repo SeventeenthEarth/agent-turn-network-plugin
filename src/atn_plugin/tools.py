@@ -1211,7 +1211,8 @@ def _validate_argue_claims(value: object, *, label: str) -> None:
         if kind is not None:
             kind_value = _required_string(kind, label=f"{claim_label}.kind")
             if kind_value not in schemas.ARGUE_CLAIM_KINDS:
-                raise ValueError(f"{claim_label}.kind must be an ARGUE claim kind")
+                allowed = ", ".join(schemas.ARGUE_CLAIM_KINDS)
+                raise ValueError(f"{claim_label}.kind must be one of: {allowed}")
 
 
 def _validate_argue_stance_links(value: object, *, label: str) -> None:

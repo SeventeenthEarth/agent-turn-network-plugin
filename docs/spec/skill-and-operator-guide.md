@@ -80,7 +80,7 @@ Default verification and operator rehearsal are local only:
 
 ## Standard live-visible decision council default
 
-For Discord-origin decision-bearing councils, the operator should use `standard_live_visible_decision_council` unless they explicitly select an exploratory or non-visible mode. The default means: `live_visible_thread`, exact `chat_id:thread_id` binding, bounded `max_discussion_turns`, selected-runner dispatch timeout defaulted to 120 seconds unless an approved alternative is recorded, participant readiness/freshness collection during attendance and grant-time operation, per-turn `poll` or hand-raise evaluation, multiple hand-raise candidates where available, `relevance` grant with a reason, selected-runner linked speech only, visible delivery proof per selected speech, one participant closeout per member after the discussion window, proposal, all required votes, visible moderator final synthesis, and terminal `council.finalize` with matching posted `surface_evidence`.
+For Discord-origin decision-bearing councils, the operator should use `standard_live_visible_decision_council` unless they explicitly select an exploratory or non-visible mode. The default means: `live_visible_thread`, exact `chat_id:thread_id` binding, bounded `max_discussion_turns`, selected-runner dispatch timeout defaulted to 120 seconds unless an approved alternative is recorded, participant readiness/freshness collection during attendance and grant-time operation, per-turn `poll` or hand-raise evaluation, multiple hand-raise candidates where available, `relevance` grant with a reason, selected-runner linked speech only, visible delivery proof per selected speech, one participant closeout per member after the discussion window, proposal, all required votes, visible moderator final synthesis, and terminal `council.finalize` with matching posted `surface_evidence`. A decision-bearing live-visible council is not terminally complete until there is participant closeout for every required member, moderator synthesis, proposal and required votes when consensus is in scope, and terminal `council.finalize` with matching visible closeout evidence.
 
 Do not set or request `turn_mode=selected_runner`; selected-speaker/selected-runner behavior is the lifecycle sequence above, not a storage metadata mode. Exploratory councils may explicitly opt out of proposal/vote, and non-visible councils still require explicit non-visible override evidence. Transcript/export-only, manual/fallback speech, or moderator reposting can be diagnostics only and must not satisfy selected-runner, visible-surface, vote, or final-closeout success labels.
 
@@ -132,6 +132,8 @@ A PRSLR operator report is not complete unless it shows the control-produced `pe
 
 If selected-runner invocation or canonical `atn_selected_participant_response` submission fails for a selected turn, stop that turn before posting substitute visible speech. The acceptable recovery choices are: retry the same selected-runner path with preserved cursor/event evidence when the failure is transient and safe; run a new poll/selection after recording the failed turn as diagnostic; or close the council unresolved with explicit fallback evidence. A moderator/operator automation script must not fill the turn by asking the selected profile to produce standalone Hermes chat text and then sending that text to Discord, because that bypass is not participant runtime evidence, not canonical `speech`, and not selected-runner success.
 
+For successful live-visible selected-runner turns, the selected participant path records one canonical runner-linked `speech`, the visible Discord delivery is delivery evidence only, and do not record a second runnerless `council.speak` for the posted Discord message. If a visible echo must be represented for diagnostics, it must be a `visible_delivery_echo` with `claims=[] visible-delivery echo` semantics and explicit linkage to the canonical speech through `surface_evidence.references_event_id` or the canonical delivery `surface_evidence.message_id`; otherwise it remains fail-closed runnerless/fallback evidence.
+
 
 ## ARGUE relation-aware response guidance
 
@@ -146,6 +148,7 @@ should separate:
 - `speech`: human-visible answer text only; do not include runtime warnings,
   wrapper logs, max-iteration summaries, tool diagnostics, or transport metadata;
 - `claims[]`: concise claims introduced or restated by the participant;
+- Allowed `claims[].kind` values: `observation`, `requirement`, `risk`, `decision_frame`, `evidence`, `open_question`, `proposal`. An unsupported `claims[].kind` must fail before canonical `speech` submission; do not invent labels such as `operator`, `diagnostic`, `decision`, or `summary`.
 - `stance_links[]`: explicit links from new claims to prior claim or event ids,
   with relation types such as support, challenge, refine, or synthesize;
 - `contribution_type`: the main contribution category, such as support,

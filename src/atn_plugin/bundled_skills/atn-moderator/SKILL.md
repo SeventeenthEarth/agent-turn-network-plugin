@@ -117,6 +117,8 @@ For each visible turn:
 
 If selected-runner invocation or canonical `atn_selected_participant_response` submission fails for a selected turn, stop that turn before posting substitute visible speech. The acceptable recovery choices are: retry the same selected-runner path with preserved cursor/event evidence when the failure is transient and safe; run a new poll/selection after recording the failed turn as diagnostic; or close the council unresolved with explicit fallback evidence. A moderator/operator automation script must not fill the turn by asking the selected profile to produce standalone Hermes chat text and then sending that text to Discord, because that bypass is not participant runtime evidence, not canonical `speech`, and not selected-runner success.
 
+For successful live-visible selected-runner turns, the selected participant path records one canonical runner-linked `speech`, the visible Discord delivery is delivery evidence only, and do not record a second runnerless `council.speak` for the posted Discord message. If a visible echo must be represented for diagnostics, it must be a `visible_delivery_echo` with `claims=[] visible-delivery echo` semantics and explicit linkage to the canonical speech through `surface_evidence.references_event_id` or the canonical delivery `surface_evidence.message_id`; otherwise it remains fail-closed runnerless/fallback evidence.
+
 ## Runner stdout semantic framing contract
 
 Selected-runner participant and moderator wrappers must emit exactly one compact JSONL object on stdout for the canonical semantic response. Use one line, no markdown fence, and no surrounding prose. Put runtime diagnostics, wrapper logs, and provider warnings on stderr or in structured evidence fields; never wrap them around the stdout semantic record.
@@ -146,6 +148,10 @@ Keep these fields separate in evidence:
 
 - `speech`: visible answer only;
 - `claims[]`;
+- Allowed `claims[].kind` values: `observation`, `requirement`, `risk`,
+  `decision_frame`, `evidence`, `open_question`, `proposal`. An unsupported
+  `claims[].kind` must fail before canonical `speech` submission; do not invent
+  labels such as `operator`, `diagnostic`, `decision`, or `summary`.
 - `stance_links[]`;
 - `contribution_type`;
 - `new_axis_reason`;

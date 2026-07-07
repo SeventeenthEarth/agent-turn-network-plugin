@@ -339,6 +339,36 @@ def test_selected_participant_response_rejects_invalid_argue_fields_before_trans
     assert client_factory_called is False
 
 
+def test_selected_participant_response_rejects_unsupported_claim_kind_with_allowed_list() -> None:
+    args = _args()
+    response = cast(JsonObject, args["participant_response"])
+    response.update(
+        {
+            "claims": [
+                {
+                    "claim_id": "T04.C3",
+                    "summary": "An unsupported schema label must fail before transport.",
+                    "kind": "operator",
+                }
+            ],
+            "contribution_type": "support",
+        }
+    )
+
+    result = decode(handle_selected_participant_response(args, client_factory=never_client_factory))
+
+    assert result["ok"] is False
+    assert result["tool"] == "atn_selected_participant_response"
+    assert result["error"] == {
+        "category": "validation",
+        "message": (
+            "participant_response.claims[0].kind must be one of: observation, "
+            "requirement, risk, decision_frame, evidence, open_question, proposal"
+        ),
+        "retryable": False,
+    }
+
+
 def test_selected_participant_response_rejects_role_substitution_before_transport() -> None:
     client_factory_called = False
 

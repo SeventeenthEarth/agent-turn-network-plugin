@@ -83,6 +83,10 @@ separate:
   speech;
 - `claims[]`: one or more concise claims introduced or restated by the
   participant;
+- Allowed `claims[].kind` values: `observation`, `requirement`, `risk`,
+  `decision_frame`, `evidence`, `open_question`, `proposal`. An unsupported
+  `claims[].kind` must fail before canonical `speech` submission; do not invent
+  labels such as `operator`, `diagnostic`, `decision`, or `summary`.
 - `stance_links[]`: explicit links from each new claim to prior claim/event ids,
   using relation types such as support, challenge, refine, or synthesize;
 - `contribution_type`: the primary contribution category, including support,

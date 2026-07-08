@@ -75,10 +75,18 @@ If the first selected participant speech says the agenda or prior context is mis
 For exact preflight and `council.new` schema pitfalls observed in live-visible ATN operation, see `references/live-visible-preflight-and-council-new.md`.
 For cross-team KLM/ATN participant onboarding and the evidence package needed before a live-visible run, see `references/cross-team-participant-preflight-evidence.md`.
 For live runtime council pitfalls learned from long selected-runner sessions, including user-scope corrections, heartbeat/ack refresh, CLI field names, and grant-timeout verification, see `references/live-runtime-council-operation-pitfalls.md`.
+For live-visible surface completeness, typed `council.new` envelope/idempotency quirks, selected-runner validation-discard retry, and resume-log sidecar pitfalls, see `references/live-visible-selected-runner-retry-and-surface-pitfalls.md`.
 
 ## Council lifecycle spine
 
 Use daemon-owned `atn_council_command` commands with caller-supplied `command_id`, `request_id`, and `idempotency_key`.
+
+For long live-visible councils, operator automation must be resumable and phase-aware:
+
+- persist per-turn visible delivery sidecars and command logs so a retry can skip already posted turns;
+- derive collision-resistant command ids from session, command label, member, turn, cursor/event, and a short hash rather than only label/member;
+- before replaying setup, inspect daemon phase and skip already-completed lifecycle stages instead of resubmitting illegal phase commands;
+- after failures, verify daemon event/state evidence before retrying because transport errors may occur after daemon-side success.
 
 ## ATN council moderation hard rules
 
@@ -118,6 +126,8 @@ For each visible turn:
 If selected-runner invocation or canonical `atn_selected_participant_response` submission fails for a selected turn, stop that turn before posting substitute visible speech. The acceptable recovery choices are: retry the same selected-runner path with preserved cursor/event evidence when the failure is transient and safe; run a new poll/selection after recording the failed turn as diagnostic; or close the council unresolved with explicit fallback evidence. A moderator/operator automation script must not fill the turn by asking the selected profile to produce standalone Hermes chat text and then sending that text to Discord, because that bypass is not participant runtime evidence, not canonical `speech`, and not selected-runner success.
 
 For successful live-visible selected-runner turns, the selected participant path records one canonical runner-linked `speech`, the visible Discord delivery is delivery evidence only, and do not record a second runnerless `council.speak` for the posted Discord message. If a visible echo must be represented for diagnostics, it must be a `visible_delivery_echo` with `claims=[] visible-delivery echo` semantics and explicit linkage to the canonical speech through `surface_evidence.references_event_id` or the canonical delivery `surface_evidence.message_id`; otherwise it remains fail-closed runnerless/fallback evidence.
+
+If the grant/status/stream result or linked canonical speech shows `surface_evidence.status=posted`, `posting_path=selected_member_profile_send`, and a matching thread/message id, moderator/operator automation must not call `hermes send`, profile send, Discord send, or any relay-send for that same speech. Reuse the daemon/control `linked_runner_delivery_evidence` or canonical speech `surface_evidence` as visible delivery proof with `source=selected_runner_surface_evidence`, and record the existing `message_id` instead of creating a second Discord post.
 
 ## Runner stdout semantic framing contract
 

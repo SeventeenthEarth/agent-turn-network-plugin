@@ -134,6 +134,8 @@ If selected-runner invocation or canonical `atn_selected_participant_response` s
 
 For successful live-visible selected-runner turns, the selected participant path records one canonical runner-linked `speech`, the visible Discord delivery is delivery evidence only, and do not record a second runnerless `council.speak` for the posted Discord message. If a visible echo must be represented for diagnostics, it must be a `visible_delivery_echo` with `claims=[] visible-delivery echo` semantics and explicit linkage to the canonical speech through `surface_evidence.references_event_id` or the canonical delivery `surface_evidence.message_id`; otherwise it remains fail-closed runnerless/fallback evidence.
 
+If the grant/status/stream result or linked canonical speech shows `surface_evidence.status=posted`, `posting_path=selected_member_profile_send`, and a matching thread/message id, moderator/operator automation must not call `hermes send`, profile send, Discord send, or any relay-send for that same speech. Reuse the daemon/control `linked_runner_delivery_evidence` or canonical speech `surface_evidence` as visible delivery proof with `source=selected_runner_surface_evidence`, and record the existing `message_id` instead of creating a second Discord post.
+
 
 ## ARGUE relation-aware response guidance
 

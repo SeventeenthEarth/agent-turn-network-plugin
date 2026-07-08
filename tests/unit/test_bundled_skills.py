@@ -202,6 +202,10 @@ def test_bundled_hun_prslr013_live_selected_runner_schema_echo_closeout_guardrai
     assert "surface_evidence.references_event_id" in normalized
     assert "surface_evidence.message_id" in normalized
     assert "claims=[] visible-delivery echo" in normalized
+    assert "surface_evidence.status=posted" in normalized
+    assert "must not call `hermes send`" in normalized
+    assert "linked_runner_delivery_evidence" in normalized
+    assert "selected_runner_surface_evidence" in normalized
     assert "participant closeout for every required member" in normalized
     assert "proposal and required votes" in normalized
     assert "terminal `council.finalize`" in normalized

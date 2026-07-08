@@ -18,6 +18,7 @@ build/
 .omc/
 .claude-octopus/
 .claude/
+.codex/
 
 # Local MAR provider adapter copies used for review attempts
 scripts/mar_adapters/

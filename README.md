@@ -1,5 +1,7 @@
 # atn-plugin
 
+![Agent Turn Network plugin architecture](assets/atn-plugin-readme-hero.png)
+
 `atn-plugin` is the Python Hermes plugin adapter for Agent Turn Network (ATN).
 It exposes Hermes-facing ATN tools and bundled operator skills that talk to the
 `atn-control` daemon protocol. It does **not** own ATN lifecycle or state.
